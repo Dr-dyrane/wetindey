@@ -29,6 +29,10 @@ const config: Config = {
           pressed: "var(--color-accent-pressed)",
           contrast: "var(--color-accent-contrast)",
         },
+        onStatus: "var(--color-on-status)",
+        scrim: "var(--color-scrim)",
+        dim: "var(--color-dim)",
+        monogramInk: "var(--color-monogram-ink)",
         status: {
           confirmed: "var(--color-status-confirmed)",
           "confirmed-bg": "var(--color-status-confirmed-bg)",

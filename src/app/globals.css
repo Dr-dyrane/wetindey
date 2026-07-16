@@ -40,11 +40,14 @@
      Apple names five thicknesses and describes what they do, but publishes no
      blur radius for any of them. These are calibrated by eye against iOS, not
      transcribed from a spec. Treat as art direction. */
-  --material-ultrathin: rgba(255, 255, 255, 0.44);
-  --material-thin: rgba(255, 255, 255, 0.58);
-  --material-regular: rgba(255, 255, 255, 0.72);
-  --material-thick: rgba(255, 255, 255, 0.86);
-  --material-blur: 20px;
+  --material-ultrathin: rgba(255, 255, 255, 0.30);
+  --material-thin: rgba(255, 255, 255, 0.44);
+  --material-regular: rgba(255, 255, 255, 0.58);
+  --material-thick: rgba(255, 255, 255, 0.72);
+  /* Blur, not opacity, is what makes glass legible: it destroys the map's
+     detail so text reads, while its colour still comes through. Raising the
+     blur lets the fills stay genuinely translucent. */
+  --material-blur: 32px;
   --material-saturate: 180%;
 
   /* ── Labels ── */
@@ -59,10 +62,28 @@
   --color-fill-tertiary: rgba(118, 118, 128, 0.12);
   --color-fill-quaternary: rgba(116, 116, 128, 0.08);
 
-  /* ── Accent — neutral by design, so signal colour is the only saturated hue ── */
+  /* ── Accent — neutral by design, so signal colour is the only saturated hue ──
+     accent-contrast is the ink that goes ON accent. It is NOT interchangeable
+     with white: accent inverts between themes, so anything hardcoding white on
+     an accent fill turns invisible in dark mode. Always pair the two. */
   --color-accent: #000000;
   --color-accent-pressed: #333333;
   --color-accent-contrast: #FFFFFF;
+
+  /* Ink on a saturated status fill. Stays white in both themes because the
+     status hues are saturated mid-tones in both — unlike accent, which flips. */
+  --color-on-status: #FFFFFF;
+
+  /* Scrim behind a presented surface. Black in both themes: it dims what is
+     behind, and dimming is subtraction of light regardless of theme.
+     --color-dim is the OPAQUE base for scrims whose opacity is animated; using
+     the alpha-carrying token there would multiply the two and halve the dim. */
+  --color-scrim: rgba(0, 0, 0, 0.35);
+  --color-dim: #000000;
+
+  /* Ink on the item monogram. That tile is a light gradient in BOTH themes, so
+     its ink is dark in both and must not follow text-primary. */
+  --color-monogram-ink: rgba(0, 0, 0, 0.42);
 
   /* ── Signal — Apple system colours, light values ── */
   --color-status-confirmed: #34C759;   /* systemGreen */
@@ -101,10 +122,10 @@
   --color-surface-elevated: #2C2C2E;
   --color-surface-sunken: #121214;
 
-  --material-ultrathin: rgba(28, 28, 30, 0.52);
-  --material-thin: rgba(28, 28, 30, 0.64);
-  --material-regular: rgba(28, 28, 30, 0.76);
-  --material-thick: rgba(28, 28, 30, 0.88);
+  --material-ultrathin: rgba(28, 28, 30, 0.36);
+  --material-thin: rgba(28, 28, 30, 0.50);
+  --material-regular: rgba(28, 28, 30, 0.64);
+  --material-thick: rgba(28, 28, 30, 0.76);
 
   --color-text-primary: #FFFFFF;
   --color-text-secondary: rgba(235, 235, 245, 0.60);
@@ -119,6 +140,14 @@
   --color-accent: #FFFFFF;
   --color-accent-pressed: #D1D1D6;
   --color-accent-contrast: #000000;
+
+  /* Unchanged from light: status hues stay saturated, so their ink stays white. */
+  --color-on-status: #FFFFFF;
+  /* Heavier in dark — a 35% dim reads as almost nothing over a dark map. */
+  --color-scrim: rgba(0, 0, 0, 0.55);
+  --color-dim: #000000;
+  /* Unchanged: the monogram tile is light in both themes. */
+  --color-monogram-ink: rgba(0, 0, 0, 0.42);
 
   /* Apple's dark variants: brighter, less saturated, to hold against black. */
   --color-status-confirmed: #30D158;

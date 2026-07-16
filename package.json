@@ -10,7 +10,8 @@
     "format": "prettier --write \"src/**/*.{ts,tsx,css,md}\"",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
-    "db:seed": "tsx --env-file=.env.local src/db/seed.ts"
+    "db:seed": "tsx --env-file=.env.local src/db/seed.ts",
+    "audit:tokens": "node scripts/audit-tokens.mjs"
   },
   "dependencies": {
     "@xstate/react": "^6.1.0",

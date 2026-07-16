@@ -131,15 +131,15 @@ export class MapboxAdapter implements MapProviderAdapter {
 
     // Create custom borderless marker element following Apple HIG
     const el = document.createElement("div");
-    el.className = `h-9 w-9 rounded-full shadow-md flex items-center justify-center cursor-pointer border-0 transition-transform hover:scale-105 active:scale-95 duration-micro`;
+    el.className = `h-9 w-9 rounded-full shadow-md flex items-center justify-center cursor-pointer transition-transform hover:scale-105 active:scale-95 duration-micro`;
     
     // Status colors conforming to Section 17.3 (Borderless)
     if (options.status === "confirmed") {
-      el.className += " bg-status-confirmed text-white";
+      el.className += " bg-status-confirmed text-onStatus";
     } else if (options.status === "caution") {
-      el.className += " bg-status-caution text-white";
+      el.className += " bg-status-caution text-onStatus";
     } else if (options.status === "unavailable") {
-      el.className += " bg-status-unavailable text-white";
+      el.className += " bg-status-unavailable text-onStatus";
     } else {
       // Neutral startup market pins (Apple HIG gray style)
       el.className += " bg-fillSecondary text-accent";

@@ -578,7 +578,7 @@ export default function HomePage() {
       <div className="px-4 pt-3 pb-2.5 flex flex-col gap-2.5">
         <div className="flex items-center justify-between w-full">
           <div className="flex items-center space-x-2.5">
-            <NigeriaLogo className="h-7 w-7" fillColor="fill-text-primary dark:fill-white" />
+            <NigeriaLogo className="h-7 w-7" />
             <span className="font-extrabold text-base tracking-tight">{TRANSLATIONS[appLang].wetin_dey}</span>
           </div>
 

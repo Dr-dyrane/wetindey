@@ -20,7 +20,14 @@ export const viewport: Viewport = {
   maximumScale: 1,
   userScalable: false,
   viewportFit: "cover",
-  // Must track --color-background in globals.css.
+  /**
+   * The only colour literals in the app, and they cannot be tokens.
+   *
+   * These become <meta name="theme-color">, which the browser reads to paint
+   * its own chrome before any stylesheet is parsed — a var() would resolve to
+   * nothing. So they are duplicated by necessity and MUST be kept in step with
+   * --color-background in globals.css by hand.
+   */
   themeColor: [
     { media: "(prefers-color-scheme: light)", color: "#F2F2F7" },
     { media: "(prefers-color-scheme: dark)", color: "#000000" },
@@ -38,7 +45,7 @@ export default function RootLayout({
         <link href="https://api.mapbox.com/mapbox-gl-js/v3.1.2/mapbox-gl.css" rel="stylesheet" />
         <script src="https://api.mapbox.com/mapbox-gl-js/v3.1.2/mapbox-gl.js" defer />
       </head>
-      <body className="h-full min-h-screen selection:bg-accent selection:text-white">
+      <body className="h-full min-h-screen selection:bg-accent selection:text-accent-contrast">
         <ThemeProvider>
           {children}
         </ThemeProvider>

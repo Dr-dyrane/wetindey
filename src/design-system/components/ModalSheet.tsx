@@ -65,7 +65,7 @@ export function ModalSheet({ open, onClose, title, action, children, size = "pag
       <button
         aria-label="Dismiss"
         onClick={onClose}
-        className="absolute inset-0 bg-black/35 animate-in fade-in duration-standard"
+        className="absolute inset-0 bg-scrim animate-in fade-in duration-standard"
       />
 
       <div

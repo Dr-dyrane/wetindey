@@ -16,7 +16,7 @@ interface NigeriaLogoProps {
 
 export function NigeriaLogo({
   className = "h-7 w-7",
-  fillColor = "fill-text-primary dark:fill-white",
+  fillColor = "fill-text-primary",
 }: NigeriaLogoProps) {
   // Use unique ID to prevent collisions on duplicate SVG instances
   const maskId = useId();

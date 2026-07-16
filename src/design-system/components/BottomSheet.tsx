@@ -208,11 +208,13 @@ export function BottomSheet({ children, detent, onDetentChange, backdropTarget }
   return (
     <>
       {backdropTarget}
-      {/* Scrim: dims and disables the map as the sheet takes over. */}
+      {/* Scrim: dims and disables the map as the sheet takes over. Black in both
+          themes — dimming is subtraction of light, not a themed colour — but
+          driven through a token so it is auditable alongside everything else. */}
       <div
         aria-hidden
         onClick={() => onDetentChange("medium")}
-        className="absolute inset-0 z-10 bg-black transition-opacity duration-standard ease-decelerate"
+        className="absolute inset-0 z-10 bg-dim transition-opacity duration-standard ease-decelerate"
         style={{
           opacity: backdropOpacity,
           pointerEvents: backdropOpacity > 0.2 ? "auto" : "none",
@@ -247,7 +249,7 @@ export function BottomSheet({ children, detent, onDetentChange, backdropTarget }
          * goes away and it becomes an opaque surface.
          */
         className={`absolute z-20 flex flex-col overflow-hidden pointer-events-auto ${
-          dock > 0.5 ? "bg-background" : "material-thick"
+          dock > 0.5 ? "bg-background" : "material-regular"
         } ${
           isDragging ? "transition-none" : "transition-[height,left,right,bottom,border-radius] duration-sheet ease-spring"
         }`}
