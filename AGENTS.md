@@ -39,7 +39,24 @@ You **MUST** write an Architectural Decision Record (ADR) in [docs/adr/](file://
 
 ---
 
-## 4. Coding Standards & Quality Gates
+## 4. Dr. Dyrane's Design Canons (Apple HIG Adapter)
+
+Every user interface element must comply with the following Apple HIG principles:
+
+### A. Border & Depth Rules
+- **No Border Zero**: The use of `border-0` is prohibited. All UI elements, buttons, cards, and panel structures must have at least a hairline border (`border border-separator` or `1px` lines).
+- **Surface Differentiation**: Depth is created using calculated surface color contrast across layers (e.g. background `#F7F7F5` vs elevated surface `#FFFFFF`) rather than heavy shadows. Drop shadows must be kept minimal and subtle.
+- **Spatial Awareness**: Z-indices must align with visual layering: Map canvas (bottom) -> Interactive Context Sheet (middle) -> Floating elements/Modals (top).
+
+### B. Animation Rules
+- **Progressive Disclosure**: Hide optional content and secondary options by default. Reveal them on request (progressive disclosure) to prevent visual clutter.
+- **Micro-interactions**: Interactive components must provide clear active states, scale effects (e.g. `active:scale-[0.98]`), and smooth color transitions.
+- **Icon Feedback**: Icons must animate on loading or touch states to give clear feedback.
+- **Sliding Guides**: Use direction-aware sliding animations to guide the user's focus and transition between views smoothly.
+
+---
+
+## 5. Coding Standards & Quality Gates
 
 - **Strict TypeScript**: TypeScript strict mode is enabled. Do not use `any` types. Prefix deliberately unused parameters with an underscore (`_`).
 - **Apple HIG Adaptations**: Ensure UI touch targets are at least 44x44px (48px preferred), and layouts respect dynamic safe-area insets.
