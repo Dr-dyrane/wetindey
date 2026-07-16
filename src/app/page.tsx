@@ -12,7 +12,8 @@ import {
   ArrowLeft,
   Sun,
   Moon,
-  X
+  X,
+  Settings
 } from "lucide-react";
 
 import { Button } from "@/design-system/components/Button";
@@ -82,7 +83,9 @@ export default function HomePage() {
   const { 
     mapCenter, 
     setMapCenter, 
-    setSelectedItemId 
+    setSelectedItemId,
+    activeRadiusKm,
+    setActiveRadiusKm
   } = useGlobalStore();
 
   // Jotai Atomic State (L5)
@@ -104,6 +107,7 @@ export default function HomePage() {
   const [isSearching, setIsSearching] = useState(false);
   const [isOffersLoading, setIsOffersLoading] = useState(false);
   const [isPlaceOffersLoading, setIsPlaceOffersLoading] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   // Load baseline data (popular items and all places) from database on mount
   useEffect(() => {
@@ -257,18 +261,28 @@ export default function HomePage() {
     <div className="flex flex-col h-full overflow-hidden">
       {/* Brand & Search Header */}
       <div className="px-5 pt-4 pb-3 flex flex-col space-y-3">
-        <div className="flex items-center space-x-2.5">
-          {/* Logo: Question mark inside a simplified outline of Nigeria map */}
-          <div className="h-7 w-7 text-accent relative flex items-center justify-center shrink-0">
-            <svg viewBox="0 0 100 100" className="w-full h-full stroke-current fill-transparent" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M 15 75 C 10 50, 18 30, 24 18 C 34 10, 48 16, 56 12 C 68 8, 80 12, 86 18 C 92 34, 88 56, 82 72 C 70 85, 52 82, 48 85 C 40 80, 22 78, 15 75 Z" />
-            </svg>
-            <span className="absolute font-black text-xs text-text-primary -mt-0.5">?</span>
+        <div className="flex items-center justify-between w-full">
+          <div className="flex items-center space-x-2.5">
+            {/* Logo: Question mark inside a simplified outline of Nigeria map */}
+            <div className="h-7 w-7 text-accent relative flex items-center justify-center shrink-0">
+              <svg viewBox="0 0 100 100" className="w-full h-full stroke-current fill-transparent" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M 15 75 C 10 50, 18 30, 24 18 C 34 10, 48 16, 56 12 C 68 8, 80 12, 86 18 C 92 34, 88 56, 82 72 C 70 85, 52 82, 48 85 C 40 80, 22 78, 15 75 Z" />
+              </svg>
+              <span className="absolute font-black text-xs text-text-primary -mt-0.5">?</span>
+            </div>
+            <span className="font-extrabold text-base tracking-tight">WetinDey</span>
           </div>
-          <span className="font-extrabold text-base tracking-tight">WetinDey</span>
+
+          <button
+            onClick={() => setIsSettingsOpen(!isSettingsOpen)}
+            className={`p-2 rounded-full hover:bg-fillSecondary transition-colors border-0 text-text-secondary hover:text-text-primary active:scale-95 ${isSettingsOpen ? "text-accent bg-fillSecondary" : ""}`}
+            aria-label="Settings"
+          >
+            <Settings className="h-5 w-5" />
+          </button>
         </div>
 
-        {selectedItem && (
+        {!isSettingsOpen && selectedItem && (
           <div className="flex items-center space-x-2 pb-1 text-accent font-semibold text-xs">
             <Button variant="ghost" size="sm" onClick={clearSearch} className="h-7 px-2 -ml-2 text-accent">
               <ArrowLeft className="h-4.5 w-4.5 mr-1" />
@@ -277,180 +291,264 @@ export default function HomePage() {
           </div>
         )}
 
-        <div className="relative">
-          <Input
-            value={searchQuery}
-            onChange={handleSearchChange}
-            onFocus={() => setSearchFocused(true)}
-            onBlur={() => setSearchFocused(false)}
-            placeholder="Wetin you dey find?"
-            icon={<Search className="h-5 w-5" />}
-            className="pr-10"
-          />
-          {searchQuery && (
-            <button
-              onClick={clearSearch}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-text-tertiary hover:text-text-primary"
-            >
-              <X className="h-5 w-5" />
-            </button>
-          )}
-        </div>
-      </div>
-
-      {/* Scrollable List Contents */}
-      <div className="flex-1 overflow-y-auto px-5 pb-5 space-y-4">
-        {/* A. Popular Items Suggestions */}
-        {!searchQuery && !selectedItem && (
-          <div className="space-y-3">
-            <h4 className="text-[11px] font-bold uppercase tracking-wider text-text-tertiary">
-              Popular items around Yaba
-            </h4>
-            <div className="grid grid-cols-1 gap-2">
-              {isPending && popularItems.length === 0 ? (
-                <CardListSkeleton count={3} />
-              ) : (
-                popularItems.map((item) => (
-                  <button
-                    key={item.id}
-                    onClick={() => handleSelectItem(item)}
-                    className="flex items-center space-x-3 w-full p-3.5 rounded-[16px] bg-fillSecondary/50 hover:bg-fillSecondary active:scale-[0.98] transition-all duration-micro text-left border-0"
-                  >
-                    <div className="p-2.5 rounded-full bg-accent/10 text-accent text-base">🛍️</div>
-                    <div className="flex-1 min-w-0">
-                      <div className="font-semibold text-text-primary text-sm">{item.name}</div>
-                      <div className="text-xs text-text-secondary truncate mt-0.5">
-                        {item.description || "Fresh staple item available locally"}
-                      </div>
-                    </div>
-                  </button>
-                ))
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* B. Searching Loading Indicator */}
-        {isSearching && (
-          <div className="space-y-2">
-            <Skeleton className="h-12 w-full rounded-[14px]" />
-            <Skeleton className="h-12 w-full rounded-[14px]" />
-            <Skeleton className="h-12 w-full rounded-[14px]" />
-          </div>
-        )}
-
-        {/* C. Search Results Suggestions */}
-        {searchQuery && !selectedItem && !isSearching && (
-          <div className="space-y-2">
-            {searchResults.length > 0 ? (
-              searchResults.map((item) => (
-                <button
-                  key={item.id}
-                  onClick={() => handleSelectItem(item)}
-                  className="flex items-center justify-between w-full p-3.5 rounded-[16px] bg-fillSecondary/50 hover:bg-fillSecondary active:scale-[0.98] transition-all duration-micro text-left border-0"
-                >
-                  <div className="font-semibold text-text-primary text-sm">{item.name}</div>
-                  <span className="text-xs text-accent font-bold">Select</span>
-                </button>
-              ))
-            ) : (
-              <div className="text-center py-10 space-y-3">
-                <div className="inline-flex p-3.5 rounded-full bg-status-caution/10 text-status-caution">
-                  <AlertTriangle className="h-7 w-7" />
-                </div>
-                <h3 className="text-sm font-bold">No items found</h3>
-                <p className="text-xs text-text-secondary max-w-[220px] mx-auto leading-normal">
-                  Try searching for Rice, Beans, Garri, Yam or Palm Oil.
-                </p>
-              </div>
+        {!isSettingsOpen && (
+          <div className="relative">
+            <Input
+              value={searchQuery}
+              onChange={handleSearchChange}
+              onFocus={() => setSearchFocused(true)}
+              onBlur={() => setSearchFocused(false)}
+              placeholder="Wetin you dey find?"
+              icon={<Search className="h-5 w-5" />}
+              className="pr-10"
+            />
+            {searchQuery && (
+              <button
+                onClick={clearSearch}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-text-tertiary hover:text-text-primary"
+              >
+                <X className="h-5 w-5" />
+              </button>
             )}
           </div>
         )}
+      </div>
 
-        {/* D. Offers loading state */}
-        {isOffersLoading && <CardListSkeleton count={2} />}
-
-        {/* E. List Result View (Rendered inside sheet) */}
-        {selectedItem && !isOffersLoading && (
-          <div className="space-y-3">
-            <div className="pb-2 border-b border-separator flex items-center justify-between">
-              <div>
-                <h2 className="text-base font-black text-text-primary">{selectedItem.name}</h2>
-                <p className="text-xs text-text-secondary mt-0.5">{matchingOffers.length} locations found</p>
-              </div>
-              <span className="text-[9px] font-black tracking-wider uppercase px-2 py-0.5 rounded bg-accent/10 text-accent">
-                Neon DB
-              </span>
+      {/* Scrollable Contents */}
+      <div className="flex-1 overflow-y-auto px-5 pb-5">
+        {isSettingsOpen ? (
+          <div className="space-y-6 pt-2">
+            <div className="flex items-center justify-between pb-2 border-b border-separator/10">
+              <h3 className="text-base font-bold text-text-primary">Settings</h3>
+              <Button variant="ghost" size="sm" onClick={() => setIsSettingsOpen(false)} className="h-8 px-3">
+                Done
+              </Button>
             </div>
 
-            {matchingOffers.length > 0 ? (
-              <div className="space-y-2.5">
-                {matchingOffers.map((offer) => {
-                  const isSelected = activeMarkerId === offer.placeId;
-
-                  return (
-                    <Card
-                      key={offer.id}
-                      hoverable
-                      onClick={() => handleMarkerSelection(offer.placeId)}
-                      className={`transition-all duration-standard ${
-                        isSelected ? "bg-fillSecondary/80" : ""
-                      }`}
-                    >
-                      <div className="p-4 space-y-3">
-                        <div className="flex items-start justify-between">
-                          <div>
-                            <h3 className="font-bold text-text-primary text-sm">{offer.placeName}</h3>
-                            <p className="text-xs text-text-secondary mt-0.5 leading-snug flex items-center">
-                              <MapPin className="h-3.5 w-3.5 text-accent mr-1 shrink-0" />
-                              {formatDistance(getHaversineDistance(mapCenter.lat, mapCenter.lng, offer.lat, offer.lng))} • {offer.address}
-                            </p>
-                          </div>
-                        </div>
-
-                        <div className="flex items-baseline justify-between pt-1">
-                          <div>
-                            <span className="text-lg font-black text-accent">
-                              {formatPrice(offer.detail.priceMin)}
-                            </span>
-                            {offer.detail.priceMax && (
-                              <span className="text-lg font-black text-accent">
-                                {" - "}{formatPrice(offer.detail.priceMax)}
-                              </span>
-                            )}
-                            <span className="text-xs text-text-secondary ml-1">/ {offer.detail.unit}</span>
-                          </div>
-                        </div>
-
-                        {/* Mobile selection detail buttons embedded in sheet */}
-                        {isSelected && (
-                          <div className="md:hidden pt-3 border-t border-separator/15 grid grid-cols-2 gap-2 animate-fade-in">
-                            <Button
-                              variant="primary"
-                              size="sm"
-                              className="h-9 text-xs flex items-center justify-center"
-                            >
-                              <Navigation className="h-3.5 w-3.5 mr-1" />
-                              Directions
-                            </Button>
-                            <Button
-                              variant="secondary"
-                              size="sm"
-                              className="h-9 text-xs flex items-center justify-center"
-                            >
-                              <Share2 className="h-3.5 w-3.5 mr-1" />
-                              Share
-                            </Button>
-                          </div>
-                        )}
-                      </div>
-                    </Card>
-                  );
-                })}
+            {/* A. Theme Toggle Settings */}
+            <div className="space-y-2">
+              <label className="text-xs font-bold uppercase tracking-wider text-text-tertiary">
+                Interface Theme
+              </label>
+              <div className="grid grid-cols-2 gap-2 p-1 bg-fillSecondary/50 rounded-[14px]">
+                <button
+                  type="button"
+                  onClick={() => theme !== "light" && toggleTheme()}
+                  className={`py-2 text-sm font-semibold rounded-[12px] transition-all border-0 flex items-center justify-center ${
+                    theme === "light" 
+                      ? "bg-surface text-accent shadow-sm" 
+                      : "bg-transparent text-text-secondary hover:text-text-primary"
+                  }`}
+                >
+                  <Sun className="h-4 w-4 mr-1.5" />
+                  Light Mode
+                </button>
+                <button
+                  type="button"
+                  onClick={() => theme !== "dark" && toggleTheme()}
+                  className={`py-2 text-sm font-semibold rounded-[12px] transition-all border-0 flex items-center justify-center ${
+                    theme === "dark" 
+                      ? "bg-surface text-accent shadow-sm" 
+                      : "bg-transparent text-text-secondary hover:text-text-primary"
+                  }`}
+                >
+                  <Moon className="h-4 w-4 mr-1.5" />
+                  Dark Mode
+                </button>
               </div>
-            ) : (
-              <div className="text-center py-10">
-                <p className="text-xs text-text-secondary">No locations reported around Yaba.</p>
+            </div>
+
+            {/* B. Search Radius Configuration */}
+            <div className="space-y-3">
+              <div className="flex justify-between items-baseline">
+                <label className="text-xs font-bold uppercase tracking-wider text-text-tertiary">
+                  Geospatial Search Radius
+                </label>
+                <span className="text-sm font-black text-accent">{activeRadiusKm} km</span>
+              </div>
+              <div className="px-1 flex flex-col space-y-1">
+                <input
+                  type="range"
+                  min="1"
+                  max="20"
+                  value={activeRadiusKm}
+                  onChange={(e) => setActiveRadiusKm(parseInt(e.target.value))}
+                  className="w-full h-1.5 bg-fillSecondary rounded-lg appearance-none cursor-pointer accent-accent"
+                />
+                <div className="flex justify-between text-[10px] text-text-tertiary pt-1">
+                  <span>1 km</span>
+                  <span>10 km</span>
+                  <span>20 km</span>
+                </div>
+              </div>
+            </div>
+
+            {/* C. Pilot Area Info Card */}
+            <div className="p-4 rounded-[20px] bg-fillSecondary/30 space-y-2 border-0">
+              <h4 className="text-xs font-bold text-text-primary flex items-center">
+                <MapPin className="h-4 w-4 text-accent mr-1.5" />
+                Lagos Pilot Areas
+              </h4>
+              <p className="text-xs text-text-secondary leading-relaxed">
+                WetinDey observations are active in Yaba, Ebute Metta, Bariga, Surulere, and Mushin. Geolocation measurements automatically calibrate search radii.
+              </p>
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {/* A. Popular Items Suggestions */}
+            {!searchQuery && !selectedItem && (
+              <div className="space-y-3">
+                <h4 className="text-[11px] font-bold uppercase tracking-wider text-text-tertiary">
+                  Popular items around Yaba
+                </h4>
+                <div className="grid grid-cols-1 gap-2">
+                  {isPending && popularItems.length === 0 ? (
+                    <CardListSkeleton count={3} />
+                  ) : (
+                    popularItems.map((item) => (
+                      <button
+                        key={item.id}
+                        onClick={() => handleSelectItem(item)}
+                        className="flex items-center space-x-3 w-full p-3.5 rounded-[16px] bg-fillSecondary/50 hover:bg-fillSecondary active:scale-[0.98] transition-all duration-micro text-left border-0"
+                      >
+                        <div className="p-2.5 rounded-full bg-accent/10 text-accent text-base">🛍️</div>
+                        <div className="flex-1 min-w-0">
+                          <div className="font-semibold text-text-primary text-sm">{item.name}</div>
+                          <div className="text-xs text-text-secondary truncate mt-0.5">
+                            {item.description || "Fresh staple item available locally"}
+                          </div>
+                        </div>
+                      </button>
+                    ))
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* B. Searching Loading Indicator */}
+            {isSearching && (
+              <div className="space-y-2">
+                <Skeleton className="h-12 w-full rounded-[14px]" />
+                <Skeleton className="h-12 w-full rounded-[14px]" />
+                <Skeleton className="h-12 w-full rounded-[14px]" />
+              </div>
+            )}
+
+            {/* C. Search Results Suggestions */}
+            {searchQuery && !selectedItem && !isSearching && (
+              <div className="space-y-2">
+                {searchResults.length > 0 ? (
+                  searchResults.map((item) => (
+                    <button
+                      key={item.id}
+                      onClick={() => handleSelectItem(item)}
+                      className="flex items-center justify-between w-full p-3.5 rounded-[16px] bg-fillSecondary/50 hover:bg-fillSecondary active:scale-[0.98] transition-all duration-micro text-left border-0"
+                    >
+                      <div className="font-semibold text-text-primary text-sm">{item.name}</div>
+                      <span className="text-xs text-accent font-bold">Select</span>
+                    </button>
+                  ))
+                ) : (
+                  <div className="text-center py-10 space-y-3">
+                    <div className="inline-flex p-3.5 rounded-full bg-status-caution/10 text-status-caution">
+                      <AlertTriangle className="h-7 w-7" />
+                    </div>
+                    <h3 className="text-sm font-bold">No items found</h3>
+                    <p className="text-xs text-text-secondary max-w-[220px] mx-auto leading-normal">
+                      Try searching for Rice, Beans, Garri, Yam or Palm Oil.
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* D. Offers loading state */}
+            {isOffersLoading && <CardListSkeleton count={2} />}
+
+            {/* E. List Result View (Rendered inside sheet) */}
+            {selectedItem && !isOffersLoading && (
+              <div className="space-y-3">
+                <div className="pb-2 border-b border-separator flex items-center justify-between">
+                  <div>
+                    <h2 className="text-base font-black text-text-primary">{selectedItem.name}</h2>
+                    <p className="text-xs text-text-secondary mt-0.5">{matchingOffers.length} locations found</p>
+                  </div>
+                  <span className="text-[9px] font-black tracking-wider uppercase px-2 py-0.5 rounded bg-accent/10 text-accent">
+                    Neon DB
+                  </span>
+                </div>
+
+                {matchingOffers.length > 0 ? (
+                  <div className="space-y-2.5">
+                    {matchingOffers.map((offer) => {
+                      const isSelected = activeMarkerId === offer.placeId;
+
+                      return (
+                        <Card
+                          key={offer.id}
+                          hoverable
+                          onClick={() => handleMarkerSelection(offer.placeId)}
+                          className={`transition-all duration-standard ${
+                            isSelected ? "bg-fillSecondary/80" : ""
+                          }`}
+                        >
+                          <div className="p-4 space-y-3">
+                            <div className="flex items-start justify-between">
+                              <div>
+                                <h3 className="font-bold text-text-primary text-sm">{offer.placeName}</h3>
+                                <p className="text-xs text-text-secondary mt-0.5 leading-snug flex items-center">
+                                  <MapPin className="h-3.5 w-3.5 text-accent mr-1 shrink-0" />
+                                  {formatDistance(getHaversineDistance(mapCenter.lat, mapCenter.lng, offer.lat, offer.lng))} • {offer.address}
+                                </p>
+                              </div>
+                            </div>
+
+                            <div className="flex items-baseline justify-between pt-1">
+                              <div>
+                                <span className="text-lg font-black text-accent">
+                                  {formatPrice(offer.detail.priceMin)}
+                                </span>
+                                {offer.detail.priceMax && (
+                                  <span className="text-lg font-black text-accent">
+                                    {" - "}{formatPrice(offer.detail.priceMax)}
+                                  </span>
+                                )}
+                                <span className="text-xs text-text-secondary ml-1">/ {offer.detail.unit}</span>
+                              </div>
+                            </div>
+
+                            {/* Mobile selection detail buttons embedded in sheet */}
+                            {isSelected && (
+                              <div className="md:hidden pt-3 border-t border-separator/15 grid grid-cols-2 gap-2 animate-fade-in">
+                                <Button
+                                  variant="primary"
+                                  size="sm"
+                                  className="h-9 text-xs flex items-center justify-center"
+                                >
+                                  <Navigation className="h-3.5 w-3.5 mr-1" />
+                                  Directions
+                                </Button>
+                                <Button
+                                  variant="secondary"
+                                  size="sm"
+                                  className="h-9 text-xs flex items-center justify-center"
+                                >
+                                  <Share2 className="h-3.5 w-3.5 mr-1" />
+                                  Share
+                                </Button>
+                              </div>
+                            )}
+                          </div>
+                        </Card>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="text-center py-10">
+                    <p className="text-xs text-text-secondary">No locations reported around Yaba.</p>
+                  </div>
+                )}
               </div>
             )}
           </div>
