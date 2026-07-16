@@ -14,10 +14,10 @@ export const Card = React.forwardRef<HTMLDivElement, CardProps>(
         ref={ref}
         className={twMerge(
           clsx(
-            "bg-surface text-text-primary rounded-[24px] border-0 transition-all duration-standard overflow-hidden",
+            "bg-surface text-text-primary squircle-lg transition-all duration-standard overflow-hidden",
             {
               "shadow-none bg-fillSecondary/65": variant === "flat",
-              "shadow-sm hover:shadow-md bg-surface/90 backdrop-blur-sm": variant === "elevated" || hoverable,
+              "shadow-card hover:shadow-raised bg-surface": variant === "elevated" || hoverable,
               "cursor-pointer hover:scale-[1.01] active:scale-[0.99]": hoverable,
             }
           ),

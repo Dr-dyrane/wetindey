@@ -3,7 +3,7 @@
 import React from "react";
 import { AlertTriangle, CheckCircle2, CloudOff } from "lucide-react";
 import { ModalSheet } from "@/design-system/components/ModalSheet";
-import { DropdownMenu } from "@/design-system/components/DropdownMenu";
+import { SheetPicker } from "@/design-system/components/SheetPicker";
 import { Button } from "@/design-system/components/Button";
 import { Input } from "@/design-system/components/Input";
 
@@ -51,7 +51,7 @@ function Banner({ kind, icon, children }: { kind: "confirmed" | "caution" | "una
     unavailable: "bg-status-unavailable-bg text-status-unavailable-fg",
   } as const;
   return (
-    <div role="status" className={`mx-4 flex items-center gap-2.5 rounded-card px-4 py-3 text-[13px] font-medium ${map[kind]} animate-in fade-in slide-in-from-top-1 duration-standard`}>
+    <div role="status" className={`mx-4 flex items-center gap-2.5 squircle px-4 py-3 text-[13px] font-medium ${map[kind]} animate-in fade-in slide-in-from-top-1 duration-standard`}>
       <span className="shrink-0">{icon}</span>
       <span>{children}</span>
     </div>
@@ -79,7 +79,8 @@ export function ReportPriceSheet(p: ReportPriceSheetProps) {
             11 items, a rail hid most options off-screen behind a swipe and gave
             no indication of how many there were. */}
         <div className="mx-4 space-y-4">
-          <DropdownMenu
+          <SheetPicker
+            title={p.t.market}
             label={p.t.market}
             options={p.places.map((x) => ({ id: x.id, label: x.name }))}
             value={p.placeId}
@@ -87,7 +88,8 @@ export function ReportPriceSheet(p: ReportPriceSheetProps) {
             placeholder="Choose market"
           />
 
-          <DropdownMenu
+          <SheetPicker
+            title={p.t.item}
             label={p.t.item}
             options={p.items.map((x) => ({ id: x.id, label: x.name }))}
             value={p.itemId}
@@ -95,7 +97,8 @@ export function ReportPriceSheet(p: ReportPriceSheetProps) {
             placeholder="Choose item"
           />
 
-          <DropdownMenu
+          <SheetPicker
+            title={p.t.variant}
             label={p.t.variant}
             options={variantsForItem.map((v) => ({ id: v.id, label: v.displayName }))}
             value={p.variantId}
@@ -104,7 +107,8 @@ export function ReportPriceSheet(p: ReportPriceSheetProps) {
             disabled={variantsForItem.length === 0}
           />
 
-          <DropdownMenu
+          <SheetPicker
+            title={p.t.unit}
             label={p.t.unit}
             options={p.units.map((u) => ({ id: u.id, label: u.displayName }))}
             value={p.unitId}
@@ -131,7 +135,7 @@ export function ReportPriceSheet(p: ReportPriceSheetProps) {
             <span className="block text-[11px] font-semibold uppercase tracking-wider text-text-tertiary">
               {p.t.availability}
             </span>
-            <div className="grid grid-cols-2 gap-1 rounded-[10px] bg-fillTertiary p-1">
+            <div className="grid grid-cols-2 gap-1 squircle bg-fillTertiary p-1">
               {([
                 { id: "available", label: p.t.available, kind: "confirmed" },
                 { id: "unavailable", label: p.t.unavailable, kind: "unavailable" },
@@ -143,7 +147,7 @@ export function ReportPriceSheet(p: ReportPriceSheetProps) {
                     type="button"
                     aria-pressed={active}
                     onClick={() => p.onAvailable(o.id)}
-                    className={`flex items-center justify-center gap-1.5 rounded-[8px] py-2 text-[13px] font-medium transition-all duration-micro
+                    className={`flex items-center justify-center gap-1.5 squircle py-2 text-[13px] font-medium transition-all duration-micro
                       ${active ? "bg-surface shadow-card" : "text-text-secondary"}`}
                   >
                     <span

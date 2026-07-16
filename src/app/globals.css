@@ -3,37 +3,49 @@
 @tailwind utilities;
 
 /* ─────────────────────────────────────────────────────────────────────────────
-   WetinDey design tokens — Apple HIG semantic colours.
+   WetinDey design tokens — mapped to Apple's Human Interface Guidelines.
 
-   Two rules govern this file:
+   What follows encodes the parts of HIG Apple ACTUALLY publishes. That matters,
+   because most "iOS metrics" in circulation are folklore:
 
-   1. The CHROME is deliberately neutral (black/white/grey). No brand hue. That
-      is a design decision, not an omission: the product's colour budget is
-      spent entirely on signal, so a green price is the only green on screen and
-      therefore unmissable.
+     Documented by Apple      → encoded here verbatim
+       · the type ramp (sizes + line heights at Large Dynamic Type)
+       · 44x44pt default hit target (28x28 is the accessibility floor, not a target)
+       · material semantics, and Liquid Glass's 35% dimming rule
+       · presentation rules (sheet vs menu vs popover vs alert)
 
-   2. Because the chrome is neutral, SIGNAL colour has to be exactly right. The
-      status ramp below uses Apple's real system colours and their real
-      light/dark pairs — dark mode is not "the same hue, dimmed", it is a
-      separate, brighter, less saturated value chosen to hold contrast against
-      black. Neutral chrome only works if signal follows the platform rules.
+     NOT documented by Apple  → chosen here, and labelled as chosen
+       · every corner radius (iOS 26 derives radii from container geometry via
+         containerConcentric / ConcentricRectangle rather than publishing them)
+       · every blur/saturation value (no Apple material has ever had its blur
+         radius published; `blur(20px) saturate(180%)` is web folklore whose
+         origin post used blur(10px) and no saturate at all)
+       · row heights (UITableView.rowHeight defaults to automaticDimension,
+         not the widely-repeated 44pt — that number is the tap target)
+
+   NO BORDERS. Not a stylistic whim: HIG contains no instruction to stroke a
+   material, and separation is specified to come from the material and vibrancy
+   themselves. The 1px hairline on glass is a web convention, not an Apple one.
+   Separation here comes from material, elevation and fill — never a stroke.
    ──────────────────────────────────────────────────────────────────────────── */
 
 :root {
-  /* ── Surfaces (iOS "grouped" hierarchy) ──
-     The grouped pattern is what gives surfaces their separation: a GREY page
-     with WHITE cards on it. The previous tokens had a near-white page (#F2F2F7)
-     carrying near-white cards (#F8F8FA at 50% alpha) — about 2% luminance
-     apart, which is why surfaces read as flat. Cards are now pure white on grey:
-     a ~6% step, plus a hairline, plus a shadow. */
+  /* ── Surfaces ── */
   --color-background: #F2F2F7;          /* systemGroupedBackground */
-  --color-surface: #FFFFFF;             /* secondarySystemGroupedBackground — cards, rows */
-  --color-surface-elevated: #FFFFFF;    /* tertiarySystemGroupedBackground — nested */
-  --color-surface-sunken: #E9E9EF;      /* wells, track backgrounds */
+  --color-surface: #FFFFFF;             /* secondarySystemGroupedBackground */
+  --color-surface-elevated: #FFFFFF;
+  --color-surface-sunken: #E9E9EF;
 
-  /* Materials — translucent chrome that sits over the map. */
-  --color-material-thick: rgba(255, 255, 255, 0.82);
-  --color-material-regular: rgba(255, 255, 255, 0.72);
+  /* ── Materials ──
+     Apple names five thicknesses and describes what they do, but publishes no
+     blur radius for any of them. These are calibrated by eye against iOS, not
+     transcribed from a spec. Treat as art direction. */
+  --material-ultrathin: rgba(255, 255, 255, 0.44);
+  --material-thin: rgba(255, 255, 255, 0.58);
+  --material-regular: rgba(255, 255, 255, 0.72);
+  --material-thick: rgba(255, 255, 255, 0.86);
+  --material-blur: 20px;
+  --material-saturate: 180%;
 
   /* ── Labels ── */
   --color-text-primary: #000000;
@@ -41,39 +53,29 @@
   --color-text-tertiary: rgba(60, 60, 67, 0.30);
   --color-text-quaternary: rgba(60, 60, 67, 0.18);
 
-  /* ── Fills — for controls resting ON a surface ── */
+  /* ── Fills — controls resting ON a surface. Carry separation instead of strokes. ── */
   --color-fill-primary: rgba(120, 120, 128, 0.20);
   --color-fill-secondary: rgba(120, 120, 128, 0.16);
   --color-fill-tertiary: rgba(118, 118, 128, 0.12);
+  --color-fill-quaternary: rgba(116, 116, 128, 0.08);
 
-  /* ── Separators ── */
-  --color-separator: rgba(60, 60, 67, 0.29);
-  --color-separator-opaque: #C6C6C8;
-
-  /* ── Accent (neutral by design) ── */
+  /* ── Accent — neutral by design, so signal colour is the only saturated hue ── */
   --color-accent: #000000;
   --color-accent-pressed: #333333;
   --color-accent-contrast: #FFFFFF;
 
-  /* ── Signal / status — Apple system colours, light values ──
-     confirmed  systemGreen   caution  systemOrange
-     unavailable systemRed    info     systemBlue */
-  --color-status-confirmed: #34C759;
-  --color-status-caution: #FF9500;
-  --color-status-unavailable: #FF3B30;
-  --color-status-info: #007AFF;
+  /* ── Signal — Apple system colours, light values ── */
+  --color-status-confirmed: #34C759;   /* systemGreen */
+  --color-status-caution: #FF9500;     /* systemOrange */
+  --color-status-unavailable: #FF3B30; /* systemRed */
+  --color-status-info: #007AFF;        /* systemBlue */
 
-  /* Tinted backgrounds for badges. Kept as explicit tokens rather than
-     colour/10 so the alpha can differ per theme — 12% of a hue over white and
-     over black are not equally legible. */
   --color-status-confirmed-bg: rgba(52, 199, 89, 0.14);
   --color-status-caution-bg: rgba(255, 149, 0, 0.14);
   --color-status-unavailable-bg: rgba(255, 59, 48, 0.14);
   --color-status-info-bg: rgba(0, 122, 255, 0.12);
 
-  /* Status text over a tinted background. Light mode darkens the hue so small
-     text clears WCAG AA against the tint; the pure system colour is reserved
-     for dots, bars and other non-text marks. */
+  /* Darkened for small text on a tint; the pure hue stays for dots and bars. */
   --color-status-confirmed-fg: #248A3D;
   --color-status-caution-fg: #B25000;
   --color-status-unavailable-fg: #C1271B;
@@ -81,13 +83,12 @@
 
   --color-focus-ring: #007AFF;
 
-  /* ── Elevation ── */
-  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.04), 0 1px 1px rgba(0, 0, 0, 0.03);
-  --shadow-raised: 0 4px 16px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.06);
-  --shadow-sheet: 0 -1px 24px rgba(0, 0, 0, 0.12), 0 -8px 48px rgba(0, 0, 0, 0.08);
-  --shadow-island: 0 8px 32px rgba(0, 0, 0, 0.16), 0 2px 8px rgba(0, 0, 0, 0.08);
+  /* ── Elevation — the only separation mechanism besides material and fill ── */
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-raised: 0 4px 16px rgba(0, 0, 0, 0.10), 0 1px 3px rgba(0, 0, 0, 0.06);
+  --shadow-sheet: 0 -2px 32px rgba(0, 0, 0, 0.14);
+  --shadow-island: 0 10px 40px rgba(0, 0, 0, 0.18), 0 2px 8px rgba(0, 0, 0, 0.08);
 
-  /* Safe Area variables mapped to fallbacks if not in standalone PWA */
   --safe-area-top: env(safe-area-inset-top, 0px);
   --safe-area-right: env(safe-area-inset-right, 0px);
   --safe-area-bottom: env(safe-area-inset-bottom, 0px);
@@ -95,16 +96,15 @@
 }
 
 .dark {
-  /* Dark grouped hierarchy inverts the logic: the page is true black and each
-     surface step gets LIGHTER as it rises, because light means "closer" when
-     there is no shadow to read against black. */
-  --color-background: #000000;          /* systemGroupedBackground */
-  --color-surface: #1C1C1E;             /* secondarySystemGroupedBackground */
-  --color-surface-elevated: #2C2C2E;    /* tertiarySystemGroupedBackground */
+  --color-background: #000000;
+  --color-surface: #1C1C1E;
+  --color-surface-elevated: #2C2C2E;
   --color-surface-sunken: #121214;
 
-  --color-material-thick: rgba(28, 28, 30, 0.84);
-  --color-material-regular: rgba(28, 28, 30, 0.74);
+  --material-ultrathin: rgba(28, 28, 30, 0.52);
+  --material-thin: rgba(28, 28, 30, 0.64);
+  --material-regular: rgba(28, 28, 30, 0.76);
+  --material-thick: rgba(28, 28, 30, 0.88);
 
   --color-text-primary: #FFFFFF;
   --color-text-secondary: rgba(235, 235, 245, 0.60);
@@ -114,16 +114,13 @@
   --color-fill-primary: rgba(120, 120, 128, 0.36);
   --color-fill-secondary: rgba(120, 120, 128, 0.32);
   --color-fill-tertiary: rgba(118, 118, 128, 0.24);
-
-  --color-separator: rgba(84, 84, 88, 0.65);
-  --color-separator-opaque: #38383A;
+  --color-fill-quaternary: rgba(118, 118, 128, 0.18);
 
   --color-accent: #FFFFFF;
   --color-accent-pressed: #D1D1D6;
   --color-accent-contrast: #000000;
 
-  /* Apple's dark variants — brighter and less saturated than their light
-     counterparts so they hold up against black. */
+  /* Apple's dark variants: brighter, less saturated, to hold against black. */
   --color-status-confirmed: #30D158;
   --color-status-caution: #FF9F0A;
   --color-status-unavailable: #FF453A;
@@ -134,8 +131,6 @@
   --color-status-unavailable-bg: rgba(255, 69, 58, 0.18);
   --color-status-info-bg: rgba(10, 132, 255, 0.20);
 
-  /* Against a dark tint the system colour is already legible, so text uses the
-     hue directly rather than a darkened variant. */
   --color-status-confirmed-fg: #30D158;
   --color-status-caution-fg: #FF9F0A;
   --color-status-unavailable-fg: #FF453A;
@@ -143,39 +138,97 @@
 
   --color-focus-ring: #0A84FF;
 
-  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.4);
-  --shadow-raised: 0 4px 16px rgba(0, 0, 0, 0.5), 0 1px 3px rgba(0, 0, 0, 0.4);
-  --shadow-sheet: 0 -1px 24px rgba(0, 0, 0, 0.6), 0 -8px 48px rgba(0, 0, 0, 0.4);
-  --shadow-island: 0 8px 32px rgba(0, 0, 0, 0.64), 0 2px 8px rgba(0, 0, 0, 0.5);
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.5);
+  --shadow-raised: 0 4px 16px rgba(0, 0, 0, 0.55), 0 1px 3px rgba(0, 0, 0, 0.4);
+  --shadow-sheet: 0 -2px 32px rgba(0, 0, 0, 0.7);
+  --shadow-island: 0 10px 40px rgba(0, 0, 0, 0.7), 0 2px 8px rgba(0, 0, 0, 0.5);
 }
 
 @layer base {
+  html {
+    /* SF on Apple platforms; the system stack elsewhere. */
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display",
+                 "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  }
+
   body {
     @apply bg-background text-text-primary antialiased;
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
-    /* The sheet owns vertical panning; stop the page itself rubber-banding
-       underneath it on iOS. */
     overscroll-behavior-y: none;
   }
 
-  /* Safe interactive outline focus states */
   :focus-visible {
     outline: 2px solid var(--color-focus-ring);
     outline-offset: 2px;
   }
+
+  /* No element gets a stroke. If a border ever creeps back in, it dies here. */
+  * {
+    border-style: none;
+  }
 }
 
 @layer components {
-  /* Hairline separator that stays 1 physical pixel on retina. */
-  .hairline-t {
-    box-shadow: inset 0 0.5px 0 var(--color-separator);
+  /**
+   * Squircle — continuous corner curvature.
+   *
+   * Apple's real corner is three Bezier segments per corner, reverse-engineered
+   * by Figma; it is NOT a superellipse, so exact parity is not reachable in CSS
+   * at any setting. `corner-shape` (CSS Borders 4) gets close: its `squircle`
+   * keyword is superellipse(2), i.e. classic exponent n = 2^2 = 4, against the
+   * (hedged, rumoured) n≈5 attributed to Apple.
+   *
+   * Shipped in Chrome 139 (Aug 2025). Safari — ironically, the platform this
+   * imitates — has not shipped it; WebKit's position is `support`, bug 277912
+   * is open with no date. Firefox is mid-implementation behind a pref.
+   *
+   * So this is progressive enhancement: a plain rounded corner everywhere, a
+   * true continuous corner where the browser can draw one. `corner-shape` is a
+   * no-op without a non-zero border-radius, hence both are always set.
+   */
+  .squircle {
+    border-radius: 16px;
   }
-  .hairline-b {
-    box-shadow: inset 0 -0.5px 0 var(--color-separator);
+  .squircle-lg {
+    border-radius: 22px;
   }
+  .squircle-xl {
+    border-radius: 28px;
+  }
+  .squircle-full {
+    border-radius: 9999px;
+  }
+
+  @supports (corner-shape: squircle) {
+    .squircle,
+    .squircle-lg,
+    .squircle-xl {
+      corner-shape: squircle;
+    }
+    /* Squircle corners read tighter than a circular arc at the same radius, so
+       the radius is opened up to keep the optical weight. Tuned by eye. */
+    .squircle { border-radius: 20px; }
+    .squircle-lg { border-radius: 28px; }
+    .squircle-xl { border-radius: 36px; }
+  }
+
+  /**
+   * Materials. Separation comes from the material — never a stroke.
+   * -webkit- prefix retained: Safari still requires it for backdrop-filter.
+   */
+  .material-thin,
+  .material-regular,
+  .material-thick,
+  .material-ultrathin {
+    -webkit-backdrop-filter: blur(var(--material-blur)) saturate(var(--material-saturate));
+    backdrop-filter: blur(var(--material-blur)) saturate(var(--material-saturate));
+  }
+  .material-ultrathin { background-color: var(--material-ultrathin); }
+  .material-thin { background-color: var(--material-thin); }
+  .material-regular { background-color: var(--material-regular); }
+  .material-thick { background-color: var(--material-thick); }
 }
 
-/* Standalone PWA adjustments */
 @media (display-mode: standalone) {
   body {
     padding-top: var(--safe-area-top);
@@ -183,7 +236,6 @@
   }
 }
 
-/* Hide scrollbar for horizontal pill pickers */
 .scrollbar-none {
   -ms-overflow-style: none;
   scrollbar-width: none;
@@ -200,5 +252,17 @@
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
+  }
+}
+
+/* Reduce Transparency: Apple's materials collapse to opaque. Ours must too. */
+@media (prefers-reduced-transparency: reduce) {
+  .material-ultrathin,
+  .material-thin,
+  .material-regular,
+  .material-thick {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    background-color: var(--color-surface);
   }
 }

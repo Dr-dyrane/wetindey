@@ -65,7 +65,7 @@ export function ModalSheet({ open, onClose, title, action, children, size = "pag
       <button
         aria-label="Dismiss"
         onClick={onClose}
-        className="absolute inset-0 bg-black/35 backdrop-blur-[2px] animate-in fade-in duration-standard"
+        className="absolute inset-0 bg-black/35 animate-in fade-in duration-standard"
       />
 
       <div
@@ -84,7 +84,7 @@ export function ModalSheet({ open, onClose, title, action, children, size = "pag
           <span className="w-9 h-[5px] rounded-full bg-text-tertiary" />
         </div>
 
-        <header className="flex items-center justify-between gap-3 px-4 py-2.5 shrink-0 hairline-b">
+        <header className="flex items-center justify-between gap-3 px-4 py-2.5 shrink-0">
           <h2 className="text-[17px] font-semibold tracking-tight text-text-primary truncate">{title}</h2>
           <div className="flex items-center gap-1.5 shrink-0">
             {action}

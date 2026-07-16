@@ -23,7 +23,7 @@ function Group({ title, children }: { title: string; children: React.ReactNode }
   return (
     <section className="space-y-2">
       <h3 className="px-4 text-[13px] font-normal uppercase tracking-wide text-text-secondary">{title}</h3>
-      <div className="mx-4 rounded-card bg-surface shadow-card ring-1 ring-inset ring-separator overflow-hidden">
+      <div className="mx-4 squircle bg-surface shadow-card overflow-hidden">
         {children}
       </div>
     </section>
@@ -41,7 +41,7 @@ function Segmented<T extends string>({
   onChange: (v: T) => void;
 }) {
   return (
-    <div role="tablist" className="m-3 grid gap-1 rounded-[10px] bg-fillTertiary p-1" style={{ gridTemplateColumns: `repeat(${options.length}, 1fr)` }}>
+    <div role="tablist" className="m-3 grid gap-1 squircle bg-fillTertiary p-1" style={{ gridTemplateColumns: `repeat(${options.length}, 1fr)` }}>
       {options.map((o) => {
         const active = o.id === value;
         return (
@@ -51,7 +51,7 @@ function Segmented<T extends string>({
             aria-selected={active}
             type="button"
             onClick={() => onChange(o.id)}
-            className={`flex items-center justify-center gap-1.5 rounded-[8px] py-1.5 text-[13px] font-medium transition-all duration-micro
+            className={`flex items-center justify-center gap-1.5 squircle py-1.5 text-[13px] font-medium transition-all duration-micro
               ${active ? "bg-surface text-text-primary shadow-card" : "text-text-secondary active:opacity-60"}`}
           >
             {o.label}

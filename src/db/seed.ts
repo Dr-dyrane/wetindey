@@ -3,6 +3,7 @@ import { migrate } from "drizzle-orm/node-postgres/migrator";
 import { Pool } from "pg";
 import * as schema from "./schema";
 import { ITEM_IMAGES } from "./itemImages";
+import { SW_LAGOS_AREAS, SW_LAGOS_PLACES } from "./lagosSouthWest";
 
 /** Attach the verified Commons photo for a slug, if we have one. */
 const withImage = (slug: string) => {
@@ -114,9 +115,21 @@ const run = async () => {
     { itemId: iGroundnut.id, slug: "groundnut-oil-1l-bottle", displayName: "1L Groundnut Oil Bottle" }
   ]).returning();
 
-  // 6. Seed areas (Lagos Neighborhoods)
+  // 6. Seed areas.
+  // South-west Lagos (Festac / Amuwo Odofin / Satellite Town / Ojo) is the
+  // pilot; the original Yaba-side areas stay so the map still has depth
+  // north-east of the lagoon.
   console.log("Seeding areas...");
-  const [aYaba, aEbuteMetta, aBariga, aSurulere, aMushin] = await db.insert(schema.areas).values([
+  const swAreaRows = SW_LAGOS_AREAS.map((a) => ({
+    slug: a.slug,
+    name: a.name,
+    type: "neighborhood",
+    center: { lng: a.center.lng, lat: a.center.lat },
+    coverageStatus: "active"
+  }));
+
+  const insertedAreas = await db.insert(schema.areas).values([
+    ...swAreaRows,
     { slug: "yaba", name: "Yaba", type: "neighborhood", center: { lng: 3.3798, lat: 6.5178 }, coverageStatus: "active" },
     { slug: "ebute-metta", name: "Ebute Metta", type: "neighborhood", center: { lng: 3.3814, lat: 6.4944 }, coverageStatus: "active" },
     { slug: "bariga", name: "Bariga", type: "neighborhood", center: { lng: 3.3934, lat: 6.5332 }, coverageStatus: "active" },
@@ -124,9 +137,28 @@ const run = async () => {
     { slug: "mushin", name: "Mushin", type: "neighborhood", center: { lng: 3.3533, lat: 6.5262 }, coverageStatus: "active" }
   ]).returning();
 
-  // 7. Seed places (15 Markets & retail stalls)
+  const areaBySlug = new Map(insertedAreas.map((a) => [a.slug, a]));
+  const aYaba = areaBySlug.get("yaba")!;
+  const aEbuteMetta = areaBySlug.get("ebute-metta")!;
+  const aBariga = areaBySlug.get("bariga")!;
+  const aSurulere = areaBySlug.get("surulere")!;
+  const aMushin = areaBySlug.get("mushin")!;
+
+  // 7. Seed places
   console.log("Seeding places...");
+  const swPlaceRows = SW_LAGOS_PLACES.map((p) => ({
+    slug: p.slug,
+    name: p.name,
+    placeType: p.placeType,
+    areaId: areaBySlug.get(p.area)!.id,
+    location: { lng: p.location.lng, lat: p.location.lat },
+    address: p.address,
+    verificationStatus: p.verified ? "verified" : "unverified"
+  }));
+
   const placesList = await db.insert(schema.places).values([
+    ...swPlaceRows,
+
     // Yaba (3 places)
     { slug: "tejuosho-market", name: "Tejuosho Market", placeType: "open_market", areaId: aYaba.id, location: { lng: 3.3850, lat: 6.5130 }, address: "Tejuosho Road, Yaba, Lagos", verificationStatus: "verified" },
     { slug: "sabo-market", name: "Sabo Market Stall 12", placeType: "open_market", areaId: aYaba.id, location: { lng: 3.3720, lat: 6.5050 }, address: "Sabo Market, Yaba, Lagos", verificationStatus: "verified" },

@@ -22,7 +22,7 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
             ref={ref}
             className={twMerge(
               clsx(
-                "w-full h-12 bg-fillSecondary text-text-primary border-0 rounded-[14px] text-base transition-all duration-micro placeholder:text-text-tertiary focus:outline-none focus:bg-surface focus:ring-2 focus:ring-accent/40 disabled:opacity-50",
+                "w-full h-12 bg-fillSecondary text-text-primary squircle text-base transition-all duration-micro placeholder:text-text-tertiary focus:outline-none focus:bg-surface focus:ring-2 focus:ring-accent/40 disabled:opacity-50",
                 {
                   "pl-12 pr-4": icon,
                   "px-4": !icon,

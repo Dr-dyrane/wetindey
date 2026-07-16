@@ -21,7 +21,7 @@ export function DesktopTabletShell({
       </div>
 
       {/* 2. Floating Left Panel (Tablet: 380px wide | Desktop: 420px wide) */}
-      <div className="absolute top-4 bottom-4 left-4 lg:top-6 lg:bottom-6 lg:left-6 z-10 w-[380px] lg:w-[420px] bg-surface/85 dark:bg-surface-elevated/85 backdrop-blur-lg rounded-[28px] shadow-2xl overflow-hidden flex flex-col transition-all duration-standard border-0">
+      <div className="absolute top-4 bottom-4 left-4 lg:top-6 lg:bottom-6 lg:left-6 z-10 w-[380px] lg:w-[420px] material-thick squircle-xl shadow-2xl overflow-hidden flex flex-col transition-all duration-standard">
         <div className="flex-1 overflow-y-auto">
           {sheetNode}
         </div>
@@ -29,7 +29,7 @@ export function DesktopTabletShell({
 
       {/* 3. Floating Right Detail Panel (Rendered dynamically if details exist) */}
       {detailNode && (
-        <div className="absolute top-4 bottom-4 right-4 lg:top-6 lg:bottom-6 lg:right-6 z-10 w-[340px] lg:w-[380px] bg-surface/85 dark:bg-surface-elevated/85 backdrop-blur-lg rounded-[28px] shadow-2xl overflow-hidden flex flex-col transition-all duration-standard border-0 animate-fade-in">
+        <div className="absolute top-4 bottom-4 right-4 lg:top-6 lg:bottom-6 lg:right-6 z-10 w-[340px] lg:w-[380px] material-thick squircle-xl shadow-2xl overflow-hidden flex flex-col transition-all duration-standard animate-fade-in">
           <div className="flex-1 overflow-y-auto p-6">
             {detailNode}
           </div>

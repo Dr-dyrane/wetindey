@@ -17,12 +17,11 @@ export function Skeleton({
     <div
       className={twMerge(
         clsx(
-          "bg-text-tertiary/10 dark:bg-text-secondary/10 animate-pulse border-0",
+          "bg-text-tertiary/10 dark:bg-text-secondary/10 animate-pulse",
           {
             "rounded-full": variant === "circular",
-            "rounded-[14px]": variant === "rectangular",
-            "rounded-[8px]": variant === "text",
-            
+            squircle: variant === "rectangular" || variant === "text",
+
             // Map text variant sizes to match typographic system (Section 17.4)
             "h-8 w-3/4 mb-4": variant === "text" && textVariant === "display",
             "h-7 w-2/3 mb-3": variant === "text" && textVariant === "title1",
@@ -43,7 +42,7 @@ export function Skeleton({
 // Custom Hi-fi Card Skeleton representing a resolved location/offer
 export function OfferCardSkeleton() {
   return (
-    <div className="p-4 border-0 rounded-[24px] bg-fillSecondary/40 space-y-4">
+    <div className="p-4 squircle-lg bg-fillSecondary/40 space-y-4">
       <div className="flex items-start justify-between">
         <div className="space-y-2 flex-1">
           {/* Place title skeleton */}
@@ -62,7 +61,7 @@ export function OfferCardSkeleton() {
         <Skeleton variant="text" textVariant="caption" className="w-16" />
       </div>
 
-      <div className="pt-2 border-0 flex items-center justify-between">
+      <div className="pt-2 flex items-center justify-between">
         {/* Confidence scale skeleton */}
         <Skeleton variant="text" textVariant="footnote" className="w-1/4 mb-0" />
         {/* Source tag skeleton */}

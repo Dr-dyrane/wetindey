@@ -24,9 +24,9 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
               "bg-transparent text-accent hover:bg-fillSecondary active:bg-opacity-80": variant === "ghost",
 
               // Sizes
-              "h-10 px-4 text-sm rounded-[14px]": size === "sm",
-              "h-12 px-5 text-base rounded-[16px]": size === "md",
-              "h-14 px-6 text-lg rounded-[18px]": size === "lg",
+              "h-10 px-4 text-sm squircle": size === "sm",
+              "h-12 px-5 text-base squircle": size === "md",
+              "h-14 px-6 text-lg squircle": size === "lg",
             },
             className
           )

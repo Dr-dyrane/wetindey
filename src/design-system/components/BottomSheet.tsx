@@ -237,8 +237,19 @@ export function BottomSheet({ children, detent, onDetentChange, backdropTarget }
           // its top edge.
           boxShadow: dock < 0.5 ? "var(--shadow-island)" : "var(--shadow-sheet)",
         }}
-        className={`absolute z-20 flex flex-col overflow-hidden bg-background pointer-events-auto ${
-          isDragging ? "transition-none" : "transition-[height,left,right,bottom,border-radius] duration-sheet ease-decelerate"
+        /**
+         * Glass while it floats, solid once it docks.
+         *
+         * HIG is explicit: "Don't use Liquid Glass in the content layer." As an
+         * island the sheet is chrome sitting over the map, and the map should
+         * read through it — that is the whole point of the island. Once it
+         * expands to the edges it IS the content layer, so the translucency
+         * goes away and it becomes an opaque surface.
+         */
+        className={`absolute z-20 flex flex-col overflow-hidden pointer-events-auto ${
+          dock > 0.5 ? "bg-background" : "material-thick"
+        } ${
+          isDragging ? "transition-none" : "transition-[height,left,right,bottom,border-radius] duration-sheet ease-spring"
         }`}
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}

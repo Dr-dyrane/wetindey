@@ -3,7 +3,6 @@
 import React, { useState, useEffect, useTransition, useMemo } from "react";
 import { useAtom } from "jotai";
 import {
-  Search,
   MapPin,
   Navigation,
   Share2,
@@ -18,7 +17,7 @@ import {
 } from "lucide-react";
 
 import { Button } from "@/design-system/components/Button";
-import { Input } from "@/design-system/components/Input";
+import { SearchField } from "@/design-system/components/SearchField";
 import { Card } from "@/design-system/components/Card";
 import { AdaptiveShell } from "@/design-system/components/AdaptiveShell";
 import { MapboxCanvas } from "@/design-system/components/MapboxCanvas";
@@ -89,7 +88,7 @@ const TRANSLATIONS = {
   en: {
     wetin_dey: "WetinDey",
     search_placeholder: "Wetin you dey find?",
-    popular_items: "Popular items around Yaba",
+    popular_items: "Popular items around",
     settings: "Settings",
     theme: "Interface Theme",
     radius: "Geospatial Search Radius",
@@ -125,7 +124,7 @@ const TRANSLATIONS = {
   pidgin: {
     wetin_dey: "WetinDey",
     search_placeholder: "Wetin you dey find?",
-    popular_items: "Things people dey buy for Yaba",
+    popular_items: "Things people dey buy for",
     settings: "Settings",
     theme: "How app dey look",
     radius: "Distance where you dey find market",
@@ -161,7 +160,7 @@ const TRANSLATIONS = {
   yoruba: {
     wetin_dey: "Kilo n ṣẹlẹ",
     search_placeholder: "Kini o n wa?",
-    popular_items: "Awọn ounjẹ ti o wọpọ ni Yaba",
+    popular_items: "Awọn ounjẹ ti o wọpọ ni",
     settings: "Eto",
     theme: "Irisi Ohun elo",
     radius: "Ijinna Wiwa Ọja",
@@ -202,12 +201,13 @@ export default function HomePage() {
   const { theme, toggleTheme } = useTheme();
   
   // Zustand Global State (L3)
-  const { 
-    mapCenter, 
-    setMapCenter, 
+  const {
+    mapCenter,
+    setMapCenter,
     setSelectedItemId,
     activeRadiusKm,
-    setActiveRadiusKm
+    setActiveRadiusKm,
+    selectedAreaName
   } = useGlobalStore();
 
   // Jotai Atomic State (L5)
@@ -553,19 +553,16 @@ export default function HomePage() {
         className="absolute left-4 right-4 z-10 flex items-start justify-between pointer-events-none"
         style={{ top: "calc(var(--safe-area-top) + 12px)" }}
       >
-        <div
-          className="pointer-events-auto flex items-center gap-2 rounded-full bg-material-thick backdrop-blur-xl
-                     px-3 py-1.5 shadow-raised ring-1 ring-inset ring-separator"
-        >
+        <div className="pointer-events-auto flex items-center gap-2 squircle-full material-thick px-3 py-1.5 shadow-raised">
           <StatusDot kind="confirmed" pulse />
-          <span className="text-[13px] font-medium text-text-primary">Showing Yaba</span>
+          <span className="text-footnote font-medium text-text-primary">Showing {selectedAreaName}</span>
         </div>
 
         <button
           onClick={toggleTheme}
           aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
-          className="pointer-events-auto grid place-items-center h-9 w-9 rounded-full bg-material-thick backdrop-blur-xl
-                     shadow-raised ring-1 ring-inset ring-separator text-text-primary
+          className="pointer-events-auto grid h-9 w-9 place-items-center squircle-full material-thick
+                     shadow-raised text-text-primary
                      active:scale-90 transition-transform duration-instant"
         >
           {theme === "dark" ? <Sun className="h-[18px] w-[18px]" /> : <Moon className="h-[18px] w-[18px]" />}
@@ -578,7 +575,7 @@ export default function HomePage() {
   const sheetNode = (
     <div className="flex flex-col h-full overflow-hidden">
       {/* Brand & Search Header */}
-      <div className="px-5 pt-4 pb-3 flex flex-col space-y-3">
+      <div className="px-4 pt-3 pb-2.5 flex flex-col gap-2.5">
         <div className="flex items-center justify-between w-full">
           <div className="flex items-center space-x-2.5">
             <NigeriaLogo className="h-7 w-7" fillColor="fill-text-primary dark:fill-white" />
@@ -617,37 +614,25 @@ export default function HomePage() {
           </div>
         )}
 
-        <div className="relative">
-          <Input
-            value={searchQuery}
-            onChange={handleSearchChange}
-            onFocus={() => setSearchFocused(true)}
-            onBlur={() => setSearchFocused(false)}
-            placeholder={TRANSLATIONS[appLang].search_placeholder}
-            icon={<Search className="h-5 w-5" />}
-            className="pr-10"
-          />
-          {searchQuery && (
-            <button
-              onClick={clearSearch}
-              aria-label="Clear search"
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-text-tertiary hover:text-text-primary"
-            >
-              <X className="h-5 w-5" />
-            </button>
-          )}
-        </div>
+        <SearchField
+          value={searchQuery}
+          onChange={handleSearchChange}
+          onClear={clearSearch}
+          onFocus={() => setSearchFocused(true)}
+          onBlur={() => setSearchFocused(false)}
+          placeholder={TRANSLATIONS[appLang].search_placeholder}
+        />
       </div>
 
       {/* Scrollable Contents */}
-      <div className="flex-1 overflow-y-auto px-4 pb-5">
+      <div className="flex-1 overflow-y-auto px-3 pb-5">
           <div className="space-y-4">
             {/* A. Popular Items Suggestions */}
             {!searchQuery && !selectedItem && (
               <div className="space-y-2.5">
                 <div className="flex items-baseline justify-between px-0.5">
                   <h4 className="text-[13px] font-semibold text-text-primary">
-                    {TRANSLATIONS[appLang].popular_items}
+                    {TRANSLATIONS[appLang].popular_items} {selectedAreaName}
                   </h4>
                   {popularItems.length > 0 && (
                     <span className="text-[12px] text-text-secondary tabular-nums">
@@ -657,7 +642,7 @@ export default function HomePage() {
                 </div>
 
                 {loadError ? (
-                  <div className="rounded-card bg-surface shadow-card ring-1 ring-inset ring-separator p-5 text-center space-y-2">
+                  <div className="squircle bg-surface shadow-card p-5 text-center space-y-2">
                     <StatusDot kind="unavailable" />
                     <p className="text-[14px] font-semibold text-text-primary">{loadError}</p>
                     <p className="text-[12px] text-text-secondary">Check your network and pull down to try again.</p>
@@ -665,7 +650,7 @@ export default function HomePage() {
                 ) : isPending && popularItems.length === 0 ? (
                   <CardListSkeleton count={4} />
                 ) : popularItems.length === 0 ? (
-                  <div className="rounded-card bg-surface shadow-card ring-1 ring-inset ring-separator p-5 text-center">
+                  <div className="squircle bg-surface shadow-card p-5 text-center">
                     <p className="text-[14px] font-semibold text-text-primary">No prices yet</p>
                     <p className="text-[12px] text-text-secondary mt-1">Be the first to report one.</p>
                   </div>
@@ -685,9 +670,9 @@ export default function HomePage() {
             {/* B. Searching Loading Indicator */}
             {isSearching && (
               <div className="space-y-2">
-                <Skeleton className="h-12 w-full rounded-[14px]" />
-                <Skeleton className="h-12 w-full rounded-[14px]" />
-                <Skeleton className="h-12 w-full rounded-[14px]" />
+                <Skeleton className="h-12 w-full squircle" />
+                <Skeleton className="h-12 w-full squircle" />
+                <Skeleton className="h-12 w-full squircle" />
               </div>
             )}
 
@@ -823,14 +808,14 @@ export default function HomePage() {
               </div>
               <button
                 onClick={() => setActiveMarkerId(null)}
-                className="p-1.5 rounded-full bg-fillSecondary text-text-secondary hover:text-text-primary transition-colors border-0"
+                className="p-1.5 rounded-full bg-fillSecondary text-text-secondary hover:text-text-primary transition-colors"
               >
                 <X className="h-4 w-4" />
               </button>
             </div>
 
             {/* Price Tag Info */}
-            <div className="p-4 rounded-[20px] bg-fillSecondary/50 flex flex-col space-y-1">
+            <div className="p-4 squircle bg-fillSecondary/50 flex flex-col space-y-1">
               <span className="text-[10px] font-bold uppercase tracking-wider text-text-tertiary">
                 {TRANSLATIONS[appLang].reported_price}
               </span>
@@ -909,12 +894,12 @@ export default function HomePage() {
                 </h2>
                 <p className="text-xs text-text-secondary mt-1 flex items-center">
                   <MapPin className="h-3.5 w-3.5 text-accent mr-1 shrink-0" />
-                  {formatDistance(getHaversineDistance(mapCenter.lat, mapCenter.lng, selectedPlace.location.lat, selectedPlace.location.lng))} • {selectedPlace.address || "Yaba, Lagos"}
+                  {formatDistance(getHaversineDistance(mapCenter.lat, mapCenter.lng, selectedPlace.location.lat, selectedPlace.location.lng))} • {selectedPlace.address || `${selectedAreaName}, Lagos`}
                 </p>
               </div>
               <button
                 onClick={() => setActiveMarkerId(null)}
-                className="p-1.5 rounded-full bg-fillSecondary text-text-secondary hover:text-text-primary transition-colors border-0"
+                className="p-1.5 rounded-full bg-fillSecondary text-text-secondary hover:text-text-primary transition-colors"
               >
                 <X className="h-4 w-4" />
               </button>
@@ -927,15 +912,15 @@ export default function HomePage() {
               </h4>
               {isPlaceOffersLoading ? (
                 <div className="space-y-2">
-                  <Skeleton className="h-10 w-full rounded-[12px]" />
-                  <Skeleton className="h-10 w-full rounded-[12px]" />
+                  <Skeleton className="h-10 w-full squircle" />
+                  <Skeleton className="h-10 w-full squircle" />
                 </div>
               ) : placeOffers.length > 0 ? (
                 <div className="space-y-2 max-h-[40vh] overflow-y-auto pr-1">
                   {placeOffers.map((offer) => (
                     <div 
                       key={offer.id}
-                      className="p-3 rounded-[16px] bg-fillSecondary/40 flex items-center justify-between"
+                      className="p-3 squircle bg-fillSecondary/40 flex items-center justify-between"
                     >
                       <div>
                         <div className="text-xs font-bold text-text-primary">{offer.itemName}</div>
@@ -971,7 +956,7 @@ export default function HomePage() {
     }
 
     return undefined;
-  }, [selectedOffer, selectedPlace, placeOffers, isPlaceOffersLoading, mapCenter.lat, mapCenter.lng, appLang, setActiveMarkerId]);
+  }, [selectedOffer, selectedPlace, placeOffers, isPlaceOffersLoading, mapCenter.lat, mapCenter.lng, appLang, setActiveMarkerId, selectedAreaName]);
 
   return (
     <div className="relative w-full h-full min-h-screen overflow-hidden">

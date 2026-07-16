@@ -2,7 +2,6 @@
 
 import React, { useState } from "react";
 import Image from "next/image";
-import { ChevronRight } from "lucide-react";
 import { StatusBadge, type StatusKind } from "./StatusBadge";
 
 export interface ItemCardData {
@@ -26,7 +25,6 @@ const naira = (kobo: number) =>
     maximumFractionDigits: 0,
   }).format(kobo / 100);
 
-/** Freshness values are already the status vocabulary; keep the mapping honest. */
 const toStatus = (freshness?: string | null): StatusKind =>
   freshness === "confirmed" ? "confirmed" : freshness === "unavailable" ? "unavailable" : "caution";
 
@@ -38,12 +36,9 @@ const STATUS_LABEL: Record<StatusKind, string> = {
 };
 
 /**
- * Monogram fallback for an item with no photo.
- *
- * Derives a stable hue from the slug so the same item always gets the same
- * tile — a fallback that reshuffles on every render reads as a glitch. This is
- * the one place a non-semantic colour is allowed, and it stays desaturated so
- * it can't be mistaken for a status signal.
+ * Monogram for an item with no photo. Hue is derived from the slug so the same
+ * item always gets the same tile; a fallback that reshuffles reads as a glitch.
+ * Kept desaturated so it can never be mistaken for a status signal.
  */
 function Monogram({ name, slug }: { name: string; slug: string }) {
   let h = 0;
@@ -51,14 +46,26 @@ function Monogram({ name, slug }: { name: string; slug: string }) {
   return (
     <div
       className="h-full w-full grid place-items-center"
-      style={{ background: `linear-gradient(145deg, hsl(${h} 22% 78%), hsl(${(h + 40) % 360} 20% 66%))` }}
+      style={{ background: `linear-gradient(145deg, hsl(${h} 20% 80%), hsl(${(h + 40) % 360} 18% 68%))` }}
       aria-hidden
     >
-      <span className="text-[22px] font-bold text-black/45">{name.slice(0, 1).toUpperCase()}</span>
+      <span className="text-title-2 font-semibold text-black/40">{name.slice(0, 1).toUpperCase()}</span>
     </div>
   );
 }
 
+/**
+ * Item row.
+ *
+ * The photo bleeds to the card's leading, top and bottom edges rather than
+ * sitting in an inset tile — the card clips it instead of framing it, so there
+ * is no gap and no stroke between image and surface. Apple publishes no rule
+ * for this (I checked: the Images and Collections pages cover only resolution,
+ * format and colour), but it matches the App Store / News treatment and it is
+ * the only way to get an edge here without drawing one.
+ *
+ * Nothing in this component has a border. Separation is surface + elevation.
+ */
 export function ItemCard({ item, onSelect }: { item: ItemCardData; onSelect: (item: ItemCardData) => void }) {
   const [broken, setBroken] = useState(false);
   const status = toStatus(item.freshest);
@@ -69,32 +76,29 @@ export function ItemCard({ item, onSelect }: { item: ItemCardData; onSelect: (it
       ? "No price yet"
       : item.priceTo && item.priceTo > item.priceFrom
         ? `${naira(item.priceFrom)} – ${naira(item.priceTo)}`
-        : `${naira(item.priceFrom)}`;
+        : naira(item.priceFrom);
 
   return (
     <button
       onClick={() => onSelect(item)}
-      className="group w-full flex items-center gap-3 p-2.5 rounded-card text-left
-                 bg-surface shadow-card ring-1 ring-inset ring-separator
+      className="group relative flex w-full items-stretch gap-3 overflow-hidden bg-surface text-left
+                 shadow-card squircle
                  active:scale-[0.985] transition-transform duration-instant"
     >
-      <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-[12px] bg-surface-sunken">
+      {/* Bleeds: no padding, no inset, clipped by the card's own squircle. */}
+      <div className="relative w-[88px] shrink-0 self-stretch bg-surface-sunken">
         {showImage ? (
           <Image
             src={item.imageUrl!}
             alt=""
             fill
-            sizes="64px"
+            sizes="88px"
             className="object-cover"
             /**
-             * Served straight from Wikimedia's CDN rather than through
-             * /_next/image. Routing these through the optimizer makes the
-             * server fetch every photo from one IP on first render, which
-             * upload.wikimedia.org answers with 429 Too Many Requests — the
-             * images then fail to appear at all. Letting the browser request
-             * them is ordinary hotlinking: one request per client, served by
-             * a CDN built for it. The stored URLs are already ~50KB thumbnails,
-             * so there is little left for the optimizer to save.
+             * Straight from Wikimedia's CDN, not /_next/image. The optimizer
+             * fetches every photo server-side from one IP, which
+             * upload.wikimedia.org answers with 429 and no image renders. The
+             * stored URLs are already ~50KB thumbnails.
              */
             unoptimized
             onError={() => setBroken(true)}
@@ -104,37 +108,32 @@ export function ItemCard({ item, onSelect }: { item: ItemCardData; onSelect: (it
         )}
       </div>
 
-      <div className="min-w-0 flex-1">
-        <h3 className="text-[15px] font-semibold text-text-primary truncate">{item.name}</h3>
-
-        <p className="mt-0.5 text-[15px] font-semibold text-text-primary tabular-nums truncate">{priceLabel}</p>
-
+      <div className="min-w-0 flex-1 py-2.5 pr-3">
+        <h3 className="truncate text-subhead font-semibold text-text-primary">{item.name}</h3>
+        <p className="mt-0.5 truncate text-callout font-semibold tabular-nums text-text-primary">{priceLabel}</p>
         <div className="mt-1.5 flex items-center gap-2">
           <StatusBadge kind={status}>{STATUS_LABEL[status]}</StatusBadge>
           {item.placeCount ? (
-            <span className="text-[12px] text-text-secondary truncate">
+            <span className="truncate text-caption-1 text-text-secondary">
               {item.placeCount} {item.placeCount === 1 ? "place" : "places"}
             </span>
           ) : null}
         </div>
       </div>
-
-      <ChevronRight className="h-4 w-4 shrink-0 text-text-tertiary" strokeWidth={2.5} />
     </button>
   );
 }
 
 /**
- * Photo credit. CC BY / CC BY-SA are only honoured if the author and licence
- * actually appear next to the image, so this is a licence obligation rather
- * than a nicety — it ships wherever the photography does.
+ * Photo credit. CC BY / CC BY-SA only hold if the author and licence appear
+ * with the image, so this is a licence obligation, not a nicety.
  */
 export function PhotoCredits({ items }: { items: ItemCardData[] }) {
   const credits = items.filter((i) => i.imageUrl && i.imageAttribution);
   if (credits.length === 0) return null;
   const unique = Array.from(new Map(credits.map((c) => [c.imageAttribution, c])).values());
   return (
-    <p className="px-1 pt-1 text-[10px] leading-relaxed text-text-tertiary">
+    <p className="px-1 pt-1 text-caption-2 leading-relaxed text-text-tertiary">
       Photos:{" "}
       {unique.map((c, i) => (
         <span key={c.id}>
