@@ -264,7 +264,7 @@ export default function HomePage() {
       <div className="px-5 pt-4 pb-3 flex flex-col space-y-3">
         <div className="flex items-center justify-between w-full">
           <div className="flex items-center space-x-2.5">
-            <NigeriaLogo className="h-7 w-7" fillColor="fill-text-primary dark:fill-white" questionMarkColor="text-white dark:text-black" />
+            <NigeriaLogo className="h-7 w-7" fillColor="fill-text-primary dark:fill-white" />
             <span className="font-extrabold text-base tracking-tight">WetinDey</span>
           </div>
 

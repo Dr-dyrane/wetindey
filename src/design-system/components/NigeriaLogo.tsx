@@ -1,21 +1,22 @@
 "use client";
 
-import React from "react";
+import React, { useId } from "react";
 
 interface NigeriaLogoProps {
   className?: string;
-  questionMarkColor?: string;
   fillColor?: string;
 }
 
 export function NigeriaLogo({
   className = "h-7 w-7",
-  questionMarkColor = "text-white dark:text-black",
   fillColor = "fill-text-primary dark:fill-white"
 }: NigeriaLogoProps) {
+  // Use unique ID to prevent collisions on duplicate SVG instances
+  const maskId = useId();
+
   return (
     <div className={`relative flex items-center justify-center shrink-0 ${className}`}>
-      {/* Nigeria Map Outline Silhouette */}
+      {/* Nigeria Map Outline Silhouette with hollow question mark cutout */}
       <svg
         version="1.0"
         xmlns="http://www.w3.org/2000/svg"
@@ -23,11 +24,33 @@ export function NigeriaLogo({
         preserveAspectRatio="xMidYMid meet"
         className={`w-full h-full ${fillColor}`}
       >
-        <g
-          transform="translate(0.000000,1024.000000) scale(0.100000,-0.100000)"
-          stroke="none"
-        >
-          <path d="M2442 9265 c-51 -10 -71 -20 -103 -51 l-40 -39 -148 -3 c-124 -3
+        <defs>
+          <mask id={maskId}>
+            {/* White covers the silhouette area (visible) */}
+            <rect x="0" y="0" width="1024" height="1024" fill="white" />
+            
+            {/* Black cut-out creates the hollow question mark */}
+            <text
+              x="525"
+              y="590"
+              fontSize="280"
+              fontWeight="900"
+              fontFamily="system-ui, -apple-system, sans-serif"
+              textAnchor="middle"
+              fill="black"
+            >
+              ?
+            </text>
+          </mask>
+        </defs>
+
+        {/* Apply the hollow cutout mask to the silhouette group */}
+        <g mask={`url(#${maskId})`}>
+          <g
+            transform="translate(0.000000,1024.000000) scale(0.100000,-0.100000)"
+            stroke="none"
+          >
+            <path d="M2442 9265 c-51 -10 -71 -20 -103 -51 l-40 -39 -148 -3 c-124 -3
 -149 -1 -160 12 -18 22 -25 21 -212 -20 l-164 -36 -90 -89 c-79 -78 -95 -89
 -125 -89 -61 0 -63 -5 -55 -127 7 -100 5 -119 -20 -218 -37 -147 -107 -254
 -215 -328 -25 -17 -75 -57 -112 -90 l-68 -59 0 -100 c0 -59 -7 -125 -16 -161
@@ -104,12 +127,9 @@ l-98 9 -174 -104 c-185 -112 -210 -120 -285 -94 -30 11 -34 9 -86 -40 l-54
 -51 -85 0 -84 0 -40 45 c-39 45 -57 77 -111 197 -16 36 -38 71 -48 76 -10 6
 -54 51 -98 101 -83 95 -130 133 -196 156 -35 13 -44 12 -73 -2 -33 -15 -34
 -15 -293 86 -143 55 -268 100 -279 100 -10 -1 -47 -7 -82 -14z" />
+          </g>
         </g>
       </svg>
-      {/* Central Bold White Question Mark */}
-      <span className={`absolute font-black text-[9px] select-none ${questionMarkColor}`}>
-        ?
-      </span>
     </div>
   );
 }
