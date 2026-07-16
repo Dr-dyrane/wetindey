@@ -6,24 +6,24 @@
   /* ── Surface Contrast Hierarchy (Apple HIG) ──
      Layer 0  Map Canvas         : (Mapbox fills this)
      Layer 1  Page Background    : #F2F2F7   — lightest grey
-     Layer 2  Sheet Surface      : #FFFFFF   — white (elevated from bg)
-     Layer 3  Surface Elevated   : #F8F8FA   — subtle step above surface
-     Layer 4  Fill Secondary     : #E5E5EA   — button/input fills
+     Layer 2  Sheet Surface      : #FFFFFF   — white
+     Layer 3  Surface Elevated   : #F8F8FA   — subtle step
+     Layer 4  Fill Secondary     : #E5E5EA   — inputs/controls
   */
   --color-background: #F2F2F7;
   --color-surface: #FFFFFF;
   --color-surface-elevated: #F8F8FA;
-  --color-text-primary: #111113;
-  --color-text-secondary: #626268;
-  --color-text-tertiary: #85858C;
-  --color-separator: rgba(60, 60, 67, 0.18);
-  --color-accent: #087A50;
-  --color-accent-pressed: #066540;
-  --color-status-confirmed: #248A3D;
-  --color-status-caution: #A96500;
-  --color-status-unavailable: #C9342F;
-  --color-status-info: #2678D9;
-  --color-focus-ring: #0A84FF;
+  --color-text-primary: #000000;
+  --color-text-secondary: #6E6E73;
+  --color-text-tertiary: #AEAEB2;
+  --color-separator: rgba(60, 60, 67, 0.12);
+  --color-accent: #000000;
+  --color-accent-pressed: #333333;
+  --color-status-confirmed: #34C759;
+  --color-status-caution: #FF9F0A;
+  --color-status-unavailable: #FF3B30;
+  --color-status-info: #5AC8FA;
+  --color-focus-ring: #000000;
   --color-fill-secondary: #E5E5EA;
 
   /* Safe Area variables mapped to fallbacks if not in standalone PWA */
@@ -39,22 +39,22 @@
      Layer 1  Page Background    : #000000   — true black
      Layer 2  Sheet Surface      : #1C1C1E   — dark grey
      Layer 3  Surface Elevated   : #2C2C2E   — lighter step
-     Layer 4  Fill Secondary     : #3A3A3C   — button/input fills
+     Layer 4  Fill Secondary     : #3A3A3C   — inputs/controls
   */
   --color-background: #000000;
   --color-surface: #1C1C1E;
   --color-surface-elevated: #2C2C2E;
-  --color-text-primary: #F5F5F7;
-  --color-text-secondary: #B1B1B7;
-  --color-text-tertiary: #85858C;
-  --color-separator: rgba(84, 84, 88, 0.60);
-  --color-accent: #35B57B;
-  --color-accent-pressed: #2DA16C;
-  --color-status-confirmed: #45B85B;
-  --color-status-caution: #E1A23A;
-  --color-status-unavailable: #F06A64;
-  --color-status-info: #64A8FF;
-  --color-focus-ring: #64A8FF;
+  --color-text-primary: #FFFFFF;
+  --color-text-secondary: #98989D;
+  --color-text-tertiary: #636366;
+  --color-separator: rgba(84, 84, 88, 0.36);
+  --color-accent: #FFFFFF;
+  --color-accent-pressed: #D1D1D6;
+  --color-status-confirmed: #30D158;
+  --color-status-caution: #FFD60A;
+  --color-status-unavailable: #FF453A;
+  --color-status-info: #64D2FF;
+  --color-focus-ring: #FFFFFF;
   --color-fill-secondary: #3A3A3C;
 }
 
