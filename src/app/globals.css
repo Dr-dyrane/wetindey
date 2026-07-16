@@ -78,3 +78,12 @@
     padding-bottom: var(--safe-area-bottom);
   }
 }
+
+/* Hide scrollbar for horizontal pill pickers */
+.scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}

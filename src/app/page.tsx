@@ -14,7 +14,8 @@ import {
   Moon,
   X,
   Settings,
-  Plus
+  Plus,
+  ChevronRight
 } from "lucide-react";
 
 import { Button } from "@/design-system/components/Button";
@@ -711,16 +712,6 @@ export default function HomePage() {
               </div>
             </div>
 
-            {/* D. Pilot Area Info Card */}
-            <div className="p-4 rounded-[20px] bg-fillSecondary/30 space-y-2 border-0">
-              <h4 className="text-xs font-bold text-text-primary flex items-center">
-                <MapPin className="h-4 w-4 text-accent mr-1.5" />
-                {TRANSLATIONS[appLang].pilot_areas}
-              </h4>
-              <p className="text-xs text-text-secondary leading-relaxed">
-                WetinDey observations are active in Yaba, Ebute Metta, Bariga, Surulere, and Mushin. Geolocation measurements automatically calibrate search radii.
-              </p>
-            </div>
           </div>
         )}
 
@@ -755,63 +746,90 @@ export default function HomePage() {
               </div>
             )}
 
-            {/* A. Market Selection */}
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold text-text-secondary uppercase tracking-wider">{TRANSLATIONS[appLang].market}</label>
-              <select
-                value={formPlaceId}
-                onChange={(e) => setFormPlaceId(e.target.value)}
-                className="w-full h-12 bg-fillSecondary text-text-primary border-0 rounded-[14px] px-4 text-sm focus:outline-none focus:ring-2 focus:ring-accent/40"
-              >
+            {/* A. Market — Scrollable Pill Picker */}
+            <div className="space-y-2">
+              <label className="text-[10px] font-bold text-text-tertiary uppercase tracking-wider">{TRANSLATIONS[appLang].market}</label>
+              <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
                 {submitPlaces.map((p) => (
-                  <option key={p.id} value={p.id}>{p.name}</option>
+                  <button
+                    key={p.id}
+                    type="button"
+                    onClick={() => setFormPlaceId(p.id)}
+                    className={`shrink-0 px-4 py-2.5 rounded-[14px] text-xs font-semibold transition-all active:scale-[0.96] ${
+                      formPlaceId === p.id
+                        ? "bg-accent text-white shadow-sm"
+                        : "bg-fillSecondary text-text-secondary hover:text-text-primary"
+                    }`}
+                  >
+                    {p.name}
+                  </button>
                 ))}
-              </select>
+              </div>
             </div>
 
-            {/* B. Food Item Selection */}
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold text-text-secondary uppercase tracking-wider">{TRANSLATIONS[appLang].item}</label>
-              <select
-                value={formItemId}
-                onChange={(e) => setFormItemId(e.target.value)}
-                className="w-full h-12 bg-fillSecondary text-text-primary border-0 rounded-[14px] px-4 text-sm focus:outline-none focus:ring-2 focus:ring-accent/40"
-              >
+            {/* B. Food Item — Scrollable Pill Picker */}
+            <div className="space-y-2">
+              <label className="text-[10px] font-bold text-text-tertiary uppercase tracking-wider">{TRANSLATIONS[appLang].item}</label>
+              <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
                 {submitItems.map((i) => (
-                  <option key={i.id} value={i.id}>{i.name}</option>
+                  <button
+                    key={i.id}
+                    type="button"
+                    onClick={() => setFormItemId(i.id)}
+                    className={`shrink-0 px-4 py-2.5 rounded-[14px] text-xs font-semibold transition-all active:scale-[0.96] ${
+                      formItemId === i.id
+                        ? "bg-accent text-white shadow-sm"
+                        : "bg-fillSecondary text-text-secondary hover:text-text-primary"
+                    }`}
+                  >
+                    {i.name}
+                  </button>
                 ))}
-              </select>
+              </div>
             </div>
 
-            {/* C. Quality/Variant Selection */}
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold text-text-secondary uppercase tracking-wider">{TRANSLATIONS[appLang].variant}</label>
-              <select
-                value={formVariantId}
-                onChange={(e) => setFormVariantId(e.target.value)}
-                className="w-full h-12 bg-fillSecondary text-text-primary border-0 rounded-[14px] px-4 text-sm focus:outline-none focus:ring-2 focus:ring-accent/40"
-                disabled={!formItemId}
-              >
+            {/* C. Quality/Variant — Scrollable Pill Picker */}
+            <div className="space-y-2">
+              <label className="text-[10px] font-bold text-text-tertiary uppercase tracking-wider">{TRANSLATIONS[appLang].variant}</label>
+              <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
                 {submitVariants
                   .filter((v) => v.itemId === formItemId)
                   .map((v) => (
-                    <option key={v.id} value={v.id}>{v.displayName}</option>
+                    <button
+                      key={v.id}
+                      type="button"
+                      onClick={() => setFormVariantId(v.id)}
+                      className={`shrink-0 px-4 py-2.5 rounded-[14px] text-xs font-semibold transition-all active:scale-[0.96] ${
+                        formVariantId === v.id
+                          ? "bg-accent text-white shadow-sm"
+                          : "bg-fillSecondary text-text-secondary hover:text-text-primary"
+                      }`}
+                    >
+                      {v.displayName}
+                    </button>
                   ))}
-              </select>
+              </div>
             </div>
 
-            {/* D. Unit Selection */}
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold text-text-secondary uppercase tracking-wider">{TRANSLATIONS[appLang].unit}</label>
-              <select
-                value={formUnitId}
-                onChange={(e) => setFormUnitId(e.target.value)}
-                className="w-full h-12 bg-fillSecondary text-text-primary border-0 rounded-[14px] px-4 text-sm focus:outline-none focus:ring-2 focus:ring-accent/40"
-              >
+            {/* D. Unit — Scrollable Pill Picker */}
+            <div className="space-y-2">
+              <label className="text-[10px] font-bold text-text-tertiary uppercase tracking-wider">{TRANSLATIONS[appLang].unit}</label>
+              <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
                 {submitUnits.map((u) => (
-                  <option key={u.id} value={u.id}>{u.displayName}</option>
+                  <button
+                    key={u.id}
+                    type="button"
+                    onClick={() => setFormUnitId(u.id)}
+                    className={`shrink-0 px-4 py-2.5 rounded-[14px] text-xs font-semibold transition-all active:scale-[0.96] ${
+                      formUnitId === u.id
+                        ? "bg-accent text-white shadow-sm"
+                        : "bg-fillSecondary text-text-secondary hover:text-text-primary"
+                    }`}
+                  >
+                    {u.displayName}
+                  </button>
                 ))}
-              </select>
+              </div>
             </div>
 
             {/* E. Price Input */}
@@ -883,15 +901,13 @@ export default function HomePage() {
                       <button
                         key={item.id}
                         onClick={() => handleSelectItem(item)}
-                        className="flex items-center space-x-3 w-full p-3.5 rounded-[16px] bg-fillSecondary/50 hover:bg-fillSecondary active:scale-[0.98] transition-all duration-micro text-left border-0"
+                        className="flex items-center justify-between w-full p-3.5 rounded-[16px] bg-fillSecondary/50 hover:bg-fillSecondary active:scale-[0.98] transition-all duration-micro text-left"
                       >
-                        <div className="p-2.5 rounded-full bg-accent/10 text-accent text-base">🛍️</div>
-                        <div className="flex-1 min-w-0">
-                          <div className="font-semibold text-text-primary text-sm">{item.name}</div>
-                          <div className="text-xs text-text-secondary truncate mt-0.5">
-                            {item.description || "Fresh staple item available locally"}
-                          </div>
+                        <div className="flex items-center space-x-3 min-w-0">
+                          <div className="p-2 rounded-full bg-accent/10 text-accent text-sm">🛍️</div>
+                          <span className="font-semibold text-text-primary text-sm truncate">{item.name}</span>
                         </div>
+                        <ChevronRight className="h-4 w-4 text-text-tertiary shrink-0" />
                       </button>
                     ))
                   )}
@@ -916,10 +932,10 @@ export default function HomePage() {
                     <button
                       key={item.id}
                       onClick={() => handleSelectItem(item)}
-                      className="flex items-center justify-between w-full p-3.5 rounded-[16px] bg-fillSecondary/50 hover:bg-fillSecondary active:scale-[0.98] transition-all duration-micro text-left border-0"
+                      className="flex items-center justify-between w-full p-3.5 rounded-[16px] bg-fillSecondary/50 hover:bg-fillSecondary active:scale-[0.98] transition-all duration-micro text-left"
                     >
-                      <div className="font-semibold text-text-primary text-sm">{item.name}</div>
-                      <span className="text-xs text-accent font-bold">Select</span>
+                      <span className="font-semibold text-text-primary text-sm">{item.name}</span>
+                      <ChevronRight className="h-4 w-4 text-text-tertiary shrink-0" />
                     </button>
                   ))
                 ) : (
@@ -928,9 +944,6 @@ export default function HomePage() {
                       <AlertTriangle className="h-7 w-7" />
                     </div>
                     <h3 className="text-sm font-bold">{TRANSLATIONS[appLang].no_results}</h3>
-                    <p className="text-xs text-text-secondary max-w-[220px] mx-auto leading-normal">
-                      Try searching for Rice, Beans, Garri, Yam or Palm Oil.
-                    </p>
                   </div>
                 )}
               </div>
@@ -1018,8 +1031,8 @@ export default function HomePage() {
                     })}
                   </div>
                 ) : (
-                  <div className="text-center py-10">
-                    <p className="text-xs text-text-secondary">No locations reported around Yaba.</p>
+                  <div className="text-center py-8">
+                    <MapPin className="h-6 w-6 text-text-tertiary/40 mx-auto" />
                   </div>
                 )}
               </div>
@@ -1177,7 +1190,7 @@ export default function HomePage() {
                 </div>
               ) : (
                 <div className="text-center py-6">
-                  <p className="text-xs text-text-secondary">No food prices reported for this market yet.</p>
+                  <MapPin className="h-5 w-5 text-text-tertiary/40 mx-auto" />
                 </div>
               )}
             </div>
