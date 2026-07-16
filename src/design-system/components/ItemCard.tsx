@@ -16,6 +16,8 @@ export interface ItemCardData {
   priceFrom?: number | null;
   priceTo?: number | null;
   freshest?: string | null;
+  /** The unit the price range is quoted in. A price without its unit can lie. */
+  unitLabel?: string | null;
 }
 
 const naira = (kobo: number) =>
@@ -130,7 +132,15 @@ export function ItemCard({ item, onSelect }: { item: ItemCardData; onSelect: (it
         <div className="flex items-baseline justify-between gap-2">
           <h3 className="min-w-0 truncate text-subhead font-semibold text-text-primary">{item.name}</h3>
         </div>
-        <p className="truncate text-subhead font-semibold tabular-nums text-text-primary">{priceLabel}</p>
+        <p className="truncate text-subhead font-semibold tabular-nums text-text-primary">
+          {priceLabel}
+          {item.unitLabel && item.priceFrom != null && (
+            /* The unit is not decoration. A range spanning a 1L bottle and a 25L
+               keg is arithmetically fine and factually nonsense; naming the unit
+               is what makes the number mean something. */
+            <span className="ml-1 font-normal text-text-secondary"> / {item.unitLabel}</span>
+          )}
+        </p>
         <div className="mt-1 flex items-center gap-1.5">
           <StatusBadge kind={status}>{STATUS_LABEL[status]}</StatusBadge>
           {item.placeCount ? (

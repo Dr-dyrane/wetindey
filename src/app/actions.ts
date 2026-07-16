@@ -1,7 +1,7 @@
 "use server";
 
 import { db } from "@/db";
-import { items, itemAliases, itemVariants, places, offersCurrent, units, observations, sources } from "@/db/schema";
+import { areas, items, itemAliases, itemVariants, places, offersCurrent, units, observations, sources } from "@/db/schema";
 import { eq, ilike, or, and, sql, count, min, max } from "drizzle-orm";
 
 /** Shape shared by every item the UI renders in a list or grid. */
@@ -57,32 +57,91 @@ export async function searchFoodItems(query: string) {
  * matter how well seeded the database was.
  */
 export async function getPopularItems(limit = 8) {
-  const rows = await db
-    .select({
-      ...itemCard,
-      offerCount: count(offersCurrent.id),
-      placeCount: sql<number>`count(distinct ${offersCurrent.placeId})::int`,
-      priceFrom: min(offersCurrent.priceMin),
-      priceTo: max(offersCurrent.priceMax),
-      // Freshest signal across the item's offers decides the status dot.
-      freshest: sql<string | null>`(
-        array_agg(${offersCurrent.freshnessState} ORDER BY ${offersCurrent.lastObservedAt} DESC)
-      )[1]`,
-      lastObservedAt: max(offersCurrent.lastObservedAt),
-    })
-    .from(items)
-    .leftJoin(itemVariants, eq(itemVariants.itemId, items.id))
-    .leftJoin(offersCurrent, eq(offersCurrent.itemVariantId, itemVariants.id))
-    .where(eq(items.active, true))
-    .groupBy(items.id)
-    .orderBy(sql`count(${offersCurrent.id}) desc, ${items.canonicalName} asc`)
-    .limit(limit);
+  /**
+   * The price range is computed WITHIN A SINGLE UNIT — the one the item is most
+   * commonly sold in — and the unit is returned so the card can name it.
+   *
+   * The obvious version, min(priceMin)/max(priceMax) grouped by item, is wrong
+   * the moment an item has variants in different units. It quoted "Palm Oil
+   * (1L)" at ₦1,454–₦49,476 because the cheap end was a 1L bottle and the dear
+   * end a 25L keg: arithmetically fine, factually meaningless, and it made the
+   * whole product look fake to anyone who buys palm oil. Pepper did the same
+   * across a paint bucket and a basket.
+   *
+   * That bug was invisible while the seed had exactly one variant per item. It
+   * only appeared once the taxonomy became real, which is the argument for the
+   * richer seed.
+   *
+   * A true price-per-litre comparison is possible — units.canonicalQuantity
+   * exists for it and is read by nothing — but normalising across a keg and a
+   * bottle still hides that they are different purchases. Naming the unit is the
+   * honest answer; normalisation is a product decision.
+   */
+  const rows = await db.execute(sql`
+    WITH offer_units AS (
+      SELECT
+        ${items.id}                      AS item_id,
+        ${offersCurrent.unitId}          AS unit_id,
+        COUNT(${offersCurrent.id})       AS offers_in_unit
+      FROM ${items}
+      JOIN ${itemVariants}  ON ${itemVariants.itemId} = ${items.id}
+      JOIN ${offersCurrent} ON ${offersCurrent.itemVariantId} = ${itemVariants.id}
+      WHERE ${items.active} = true
+      GROUP BY ${items.id}, ${offersCurrent.unitId}
+    ),
+    modal_unit AS (
+      -- The unit this item is most often sold in. Ties break on unit_id so the
+      -- choice is stable between calls rather than flapping.
+      SELECT DISTINCT ON (item_id) item_id, unit_id
+      FROM offer_units
+      ORDER BY item_id, offers_in_unit DESC, unit_id
+    )
+    SELECT
+      i.id, i.slug, i.canonical_name AS name, i.description,
+      i.image_url, i.image_attribution, i.image_license, i.image_source_url,
+      u.display_name                                   AS "unitLabel",
+      COUNT(o.id)::int                                 AS "offerCount",
+      COUNT(DISTINCT o.place_id)::int                  AS "placeCount",
+      MIN(o.price_min)::int                            AS "priceFrom",
+      MAX(COALESCE(o.price_max, o.price_min))::int     AS "priceTo",
+      (array_agg(o.freshness_state ORDER BY o.last_observed_at DESC))[1] AS freshest,
+      MAX(o.last_observed_at)                          AS "lastObservedAt"
+    FROM ${items} i
+    JOIN modal_unit  mu ON mu.item_id = i.id
+    JOIN ${itemVariants}  v ON v.item_id = i.id
+    JOIN ${offersCurrent} o ON o.item_variant_id = v.id AND o.unit_id = mu.unit_id
+    JOIN ${units}         u ON u.id = mu.unit_id
+    WHERE i.active = true
+    GROUP BY i.id, u.display_name
+    ORDER BY COUNT(o.id) DESC, i.canonical_name ASC
+    LIMIT ${limit}
+  `);
 
-  return rows.map((r) => ({
-    ...r,
+  type Row = {
+    id: string; slug: string; name: string; description: string | null;
+    image_url: string | null; image_attribution: string | null;
+    image_license: string | null; image_source_url: string | null;
+    unitLabel: string; offerCount: number; placeCount: number;
+    priceFrom: number | null; priceTo: number | null;
+    freshest: string | null; lastObservedAt: Date | null;
+  };
+
+  return (rows.rows as unknown as Row[]).map((r) => ({
+    id: r.id,
+    slug: r.slug,
+    name: r.name,
+    description: r.description,
+    imageUrl: r.image_url,
+    imageAttribution: r.image_attribution,
+    imageLicense: r.image_license,
+    imageSourceUrl: r.image_source_url,
+    unitLabel: r.unitLabel,
+    offerCount: r.offerCount,
+    placeCount: r.placeCount,
     priceFrom: r.priceFrom ?? null,
     priceTo: r.priceTo ?? null,
-    lastObservedAt: r.lastObservedAt ? r.lastObservedAt.toISOString() : null,
+    freshest: r.freshest,
+    lastObservedAt: r.lastObservedAt ? new Date(r.lastObservedAt).toISOString() : null,
   }));
 }
 
@@ -314,5 +373,737 @@ export async function getInitialSubmissionData() {
     items: itemsList,
     variants: variantsList,
     units: unitsList
+  };
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   THE TRUST LOOP
+
+   Everything above this line is a price lookup. What follows asks the only
+   person who actually knows — the one who went — whether the answer we gave was
+   true, and folds it back into offers_current so the next lookup is better.
+   ──────────────────────────────────────────────────────────────────────────── */
+
+/**
+ * The default Contributor source, resolved the same way submitObservation does.
+ *
+ * Deliberately the SAME source a sofa report gets. A confirmation from someone
+ * who physically went should outweigh one typed from a chair, and
+ * `sources.reliability_score_internal` is the field to hang that on — but which
+ * source a visit belongs to, and what it scores, is a product decision. Minting
+ * a second source row here would quietly answer it. Flagged, not guessed; the
+ * visit is distinguished by `collection_method` in the meantime, which is
+ * enough for the model to be applied retroactively once it is decided.
+ */
+async function visitContributorSourceId(): Promise<string> {
+  const [row] = await db
+    .select({ id: sources.id })
+    .from(sources)
+    .where(eq(sources.sourceType, "Contributor"))
+    .limit(1);
+
+  if (!row) throw new Error("Default Contributor source not configured in database.");
+  return row.id;
+}
+
+// 7. Snapshot the claim a user is about to go and test.
+//
+// Called on the way OUT ("Go there"), not on the way back. Someone returning
+// from a market is the least likely person in the product to have a connection,
+// so the question they are asked on their return must already be in their hand
+// before they leave. The caller stashes this and hands it to ConfirmVisitSheet.
+export async function getVisitContext(offerId: string) {
+  const [row] = await db
+    .select({
+      offerId: offersCurrent.id,
+      placeId: places.id,
+      placeName: places.name,
+      itemVariantId: itemVariants.id,
+      unitId: units.id,
+      itemName: items.canonicalName,
+      variantName: itemVariants.displayName,
+      unitName: units.displayName,
+      quotedPriceMin: offersCurrent.priceMin,
+      quotedPriceMax: offersCurrent.priceMax,
+      lastObservedAt: offersCurrent.lastObservedAt
+    })
+    .from(offersCurrent)
+    .innerJoin(places, eq(offersCurrent.placeId, places.id))
+    .innerJoin(itemVariants, eq(offersCurrent.itemVariantId, itemVariants.id))
+    .innerJoin(items, eq(itemVariants.itemId, items.id))
+    .innerJoin(units, eq(offersCurrent.unitId, units.id))
+    .where(eq(offersCurrent.id, offerId))
+    .limit(1);
+
+  // No fallback. A visit context we cannot build is a question we cannot ask
+  // honestly — an empty or half-filled one would submit an observation against
+  // the wrong variant, which is a plausible wrong answer of exactly the kind
+  // that hides for months.
+  if (!row) throw new Error(`getVisitContext: no current offer with id ${offerId}`);
+
+  return {
+    offerId: row.offerId,
+    placeId: row.placeId,
+    placeName: row.placeName,
+    itemVariantId: row.itemVariantId,
+    unitId: row.unitId,
+    itemName: row.itemName,
+    variantName: row.variantName,
+    unitName: row.unitName,
+    quotedPriceMin: row.quotedPriceMin,
+    quotedPriceMax: row.quotedPriceMax,
+    quotedAt: row.lastObservedAt.toISOString()
+  };
+}
+
+/**
+ * Record that someone physically went, and what they found.
+ *
+ * Three answers, mapped onto the existing data model:
+ *
+ *   was it there      → observations.availability_state
+ *   was the price right → the observation's price (theirs, or the quote they confirmed)
+ *   did you buy it    → observations.raw_payload (no column exists for it)
+ *
+ * The priced paths delegate to `submitObservation` rather than reimplementing
+ * the offer recalculation: the price-bound maths, the freshness window and the
+ * supporting-count increment are the trust model, and two copies of a trust
+ * model is two trust models. The one thing delegation cannot express is that
+ * this datum came from a pair of feet rather than a sofa, so the observation is
+ * annotated with that immediately afterwards. See the blockers note: the clean
+ * fix is for submitObservation to accept collectionMethod / sourceId /
+ * observedAt, at which point the annotation step disappears.
+ */
+export async function submitVisitConfirmation(data: {
+  placeId: string;
+  itemVariantId: string;
+  unitId: string;
+  /** Was the item actually there? */
+  wasAvailable: boolean;
+  /** Required when wasAvailable. Meaningless otherwise. */
+  priceWasRight?: boolean;
+  /** Naira. Required when priceWasRight === false. */
+  actualPrice?: number;
+  /** Required when wasAvailable. Meaningless otherwise — you cannot buy what is not there. */
+  didBuy?: boolean;
+}) {
+  const now = new Date();
+
+  /* ── "It wasn't there" ─────────────────────────────────────────────────────
+     Written directly, because submitObservation requires a price and there is
+     no price to give. Passing the last known one would file a number the user
+     never saw into an immutable log — a fabricated datum. The offer update here
+     is genuinely different logic rather than a duplicate: no price maths runs
+     at all, and the price bounds are deliberately left alone, because "not
+     there right now" says nothing about what it costs when it comes back. */
+  if (!data.wasAvailable) {
+    const sourceId = await visitContributorSourceId();
+
+    const [newObs] = await db
+      .insert(observations)
+      .values({
+        itemVariantId: data.itemVariantId,
+        unitId: data.unitId,
+        placeId: data.placeId,
+        availabilityState: "unavailable",
+        priceAmount: null,
+        observedAt: now,
+        sourceId,
+        collectionMethod: "visit_confirmation",
+        moderationStatus: "approved",
+        rawPayload: { kind: "visit_confirmation", wasAvailable: false }
+      })
+      .returning();
+
+    const [offer] = await db
+      .select({ id: offersCurrent.id })
+      .from(offersCurrent)
+      .where(
+        and(
+          eq(offersCurrent.itemVariantId, data.itemVariantId),
+          eq(offersCurrent.unitId, data.unitId),
+          eq(offersCurrent.placeId, data.placeId)
+        )
+      )
+      .limit(1);
+
+    // Nothing to update is a legitimate outcome — the offer may have expired
+    // out from under the visit. The observation still stands on its own.
+    if (!offer) return { success: true, observationId: newObs.id, offerUpdated: false };
+
+    await db
+      .update(offersCurrent)
+      .set({
+        availabilityState: "unavailable",
+        freshnessState: "unavailable",
+        trustLevel: "high",
+        lastObservedAt: now,
+        expiresAt: new Date(now.getTime() + 72 * 3600 * 1000),
+        // Reset, not increment. The count exists to say how many observations
+        // back the CURRENT state, and the state just flipped — every report
+        // that supported "available" supports nothing now. Note this differs
+        // from submitObservation, which increments unconditionally; that is
+        // flagged in the blockers as a model question, not settled here.
+        supportingObservationCount: 1,
+        updatedAt: now
+      })
+      .where(eq(offersCurrent.id, offer.id));
+
+    return { success: true, observationId: newObs.id, offerUpdated: true };
+  }
+
+  /* ── "It was there" ─────────────────────────────────────────────────────── */
+  let priceNaira: number;
+
+  if (data.priceWasRight === false) {
+    if (typeof data.actualPrice !== "number" || !Number.isFinite(data.actualPrice) || data.actualPrice <= 0) {
+      throw new Error("submitVisitConfirmation: 'the price was different' requires the price they actually saw.");
+    }
+    priceNaira = data.actualPrice;
+  } else if (data.priceWasRight === true) {
+    // Read the confirmed figure from the server rather than trusting a number
+    // round-tripped through the client: the user tapped "yes, that's it", and
+    // what "it" is must be whatever the database currently claims.
+    const [offer] = await db
+      .select({ priceMin: offersCurrent.priceMin })
+      .from(offersCurrent)
+      .where(
+        and(
+          eq(offersCurrent.itemVariantId, data.itemVariantId),
+          eq(offersCurrent.unitId, data.unitId),
+          eq(offersCurrent.placeId, data.placeId)
+        )
+      )
+      .limit(1);
+
+    if (!offer) {
+      throw new Error("submitVisitConfirmation: there is no current offer here to confirm the price of.");
+    }
+    priceNaira = offer.priceMin / 100;
+  } else {
+    throw new Error("submitVisitConfirmation: priceWasRight is required when the item was available.");
+  }
+
+  const res = await submitObservation({
+    itemVariantId: data.itemVariantId,
+    unitId: data.unitId,
+    placeId: data.placeId,
+    priceAmount: priceNaira,
+    availabilityState: "available"
+  });
+
+  // Annotate what delegation could not carry: that this came from a visit, and
+  // whether the trip ended in a purchase. `did_buy` has no column, and the
+  // conversion signal is worth more than the schema change it is waiting on.
+  await db
+    .update(observations)
+    .set({
+      collectionMethod: "visit_confirmation",
+      rawPayload: {
+        kind: "visit_confirmation",
+        wasAvailable: true,
+        priceWasRight: data.priceWasRight,
+        didBuy: data.didBuy ?? null
+      }
+    })
+    .where(eq(observations.id, res.observationId));
+
+  return { success: true, observationId: res.observationId, offerUpdated: true };
+}
+
+/* ───────────────────────────────────────────────────────────────────────────
+   7. Discovery — narrowing an item down to a unit, then to nearby offers.
+
+   USER-FLOW calls for rice → Long-grain rice → 50 kg bag → offers. The taxonomy
+   was already in the database and already walked by the report form; the search
+   path jumped straight from an item to every offer in the country and sorted by
+   a distance computed client-side. The two actions below do that narrowing, and
+   do the distance and the radius in PostGIS instead.
+   ────────────────────────────────────────────────────────────────────────── */
+
+export type OfferSort = "nearest" | "cheapest" | "freshest";
+
+export interface NarrowingInput {
+  itemId: string;
+  /** null = every type of this item. */
+  variantId?: string | null;
+  /** null = every packaging size. */
+  unitId?: string | null;
+  center: { lat: number; lng: number };
+  radiusKm: number;
+  sort?: OfferSort;
+  limit?: number;
+}
+
+export interface NarrowedOffer {
+  id: string;
+  placeId: string;
+  placeName: string;
+  placeType: string;
+  address: string | null;
+  lat: number;
+  lng: number;
+  /** Great-circle metres from the search origin, straight out of PostGIS. */
+  distanceM: number;
+  variantId: string;
+  variantName: string;
+  unitId: string;
+  unitName: string;
+  availabilityState: string;
+  priceKind: string;
+  priceMin: number;
+  priceMax: number | null;
+  currency: string;
+  freshnessState: string;
+  lastObservedAt: string;
+  expiresAt: string;
+  /** offers_current's own tally — how many reports back this price. */
+  supportingObservationCount: number;
+  /**
+   * How many DISTINCT sources filed those reports. This is the number that
+   * actually carries trust: `supportingObservationCount * 10` — what the old
+   * detail panel showed as a percentage — reads ten reports from one person as
+   * 100% confidence. Two people saying the same thing is evidence; one person
+   * saying it ten times is not.
+   */
+  distinctSourceCount: number;
+}
+
+/** Reject an origin we cannot trust rather than quietly searching from it. */
+function searchOrigin(center: { lat: number; lng: number }) {
+  if (
+    !center ||
+    !Number.isFinite(center.lat) ||
+    !Number.isFinite(center.lng) ||
+    Math.abs(center.lat) > 90 ||
+    Math.abs(center.lng) > 180
+  ) {
+    throw new Error(`Discovery: invalid search origin ${JSON.stringify(center)}`);
+  }
+  return sql`ST_SetSRID(ST_MakePoint(${center.lng}, ${center.lat}), 4326)`;
+}
+
+function searchRadiusMetres(radiusKm: number) {
+  if (!Number.isFinite(radiusKm) || radiusKm <= 0 || radiusKm > 500) {
+    throw new Error(`Discovery: invalid search radius ${radiusKm}km`);
+  }
+  return Math.round(radiusKm * 1000);
+}
+
+/**
+ * Distinct sources behind one offer's price.
+ *
+ * `moderation_status <> 'rejected'` rather than `= 'approved'` on purpose: the
+ * seeder inserts observations without a moderation status, so they all sit at
+ * the column default of 'pending'. Counting only approved rows would report
+ * zero sources for every offer in the pilot database — a plausible-looking
+ * "no evidence" that is really a schema default, not a fact about the data.
+ */
+const distinctSourceCount = sql<number>`(
+  select count(distinct o.source_id)::int
+  from ${observations} o
+  where o.item_variant_id = ${offersCurrent.itemVariantId}
+    and o.unit_id = ${offersCurrent.unitId}
+    and o.place_id = ${offersCurrent.placeId}
+    and o.moderation_status <> 'rejected'
+)`;
+
+/**
+ * The variants and units this item is actually sold in WITHIN the radius, with
+ * the counts behind each choice.
+ *
+ * Counts are scoped to the same origin and radius as the offer list, so the
+ * narrowing controls can never promise "12 prices" and then hand back a list of
+ * three. Variants with nothing nearby still come back, with a count of zero, so
+ * the UI can show them as unavailable rather than pretend they do not exist.
+ */
+export async function getItemNarrowingOptions(input: {
+  itemId: string;
+  center: { lat: number; lng: number };
+  radiusKm: number;
+}) {
+  if (!input.itemId) throw new Error("Discovery: getItemNarrowingOptions needs an itemId");
+
+  const origin = searchOrigin(input.center);
+  const radiusM = searchRadiusMetres(input.radiusKm);
+  const withinRadius = sql`ST_DistanceSphere(${places.location}::geometry, ${origin}) <= ${radiusM}`;
+
+  const [variantRows, unitRows] = await Promise.all([
+    // The radius lives in the JOIN, not the WHERE: a variant with no nearby
+    // offer must still surface (count 0) instead of vanishing from the picker.
+    db
+      .select({
+        id: itemVariants.id,
+        displayName: itemVariants.displayName,
+        offerCount: sql<number>`count(${places.id})::int`,
+        placeCount: sql<number>`count(distinct ${places.id})::int`,
+        priceFrom: sql<number | null>`min(${offersCurrent.priceMin}) filter (where ${places.id} is not null)`,
+      })
+      .from(itemVariants)
+      .leftJoin(offersCurrent, eq(offersCurrent.itemVariantId, itemVariants.id))
+      .leftJoin(places, and(eq(places.id, offersCurrent.placeId), withinRadius))
+      .where(and(eq(itemVariants.itemId, input.itemId), eq(itemVariants.active, true)))
+      .groupBy(itemVariants.id)
+      .orderBy(sql`count(distinct ${places.id}) desc, ${itemVariants.displayName} asc`),
+
+    // Units only exist as a choice where an offer exists, so these are inner
+    // joins. variantId rides along so the client can re-filter without a trip.
+    db
+      .select({
+        variantId: itemVariants.id,
+        id: units.id,
+        displayName: units.displayName,
+        offerCount: sql<number>`count(${offersCurrent.id})::int`,
+        placeCount: sql<number>`count(distinct ${places.id})::int`,
+        priceFrom: sql<number | null>`min(${offersCurrent.priceMin})`,
+      })
+      .from(offersCurrent)
+      .innerJoin(itemVariants, eq(offersCurrent.itemVariantId, itemVariants.id))
+      .innerJoin(units, eq(offersCurrent.unitId, units.id))
+      .innerJoin(places, eq(offersCurrent.placeId, places.id))
+      .where(and(eq(itemVariants.itemId, input.itemId), eq(itemVariants.active, true), withinRadius))
+      .groupBy(itemVariants.id, units.id)
+      .orderBy(sql`count(distinct ${places.id}) desc, ${units.displayName} asc`),
+  ]);
+
+  return { variants: variantRows, units: unitRows };
+}
+
+/**
+ * Offers for an item, narrowed by variant and unit, ranked, and cut to a radius.
+ *
+ * Distance and the radius cut both happen in PostGIS via the SAME expression:
+ * mixing ST_DWithin (spheroid) for the filter with ST_DistanceSphere (sphere)
+ * for the displayed number differs by up to ~0.3%, which is enough to list a
+ * row as "5.0 km away" inside a 5 km radius it was measured out of.
+ *
+ * Unavailable offers always sink to the bottom whatever the sort: availability
+ * is a fact about the row, not a preference about the ordering.
+ */
+export async function getOffersNarrowed(input: NarrowingInput): Promise<NarrowedOffer[]> {
+  if (!input.itemId) throw new Error("Discovery: getOffersNarrowed needs an itemId");
+
+  const sort: OfferSort = input.sort ?? "nearest";
+  const limit = input.limit ?? 60;
+  const origin = searchOrigin(input.center);
+  const radiusM = searchRadiusMetres(input.radiusKm);
+  const distanceM = sql<number>`ST_DistanceSphere(${places.location}::geometry, ${origin})`;
+
+  const filters = [
+    eq(itemVariants.itemId, input.itemId),
+    eq(itemVariants.active, true),
+    sql`${distanceM} <= ${radiusM}`,
+  ];
+  if (input.variantId) filters.push(eq(offersCurrent.itemVariantId, input.variantId));
+  if (input.unitId) filters.push(eq(offersCurrent.unitId, input.unitId));
+
+  const ranking = {
+    nearest: sql`${distanceM} asc, ${offersCurrent.priceMin} asc`,
+    cheapest: sql`${offersCurrent.priceMin} asc, ${distanceM} asc`,
+    freshest: sql`${offersCurrent.lastObservedAt} desc, ${distanceM} asc`,
+  }[sort];
+
+  const rows = await db
+    .select({
+      id: offersCurrent.id,
+      placeId: places.id,
+      placeName: places.name,
+      placeType: places.placeType,
+      address: places.address,
+      location: places.location,
+      distanceM,
+      variantId: itemVariants.id,
+      variantName: itemVariants.displayName,
+      unitId: units.id,
+      unitName: units.displayName,
+      availabilityState: offersCurrent.availabilityState,
+      priceKind: offersCurrent.priceKind,
+      priceMin: offersCurrent.priceMin,
+      priceMax: offersCurrent.priceMax,
+      currency: offersCurrent.currency,
+      freshnessState: offersCurrent.freshnessState,
+      lastObservedAt: offersCurrent.lastObservedAt,
+      expiresAt: offersCurrent.expiresAt,
+      supportingObservationCount: offersCurrent.supportingObservationCount,
+      distinctSourceCount,
+    })
+    .from(offersCurrent)
+    .innerJoin(itemVariants, eq(offersCurrent.itemVariantId, itemVariants.id))
+    .innerJoin(units, eq(offersCurrent.unitId, units.id))
+    .innerJoin(places, eq(offersCurrent.placeId, places.id))
+    .where(and(...filters))
+    .orderBy(sql`(${offersCurrent.availabilityState} = 'unavailable') asc, ${ranking}`)
+    .limit(limit);
+
+  return rows.map((r) => {
+    // The (0,0) incident: a place that cannot be located is not a place we can
+    // rank by distance, so it fails loudly rather than sorting first forever.
+    if (!Number.isFinite(r.distanceM)) {
+      throw new Error(`Discovery: no distance for place ${r.placeId} (${r.placeName})`);
+    }
+    return {
+      id: r.id,
+      placeId: r.placeId,
+      placeName: r.placeName,
+      placeType: r.placeType,
+      address: r.address,
+      lat: r.location.lat,
+      lng: r.location.lng,
+      distanceM: r.distanceM,
+      variantId: r.variantId,
+      variantName: r.variantName,
+      unitId: r.unitId,
+      unitName: r.unitName,
+      availabilityState: r.availabilityState,
+      priceKind: r.priceKind,
+      priceMin: r.priceMin,
+      priceMax: r.priceMax,
+      currency: r.currency,
+      freshnessState: r.freshnessState,
+      lastObservedAt: r.lastObservedAt.toISOString(),
+      expiresAt: r.expiresAt.toISOString(),
+      supportingObservationCount: r.supportingObservationCount,
+      distinctSourceCount: r.distinctSourceCount,
+    };
+  });
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 7. Location
+//
+// Everything below treats the radius as a real constraint rather than a number
+// the settings slider owns and nothing reads. `getPlacesNear` filters in
+// PostGIS with ST_DWithin on the geography column, so the database returns the
+// places inside the radius instead of the client fetching the whole table and
+// discovering the distance afterwards.
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Build an EWKT literal for a user-supplied coordinate.
+ *
+ * Validates rather than clamps. A latitude of 200 is not a location that needs
+ * rounding down, it is a bug upstream, and the whole reason every place in this
+ * app once sat in the Gulf of Guinea is that a bad coordinate was quietly given
+ * a plausible value instead of raising. Throw.
+ *
+ * The result is interpolated into SQL as a single bound text parameter via
+ * ST_GeogFromText — the numbers are proven finite before they get here, and
+ * they never reach the query as anything but a parameter.
+ */
+function toEwkt(lat: number, lng: number): string {
+  const ok =
+    Number.isFinite(lat) && Number.isFinite(lng) &&
+    lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180;
+  if (!ok) {
+    throw new Error(`Invalid coordinate: lat=${lat}, lng=${lng}`);
+  }
+  return `SRID=4326;POINT(${lng} ${lat})`;
+}
+
+export interface AreaSummary {
+  id: string;
+  slug: string;
+  name: string;
+  lat: number;
+  lng: number;
+  placeCount: number;
+  coverageStatus: string;
+}
+
+/**
+ * Every area we cover, with the number of places we actually hold in each.
+ *
+ * The count is the honest part: an area with 0 places is still listed, because
+ * hiding it would misrepresent coverage, and the picker can then say "no places
+ * yet" rather than switching the user to an empty map without explanation.
+ */
+export async function getAreasWithPlaceCounts(): Promise<AreaSummary[]> {
+  const rows = await db
+    .select({
+      id: areas.id,
+      slug: areas.slug,
+      name: areas.name,
+      center: areas.center,
+      coverageStatus: areas.coverageStatus,
+      placeCount: sql<number>`count(${places.id})::int`,
+    })
+    .from(areas)
+    .leftJoin(places, eq(places.areaId, areas.id))
+    .groupBy(areas.id)
+    .orderBy(sql`count(${places.id}) desc, ${areas.name} asc`);
+
+  return rows.map((r) => ({
+    id: r.id,
+    slug: r.slug,
+    name: r.name,
+    lat: r.center.lat,
+    lng: r.center.lng,
+    placeCount: r.placeCount,
+    coverageStatus: r.coverageStatus,
+  }));
+}
+
+/**
+ * Places within `radiusKm` of a point, nearest first — filtered by PostGIS.
+ *
+ * ST_DWithin on a geography column is metres on the spheroid and uses the
+ * spatial index, so this is both correct and cheap. `getPlaces()` returns the
+ * whole table unconditionally; this is the query to use whenever a radius is
+ * in play.
+ */
+export async function getPlacesNear(input: {
+  lat: number;
+  lng: number;
+  radiusKm: number;
+  limit?: number;
+}) {
+  const point = toEwkt(input.lat, input.lng);
+  if (!Number.isFinite(input.radiusKm) || input.radiusKm <= 0) {
+    throw new Error(`Invalid radius: ${input.radiusKm} km`);
+  }
+  const radiusM = input.radiusKm * 1000;
+
+  const rows = await db
+    .select({
+      id: places.id,
+      name: places.name,
+      placeType: places.placeType,
+      areaId: places.areaId,
+      location: places.location,
+      address: places.address,
+      distanceKm: sql<number>`(ST_Distance(${places.location}, ST_GeogFromText(${point})) / 1000.0)`,
+    })
+    .from(places)
+    .where(sql`ST_DWithin(${places.location}, ST_GeogFromText(${point}), ${radiusM}::double precision)`)
+    .orderBy(sql`ST_Distance(${places.location}, ST_GeogFromText(${point})) asc`)
+    .limit(input.limit ?? 200);
+
+  return rows;
+}
+
+export interface PointCoverage {
+  /** Nearest area by centre, whether or not the point is covered. Null only if
+   *  the areas table is empty, which is a seeding failure, not a user state. */
+  nearestArea: (AreaSummary & { distanceKm: number }) | null;
+  /** Places inside `radiusKm` of the point. This is what "covered" means here. */
+  placesInRadius: number;
+  radiusKm: number;
+}
+
+/**
+ * Answer "where is this person, and do we have anything for them?".
+ *
+ * Coverage is defined as **at least one place within the user's own search
+ * radius** — not as a bounding box we drew, and not as proximity to an area
+ * centre. That definition is deliberate and it is the one the UI states out
+ * loud: a user standing in Ikeja with a 5 km radius is not covered, and telling
+ * them so is more useful than dropping them onto an empty map or silently
+ * teleporting them to Festac.
+ */
+export async function getCoverageForPoint(input: {
+  lat: number;
+  lng: number;
+  radiusKm: number;
+}): Promise<PointCoverage> {
+  const point = toEwkt(input.lat, input.lng);
+  if (!Number.isFinite(input.radiusKm) || input.radiusKm <= 0) {
+    throw new Error(`Invalid radius: ${input.radiusKm} km`);
+  }
+  const radiusM = input.radiusKm * 1000;
+
+  const [nearestRows, countRows] = await Promise.all([
+    db
+      .select({
+        id: areas.id,
+        slug: areas.slug,
+        name: areas.name,
+        center: areas.center,
+        coverageStatus: areas.coverageStatus,
+        placeCount: sql<number>`count(${places.id})::int`,
+        distanceKm: sql<number>`(ST_Distance(${areas.center}, ST_GeogFromText(${point})) / 1000.0)`,
+      })
+      .from(areas)
+      .leftJoin(places, eq(places.areaId, areas.id))
+      .where(eq(areas.coverageStatus, "active"))
+      .groupBy(areas.id)
+      .orderBy(sql`ST_Distance(${areas.center}, ST_GeogFromText(${point})) asc`)
+      .limit(1),
+    db
+      .select({ n: sql<number>`count(*)::int` })
+      .from(places)
+      .where(sql`ST_DWithin(${places.location}, ST_GeogFromText(${point}), ${radiusM}::double precision)`),
+  ]);
+
+  const nearest = nearestRows[0];
+
+  return {
+    nearestArea: nearest
+      ? {
+          id: nearest.id,
+          slug: nearest.slug,
+          name: nearest.name,
+          lat: nearest.center.lat,
+          lng: nearest.center.lng,
+          placeCount: nearest.placeCount,
+          coverageStatus: nearest.coverageStatus,
+          distanceKm: nearest.distanceKm,
+        }
+      : null,
+    placesInRadius: countRows[0]?.n ?? 0,
+    radiusKm: input.radiusKm,
+  };
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 8. Contact policy
+//
+// `places.contactVisibility` has existed since the first migration and nothing
+// has ever read it. "Get it" is the first surface that needs to, because it is
+// the first surface that offers to put a user in touch with a real trader.
+//
+// The column is the seller's answer, not a hint. It defaults to 'private' and
+// no seed or write path sets it to anything else, which means the honest answer
+// today is always "this seller has not agreed to be contacted". There is also
+// no channel column — no phone, no handle — so even an explicit 'public' does
+// not yield something to dial. The UI states both facts rather than inventing a
+// number to fill the row.
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** The seller's own contact setting, plus whatever public detail exists. */
+export interface PlaceContactPolicy {
+  placeId: string;
+  /** Raw column value, e.g. 'private'. Passed through, never defaulted here. */
+  contactVisibility: string;
+  /** Free text a trader chose to publish, e.g. opening days. May be null. */
+  openingInformation: string | null;
+  address: string | null;
+}
+
+export async function getPlaceContactPolicy(placeId: string): Promise<PlaceContactPolicy> {
+  const rows = await db
+    .select({
+      id: places.id,
+      contactVisibility: places.contactVisibility,
+      openingInformation: places.openingInformation,
+      address: places.address,
+    })
+    .from(places)
+    .where(eq(places.id, placeId))
+    .limit(1);
+
+  const row = rows[0];
+  // No row means the caller holds an id the database does not. Throwing beats
+  // returning a permissive default: a silent 'public' here would expose a
+  // seller who never agreed to it, and a silent 'private' would hide a real
+  // failure behind a plausible answer.
+  if (!row) {
+    throw new Error(`getPlaceContactPolicy: no place with id ${placeId}`);
+  }
+
+  return {
+    placeId: row.id,
+    contactVisibility: row.contactVisibility,
+    openingInformation: row.openingInformation,
+    address: row.address,
   };
 }
