@@ -1,9 +1,11 @@
-const CACHE_NAME = "wetindey-cache-v1";
+// Bumped to v2 to evict the retired icon.jpg from installed clients' caches.
+const CACHE_NAME = "wetindey-cache-v2";
 const OFFLINE_URL = "/offline.html";
 
 const ASSETS_TO_CACHE = [
   "/",
-  "/icon.jpg",
+  "/icons/icon-192.png",
+  "/icons/icon-512.png",
   "/manifest.webmanifest",
   OFFLINE_URL
 ];
