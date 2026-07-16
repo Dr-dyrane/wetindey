@@ -44,11 +44,13 @@
   --material-thin: rgba(255, 255, 255, 0.44);
   --material-regular: rgba(255, 255, 255, 0.58);
   --material-thick: rgba(255, 255, 255, 0.72);
-  /* Blur, not opacity, is what makes glass legible: it destroys the map's
-     detail so text reads, while its colour still comes through. Raising the
-     blur lets the fills stay genuinely translucent. */
-  --material-blur: 32px;
-  --material-saturate: 180%;
+  /* Liquid Glass refracts its surroundings -- you are meant to still read
+     shapes through it. 32px was fog: it destroyed the map instead of bending
+     it. The liquid quality comes from saturation and a slight lift, not from
+     blurring the world away. */
+  --material-blur: 12px;
+  --material-saturate: 200%;
+  --material-brightness: 1.06;
 
   /* ── Labels ── */
   --color-text-primary: #000000;
@@ -122,6 +124,7 @@
   --color-surface-elevated: #2C2C2E;
   --color-surface-sunken: #121214;
 
+  --material-brightness: 0.86;
   --material-ultrathin: rgba(28, 28, 30, 0.36);
   --material-thin: rgba(28, 28, 30, 0.50);
   --material-regular: rgba(28, 28, 30, 0.64);
@@ -249,8 +252,10 @@
   .material-regular,
   .material-thick,
   .material-ultrathin {
-    -webkit-backdrop-filter: blur(var(--material-blur)) saturate(var(--material-saturate));
-    backdrop-filter: blur(var(--material-blur)) saturate(var(--material-saturate));
+    -webkit-backdrop-filter: blur(var(--material-blur)) saturate(var(--material-saturate))
+      brightness(var(--material-brightness));
+    backdrop-filter: blur(var(--material-blur)) saturate(var(--material-saturate))
+      brightness(var(--material-brightness));
   }
   .material-ultrathin { background-color: var(--material-ultrathin); }
   .material-thin { background-color: var(--material-thin); }

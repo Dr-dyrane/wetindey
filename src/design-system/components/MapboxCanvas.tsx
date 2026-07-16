@@ -3,6 +3,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { MapboxAdapter } from "@/integrations/maps/MapboxAdapter";
 import { useTheme } from "@/core/context/ThemeContext";
+import { MapLoading, MapFailed } from "./MapLoader";
 
 interface MapMarkerData {
   id: string;
@@ -61,9 +62,10 @@ export function MapboxCanvas({
   const containerRef = useRef<HTMLDivElement>(null);
   const adapterRef = useRef<MapboxAdapter | null>(null);
   const initialCenterRef = useRef(center);
-  const initialThemeRef = useRef<"light" | "dark">(theme === "dark" ? "dark" : "light");
   const [ready, setReady] = useState(false);
   const [failed, setFailed] = useState(false);
+  /** Bumped by 'Try again'; re-runs the init effect. */
+  const [attempt, setAttempt] = useState(0);
 
   // Initialize once the library is actually available.
   useEffect(() => {
@@ -78,7 +80,11 @@ export function MapboxCanvas({
       const accessToken = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN || "";
       const adapter = new MapboxAdapter(accessToken);
       adapterRef.current = adapter;
-      adapter.initialize(containerRef.current, initialCenterRef.current, 14.5, initialThemeRef.current);
+      // Read the theme at init, not at first render: ThemeContext resolves
+      // localStorage in an effect, so a ref captured during render is always
+      // "light" and the map would flash the wrong basemap.
+      const t = document.documentElement.classList.contains("dark") ? "dark" : "light";
+      adapter.initialize(containerRef.current, initialCenterRef.current, 14.5, t);
       setFailed(false);
       // Flips the marker effect once the adapter exists — otherwise markers
       // added before init are silently dropped and never re-added.
@@ -90,18 +96,21 @@ export function MapboxCanvas({
       adapterRef.current?.destroy();
       adapterRef.current = null;
     };
-  }, []);
+  }, [attempt]);
 
   // Update map center when global coordinate changes
   const { lat, lng } = center;
   useEffect(() => {
     adapterRef.current?.setCenter(lat, lng);
-  }, [lat, lng]);
+  }, [lat, lng, ready]);
 
   // The map is the base layer of the UI, so it follows the app theme.
+  // `ready` is in the deps because the adapter is created asynchronously: at
+  // mount there is nothing to call, and without re-running here a dark session
+  // would keep the light basemap it was initialised with.
   useEffect(() => {
     adapterRef.current?.setTheme(theme === "dark" ? "dark" : "light");
-  }, [theme]);
+  }, [theme, ready]);
 
   // Update pins on the map whenever candidate details change
   useEffect(() => {
@@ -130,16 +139,12 @@ export function MapboxCanvas({
 
   return (
     <div className="absolute inset-0 overflow-hidden">
-      <div ref={containerRef} className="w-full h-full" />
-      {failed && (
-        // The old code warned "Falling back to static map canvas" and then
-        // rendered nothing — a blank rectangle with no explanation.
-        <div className="absolute inset-0 grid place-items-center bg-surface-sunken p-6 text-center">
-          <p className="text-subhead text-text-secondary">
-            Map no fit load. Check your network — the list still dey work.
-          </p>
-        </div>
-      )}
+      {/* The container must stay mounted underneath: Mapbox attaches to this
+          node, so unmounting it while loading would give the adapter nothing to
+          initialise into. The placeholders sit ON TOP and peel away. */}
+      <div ref={containerRef} className="h-full w-full" />
+      {!ready && !failed && <MapLoading />}
+      {failed && <MapFailed onRetry={() => { setFailed(false); setAttempt((n) => n + 1); }} />}
     </div>
   );
 }

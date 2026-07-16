@@ -2,6 +2,8 @@
 
 import React, { useCallback, useEffect, useRef } from "react";
 import { X } from "lucide-react";
+import { SHEET_RADIUS } from "./BottomSheet";
+import { useMediaQuery } from "@/core/hooks/useMediaQuery";
 
 interface ModalSheetProps {
   open: boolean;
@@ -31,6 +33,8 @@ interface ModalSheetProps {
 export function ModalSheet({ open, onClose, title, action, children, size = "page" }: ModalSheetProps) {
   const panelRef = useRef<HTMLDivElement>(null);
   const lastFocused = useRef<Element | null>(null);
+  /** Regular width presents a floating card, so all four corners round. */
+  const isRegular = useMediaQuery("(min-width: 768px)") === true;
 
   const onKeyDown = useCallback(
     (e: KeyboardEvent) => {
@@ -61,7 +65,18 @@ export function ModalSheet({ open, onClose, title, action, children, size = "pag
   if (!open) return null;
 
   return (
-    <div className="absolute inset-0 z-50 flex flex-col justify-end">
+    /**
+     * Compact width  → edge-to-edge sheet rising from the bottom.
+     * Regular width  → a centred, size-limited card, all corners rounded.
+     *
+     * This is the HIG's own split: at regular width a full-bleed bottom sheet
+     * stretches a short form across 1400px of screen, which is unusable and
+     * looks nothing like the platform. iPadOS presents the same content as a
+     * centred form sheet, so that is what we do past `md`. It is still a sheet
+     * — same component, same semantics, same dismissal — it just stops
+     * pretending a desktop is a phone.
+     */
+    <div className="absolute inset-0 z-50 flex flex-col justify-end md:items-center md:justify-center md:p-6">
       <button
         aria-label="Dismiss"
         onClick={onClose}
@@ -73,19 +88,41 @@ export function ModalSheet({ open, onClose, title, action, children, size = "pag
         role="dialog"
         aria-modal="true"
         aria-label={title}
-        className={`relative flex flex-col bg-background shadow-sheet
-          rounded-t-[20px] overflow-hidden
-          animate-in slide-in-from-bottom duration-sheet ease-decelerate
-          ${size === "page" ? "h-[94%]" : "max-h-[88%]"}`}
+        /**
+         * Corner radius comes from SHEET_RADIUS, the same constant the bottom
+         * sheet uses. These are the same kind of object — a presented surface —
+         * so a modal at 20px next to a sheet at 28px read as two different
+         * systems. One constant, one language.
+         *
+         * At compact width only the top corners are rounded (it meets the
+         * bottom edge); at regular width all four are, because it floats.
+         *
+         * ease-spring, not ease-decelerate: iOS sheets settle, they don't
+         * merely slow down.
+         */
+        style={{
+          borderTopLeftRadius: SHEET_RADIUS,
+          borderTopRightRadius: SHEET_RADIUS,
+          borderBottomLeftRadius: isRegular ? SHEET_RADIUS : 0,
+          borderBottomRightRadius: isRegular ? SHEET_RADIUS : 0,
+        }}
+        className={`relative flex flex-col bg-background shadow-sheet overflow-hidden
+          animate-in duration-sheet ease-spring
+          slide-in-from-bottom md:slide-in-from-bottom-4 md:zoom-in-95
+          md:w-full md:max-w-[440px] md:shadow-island
+          ${size === "page" ? "h-[94%] md:h-[min(92%,720px)]" : "max-h-[88%] md:max-h-[min(88%,640px)]"}`}
       >
-        {/* Grabber — signals "this sheet dismisses downward" even though the
-            drag itself is handled by the backdrop/close affordances. */}
-        <div className="w-full pt-2.5 pb-1 flex justify-center shrink-0">
-          <span className="w-9 h-[5px] rounded-full bg-text-tertiary" />
-        </div>
+        {/* Grabber — signals "dismisses downward". Compact width only: a
+            floating card at regular width does not dismiss by dragging down,
+            so the affordance would be a lie. */}
+        {!isRegular && (
+          <div className="flex w-full shrink-0 justify-center pt-2.5 pb-1">
+            <span className="h-[5px] w-9 rounded-full bg-text-tertiary" />
+          </div>
+        )}
 
         <header className="flex items-center justify-between gap-3 px-4 py-2.5 shrink-0">
-          <h2 className="text-[17px] font-semibold tracking-tight text-text-primary truncate">{title}</h2>
+          <h2 className="truncate text-headline text-text-primary">{title}</h2>
           <div className="flex items-center gap-1.5 shrink-0">
             {action}
             <button
