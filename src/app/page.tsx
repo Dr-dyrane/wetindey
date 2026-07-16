@@ -623,7 +623,7 @@ export default function HomePage() {
       <div className="flex-1 overflow-y-auto px-5 pb-5">
         {isSettingsOpen && (
           <div className="space-y-6 pt-2">
-            <div className="flex items-center justify-between pb-2 border-b border-separator/10">
+            <div className="flex items-center justify-between pb-3 mb-1">
               <h3 className="text-base font-bold text-text-primary">{TRANSLATIONS[appLang].settings}</h3>
               <Button variant="ghost" size="sm" onClick={() => setIsSettingsOpen(false)} className="h-8 px-3">
                 {TRANSLATIONS[appLang].done}
@@ -727,7 +727,7 @@ export default function HomePage() {
         {/* Phase 1: Price Submission Form View */}
         {isReportOpen && (
           <form onSubmit={handlePriceSubmit} className="space-y-5 pt-2">
-            <div className="flex items-center justify-between pb-2 border-b border-separator/10">
+            <div className="flex items-center justify-between pb-3 mb-1">
               <h3 className="text-base font-bold text-text-primary">{TRANSLATIONS[appLang].report_price}</h3>
               <Button variant="ghost" size="sm" type="button" onClick={() => setIsReportOpen(false)} className="h-8 px-3">
                 {TRANSLATIONS[appLang].done}
@@ -942,7 +942,7 @@ export default function HomePage() {
             {/* E. List Result View (Rendered inside sheet) */}
             {selectedItem && !isOffersLoading && (
               <div className="space-y-3">
-                <div className="pb-2 border-b border-separator flex items-center justify-between">
+                <div className="pb-3 mb-1 flex items-center justify-between">
                   <div>
                     <h2 className="text-base font-black text-text-primary">{selectedItem.name}</h2>
                     <p className="text-xs text-text-secondary mt-0.5">{matchingOffers.length} {TRANSLATIONS[appLang].locations_found}</p>
@@ -993,7 +993,7 @@ export default function HomePage() {
 
                             {/* Mobile selection detail buttons embedded in sheet */}
                             {isSelected && (
-                              <div className="md:hidden pt-3 border-t border-separator/15 grid grid-cols-2 gap-2 animate-fade-in">
+                              <div className="md:hidden pt-3 mt-1 grid grid-cols-2 gap-2 animate-fade-in">
                                 <Button
                                   variant="primary"
                                   size="sm"
@@ -1076,7 +1076,7 @@ export default function HomePage() {
 
             {/* Info stats */}
             <div className="space-y-3">
-              <div className="flex items-center justify-between text-xs py-1 border-b border-separator/10">
+              <div className="flex items-center justify-between text-xs py-2">
                 <span className="text-text-secondary">{TRANSLATIONS[appLang].freshness}</span>
                 <span
                   className={`font-semibold px-2 py-0.5 rounded-full flex items-center ${
@@ -1094,14 +1094,14 @@ export default function HomePage() {
                     : TRANSLATIONS[appLang].unavailable}
                 </span>
               </div>
-              <div className="flex items-center justify-between text-xs py-1 border-b border-separator/10">
+              <div className="flex items-center justify-between text-xs py-2">
                 <span className="text-text-secondary">{TRANSLATIONS[appLang].data_confidence}</span>
                 <span className="font-semibold text-text-primary flex items-center">
                   <CheckCircle2 className="h-3.5 w-3.5 text-accent mr-1" />
                   {selectedOffer.detail.confidenceScore}%
                 </span>
               </div>
-              <div className="flex items-center justify-between text-xs py-1 border-b border-separator/10">
+              <div className="flex items-center justify-between text-xs py-2">
                 <span className="text-text-secondary">{TRANSLATIONS[appLang].data_source}</span>
                 <span className="font-semibold text-text-primary">
                   {selectedOffer.detail.sourceType}
@@ -1111,7 +1111,7 @@ export default function HomePage() {
           </div>
 
           {/* Sticky Bottom Actions */}
-          <div className="grid grid-cols-2 gap-3 pt-4 border-t border-separator/10">
+          <div className="grid grid-cols-2 gap-3 pt-4 mt-2">
             <Button variant="primary" size="md" className="w-full flex items-center justify-center">
               <Navigation className="h-4 w-4 mr-1.5" />
               {TRANSLATIONS[appLang].directions}
@@ -1183,7 +1183,7 @@ export default function HomePage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3 pt-4 border-t border-separator/10">
+          <div className="grid grid-cols-2 gap-3 pt-4 mt-2">
             <Button variant="primary" size="md" className="w-full flex items-center justify-center">
               <Navigation className="h-4 w-4 mr-1.5" />
               {TRANSLATIONS[appLang].directions}

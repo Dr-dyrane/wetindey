@@ -3,9 +3,16 @@
 @tailwind utilities;
 
 :root {
-  --color-background: #F7F7F5;
+  /* ── Surface Contrast Hierarchy (Apple HIG) ──
+     Layer 0  Map Canvas         : (Mapbox fills this)
+     Layer 1  Page Background    : #F2F2F7   — lightest grey
+     Layer 2  Sheet Surface      : #FFFFFF   — white (elevated from bg)
+     Layer 3  Surface Elevated   : #F8F8FA   — subtle step above surface
+     Layer 4  Fill Secondary     : #E5E5EA   — button/input fills
+  */
+  --color-background: #F2F2F7;
   --color-surface: #FFFFFF;
-  --color-surface-elevated: #FFFFFF;
+  --color-surface-elevated: #F8F8FA;
   --color-text-primary: #111113;
   --color-text-secondary: #626268;
   --color-text-tertiary: #85858C;
@@ -27,9 +34,16 @@
 }
 
 .dark {
-  --color-background: #0B0B0C;
+  /* ── Dark Surface Contrast Hierarchy (Apple HIG) ──
+     Layer 0  Map Canvas         : (Mapbox fills this)
+     Layer 1  Page Background    : #000000   — true black
+     Layer 2  Sheet Surface      : #1C1C1E   — dark grey
+     Layer 3  Surface Elevated   : #2C2C2E   — lighter step
+     Layer 4  Fill Secondary     : #3A3A3C   — button/input fills
+  */
+  --color-background: #000000;
   --color-surface: #1C1C1E;
-  --color-surface-elevated: #252528;
+  --color-surface-elevated: #2C2C2E;
   --color-text-primary: #F5F5F7;
   --color-text-secondary: #B1B1B7;
   --color-text-tertiary: #85858C;
@@ -41,7 +55,7 @@
   --color-status-unavailable: #F06A64;
   --color-status-info: #64A8FF;
   --color-focus-ring: #64A8FF;
-  --color-fill-secondary: #2C2C2E;
+  --color-fill-secondary: #3A3A3C;
 }
 
 @layer base {

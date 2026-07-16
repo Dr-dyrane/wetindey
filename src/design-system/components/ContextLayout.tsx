@@ -34,7 +34,7 @@ export function ContextLayout({
         Mobile: Bottom slide-up panel or list view.
       */}
       <div
-        className={`w-full md:w-[420px] bg-surface/95 dark:bg-surface-elevated/95 backdrop-blur md:border-r border-separator z-20 flex flex-col transition-all duration-sheet shadow-2xl md:shadow-lg ${
+        className={`w-full md:w-[420px] bg-surface/95 dark:bg-surface-elevated/95 backdrop-blur border-0 z-20 flex flex-col transition-all duration-sheet shadow-2xl md:shadow-lg ${
           isMobileListActive ? "flex-1 h-full pt-16" : "h-[45vh] md:h-screen pt-16 md:pt-0"
         }`}
       >

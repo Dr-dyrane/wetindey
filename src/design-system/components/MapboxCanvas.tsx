@@ -92,7 +92,7 @@ export function MapboxCanvas({
   }, [selectedPlaceId, candidates]);
 
   return (
-    <div className="absolute inset-0 overflow-hidden bg-surface dark:bg-background border border-separator rounded-2xl m-2">
+    <div className="absolute inset-0 overflow-hidden">
       <div ref={containerRef} className="w-full h-full" />
     </div>
   );
