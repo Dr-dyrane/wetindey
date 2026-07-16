@@ -22,6 +22,7 @@ import { Card } from "@/design-system/components/Card";
 import { AdaptiveShell } from "@/design-system/components/AdaptiveShell";
 import { MapboxCanvas } from "@/design-system/components/MapboxCanvas";
 import { Skeleton, CardListSkeleton } from "@/design-system/components/Skeleton";
+import { NigeriaLogo } from "@/design-system/components/NigeriaLogo";
 
 import { useTheme } from "@/core/context/ThemeContext";
 import { useGlobalStore } from "@/core/state/globalStore";
@@ -263,13 +264,7 @@ export default function HomePage() {
       <div className="px-5 pt-4 pb-3 flex flex-col space-y-3">
         <div className="flex items-center justify-between w-full">
           <div className="flex items-center space-x-2.5">
-            {/* Logo: Question mark inside a simplified outline of Nigeria map */}
-            <div className="h-7 w-7 text-accent relative flex items-center justify-center shrink-0">
-              <svg viewBox="0 0 100 100" className="w-full h-full stroke-current fill-transparent" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M 15 75 C 10 50, 18 30, 24 18 C 34 10, 48 16, 56 12 C 68 8, 80 12, 86 18 C 92 34, 88 56, 82 72 C 70 85, 52 82, 48 85 C 40 80, 22 78, 15 75 Z" />
-              </svg>
-              <span className="absolute font-black text-xs text-text-primary -mt-0.5">?</span>
-            </div>
+            <NigeriaLogo className="h-7 w-7" fillColor="fill-text-primary dark:fill-white" questionMarkColor="text-white dark:text-black" />
             <span className="font-extrabold text-base tracking-tight">WetinDey</span>
           </div>
 
