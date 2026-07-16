@@ -14,8 +14,7 @@ import {
   Moon,
   X,
   Settings,
-  Plus,
-  ChevronRight
+  Plus
 } from "lucide-react";
 
 import { Button } from "@/design-system/components/Button";
@@ -25,25 +24,24 @@ import { AdaptiveShell } from "@/design-system/components/AdaptiveShell";
 import { MapboxCanvas } from "@/design-system/components/MapboxCanvas";
 import { Skeleton, CardListSkeleton } from "@/design-system/components/Skeleton";
 import { NigeriaLogo } from "@/design-system/components/NigeriaLogo";
+import { ItemCard, PhotoCredits, type ItemCardData } from "@/design-system/components/ItemCard";
+import { StatusDot } from "@/design-system/components/StatusBadge";
+import { SettingsSheet } from "@/app/_components/SettingsSheet";
+import { ReportPriceSheet } from "@/app/_components/ReportPriceSheet";
 
 import { useTheme } from "@/core/context/ThemeContext";
 import { useGlobalStore } from "@/core/state/globalStore";
 import { sheetDetentAtom, activeMarkerIdAtom, searchFocusedAtom } from "@/core/state/uiAtoms";
-import { 
-  searchFoodItems, 
-  getFoodItemCandidates, 
-  getPlaces, 
+import {
+  searchFoodItems,
+  getPopularItems,
+  getFoodItemCandidates,
+  getPlaces,
   getPlaceOffers,
   getInitialSubmissionData,
-  submitObservation 
+  submitObservation
 } from "@/app/actions";
 import { getHaversineDistance, formatDistance } from "@/lib/geospatial";
-
-interface FoodItem {
-  id: string;
-  name: string;
-  description: string | null;
-}
 
 interface PlaceData {
   id: string;
@@ -227,9 +225,10 @@ export default function HomePage() {
 
   // General App States
   const [searchQuery, setSearchQuery] = useState("");
-  const [popularItems, setPopularItems] = useState<FoodItem[]>([]);
-  const [searchResults, setSearchResults] = useState<FoodItem[]>([]);
-  const [selectedItem, setSelectedItem] = useState<FoodItem | null>(null);
+  const [popularItems, setPopularItems] = useState<ItemCardData[]>([]);
+  const [searchResults, setSearchResults] = useState<ItemCardData[]>([]);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [selectedItem, setSelectedItem] = useState<ItemCardData | null>(null);
   const [matchingOffers, setMatchingOffers] = useState<Candidate[]>([]);
   const [allPlaces, setAllPlaces] = useState<PlaceData[]>([]);
   const [placeOffers, setPlaceOffers] = useState<PlaceOffer[]>([]);
@@ -260,23 +259,35 @@ export default function HomePage() {
   // Load baseline data on mount
   useEffect(() => {
     startTransition(async () => {
-      const items = await searchFoodItems(" ");
-      setPopularItems(items.slice(0, 5));
+      try {
+        setLoadError(null);
 
-      const placesList = await getPlaces();
-      setAllPlaces(placesList);
+        // Fetch in parallel — these three don't depend on each other, and doing
+        // them in series stacked three round-trips before anything rendered.
+        const [items, placesList, metadata] = await Promise.all([
+          getPopularItems(8),
+          getPlaces(),
+          getInitialSubmissionData()
+        ]);
 
-      // Load metadata for form drop-downs
-      const metadata = await getInitialSubmissionData();
-      setSubmitPlaces(metadata.places);
-      setSubmitItems(metadata.items);
-      setSubmitVariants(metadata.variants);
-      setSubmitUnits(metadata.units);
+        setPopularItems(items);
+        setAllPlaces(placesList);
 
-      // Set baseline form defaults
-      if (metadata.places.length > 0) setFormPlaceId(metadata.places[0].id);
-      if (metadata.items.length > 0) setFormItemId(metadata.items[0].id);
-      if (metadata.units.length > 0) setFormUnitId(metadata.units[0].id);
+        setSubmitPlaces(metadata.places);
+        setSubmitItems(metadata.items);
+        setSubmitVariants(metadata.variants);
+        setSubmitUnits(metadata.units);
+
+        // Set baseline form defaults
+        if (metadata.places.length > 0) setFormPlaceId(metadata.places[0].id);
+        if (metadata.items.length > 0) setFormItemId(metadata.items[0].id);
+        if (metadata.units.length > 0) setFormUnitId(metadata.units[0].id);
+      } catch (err) {
+        // Previously this effect had no catch, so a database that was down
+        // produced an empty map and an empty sheet with no explanation.
+        console.error("Failed to load initial data:", err);
+        setLoadError("We no fit reach the price data right now.");
+      }
     });
   }, []);
 
@@ -371,7 +382,7 @@ export default function HomePage() {
   };
 
   // Resolve selecting a specific item
-  const handleSelectItem = (item: FoodItem) => {
+  const handleSelectItem = (item: ItemCardData) => {
     setSelectedItem(item);
     setSelectedItemId(item.id);
     setSearchQuery(item.name);
@@ -535,17 +546,30 @@ export default function HomePage() {
         center={mapCenter}
       />
 
-      {/* Floating System Controls on Map (Theme Toggle) */}
-      <div className="absolute top-4 right-4 z-10">
-        <Button
-          variant="secondary"
-          size="sm"
-          onClick={toggleTheme}
-          className="w-10 h-10 p-0 rounded-full shadow-md bg-surface/90 dark:bg-surface-elevated/90 backdrop-blur"
-          aria-label="Toggle theme"
+      {/* Floating controls. These sit directly on the map, so they use the
+          translucent material rather than a solid surface — the map needs to
+          stay legible through them. */}
+      <div
+        className="absolute left-4 right-4 z-10 flex items-start justify-between pointer-events-none"
+        style={{ top: "calc(var(--safe-area-top) + 12px)" }}
+      >
+        <div
+          className="pointer-events-auto flex items-center gap-2 rounded-full bg-material-thick backdrop-blur-xl
+                     px-3 py-1.5 shadow-raised ring-1 ring-inset ring-separator"
         >
-          {theme === "dark" ? <Sun className="h-5 w-5 text-accent" /> : <Moon className="h-5 w-5 text-text-secondary" />}
-        </Button>
+          <StatusDot kind="confirmed" pulse />
+          <span className="text-[13px] font-medium text-text-primary">Showing Yaba</span>
+        </div>
+
+        <button
+          onClick={toggleTheme}
+          aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+          className="pointer-events-auto grid place-items-center h-9 w-9 rounded-full bg-material-thick backdrop-blur-xl
+                     shadow-raised ring-1 ring-inset ring-separator text-text-primary
+                     active:scale-90 transition-transform duration-instant"
+        >
+          {theme === "dark" ? <Sun className="h-[18px] w-[18px]" /> : <Moon className="h-[18px] w-[18px]" />}
+        </button>
       </div>
     </div>
   );
@@ -561,357 +585,100 @@ export default function HomePage() {
             <span className="font-extrabold text-base tracking-tight">{TRANSLATIONS[appLang].wetin_dey}</span>
           </div>
 
-          <div className="flex items-center space-x-2">
-            {/* Price Report plus button trigger */}
+          {/* Both actions present a sheet over this one rather than replacing
+              its contents, so the search context stays put underneath. */}
+          <div className="flex items-center gap-1.5">
             <button
-              onClick={() => {
-                setIsReportOpen(!isReportOpen);
-                setIsSettingsOpen(false);
-              }}
-              className={`p-2 rounded-full hover:bg-fillSecondary transition-colors border-0 text-text-secondary hover:text-text-primary active:scale-95 ${isReportOpen ? "text-accent bg-fillSecondary" : ""}`}
-              aria-label="Report Price"
+              onClick={() => setIsReportOpen(true)}
+              className="grid place-items-center h-8 w-8 rounded-full bg-fillSecondary text-text-primary
+                         active:scale-90 transition-transform duration-instant"
+              aria-label={TRANSLATIONS[appLang].report_price}
             >
-              <Plus className="h-5 w-5" />
+              <Plus className="h-[18px] w-[18px]" strokeWidth={2.5} />
             </button>
 
-            {/* Settings Toggle Trigger Button */}
             <button
-              onClick={() => {
-                setIsSettingsOpen(!isSettingsOpen);
-                setIsReportOpen(false);
-              }}
-              className={`p-2 rounded-full hover:bg-fillSecondary transition-colors border-0 text-text-secondary hover:text-text-primary active:scale-95 ${isSettingsOpen ? "text-accent bg-fillSecondary" : ""}`}
-              aria-label="Settings"
+              onClick={() => setIsSettingsOpen(true)}
+              className="grid place-items-center h-8 w-8 rounded-full bg-fillSecondary text-text-primary
+                         active:scale-90 transition-transform duration-instant"
+              aria-label={TRANSLATIONS[appLang].settings}
             >
-              <Settings className="h-5 w-5" />
+              <Settings className="h-[18px] w-[18px]" strokeWidth={2.2} />
             </button>
           </div>
         </div>
 
-        {!isSettingsOpen && !isReportOpen && selectedItem && (
-          <div className="flex items-center space-x-2 pb-1 text-accent font-semibold text-xs">
-            <Button variant="ghost" size="sm" onClick={clearSearch} className="h-7 px-2 -ml-2 text-accent">
-              <ArrowLeft className="h-4.5 w-4.5 mr-1" />
+        {selectedItem && (
+          <div className="flex items-center">
+            <Button variant="ghost" size="sm" onClick={clearSearch} className="h-7 px-2 -ml-2 text-status-info">
+              <ArrowLeft className="h-4 w-4 mr-1" />
               {TRANSLATIONS[appLang].clear_search}
             </Button>
           </div>
         )}
 
-        {!isSettingsOpen && !isReportOpen && (
-          <div className="relative">
-            <Input
-              value={searchQuery}
-              onChange={handleSearchChange}
-              onFocus={() => setSearchFocused(true)}
-              onBlur={() => setSearchFocused(false)}
-              placeholder={TRANSLATIONS[appLang].search_placeholder}
-              icon={<Search className="h-5 w-5" />}
-              className="pr-10"
-            />
-            {searchQuery && (
-              <button
-                onClick={clearSearch}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-text-tertiary hover:text-text-primary"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            )}
-          </div>
-        )}
+        <div className="relative">
+          <Input
+            value={searchQuery}
+            onChange={handleSearchChange}
+            onFocus={() => setSearchFocused(true)}
+            onBlur={() => setSearchFocused(false)}
+            placeholder={TRANSLATIONS[appLang].search_placeholder}
+            icon={<Search className="h-5 w-5" />}
+            className="pr-10"
+          />
+          {searchQuery && (
+            <button
+              onClick={clearSearch}
+              aria-label="Clear search"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-text-tertiary hover:text-text-primary"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Scrollable Contents */}
-      <div className="flex-1 overflow-y-auto px-5 pb-5">
-        {isSettingsOpen && (
-          <div className="space-y-6 pt-2">
-            <div className="flex items-center justify-between pb-3 mb-1">
-              <h3 className="text-base font-bold text-text-primary">{TRANSLATIONS[appLang].settings}</h3>
-              <Button variant="ghost" size="sm" onClick={() => setIsSettingsOpen(false)} className="h-8 px-3">
-                {TRANSLATIONS[appLang].done}
-              </Button>
-            </div>
-
-            {/* A. Language Selector (Phase 3) */}
-            <div className="space-y-2">
-              <label className="text-xs font-bold uppercase tracking-wider text-text-tertiary">
-                {TRANSLATIONS[appLang].language}
-              </label>
-              <div className="grid grid-cols-3 gap-2 p-1 bg-fillSecondary/50 rounded-[14px]">
-                {(["en", "pidgin", "yoruba"] as const).map((l) => (
-                  <button
-                    key={l}
-                    type="button"
-                    onClick={() => setAppLang(l)}
-                    className={`py-1.5 text-xs font-semibold rounded-[12px] transition-all border-0 ${
-                      appLang === l 
-                        ? "bg-surface text-accent shadow-sm" 
-                        : "bg-transparent text-text-secondary hover:text-text-primary"
-                    }`}
-                  >
-                    {l === "en" ? "English" : l === "pidgin" ? "Pidgin" : "Yorùbá"}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* B. Theme Toggle Settings */}
-            <div className="space-y-2">
-              <label className="text-xs font-bold uppercase tracking-wider text-text-tertiary">
-                {TRANSLATIONS[appLang].theme}
-              </label>
-              <div className="grid grid-cols-2 gap-2 p-1 bg-fillSecondary/50 rounded-[14px]">
-                <button
-                  type="button"
-                  onClick={() => theme !== "light" && toggleTheme()}
-                  className={`py-2 text-sm font-semibold rounded-[12px] transition-all border-0 flex items-center justify-center ${
-                    theme === "light" 
-                      ? "bg-surface text-accent shadow-sm" 
-                      : "bg-transparent text-text-secondary hover:text-text-primary"
-                  }`}
-                >
-                  <Sun className="h-4 w-4 mr-1.5" />
-                  {TRANSLATIONS[appLang].light_mode}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => theme !== "dark" && toggleTheme()}
-                  className={`py-2 text-sm font-semibold rounded-[12px] transition-all border-0 flex items-center justify-center ${
-                    theme === "dark" 
-                      ? "bg-surface text-accent shadow-sm" 
-                      : "bg-transparent text-text-secondary hover:text-text-primary"
-                  }`}
-                >
-                  <Moon className="h-4 w-4 mr-1.5" />
-                  {TRANSLATIONS[appLang].dark_mode}
-                </button>
-              </div>
-            </div>
-
-            {/* C. Search Radius Configuration */}
-            <div className="space-y-3">
-              <div className="flex justify-between items-baseline">
-                <label className="text-xs font-bold uppercase tracking-wider text-text-tertiary">
-                  {TRANSLATIONS[appLang].radius}
-                </label>
-                <span className="text-sm font-black text-accent">{activeRadiusKm} km</span>
-              </div>
-              <div className="px-1 flex flex-col space-y-1">
-                <input
-                  type="range"
-                  min="1"
-                  max="20"
-                  value={activeRadiusKm}
-                  onChange={(e) => setActiveRadiusKm(parseInt(e.target.value))}
-                  className="w-full h-1.5 bg-fillSecondary rounded-lg appearance-none cursor-pointer accent-accent"
-                />
-                <div className="flex justify-between text-[10px] text-text-tertiary pt-1">
-                  <span>1 km</span>
-                  <span>10 km</span>
-                  <span>20 km</span>
-                </div>
-              </div>
-            </div>
-
-          </div>
-        )}
-
-        {/* Phase 1: Price Submission Form View */}
-        {isReportOpen && (
-          <form onSubmit={handlePriceSubmit} className="space-y-5 pt-2">
-            <div className="flex items-center justify-between pb-3 mb-1">
-              <h3 className="text-base font-bold text-text-primary">{TRANSLATIONS[appLang].report_price}</h3>
-              <Button variant="ghost" size="sm" type="button" onClick={() => setIsReportOpen(false)} className="h-8 px-3">
-                {TRANSLATIONS[appLang].done}
-              </Button>
-            </div>
-
-            {submitSuccess && (
-              <div className="p-4 rounded-[16px] bg-status-confirmed/10 text-status-confirmed flex items-center space-x-2 text-xs font-bold animate-fade-in">
-                <CheckCircle2 className="h-5 w-5 shrink-0" />
-                <span>{TRANSLATIONS[appLang].success_msg}</span>
-              </div>
-            )}
-
-            {isOfflineSaved && (
-              <div className="p-4 rounded-[16px] bg-status-caution/10 text-status-caution flex items-center space-x-2 text-xs font-bold animate-fade-in">
-                <AlertTriangle className="h-5 w-5 shrink-0" />
-                <span>{TRANSLATIONS[appLang].offline_msg}</span>
-              </div>
-            )}
-
-            {submitError && (
-              <div className="p-4 rounded-[16px] bg-status-unavailable/10 text-status-unavailable flex items-center space-x-2 text-xs font-bold animate-fade-in">
-                <AlertTriangle className="h-5 w-5 shrink-0" />
-                <span>{submitError}</span>
-              </div>
-            )}
-
-            {/* A. Market — Scrollable Pill Picker */}
-            <div className="space-y-2">
-              <label className="text-[10px] font-bold text-text-tertiary uppercase tracking-wider">{TRANSLATIONS[appLang].market}</label>
-              <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
-                {submitPlaces.map((p) => (
-                  <button
-                    key={p.id}
-                    type="button"
-                    onClick={() => setFormPlaceId(p.id)}
-                    className={`shrink-0 px-4 py-2.5 rounded-[14px] text-xs font-semibold transition-all active:scale-[0.96] ${
-                      formPlaceId === p.id
-                        ? "bg-accent text-white shadow-sm"
-                        : "bg-fillSecondary text-text-secondary hover:text-text-primary"
-                    }`}
-                  >
-                    {p.name}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* B. Food Item — Scrollable Pill Picker */}
-            <div className="space-y-2">
-              <label className="text-[10px] font-bold text-text-tertiary uppercase tracking-wider">{TRANSLATIONS[appLang].item}</label>
-              <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
-                {submitItems.map((i) => (
-                  <button
-                    key={i.id}
-                    type="button"
-                    onClick={() => setFormItemId(i.id)}
-                    className={`shrink-0 px-4 py-2.5 rounded-[14px] text-xs font-semibold transition-all active:scale-[0.96] ${
-                      formItemId === i.id
-                        ? "bg-accent text-white shadow-sm"
-                        : "bg-fillSecondary text-text-secondary hover:text-text-primary"
-                    }`}
-                  >
-                    {i.name}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* C. Quality/Variant — Scrollable Pill Picker */}
-            <div className="space-y-2">
-              <label className="text-[10px] font-bold text-text-tertiary uppercase tracking-wider">{TRANSLATIONS[appLang].variant}</label>
-              <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
-                {submitVariants
-                  .filter((v) => v.itemId === formItemId)
-                  .map((v) => (
-                    <button
-                      key={v.id}
-                      type="button"
-                      onClick={() => setFormVariantId(v.id)}
-                      className={`shrink-0 px-4 py-2.5 rounded-[14px] text-xs font-semibold transition-all active:scale-[0.96] ${
-                        formVariantId === v.id
-                          ? "bg-accent text-white shadow-sm"
-                          : "bg-fillSecondary text-text-secondary hover:text-text-primary"
-                      }`}
-                    >
-                      {v.displayName}
-                    </button>
-                  ))}
-              </div>
-            </div>
-
-            {/* D. Unit — Scrollable Pill Picker */}
-            <div className="space-y-2">
-              <label className="text-[10px] font-bold text-text-tertiary uppercase tracking-wider">{TRANSLATIONS[appLang].unit}</label>
-              <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
-                {submitUnits.map((u) => (
-                  <button
-                    key={u.id}
-                    type="button"
-                    onClick={() => setFormUnitId(u.id)}
-                    className={`shrink-0 px-4 py-2.5 rounded-[14px] text-xs font-semibold transition-all active:scale-[0.96] ${
-                      formUnitId === u.id
-                        ? "bg-accent text-white shadow-sm"
-                        : "bg-fillSecondary text-text-secondary hover:text-text-primary"
-                    }`}
-                  >
-                    {u.displayName}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* E. Price Input */}
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold text-text-secondary uppercase tracking-wider">{TRANSLATIONS[appLang].price_paid}</label>
-              <Input
-                type="number"
-                value={formPrice}
-                onChange={(e) => setFormPrice(e.target.value)}
-                placeholder="₦ e.g. 3500"
-                className="px-4"
-              />
-            </div>
-
-            {/* F. Availability toggle */}
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold text-text-secondary uppercase tracking-wider">{TRANSLATIONS[appLang].availability}</label>
-              <div className="grid grid-cols-2 gap-2 p-1 bg-fillSecondary/50 rounded-[14px]">
-                <button
-                  type="button"
-                  onClick={() => setFormAvailable("available")}
-                  className={`py-2 text-xs font-semibold rounded-[12px] transition-all border-0 ${
-                    formAvailable === "available" 
-                      ? "bg-surface text-accent shadow-sm" 
-                      : "bg-transparent text-text-secondary hover:text-text-primary"
-                  }`}
-                >
-                  {TRANSLATIONS[appLang].available}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setFormAvailable("unavailable")}
-                  className={`py-2 text-xs font-semibold rounded-[12px] transition-all border-0 ${
-                    formAvailable === "unavailable" 
-                      ? "bg-surface text-accent shadow-sm" 
-                      : "bg-transparent text-text-secondary hover:text-text-primary"
-                  }`}
-                >
-                  {TRANSLATIONS[appLang].unavailable}
-                </button>
-              </div>
-            </div>
-
-            <Button
-              type="submit"
-              variant="primary"
-              size="md"
-              className="w-full"
-              disabled={isSubmitting || submitSuccess || isOfflineSaved}
-            >
-              {isSubmitting ? "Submitting..." : TRANSLATIONS[appLang].submit}
-            </Button>
-          </form>
-        )}
-
-        {!isSettingsOpen && !isReportOpen && (
+      <div className="flex-1 overflow-y-auto px-4 pb-5">
           <div className="space-y-4">
             {/* A. Popular Items Suggestions */}
             {!searchQuery && !selectedItem && (
-              <div className="space-y-3">
-                <h4 className="text-[11px] font-bold uppercase tracking-wider text-text-tertiary">
-                  {TRANSLATIONS[appLang].popular_items}
-                </h4>
-                <div className="grid grid-cols-1 gap-2">
-                  {isPending && popularItems.length === 0 ? (
-                    <CardListSkeleton count={3} />
-                  ) : (
-                    popularItems.map((item) => (
-                      <button
-                        key={item.id}
-                        onClick={() => handleSelectItem(item)}
-                        className="flex items-center justify-between w-full p-3.5 rounded-[16px] bg-fillSecondary/50 hover:bg-fillSecondary active:scale-[0.98] transition-all duration-micro text-left"
-                      >
-                        <div className="flex items-center space-x-3 min-w-0">
-                          <div className="p-2 rounded-full bg-accent/10 text-accent text-sm">🛍️</div>
-                          <span className="font-semibold text-text-primary text-sm truncate">{item.name}</span>
-                        </div>
-                        <ChevronRight className="h-4 w-4 text-text-tertiary shrink-0" />
-                      </button>
-                    ))
+              <div className="space-y-2.5">
+                <div className="flex items-baseline justify-between px-0.5">
+                  <h4 className="text-[13px] font-semibold text-text-primary">
+                    {TRANSLATIONS[appLang].popular_items}
+                  </h4>
+                  {popularItems.length > 0 && (
+                    <span className="text-[12px] text-text-secondary tabular-nums">
+                      {popularItems.reduce((n, i) => n + (i.offerCount ?? 0), 0)} prices
+                    </span>
                   )}
                 </div>
+
+                {loadError ? (
+                  <div className="rounded-card bg-surface shadow-card ring-1 ring-inset ring-separator p-5 text-center space-y-2">
+                    <StatusDot kind="unavailable" />
+                    <p className="text-[14px] font-semibold text-text-primary">{loadError}</p>
+                    <p className="text-[12px] text-text-secondary">Check your network and pull down to try again.</p>
+                  </div>
+                ) : isPending && popularItems.length === 0 ? (
+                  <CardListSkeleton count={4} />
+                ) : popularItems.length === 0 ? (
+                  <div className="rounded-card bg-surface shadow-card ring-1 ring-inset ring-separator p-5 text-center">
+                    <p className="text-[14px] font-semibold text-text-primary">No prices yet</p>
+                    <p className="text-[12px] text-text-secondary mt-1">Be the first to report one.</p>
+                  </div>
+                ) : (
+                  <>
+                    <div className="grid grid-cols-1 gap-2">
+                      {popularItems.map((item) => (
+                        <ItemCard key={item.id} item={item} onSelect={handleSelectItem} />
+                      ))}
+                    </div>
+                    <PhotoCredits items={popularItems} />
+                  </>
+                )}
               </div>
             )}
 
@@ -929,21 +696,15 @@ export default function HomePage() {
               <div className="space-y-2">
                 {searchResults.length > 0 ? (
                   searchResults.map((item) => (
-                    <button
-                      key={item.id}
-                      onClick={() => handleSelectItem(item)}
-                      className="flex items-center justify-between w-full p-3.5 rounded-[16px] bg-fillSecondary/50 hover:bg-fillSecondary active:scale-[0.98] transition-all duration-micro text-left"
-                    >
-                      <span className="font-semibold text-text-primary text-sm">{item.name}</span>
-                      <ChevronRight className="h-4 w-4 text-text-tertiary shrink-0" />
-                    </button>
+                    <ItemCard key={item.id} item={item} onSelect={handleSelectItem} />
                   ))
                 ) : (
                   <div className="text-center py-10 space-y-3">
-                    <div className="inline-flex p-3.5 rounded-full bg-status-caution/10 text-status-caution">
+                    <div className="inline-flex p-3.5 rounded-full bg-status-caution-bg text-status-caution-fg">
                       <AlertTriangle className="h-7 w-7" />
                     </div>
                     <h3 className="text-sm font-bold">{TRANSLATIONS[appLang].no_results}</h3>
+                    <p className="text-[12px] text-text-secondary">Try a local name like &ldquo;ewa&rdquo; or &ldquo;dodo&rdquo;.</p>
                   </div>
                 )}
               </div>
@@ -1038,7 +799,6 @@ export default function HomePage() {
               </div>
             )}
           </div>
-        )}
       </div>
     </div>
   );
@@ -1214,12 +974,55 @@ export default function HomePage() {
   }, [selectedOffer, selectedPlace, placeOffers, isPlaceOffersLoading, mapCenter.lat, mapCenter.lng, appLang, setActiveMarkerId]);
 
   return (
-    <AdaptiveShell
-      mapNode={mapNode}
-      sheetNode={sheetNode}
-      detailNode={detailNode}
-      activeDetent={activeDetent}
-      setActiveDetent={setActiveDetent}
-    />
+    <div className="relative w-full h-full min-h-screen overflow-hidden">
+      <AdaptiveShell
+        mapNode={mapNode}
+        sheetNode={sheetNode}
+        detailNode={detailNode}
+        activeDetent={activeDetent}
+        setActiveDetent={setActiveDetent}
+      />
+
+      {/* Progressive reveal: each task presents its own surface over the map
+          and the results sheet, instead of taking their place. */}
+      <SettingsSheet
+        open={isSettingsOpen}
+        onClose={() => setIsSettingsOpen(false)}
+        lang={appLang}
+        onLangChange={setAppLang}
+        theme={theme}
+        onToggleTheme={toggleTheme}
+        radiusKm={activeRadiusKm}
+        onRadiusChange={setActiveRadiusKm}
+        t={TRANSLATIONS[appLang]}
+      />
+
+      <ReportPriceSheet
+        open={isReportOpen}
+        onClose={() => setIsReportOpen(false)}
+        t={TRANSLATIONS[appLang]}
+        places={submitPlaces}
+        items={submitItems}
+        variants={submitVariants}
+        units={submitUnits}
+        placeId={formPlaceId}
+        itemId={formItemId}
+        variantId={formVariantId}
+        unitId={formUnitId}
+        price={formPrice}
+        available={formAvailable}
+        onPlaceId={setFormPlaceId}
+        onItemId={setFormItemId}
+        onVariantId={setFormVariantId}
+        onUnitId={setFormUnitId}
+        onPrice={setFormPrice}
+        onAvailable={setFormAvailable}
+        onSubmit={handlePriceSubmit}
+        submitting={isSubmitting}
+        error={submitError}
+        success={submitSuccess}
+        offlineSaved={isOfflineSaved}
+      />
+    </div>
   );
 }

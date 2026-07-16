@@ -2,6 +2,7 @@
 
 import React, { useEffect, useRef } from "react";
 import { MapboxAdapter } from "@/integrations/maps/MapboxAdapter";
+import { useTheme } from "@/core/context/ThemeContext";
 
 interface MapMarkerData {
   id: string;
@@ -27,9 +28,11 @@ export function MapboxCanvas({
   onMarkerClick,
   center
 }: MapboxCanvasProps) {
+  const { theme } = useTheme();
   const containerRef = useRef<HTMLDivElement>(null);
   const adapterRef = useRef<MapboxAdapter | null>(null);
   const initialCenterRef = useRef(center);
+  const initialThemeRef = useRef<"light" | "dark">(theme === "dark" ? "dark" : "light");
 
   // Initialize MapboxAdapter once on mount
   useEffect(() => {
@@ -39,13 +42,20 @@ export function MapboxCanvas({
     const adapter = new MapboxAdapter(accessToken);
     adapterRef.current = adapter;
 
-    adapter.initialize(containerRef.current, initialCenterRef.current, 14.5);
+    // Seed with the current theme so a dark session never flashes a light
+    // basemap before the theme effect below catches up.
+    adapter.initialize(containerRef.current, initialCenterRef.current, 14.5, initialThemeRef.current);
 
     return () => {
       adapter.destroy();
       adapterRef.current = null;
     };
   }, []); // Safe single init on mount
+
+  // The map is the base layer of the UI, so it follows the app theme.
+  useEffect(() => {
+    adapterRef.current?.setTheme(theme === "dark" ? "dark" : "light");
+  }, [theme]);
 
   // Update map center when global coordinate changes
   const { lat, lng } = center;

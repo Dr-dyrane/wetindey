@@ -5,7 +5,8 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "WetinDey - Food Availability & Price Map",
   description: "Know before you go. Confirm food availability and prices in your neighborhood.",
-  manifest: "/manifest.json",
+  // app/manifest.ts is served at /manifest.webmanifest, not /manifest.json.
+  manifest: "/manifest.webmanifest",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
@@ -19,9 +20,10 @@ export const viewport: Viewport = {
   maximumScale: 1,
   userScalable: false,
   viewportFit: "cover",
+  // Must track --color-background in globals.css.
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#F7F7F5" },
-    { media: "(prefers-color-scheme: dark)", color: "#0B0B0C" },
+    { media: "(prefers-color-scheme: light)", color: "#F2F2F7" },
+    { media: "(prefers-color-scheme: dark)", color: "#000000" },
   ],
 };
 
