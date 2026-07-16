@@ -3,6 +3,11 @@
 import { db } from "@/db";
 import { areas, items, itemAliases, itemVariants, places, offersCurrent, units, observations, sources } from "@/db/schema";
 import { eq, ilike, or, and, sql, count, min, max } from "drizzle-orm";
+import {
+  assertValid,
+  submitObservationInput,
+  visitConfirmationInput,
+} from "@/lib/validation";
 
 /** Shape shared by every item the UI renders in a list or grid. */
 const itemCard = {
@@ -246,6 +251,25 @@ export async function submitObservation(data: {
   priceAmount: number; // in Naira
   availabilityState: "available" | "unavailable";
 }) {
+  /**
+   * A Next.js server action is a PUBLIC HTTP ENDPOINT. Anyone can POST to it —
+   * there is no auth in this app. Until this line existed, `priceAmount` went
+   * straight from an anonymous request into `Math.round(n * 100)` below and
+   * into the price band every other user reads. A ₦900,000,000 rice report is
+   * not a typo; it is an attack, and it poisons the band for everyone.
+   *
+   * The schema also refuses (0,0) coordinates BY NAME wherever it sees them.
+   * That is the Gulf-of-Guinea scar: (0,0) is what a zeroed or half-parsed
+   * coordinate looks like, never what a device reports.
+   *
+   * Validation cannot be bolted on by appending a wrapper, which is why the
+   * security department could not wire this itself: a server action's ID binds
+   * to the original exported function reference, so a same-named export
+   * appended later is simply never called. It has to happen here, inside the
+   * function the client actually reaches.
+   */
+  const input = assertValid(submitObservationInput, data, "submitObservation");
+
   // Fetch default "Contributor" source
   const contributorSource = await db
     .select({ id: sources.id })
@@ -259,7 +283,7 @@ export async function submitObservation(data: {
   }
 
   const now = new Date();
-  const koboPrice = Math.round(data.priceAmount * 100);
+  const koboPrice = Math.round(input.priceAmount * 100);
 
   // Insert raw immutable observation entry
   const [newObs] = await db
@@ -487,6 +511,25 @@ export async function submitVisitConfirmation(data: {
   /** Required when wasAvailable. Meaningless otherwise — you cannot buy what is not there. */
   didBuy?: boolean;
 }) {
+  /**
+   * The back door. This action checks `actualPrice` is finite and positive but
+   * had NO CEILING, and it delegates to submitObservation — so it could push
+   * the exact ₦900,000,000 report that the front door now refuses. A validated
+   * front door and an unvalidated back door is an unvalidated endpoint.
+   *
+   * `.strict()` also matters here: `didBuy` lands in observations.raw_payload,
+   * a jsonb column, so an unknown key is stored verbatim. A multi-megabyte
+   * object would be written without complaint.
+   *
+   * What this CANNOT fix, and what no schema can: the "it wasn't there" branch
+   * below sets freshnessState 'unavailable' AND trustLevel 'high' on any offer
+   * from one unauthenticated POST. A competitor can blank a rival stall's
+   * inventory with a perfectly well-formed payload. That needs auth, not zod —
+   * see the security notes.
+   */
+  const input = assertValid(visitConfirmationInput, data, "submitVisitConfirmation");
+  data = input as typeof data;
+
   const now = new Date();
 
   /* ── "It wasn't there" ─────────────────────────────────────────────────────
@@ -1106,4 +1149,113 @@ export async function getPlaceContactPolicy(placeId: string): Promise<PlaceConta
     openingInformation: row.openingInformation,
     address: row.address,
   };
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 9. Trust
+//
+// The real model lives in src/lib/trust.ts, ported from FoodModule.ts:138-176,
+// which held it correctly and had zero importers. These actions are the wire.
+//
+// The import sits here rather than at the top of the file because this section
+// was appended and the existing import block was off limits to this pass. ESM
+// import declarations are hoisted, so this is correct, not merely tolerated —
+// but it belongs upstairs with the others the next time that block is touched.
+//
+// They do not replace `supportingObservationCount * 10` at :194 in place —
+// that line is owned by another surface this pass may not edit. They stand
+// beside it so callers can move over. See the handover's integration note.
+// ─────────────────────────────────────────────────────────────────────────────
+
+import { assessTrust, type TrustAssessment, type TrustObservation } from "@/lib/trust";
+
+/** Identifies one offer: the (variant, unit, place) triple offers_current is keyed by. */
+export interface OfferKey {
+  itemVariantId: string;
+  unitId: string;
+  placeId: string;
+}
+
+function offerKeyOf(k: OfferKey) {
+  return `${k.itemVariantId}|${k.unitId}|${k.placeId}`;
+}
+
+/**
+ * Real trust for a batch of offers, in one query.
+ *
+ * Batched on purpose: discovery returns up to `limit` rows, and a per-row action
+ * would be one round trip per pin on the map.
+ *
+ * The moderation filter is `<> 'rejected'` rather than `= 'approved'`, matching
+ * `distinctSourceCount` at :702 exactly. The two numbers are read side by side
+ * in the same panel; if they filtered differently they would disagree in front
+ * of the user, and a trust panel that contradicts itself is worse than no panel.
+ * (The current seed does write 'approved' — src/db/seed.ts:305 — but older rows
+ * and any future non-seed writer sit at the column's 'pending' default, and
+ * counting only 'approved' would report "no evidence" for all of them: a schema
+ * default wearing the costume of a fact.)
+ */
+export async function getOfferTrustBatch(
+  keys: OfferKey[]
+): Promise<Record<string, TrustAssessment>> {
+  if (keys.length === 0) return {};
+
+  const rows = await db
+    .select({
+      itemVariantId: observations.itemVariantId,
+      unitId: observations.unitId,
+      placeId: observations.placeId,
+      observedAt: observations.observedAt,
+      sourceId: observations.sourceId,
+      sourceReliability: sources.reliabilityScoreInternal,
+      collectionMethod: observations.collectionMethod,
+      availabilityState: observations.availabilityState,
+    })
+    .from(observations)
+    .innerJoin(sources, eq(observations.sourceId, sources.id))
+    .where(
+      and(
+        sql`${observations.moderationStatus} <> 'rejected'`,
+        or(
+          ...keys.map((k) =>
+            and(
+              eq(observations.itemVariantId, k.itemVariantId),
+              eq(observations.unitId, k.unitId),
+              eq(observations.placeId, k.placeId)
+            )
+          )
+        )
+      )
+    );
+
+  const grouped = new Map<string, TrustObservation[]>();
+  for (const r of rows) {
+    const key = offerKeyOf(r);
+    const bucket = grouped.get(key);
+    const observation: TrustObservation = {
+      observedAt: r.observedAt,
+      sourceId: r.sourceId,
+      sourceReliability: r.sourceReliability,
+      collectionMethod: r.collectionMethod,
+      availabilityState: r.availabilityState,
+    };
+    if (bucket) bucket.push(observation);
+    else grouped.set(key, [observation]);
+  }
+
+  const out: Record<string, TrustAssessment> = {};
+  for (const k of keys) {
+    const key = offerKeyOf(k);
+    // An offer with no admissible observations is a real, sayable state:
+    // assessTrust returns score 0 / band 'none' / "Nobody has reported this yet."
+    // rather than an absent entry the caller has to guess about.
+    out[key] = assessTrust(grouped.get(key) ?? []);
+  }
+  return out;
+}
+
+/** Single-offer convenience. Prefer `getOfferTrustBatch` for lists. */
+export async function getOfferTrust(key: OfferKey): Promise<TrustAssessment> {
+  const batch = await getOfferTrustBatch([key]);
+  return batch[offerKeyOf(key)];
 }
