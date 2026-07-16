@@ -8,7 +8,13 @@ export interface MapMarkerOptions {
 }
 
 export interface MapProviderAdapter {
-  initialize(container: HTMLDivElement, center: { lat: number; lng: number }, zoom: number): void;
+  initialize(
+    container: HTMLDivElement,
+    center: { lat: number; lng: number },
+    zoom: number,
+    theme?: "light" | "dark"
+  ): void;
+  setTheme(theme: "light" | "dark"): void;
   setCenter(lat: number, lng: number): void;
   addMarker(options: MapMarkerOptions): void;
   clearMarkers(): void;
@@ -19,6 +25,7 @@ export interface MapProviderAdapter {
 // Local typings to satisfy strict TypeScript checking without using "any"
 interface MapboxMap {
   flyTo(options: { center: [number, number]; essential: boolean; duration: number }): void;
+  setStyle(style: string): void;
   resize(): void;
   remove(): void;
 }
@@ -49,12 +56,26 @@ export class MapboxAdapter implements MapProviderAdapter {
   private mapInstance: MapboxMap | null = null;
   private markersMap: Map<string, MapboxMarker> = new Map();
   private accessToken: string;
+  /** Theme the live style already reflects; see setTheme. */
+  private currentTheme: "light" | "dark" = "light";
 
   constructor(accessToken?: string) {
     this.accessToken = accessToken || process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN || "";
   }
 
-  public initialize(container: HTMLDivElement, center: { lat: number; lng: number }, zoom: number): void {
+  /** The map is the app's base layer, so its style has to track the app theme. */
+  public static styleFor(theme: "light" | "dark"): string {
+    return theme === "dark"
+      ? "mapbox://styles/mapbox/dark-v11"
+      : "mapbox://styles/mapbox/streets-v12";
+  }
+
+  public initialize(
+    container: HTMLDivElement,
+    center: { lat: number; lng: number },
+    zoom: number,
+    theme: "light" | "dark" = "light"
+  ): void {
     if (this.mapInstance) return;
 
     // Cast the window global context to our typed interface
@@ -66,13 +87,30 @@ export class MapboxAdapter implements MapProviderAdapter {
     }
 
     mapboxgl.accessToken = this.accessToken;
+    this.currentTheme = theme;
     this.mapInstance = new mapboxgl.Map({
       container,
-      style: "mapbox://styles/mapbox/streets-v12",
+      style: MapboxAdapter.styleFor(theme),
       center: [center.lng, center.lat],
       zoom,
       attributionControl: false
     });
+  }
+
+  /**
+   * Swap basemaps in place when the theme changes, keeping camera and markers.
+   *
+   * Guarded on the currently-applied theme. Calling setStyle with the style the
+   * map already has still tears the style down and rebuilds it from scratch —
+   * and if that lands before the first style has finished loading, the map is
+   * left blank. Since the theme effect fires once on mount with the initial
+   * theme, an unguarded call blanked the map on every load.
+   */
+  public setTheme(theme: "light" | "dark"): void {
+    if (!this.mapInstance) return;
+    if (theme === this.currentTheme) return;
+    this.currentTheme = theme;
+    this.mapInstance.setStyle(MapboxAdapter.styleFor(theme));
   }
 
   public setCenter(lat: number, lng: number): void {

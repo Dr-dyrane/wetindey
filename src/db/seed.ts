@@ -2,6 +2,19 @@ import { drizzle } from "drizzle-orm/node-postgres";
 import { migrate } from "drizzle-orm/node-postgres/migrator";
 import { Pool } from "pg";
 import * as schema from "./schema";
+import { ITEM_IMAGES } from "./itemImages";
+
+/** Attach the verified Commons photo for a slug, if we have one. */
+const withImage = (slug: string) => {
+  const img = ITEM_IMAGES[slug];
+  if (!img) return {};
+  return {
+    imageUrl: img.url,
+    imageAttribution: img.attribution,
+    imageLicense: img.license,
+    imageSourceUrl: img.sourceUrl
+  };
+};
 
 const run = async () => {
   const connectionString = process.env.DATABASE_URL;
@@ -58,17 +71,17 @@ const run = async () => {
   // 5. Seed items, aliases, and variants
   console.log("Seeding items taxonomy...");
   const [iRice, iBeans, iWGarri, iYGarri, iYam, iPotato, iPlantain, iTomatoes, iOnions, iPalm, iGroundnut] = await db.insert(schema.items).values([
-    { slug: "rice", canonicalName: "Rice (50kg bag)", description: "Local and imported parboiled rice" },
-    { slug: "oloyin-beans", canonicalName: "Oloyin Beans (1kg)", description: "Honey beans" },
-    { slug: "white-garri", canonicalName: "White Garri (1 Paint)", description: "White cassava flakes" },
-    { slug: "yellow-garri", canonicalName: "Yellow Garri (1 Paint)", description: "Yellow/Ijebu garri flakes" },
-    { slug: "yam", canonicalName: "Yam (1 Tuber)", description: "Yam tuber" },
-    { slug: "sweet-potato", canonicalName: "Sweet Potato (1kg)", description: "Sweet potatoes" },
-    { slug: "plantain", canonicalName: "Plantain (1 Bunch)", description: "Ripe or unripe plantain bunch" },
-    { slug: "tomatoes", canonicalName: "Tomatoes (1 Paint)", description: "Fresh basket/paint of round tomatoes" },
-    { slug: "onions", canonicalName: "Onions (1kg)", description: "Red onions" },
-    { slug: "palm-oil", canonicalName: "Palm Oil (1L)", description: "Red palm oil" },
-    { slug: "groundnut-oil", canonicalName: "Groundnut Oil (1L)", description: "Vegetable cooking oil" }
+    { slug: "rice", canonicalName: "Rice (50kg bag)", description: "Local and imported parboiled rice", ...withImage("rice") },
+    { slug: "oloyin-beans", canonicalName: "Oloyin Beans (1kg)", description: "Honey beans", ...withImage("oloyin-beans") },
+    { slug: "white-garri", canonicalName: "White Garri (1 Paint)", description: "White cassava flakes", ...withImage("white-garri") },
+    { slug: "yellow-garri", canonicalName: "Yellow Garri (1 Paint)", description: "Yellow/Ijebu garri flakes", ...withImage("yellow-garri") },
+    { slug: "yam", canonicalName: "Yam (1 Tuber)", description: "Yam tuber", ...withImage("yam") },
+    { slug: "sweet-potato", canonicalName: "Sweet Potato (1kg)", description: "Sweet potatoes", ...withImage("sweet-potato") },
+    { slug: "plantain", canonicalName: "Plantain (1 Bunch)", description: "Ripe or unripe plantain bunch", ...withImage("plantain") },
+    { slug: "tomatoes", canonicalName: "Tomatoes (1 Paint)", description: "Fresh basket/paint of round tomatoes", ...withImage("tomatoes") },
+    { slug: "onions", canonicalName: "Onions (1kg)", description: "Red onions", ...withImage("onions") },
+    { slug: "palm-oil", canonicalName: "Palm Oil (1L)", description: "Red palm oil", ...withImage("palm-oil") },
+    { slug: "groundnut-oil", canonicalName: "Groundnut Oil (1L)", description: "Vegetable cooking oil", ...withImage("groundnut-oil") }
   ]).returning();
 
   // Item aliases

@@ -56,6 +56,15 @@ export const items = pgTable("items", {
   slug: varchar("slug", { length: 255 }).notNull().unique(),
   canonicalName: varchar("canonical_name", { length: 255 }).notNull(),
   description: text("description"),
+  // Remotely hosted product photo. Nullable: an item is valid without one and
+  // the UI falls back to a generated monogram tile.
+  imageUrl: text("image_url"),
+  // Most sources are CC BY / CC BY-SA, which oblige us to credit the author and
+  // name the licence wherever the photo is shown. Store both alongside the URL
+  // so a credit can never drift away from the image it belongs to.
+  imageAttribution: text("image_attribution"),
+  imageLicense: varchar("image_license", { length: 64 }),
+  imageSourceUrl: text("image_source_url"),
   active: boolean("active").default(true).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull()

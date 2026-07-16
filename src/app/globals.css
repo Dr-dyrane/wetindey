@@ -2,29 +2,90 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ─────────────────────────────────────────────────────────────────────────────
+   WetinDey design tokens — Apple HIG semantic colours.
+
+   Two rules govern this file:
+
+   1. The CHROME is deliberately neutral (black/white/grey). No brand hue. That
+      is a design decision, not an omission: the product's colour budget is
+      spent entirely on signal, so a green price is the only green on screen and
+      therefore unmissable.
+
+   2. Because the chrome is neutral, SIGNAL colour has to be exactly right. The
+      status ramp below uses Apple's real system colours and their real
+      light/dark pairs — dark mode is not "the same hue, dimmed", it is a
+      separate, brighter, less saturated value chosen to hold contrast against
+      black. Neutral chrome only works if signal follows the platform rules.
+   ──────────────────────────────────────────────────────────────────────────── */
+
 :root {
-  /* ── Surface Contrast Hierarchy (Apple HIG) ──
-     Layer 0  Map Canvas         : (Mapbox fills this)
-     Layer 1  Page Background    : #F2F2F7   — lightest grey
-     Layer 2  Sheet Surface      : #FFFFFF   — white
-     Layer 3  Surface Elevated   : #F8F8FA   — subtle step
-     Layer 4  Fill Secondary     : #E5E5EA   — inputs/controls
-  */
-  --color-background: #F2F2F7;
-  --color-surface: #FFFFFF;
-  --color-surface-elevated: #F8F8FA;
+  /* ── Surfaces (iOS "grouped" hierarchy) ──
+     The grouped pattern is what gives surfaces their separation: a GREY page
+     with WHITE cards on it. The previous tokens had a near-white page (#F2F2F7)
+     carrying near-white cards (#F8F8FA at 50% alpha) — about 2% luminance
+     apart, which is why surfaces read as flat. Cards are now pure white on grey:
+     a ~6% step, plus a hairline, plus a shadow. */
+  --color-background: #F2F2F7;          /* systemGroupedBackground */
+  --color-surface: #FFFFFF;             /* secondarySystemGroupedBackground — cards, rows */
+  --color-surface-elevated: #FFFFFF;    /* tertiarySystemGroupedBackground — nested */
+  --color-surface-sunken: #E9E9EF;      /* wells, track backgrounds */
+
+  /* Materials — translucent chrome that sits over the map. */
+  --color-material-thick: rgba(255, 255, 255, 0.82);
+  --color-material-regular: rgba(255, 255, 255, 0.72);
+
+  /* ── Labels ── */
   --color-text-primary: #000000;
-  --color-text-secondary: #6E6E73;
-  --color-text-tertiary: #AEAEB2;
-  --color-separator: rgba(60, 60, 67, 0.12);
+  --color-text-secondary: rgba(60, 60, 67, 0.60);
+  --color-text-tertiary: rgba(60, 60, 67, 0.30);
+  --color-text-quaternary: rgba(60, 60, 67, 0.18);
+
+  /* ── Fills — for controls resting ON a surface ── */
+  --color-fill-primary: rgba(120, 120, 128, 0.20);
+  --color-fill-secondary: rgba(120, 120, 128, 0.16);
+  --color-fill-tertiary: rgba(118, 118, 128, 0.12);
+
+  /* ── Separators ── */
+  --color-separator: rgba(60, 60, 67, 0.29);
+  --color-separator-opaque: #C6C6C8;
+
+  /* ── Accent (neutral by design) ── */
   --color-accent: #000000;
   --color-accent-pressed: #333333;
+  --color-accent-contrast: #FFFFFF;
+
+  /* ── Signal / status — Apple system colours, light values ──
+     confirmed  systemGreen   caution  systemOrange
+     unavailable systemRed    info     systemBlue */
   --color-status-confirmed: #34C759;
-  --color-status-caution: #FF9F0A;
+  --color-status-caution: #FF9500;
   --color-status-unavailable: #FF3B30;
-  --color-status-info: #5AC8FA;
-  --color-focus-ring: #000000;
-  --color-fill-secondary: #E5E5EA;
+  --color-status-info: #007AFF;
+
+  /* Tinted backgrounds for badges. Kept as explicit tokens rather than
+     colour/10 so the alpha can differ per theme — 12% of a hue over white and
+     over black are not equally legible. */
+  --color-status-confirmed-bg: rgba(52, 199, 89, 0.14);
+  --color-status-caution-bg: rgba(255, 149, 0, 0.14);
+  --color-status-unavailable-bg: rgba(255, 59, 48, 0.14);
+  --color-status-info-bg: rgba(0, 122, 255, 0.12);
+
+  /* Status text over a tinted background. Light mode darkens the hue so small
+     text clears WCAG AA against the tint; the pure system colour is reserved
+     for dots, bars and other non-text marks. */
+  --color-status-confirmed-fg: #248A3D;
+  --color-status-caution-fg: #B25000;
+  --color-status-unavailable-fg: #C1271B;
+  --color-status-info-fg: #0058D0;
+
+  --color-focus-ring: #007AFF;
+
+  /* ── Elevation ── */
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.04), 0 1px 1px rgba(0, 0, 0, 0.03);
+  --shadow-raised: 0 4px 16px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.06);
+  --shadow-sheet: 0 -1px 24px rgba(0, 0, 0, 0.12), 0 -8px 48px rgba(0, 0, 0, 0.08);
+  --shadow-island: 0 8px 32px rgba(0, 0, 0, 0.16), 0 2px 8px rgba(0, 0, 0, 0.08);
 
   /* Safe Area variables mapped to fallbacks if not in standalone PWA */
   --safe-area-top: env(safe-area-inset-top, 0px);
@@ -34,40 +95,83 @@
 }
 
 .dark {
-  /* ── Dark Surface Contrast Hierarchy (Apple HIG) ──
-     Layer 0  Map Canvas         : (Mapbox fills this)
-     Layer 1  Page Background    : #000000   — true black
-     Layer 2  Sheet Surface      : #1C1C1E   — dark grey
-     Layer 3  Surface Elevated   : #2C2C2E   — lighter step
-     Layer 4  Fill Secondary     : #3A3A3C   — inputs/controls
-  */
-  --color-background: #000000;
-  --color-surface: #1C1C1E;
-  --color-surface-elevated: #2C2C2E;
+  /* Dark grouped hierarchy inverts the logic: the page is true black and each
+     surface step gets LIGHTER as it rises, because light means "closer" when
+     there is no shadow to read against black. */
+  --color-background: #000000;          /* systemGroupedBackground */
+  --color-surface: #1C1C1E;             /* secondarySystemGroupedBackground */
+  --color-surface-elevated: #2C2C2E;    /* tertiarySystemGroupedBackground */
+  --color-surface-sunken: #121214;
+
+  --color-material-thick: rgba(28, 28, 30, 0.84);
+  --color-material-regular: rgba(28, 28, 30, 0.74);
+
   --color-text-primary: #FFFFFF;
-  --color-text-secondary: #98989D;
-  --color-text-tertiary: #636366;
-  --color-separator: rgba(84, 84, 88, 0.36);
+  --color-text-secondary: rgba(235, 235, 245, 0.60);
+  --color-text-tertiary: rgba(235, 235, 245, 0.30);
+  --color-text-quaternary: rgba(235, 235, 245, 0.16);
+
+  --color-fill-primary: rgba(120, 120, 128, 0.36);
+  --color-fill-secondary: rgba(120, 120, 128, 0.32);
+  --color-fill-tertiary: rgba(118, 118, 128, 0.24);
+
+  --color-separator: rgba(84, 84, 88, 0.65);
+  --color-separator-opaque: #38383A;
+
   --color-accent: #FFFFFF;
   --color-accent-pressed: #D1D1D6;
+  --color-accent-contrast: #000000;
+
+  /* Apple's dark variants — brighter and less saturated than their light
+     counterparts so they hold up against black. */
   --color-status-confirmed: #30D158;
-  --color-status-caution: #FFD60A;
+  --color-status-caution: #FF9F0A;
   --color-status-unavailable: #FF453A;
-  --color-status-info: #64D2FF;
-  --color-focus-ring: #FFFFFF;
-  --color-fill-secondary: #3A3A3C;
+  --color-status-info: #0A84FF;
+
+  --color-status-confirmed-bg: rgba(48, 209, 88, 0.18);
+  --color-status-caution-bg: rgba(255, 159, 10, 0.18);
+  --color-status-unavailable-bg: rgba(255, 69, 58, 0.18);
+  --color-status-info-bg: rgba(10, 132, 255, 0.20);
+
+  /* Against a dark tint the system colour is already legible, so text uses the
+     hue directly rather than a darkened variant. */
+  --color-status-confirmed-fg: #30D158;
+  --color-status-caution-fg: #FF9F0A;
+  --color-status-unavailable-fg: #FF453A;
+  --color-status-info-fg: #0A84FF;
+
+  --color-focus-ring: #0A84FF;
+
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-raised: 0 4px 16px rgba(0, 0, 0, 0.5), 0 1px 3px rgba(0, 0, 0, 0.4);
+  --shadow-sheet: 0 -1px 24px rgba(0, 0, 0, 0.6), 0 -8px 48px rgba(0, 0, 0, 0.4);
+  --shadow-island: 0 8px 32px rgba(0, 0, 0, 0.64), 0 2px 8px rgba(0, 0, 0, 0.5);
 }
 
 @layer base {
   body {
     @apply bg-background text-text-primary antialiased;
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    /* The sheet owns vertical panning; stop the page itself rubber-banding
+       underneath it on iOS. */
+    overscroll-behavior-y: none;
   }
 
   /* Safe interactive outline focus states */
   :focus-visible {
     outline: 2px solid var(--color-focus-ring);
     outline-offset: 2px;
+  }
+}
+
+@layer components {
+  /* Hairline separator that stays 1 physical pixel on retina. */
+  .hairline-t {
+    box-shadow: inset 0 0.5px 0 var(--color-separator);
+  }
+  .hairline-b {
+    box-shadow: inset 0 -0.5px 0 var(--color-separator);
   }
 }
 
@@ -86,4 +190,15 @@
 }
 .scrollbar-none::-webkit-scrollbar {
   display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

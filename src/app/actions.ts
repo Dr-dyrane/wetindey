@@ -1,8 +1,20 @@
 "use server";
 
 import { db } from "@/db";
-import { items, itemVariants, places, offersCurrent, units, observations, sources } from "@/db/schema";
-import { eq, ilike, or, and } from "drizzle-orm";
+import { items, itemAliases, itemVariants, places, offersCurrent, units, observations, sources } from "@/db/schema";
+import { eq, ilike, or, and, sql, count, min, max } from "drizzle-orm";
+
+/** Shape shared by every item the UI renders in a list or grid. */
+const itemCard = {
+  id: items.id,
+  slug: items.slug,
+  name: items.canonicalName,
+  description: items.description,
+  imageUrl: items.imageUrl,
+  imageAttribution: items.imageAttribution,
+  imageLicense: items.imageLicense,
+  imageSourceUrl: items.imageSourceUrl,
+};
 
 // 1. Search food items in the database
 export async function searchFoodItems(query: string) {
@@ -10,22 +22,68 @@ export async function searchFoodItems(query: string) {
     return [];
   }
 
+  const q = `%${query.trim()}%`;
+
+  // Match the canonical name, the slug, or a local-language alias, so "ewa",
+  // "shinkafa" and "dodo" find their items the way a Nigerian shopper would ask.
   const matched = await db
-    .select({
-      id: items.id,
-      name: items.canonicalName,
-      description: items.description,
-    })
+    .selectDistinctOn([items.id], itemCard)
     .from(items)
+    .leftJoin(itemAliases, eq(itemAliases.itemId, items.id))
     .where(
-      or(
-        ilike(items.canonicalName, `%${query}%`),
-        ilike(items.slug, `%${query}%`)
+      and(
+        eq(items.active, true),
+        or(
+          ilike(items.canonicalName, q),
+          ilike(items.slug, q),
+          ilike(itemAliases.alias, q)
+        )
       )
     )
     .limit(10);
 
   return matched;
+}
+
+/**
+ * Items to show on the landing surface before the user has searched anything.
+ *
+ * Ranked by how much live pricing we actually hold for each item, so the first
+ * thing a shopper sees is the part of the map with real answers behind it.
+ *
+ * This replaces an earlier `searchFoodItems(" ")` call, which could never
+ * return anything: the search guard trims its argument and bails on empty, so
+ * a single space always produced [] and the landing grid rendered blank no
+ * matter how well seeded the database was.
+ */
+export async function getPopularItems(limit = 8) {
+  const rows = await db
+    .select({
+      ...itemCard,
+      offerCount: count(offersCurrent.id),
+      placeCount: sql<number>`count(distinct ${offersCurrent.placeId})::int`,
+      priceFrom: min(offersCurrent.priceMin),
+      priceTo: max(offersCurrent.priceMax),
+      // Freshest signal across the item's offers decides the status dot.
+      freshest: sql<string | null>`(
+        array_agg(${offersCurrent.freshnessState} ORDER BY ${offersCurrent.lastObservedAt} DESC)
+      )[1]`,
+      lastObservedAt: max(offersCurrent.lastObservedAt),
+    })
+    .from(items)
+    .leftJoin(itemVariants, eq(itemVariants.itemId, items.id))
+    .leftJoin(offersCurrent, eq(offersCurrent.itemVariantId, itemVariants.id))
+    .where(eq(items.active, true))
+    .groupBy(items.id)
+    .orderBy(sql`count(${offersCurrent.id}) desc, ${items.canonicalName} asc`)
+    .limit(limit);
+
+  return rows.map((r) => ({
+    ...r,
+    priceFrom: r.priceFrom ?? null,
+    priceTo: r.priceTo ?? null,
+    lastObservedAt: r.lastObservedAt ? r.lastObservedAt.toISOString() : null,
+  }));
 }
 
 // 2. Fetch candidates/offers for a selected food item
