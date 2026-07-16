@@ -26,6 +26,7 @@ import { useTheme } from "@/core/context/ThemeContext";
 import { useGlobalStore } from "@/core/state/globalStore";
 import { sheetDetentAtom, activeMarkerIdAtom, searchFocusedAtom } from "@/core/state/uiAtoms";
 import { searchFoodItems, getFoodItemCandidates, getPlaces, getPlaceOffers } from "@/app/actions";
+import { getHaversineDistance, formatDistance } from "@/lib/geospatial";
 
 interface FoodItem {
   id: string;
@@ -400,8 +401,9 @@ export default function HomePage() {
                         <div className="flex items-start justify-between">
                           <div>
                             <h3 className="font-bold text-text-primary text-sm">{offer.placeName}</h3>
-                            <p className="text-xs text-text-secondary mt-0.5 leading-snug">
-                              {offer.address}
+                            <p className="text-xs text-text-secondary mt-0.5 leading-snug flex items-center">
+                              <MapPin className="h-3.5 w-3.5 text-accent mr-1 shrink-0" />
+                              {formatDistance(getHaversineDistance(mapCenter.lat, mapCenter.lng, offer.lat, offer.lng))} • {offer.address}
                             </p>
                           </div>
                         </div>
@@ -472,7 +474,7 @@ export default function HomePage() {
                 </h2>
                 <p className="text-xs text-text-secondary mt-1 flex items-center">
                   <MapPin className="h-3.5 w-3.5 text-accent mr-1 shrink-0" />
-                  {selectedOffer.address}
+                  {formatDistance(getHaversineDistance(mapCenter.lat, mapCenter.lng, selectedOffer.lat, selectedOffer.lng))} • {selectedOffer.address}
                 </p>
               </div>
               <button
@@ -563,7 +565,7 @@ export default function HomePage() {
                 </h2>
                 <p className="text-xs text-text-secondary mt-1 flex items-center">
                   <MapPin className="h-3.5 w-3.5 text-accent mr-1 shrink-0" />
-                  {selectedPlace.address || "Yaba, Lagos"}
+                  {formatDistance(getHaversineDistance(mapCenter.lat, mapCenter.lng, selectedPlace.location.lat, selectedPlace.location.lng))} • {selectedPlace.address || "Yaba, Lagos"}
                 </p>
               </div>
               <button
@@ -625,7 +627,7 @@ export default function HomePage() {
     }
 
     return undefined;
-  }, [selectedOffer, selectedPlace, placeOffers, isPlaceOffersLoading, setActiveMarkerId]);
+  }, [selectedOffer, selectedPlace, placeOffers, isPlaceOffersLoading, mapCenter.lat, mapCenter.lng, setActiveMarkerId]);
 
   return (
     <AdaptiveShell
