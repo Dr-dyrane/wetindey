@@ -78,3 +78,45 @@ export async function getFoodItemCandidates(itemId: string) {
     }
   }));
 }
+
+// 3. Fetch all places (markets/kiosks) for default startup rendering
+export async function getPlaces() {
+  const allPlaces = await db
+    .select({
+      id: places.id,
+      name: places.name,
+      placeType: places.placeType,
+      location: places.location,
+      address: places.address,
+    })
+    .from(places);
+  return allPlaces;
+}
+
+// 4. Fetch all current food item offers at a specific place
+export async function getPlaceOffers(placeId: string) {
+  const results = await db
+    .select({
+      offer: offersCurrent,
+      itemName: items.canonicalName,
+      unitName: units.displayName,
+      variantName: itemVariants.displayName,
+    })
+    .from(offersCurrent)
+    .innerJoin(itemVariants, eq(offersCurrent.itemVariantId, itemVariants.id))
+    .innerJoin(items, eq(itemVariants.itemId, items.id))
+    .innerJoin(units, eq(offersCurrent.unitId, units.id))
+    .where(eq(offersCurrent.placeId, placeId));
+
+  return results.map((r) => ({
+    id: r.offer.id,
+    itemName: r.itemName,
+    variantName: r.variantName,
+    priceMin: r.offer.priceMin,
+    priceMax: r.offer.priceMax || undefined,
+    unit: r.unitName,
+    availabilityState: r.offer.availabilityState,
+    freshnessState: r.offer.freshnessState,
+    lastObservedAt: r.offer.lastObservedAt.toISOString(),
+  }));
+}

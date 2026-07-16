@@ -3,7 +3,7 @@ export interface MapMarkerOptions {
   lat: number;
   lng: number;
   label: string;
-  status: "confirmed" | "caution" | "unavailable";
+  status: "confirmed" | "caution" | "unavailable" | "neutral";
   onClick?: () => void;
 }
 
@@ -91,17 +91,20 @@ export class MapboxAdapter implements MapProviderAdapter {
     const mapboxgl = (window as unknown as WindowWithMapboxgl).mapboxgl;
     if (!mapboxgl) return;
 
-    // Create custom hairline marker element following Dr. Dyrane's Border Canon
+    // Create custom borderless marker element following Apple HIG
     const el = document.createElement("div");
-    el.className = `h-9 w-9 rounded-full shadow-sm flex items-center justify-center cursor-pointer border transition-transform hover:scale-105 active:scale-95 duration-micro`;
+    el.className = `h-9 w-9 rounded-full shadow-md flex items-center justify-center cursor-pointer border-0 transition-transform hover:scale-105 active:scale-95 duration-micro`;
     
-    // Status colors conforming to Section 17.3
+    // Status colors conforming to Section 17.3 (Borderless)
     if (options.status === "confirmed") {
-      el.className += " bg-status-confirmed border-white dark:border-black text-white";
+      el.className += " bg-status-confirmed text-white";
     } else if (options.status === "caution") {
-      el.className += " bg-status-caution border-white dark:border-black text-white";
+      el.className += " bg-status-caution text-white";
+    } else if (options.status === "unavailable") {
+      el.className += " bg-status-unavailable text-white";
     } else {
-      el.className += " bg-status-unavailable border-white dark:border-black text-white";
+      // Neutral startup market pins (Apple HIG gray style)
+      el.className += " bg-fillSecondary text-accent";
     }
 
     // Hairline marker pin svg

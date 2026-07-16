@@ -9,7 +9,7 @@ interface MapMarkerData {
   placeName: string;
   lat: number;
   lng: number;
-  detail: {
+  detail?: {
     confidenceLevel: string;
   };
 }
@@ -68,11 +68,13 @@ export function MapboxCanvas({
         lat: candidate.lat,
         lng: candidate.lng,
         label: candidate.placeName,
-        status: candidate.detail.confidenceLevel === "confirmed" 
-          ? "confirmed" 
-          : candidate.detail.confidenceLevel === "caution" 
-            ? "caution" 
-            : "unavailable",
+        status: candidate.detail 
+          ? (candidate.detail.confidenceLevel === "confirmed" 
+              ? "confirmed" 
+              : candidate.detail.confidenceLevel === "caution" 
+                ? "caution" 
+                : "unavailable")
+          : "neutral",
         onClick: () => onMarkerClick(candidate.placeId)
       });
     });

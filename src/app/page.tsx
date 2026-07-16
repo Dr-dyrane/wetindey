@@ -25,12 +25,23 @@ import { Skeleton, CardListSkeleton } from "@/design-system/components/Skeleton"
 import { useTheme } from "@/core/context/ThemeContext";
 import { useGlobalStore } from "@/core/state/globalStore";
 import { sheetDetentAtom, activeMarkerIdAtom, searchFocusedAtom } from "@/core/state/uiAtoms";
-import { searchFoodItems, getFoodItemCandidates } from "@/app/actions";
+import { searchFoodItems, getFoodItemCandidates, getPlaces, getPlaceOffers } from "@/app/actions";
 
 interface FoodItem {
   id: string;
   name: string;
   description: string | null;
+}
+
+interface PlaceData {
+  id: string;
+  name: string;
+  placeType: string;
+  location: {
+    lat: number;
+    lng: number;
+  };
+  address: string | null;
 }
 
 interface Candidate {
@@ -52,6 +63,17 @@ interface Candidate {
   };
 }
 
+interface PlaceOffer {
+  id: string;
+  itemName: string;
+  variantName: string;
+  priceMin: number;
+  priceMax?: number;
+  unit: string;
+  availabilityState: string;
+  freshnessState: string;
+}
+
 export default function HomePage() {
   const { theme, toggleTheme } = useTheme();
   
@@ -67,7 +89,7 @@ export default function HomePage() {
   const [activeMarkerId, setActiveMarkerId] = useAtom(activeMarkerIdAtom);
   const [_searchFocused, setSearchFocused] = useAtom(searchFocusedAtom);
 
-  // React Transitions for concurrent render support
+  // React Transitions
   const [isPending, startTransition] = useTransition();
 
   // Component States
@@ -76,16 +98,36 @@ export default function HomePage() {
   const [searchResults, setSearchResults] = useState<FoodItem[]>([]);
   const [selectedItem, setSelectedItem] = useState<FoodItem | null>(null);
   const [matchingOffers, setMatchingOffers] = useState<Candidate[]>([]);
+  const [allPlaces, setAllPlaces] = useState<PlaceData[]>([]);
+  const [placeOffers, setPlaceOffers] = useState<PlaceOffer[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [isOffersLoading, setIsOffersLoading] = useState(false);
+  const [isPlaceOffersLoading, setIsPlaceOffersLoading] = useState(false);
 
-  // Load baseline popular items from database on mount
+  // Load baseline data (popular items and all places) from database on mount
   useEffect(() => {
     startTransition(async () => {
       const items = await searchFoodItems(" ");
       setPopularItems(items.slice(0, 5));
+
+      const placesList = await getPlaces();
+      setAllPlaces(placesList);
     });
   }, []);
+
+  // Fetch available food items and prices in a market when a pin is clicked on startup
+  useEffect(() => {
+    if (activeMarkerId && !selectedItem) {
+      setIsPlaceOffersLoading(true);
+      startTransition(async () => {
+        const offers = await getPlaceOffers(activeMarkerId);
+        setPlaceOffers(offers);
+        setIsPlaceOffersLoading(false);
+      });
+    } else {
+      setPlaceOffers([]);
+    }
+  }, [activeMarkerId, selectedItem]);
 
   // Handle Search Input transitions
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -133,6 +175,12 @@ export default function HomePage() {
   const handleMarkerSelection = (placeId: string) => {
     setActiveMarkerId(placeId);
     setActiveDetent("medium");
+
+    // Center map on selected pin
+    const match = allPlaces.find((p) => p.id === placeId);
+    if (match) {
+      setMapCenter({ lat: match.location.lat, lng: match.location.lng });
+    }
   };
 
   const clearSearch = () => {
@@ -153,16 +201,36 @@ export default function HomePage() {
     }).format(koboAmount / 100);
   };
 
-  // Retrieve the selected offer details based on activeMarkerId
+  // Retrieve selected offer when filtering by item
   const selectedOffer = useMemo(() => {
     return matchingOffers.find((o) => o.placeId === activeMarkerId);
   }, [matchingOffers, activeMarkerId]);
+
+  // Retrieve selected place when clicking neutral pins
+  const selectedPlace = useMemo(() => {
+    return allPlaces.find((p) => p.id === activeMarkerId);
+  }, [allPlaces, activeMarkerId]);
+
+  // Map markers: Use candidates if item selected, otherwise show all places as neutral pins
+  const mapMarkers = useMemo(() => {
+    if (selectedItem && matchingOffers.length > 0) {
+      return matchingOffers;
+    }
+    return allPlaces.map((p) => ({
+      id: p.id,
+      placeId: p.id,
+      placeName: p.name,
+      lat: p.location.lat,
+      lng: p.location.lng,
+      address: p.address || "",
+    }));
+  }, [selectedItem, matchingOffers, allPlaces]);
 
   // 1. Map Node (Base layer)
   const mapNode = (
     <div className="relative w-full h-full">
       <MapboxCanvas
-        candidates={matchingOffers}
+        candidates={mapMarkers}
         selectedPlaceId={activeMarkerId}
         onMarkerClick={handleMarkerSelection}
         center={mapCenter}
@@ -188,9 +256,13 @@ export default function HomePage() {
     <div className="flex flex-col h-full overflow-hidden">
       {/* Brand & Search Header */}
       <div className="px-5 pt-4 pb-3 flex flex-col space-y-3">
-        <div className="flex items-center space-x-2">
-          <div className="h-7 w-7 rounded-lg bg-accent flex items-center justify-center text-white font-black text-sm">
-            W
+        <div className="flex items-center space-x-2.5">
+          {/* Logo: Question mark inside a simplified outline of Nigeria map */}
+          <div className="h-7 w-7 text-accent relative flex items-center justify-center shrink-0">
+            <svg viewBox="0 0 100 100" className="w-full h-full stroke-current fill-transparent" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M 15 75 C 10 50, 18 30, 24 18 C 34 10, 48 16, 56 12 C 68 8, 80 12, 86 18 C 92 34, 88 56, 82 72 C 70 85, 52 82, 48 85 C 40 80, 22 78, 15 75 Z" />
+            </svg>
+            <span className="absolute font-black text-xs text-text-primary -mt-0.5">?</span>
           </div>
           <span className="font-extrabold text-base tracking-tight">WetinDey</span>
         </div>
@@ -386,95 +458,174 @@ export default function HomePage() {
   );
 
   // 3. Desktop Detail Sidebar Node (Right panel overlay on Desktop)
-  const detailNode = selectedOffer ? (
-    <div className="space-y-5 h-full flex flex-col justify-between">
-      <div className="space-y-4">
-        {/* Detail Panel Header */}
-        <div className="flex items-start justify-between">
-          <div className="flex-1 pr-4">
-            <h2 className="text-lg font-black tracking-tight leading-snug text-text-primary">
-              {selectedOffer.placeName}
-            </h2>
-            <p className="text-xs text-text-secondary mt-1 flex items-center">
-              <MapPin className="h-3.5 w-3.5 text-accent mr-1 shrink-0" />
-              {selectedOffer.address}
-            </p>
-          </div>
-          <button
-            onClick={() => setActiveMarkerId(null)}
-            className="p-1.5 rounded-full bg-fillSecondary text-text-secondary hover:text-text-primary transition-colors border-0"
-          >
-            <X className="h-4 w-4" />
-          </button>
-        </div>
+  // Reusable detail drawer content dynamically mapped to item-selection or market-selection state
+  const detailNode = useMemo(() => {
+    if (selectedOffer) {
+      return (
+        <div className="space-y-5 h-full flex flex-col justify-between">
+          <div className="space-y-4">
+            {/* Detail Panel Header */}
+            <div className="flex items-start justify-between">
+              <div className="flex-1 pr-4">
+                <h2 className="text-base font-black tracking-tight leading-snug text-text-primary">
+                  {selectedOffer.placeName}
+                </h2>
+                <p className="text-xs text-text-secondary mt-1 flex items-center">
+                  <MapPin className="h-3.5 w-3.5 text-accent mr-1 shrink-0" />
+                  {selectedOffer.address}
+                </p>
+              </div>
+              <button
+                onClick={() => setActiveMarkerId(null)}
+                className="p-1.5 rounded-full bg-fillSecondary text-text-secondary hover:text-text-primary transition-colors border-0"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
 
-        {/* Price Tag Info */}
-        <div className="p-4 rounded-[20px] bg-fillSecondary/50 flex flex-col space-y-1">
-          <span className="text-[10px] font-bold uppercase tracking-wider text-text-tertiary">
-            Reported Price
-          </span>
-          <div className="flex items-baseline">
-            <span className="text-2xl font-black text-accent">
-              {formatPrice(selectedOffer.detail.priceMin)}
-            </span>
-            {selectedOffer.detail.priceMax && (
-              <span className="text-2xl font-black text-accent">
-                {" - "}{formatPrice(selectedOffer.detail.priceMax)}
+            {/* Price Tag Info */}
+            <div className="p-4 rounded-[20px] bg-fillSecondary/50 flex flex-col space-y-1">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-text-tertiary">
+                Reported Price
               </span>
-            )}
-            <span className="text-xs text-text-secondary ml-1">/ {selectedOffer.detail.unit}</span>
+              <div className="flex items-baseline">
+                <span className="text-xl font-black text-accent">
+                  {formatPrice(selectedOffer.detail.priceMin)}
+                </span>
+                {selectedOffer.detail.priceMax && (
+                  <span className="text-xl font-black text-accent">
+                    {" - "}{formatPrice(selectedOffer.detail.priceMax)}
+                  </span>
+                )}
+                <span className="text-xs text-text-secondary ml-1">/ {selectedOffer.detail.unit}</span>
+              </div>
+            </div>
+
+            {/* Info stats */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between text-xs py-1 border-b border-separator/10">
+                <span className="text-text-secondary">Freshness Status</span>
+                <span
+                  className={`font-semibold px-2 py-0.5 rounded-full flex items-center ${
+                    selectedOffer.detail.confidenceLevel === "confirmed"
+                      ? "bg-status-confirmed/10 text-status-confirmed"
+                      : selectedOffer.detail.confidenceLevel === "caution"
+                      ? "bg-status-caution/10 text-status-caution"
+                      : "bg-status-unavailable/10 text-status-unavailable"
+                  }`}
+                >
+                  {selectedOffer.detail.confidenceLevel === "confirmed"
+                    ? "Confirmed Available"
+                    : selectedOffer.detail.confidenceLevel === "caution"
+                    ? "Likely Available"
+                    : "Out of Stock"}
+                </span>
+              </div>
+              <div className="flex items-center justify-between text-xs py-1 border-b border-separator/10">
+                <span className="text-text-secondary">Data Confidence</span>
+                <span className="font-semibold text-text-primary flex items-center">
+                  <CheckCircle2 className="h-3.5 w-3.5 text-accent mr-1" />
+                  {selectedOffer.detail.confidenceScore}%
+                </span>
+              </div>
+              <div className="flex items-center justify-between text-xs py-1 border-b border-separator/10">
+                <span className="text-text-secondary">Data Source</span>
+                <span className="font-semibold text-text-primary">
+                  {selectedOffer.detail.sourceType}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Sticky Bottom Actions */}
+          <div className="grid grid-cols-2 gap-3 pt-4 border-t border-separator/10">
+            <Button variant="primary" size="md" className="w-full flex items-center justify-center">
+              <Navigation className="h-4 w-4 mr-1.5" />
+              Directions
+            </Button>
+            <Button variant="secondary" size="md" className="w-full flex items-center justify-center">
+              <Share2 className="h-4 w-4 mr-1.5" />
+              Share
+            </Button>
           </div>
         </div>
+      );
+    }
 
-        {/* Info stats */}
-        <div className="space-y-3">
-          <div className="flex items-center justify-between text-xs py-1 border-b border-separator/10">
-            <span className="text-text-secondary">Freshness Status</span>
-            <span
-              className={`font-semibold px-2 py-0.5 rounded-full flex items-center ${
-                selectedOffer.detail.confidenceLevel === "confirmed"
-                  ? "bg-status-confirmed/10 text-status-confirmed"
-                  : selectedOffer.detail.confidenceLevel === "caution"
-                  ? "bg-status-caution/10 text-status-caution"
-                  : "bg-status-unavailable/10 text-status-unavailable"
-              }`}
-            >
-              {selectedOffer.detail.confidenceLevel === "confirmed"
-                ? "Confirmed Available"
-                : selectedOffer.detail.confidenceLevel === "caution"
-                ? "Likely Available"
-                : "Out of Stock"}
-            </span>
+    if (selectedPlace) {
+      return (
+        <div className="space-y-5 h-full flex flex-col justify-between">
+          <div className="space-y-4">
+            <div className="flex items-start justify-between">
+              <div className="flex-1 pr-4">
+                <h2 className="text-base font-black tracking-tight leading-snug text-text-primary">
+                  {selectedPlace.name}
+                </h2>
+                <p className="text-xs text-text-secondary mt-1 flex items-center">
+                  <MapPin className="h-3.5 w-3.5 text-accent mr-1 shrink-0" />
+                  {selectedPlace.address || "Yaba, Lagos"}
+                </p>
+              </div>
+              <button
+                onClick={() => setActiveMarkerId(null)}
+                className="p-1.5 rounded-full bg-fillSecondary text-text-secondary hover:text-text-primary transition-colors border-0"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            {/* List of food items and prices currently available in this specific market */}
+            <div className="space-y-3">
+              <h4 className="text-[10px] font-bold uppercase tracking-wider text-text-tertiary">
+                Available Prices in Market
+              </h4>
+              {isPlaceOffersLoading ? (
+                <div className="space-y-2">
+                  <Skeleton className="h-10 w-full rounded-[12px]" />
+                  <Skeleton className="h-10 w-full rounded-[12px]" />
+                </div>
+              ) : placeOffers.length > 0 ? (
+                <div className="space-y-2 max-h-[40vh] overflow-y-auto pr-1">
+                  {placeOffers.map((offer) => (
+                    <div 
+                      key={offer.id}
+                      className="p-3 rounded-[16px] bg-fillSecondary/40 flex items-center justify-between"
+                    >
+                      <div>
+                        <div className="text-xs font-bold text-text-primary">{offer.itemName}</div>
+                        <div className="text-[10px] text-text-secondary mt-0.5">{offer.variantName}</div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-xs font-black text-accent">{formatPrice(offer.priceMin)}</div>
+                        <div className="text-[9px] text-text-tertiary">/ {offer.unit}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-6">
+                  <p className="text-xs text-text-secondary">No food prices reported for this market yet.</p>
+                </div>
+              )}
+            </div>
           </div>
-          <div className="flex items-center justify-between text-xs py-1 border-b border-separator/10">
-            <span className="text-text-secondary">Data Confidence</span>
-            <span className="font-semibold text-text-primary flex items-center">
-              <CheckCircle2 className="h-3.5 w-3.5 text-accent mr-1" />
-              {selectedOffer.detail.confidenceScore}%
-            </span>
-          </div>
-          <div className="flex items-center justify-between text-xs py-1 border-b border-separator/10">
-            <span className="text-text-secondary">Data Source</span>
-            <span className="font-semibold text-text-primary">
-              {selectedOffer.detail.sourceType}
-            </span>
+
+          <div className="grid grid-cols-2 gap-3 pt-4 border-t border-separator/10">
+            <Button variant="primary" size="md" className="w-full flex items-center justify-center">
+              <Navigation className="h-4 w-4 mr-1.5" />
+              Directions
+            </Button>
+            <Button variant="secondary" size="md" className="w-full flex items-center justify-center">
+              <Share2 className="h-4 w-4 mr-1.5" />
+              Share
+            </Button>
           </div>
         </div>
-      </div>
+      );
+    }
 
-      {/* Sticky Bottom Actions */}
-      <div className="grid grid-cols-2 gap-3 pt-4 border-t border-separator/10">
-        <Button variant="primary" size="md" className="w-full flex items-center justify-center">
-          <Navigation className="h-4 w-4 mr-1.5" />
-          Directions
-        </Button>
-        <Button variant="secondary" size="md" className="w-full flex items-center justify-center">
-          <Share2 className="h-4 w-4 mr-1.5" />
-          Share
-        </Button>
-      </div>
-    </div>
-  ) : undefined;
+    return undefined;
+  }, [selectedOffer, selectedPlace, placeOffers, isPlaceOffersLoading, setActiveMarkerId]);
 
   return (
     <AdaptiveShell
