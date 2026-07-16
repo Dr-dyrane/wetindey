@@ -53,6 +53,20 @@ interface ItemDetailSheetProps {
   areaName: string;
   /** Tapping a row. The parent centres the map and dismisses this sheet. */
   onSelectOffer: (offer: NarrowedOffer) => void;
+  /**
+   * The narrowed set, whenever it changes, so the map behind can pin exactly
+   * what this list is showing.
+   *
+   * The alternative — the parent running its own item→offer query for markers —
+   * is what the app did before, via `getFoodItemCandidates`. Two queries for one
+   * question is two answers: narrow to "50 kg bag" and the pins would still be
+   * every size, so the map and the list would quietly describe different things.
+   *
+   * MUST be stable across renders (`useEventCallback`). It is called from an
+   * effect, so an identity that churns re-fires it, and a handler that sets
+   * parent state would loop.
+   */
+  onOffersChange?: (offers: NarrowedOffer[]) => void;
   /** page.tsx's TRANSLATIONS dict. Only the keys that already exist are used. */
   t?: Record<string, string>;
 }
@@ -97,8 +111,14 @@ function formatAge(ms: number): string {
  * Availability rides the same dot because an offer reported finished has no
  * meaningful freshness — but it also strikes the price, so the signal survives
  * greyscale and a colour-blind glance.
+ *
+ * EXPORTED because the map pins are the same claim in another projection. A pin
+ * coloured straight from `freshnessState` while the row beside it derives the
+ * kind would show green on the map and amber in the list for the same expired
+ * offer, and the user would have no way to know which one was lying. One
+ * derivation, two renderers.
  */
-function signalsFor(offer: NarrowedOffer, now: number) {
+export function offerSignal(offer: NarrowedOffer, now: number) {
   const observedAt = parseAt(offer.lastObservedAt, "lastObservedAt");
   const expiresAt = parseAt(offer.expiresAt, "expiresAt");
   const age = formatAge(now - observedAt);
@@ -106,19 +126,27 @@ function signalsFor(offer: NarrowedOffer, now: number) {
   const sold = offer.availabilityState === "unavailable";
 
   let kind: StatusKind;
-  let label: string;
+  /** The verdict alone. See `label` for why it is separate. */
+  let short: string;
   if (sold) {
     kind = "unavailable";
-    label = `Not dey · ${age}`;
+    short = "Not dey";
   } else if (offer.freshnessState === "confirmed" && !expired) {
     kind = "confirmed";
-    label = `Confirmed ${age}`;
+    short = "Confirmed";
   } else {
     kind = "caution";
-    label = expired ? `Needs checking · ${age}` : `Likely · ${age}`;
+    short = expired ? "Needs checking" : "Likely";
   }
 
-  return { kind, label, sold };
+  /**
+   * Verdict AND age, for a row that has room for one line and must carry both.
+   * `short` exists for surfaces that already print the age themselves — GetItSheet
+   * does — where this would read "Confirmed 18 min ago · Last seen 18 minutes ago".
+   */
+  const label = kind === "confirmed" ? `${short} ${age}` : `${short} · ${age}`;
+
+  return { kind, label, short, sold };
 }
 
 const FRESH_FG: Record<StatusKind, string> = {
@@ -232,6 +260,7 @@ export function ItemDetailSheet({
   radiusKm,
   areaName,
   onSelectOffer,
+  onOffersChange,
   t,
 }: ItemDetailSheetProps) {
   const itemId = item?.id ?? null;
@@ -326,6 +355,13 @@ export function ItemDetailSheet({
     void load();
   }, [load]);
 
+  // Publish the narrowed set to whoever is drawing the map behind us. Keyed on
+  // `offers` identity, which only turns over when a load actually lands — so a
+  // re-render for an unrelated reason does not republish and rebuild every pin.
+  useEffect(() => {
+    onOffersChange?.(offers);
+  }, [offers, onOffersChange]);
+
   const variantOptions = useMemo(() => {
     const opts = variants.map((v) => ({
       id: v.id,
@@ -386,7 +422,7 @@ export function ItemDetailSheet({
 
     return offers.map((offer) => ({
       offer,
-      signal: signalsFor(offer, now),
+      signal: offerSignal(offer, now),
       confidence: confidenceFor(offer),
       isCheapest: offers.length > 1 && offer.id === cheapestId,
       isClosest: offers.length > 1 && offer.id === closestId,

@@ -9,6 +9,19 @@ interface ProfileSheetProps {
   open: boolean;
   onClose: () => void;
   onOpenSettings: () => void;
+  /**
+   * Present the location sheet. Required, not optional: this row used to carry a
+   * no-op `onClick` and a hardcoded `detail="Festac"`, so it looked navigational,
+   * pressed like a button, and went nowhere. A required prop is what stops that
+   * being expressible again.
+   */
+  onChangeArea: () => void;
+  /**
+   * What the location actually is, from `useLocationChrome().label`. Never the
+   * literal "Festac" — this row and the map pill must not be able to disagree
+   * about where the user is standing.
+   */
+  currentAreaName: string;
   /** Null until auth exists — the sheet is deliberately useful while signed out. */
   user?: { name: string; handle?: string; reportCount?: number } | null;
 }
@@ -25,7 +38,14 @@ interface ProfileSheetProps {
  * That is deliberate: it shows the shape of the product without pretending the
  * routes exist, and it stops us shipping a dead link.
  */
-export function ProfileSheet({ open, onClose, onOpenSettings, user }: ProfileSheetProps) {
+export function ProfileSheet({
+  open,
+  onClose,
+  onOpenSettings,
+  onChangeArea,
+  currentAreaName,
+  user,
+}: ProfileSheetProps) {
   const signedIn = Boolean(user);
 
   return (
@@ -62,12 +82,20 @@ export function ProfileSheet({ open, onClose, onOpenSettings, user }: ProfileShe
             disabled={!signedIn}
             onClick={() => {}}
           />
+          {/* The one row here that has always had somewhere to go. It is a peer
+              of the map's location pill — same store, same label — so reaching
+              it from the navigation hub and from the map lands on one sheet. */}
           <ListRow
             icon={<MapPin className="h-4 w-4 text-status-confirmed-fg" />}
             iconTint="bg-status-confirmed-bg"
             label="Change area"
-            detail="Festac"
-            onClick={() => {}}
+            detail={currentAreaName}
+            onClick={() => {
+              // Dismiss first, like Settings below: two stacked sheets would
+              // bury this one behind the next with no way back to it.
+              onClose();
+              onChangeArea();
+            }}
           />
         </ListGroup>
 

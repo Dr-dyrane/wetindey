@@ -1,8 +1,8 @@
 "use client";
 
 import React from "react";
-import { MobileShell } from "./MobileShell";
-import { DesktopTabletShell } from "./DesktopTabletShell";
+import { CompactShell } from "./CompactShell";
+import { RegularShell, PANEL_LEADING_OCCLUSION } from "./RegularShell";
 import { useMediaQuery } from "@/core/hooks/useMediaQuery";
 import type { Detent } from "./BottomSheet";
 
@@ -10,17 +10,43 @@ interface AdaptiveShellProps {
   mapNode: React.ReactNode;
   sheetNode: React.ReactNode;
   detailNode?: React.ReactNode;
+  /** Optional, additive: accessible name for the pushed detail level. */
+  detailLabel?: string;
+  /** Optional, additive: pops the detail level. `detailNode`'s own close
+   *  control already pops, so omitting this costs a back row, not the feature. */
+  onDetailBack?: () => void;
+  /** Optional, additive: back row label, for the app's three languages. */
+  backLabel?: string;
   activeDetent: Detent;
   setActiveDetent: (detent: Detent) => void;
 }
 
-/** Tailwind's `md` breakpoint, kept in one place so JS and CSS cannot drift. */
-const DESKTOP_QUERY = "(min-width: 768px)";
+/**
+ * The app's ONLY width boundary, kept in one place so JS and CSS cannot drift.
+ *
+ * It is a VIEWPORT query, not a device test. `window.matchMedia` reports the
+ * window, which is the whole point: an iPad in Split View reports ~320-507px and
+ * lands in the compact branch for free, a desktop window dragged narrow becomes
+ * compact mid-drag, and an iPhone Pro Max in landscape is regular. Device names
+ * do not predict layout, so nothing here may ever consult one — no UA sniffing,
+ * no `pointer: coarse`, no `screen.width`, no `navigator.maxTouchPoints`. Each
+ * of those breaks on the first case above.
+ *
+ * 768 is where the geometry stops lying rather than where a tablet starts: below
+ * it, a panel wide enough to hold the list permanently occludes a map that
+ * cannot be dragged out of the way. A sheet can. That is the difference between
+ * the two layouts, and it is the only difference — everything inside them is
+ * one component.
+ */
+const REGULAR_QUERY = "(min-width: 768px)";
 
 export function AdaptiveShell({
   mapNode,
   sheetNode,
   detailNode,
+  detailLabel,
+  onDetailBack,
+  backLabel,
   activeDetent,
   setActiveDetent
 }: AdaptiveShellProps) {
@@ -38,37 +64,53 @@ export function AdaptiveShell({
    * is a hydration mismatch. ThemeProvider keeps the tree invisible until mount,
    * so this frame is never seen.
    */
-  const isDesktop = useMediaQuery(DESKTOP_QUERY);
+  const isRegular = useMediaQuery(REGULAR_QUERY);
+
+  /** One set of stack props, one detail node, both size classes. */
+  const stack = {
+    listNode: sheetNode,
+    detailNode,
+    detailLabel,
+    onDetailBack,
+    backLabel
+  };
 
   return (
-    <div className="relative w-full h-full min-h-screen overflow-hidden bg-background">
+    <div
+      className="relative w-full h-full min-h-screen overflow-hidden bg-background"
+      /**
+       * The leading edge the shell occludes, published for the map layer:
+       * camera padding so a selected pin never lands under the panel, and an
+       * offset for the location pill, which sits at `left-4` inside the z-0 map
+       * layer and is therefore covered by the panel at every regular width
+       * today. Both consumers live in files owned elsewhere; this is the number
+       * they need, made available rather than described.
+       */
+      style={{ "--shell-leading-inset": isRegular ? PANEL_LEADING_OCCLUSION : "0px" } as React.CSSProperties}
+    >
       {/*
         Persistent Global Map Layer:
-        Mounted once at the root (z-0) so the WebGL context survives switching
-        between the mobile sheet and the desktop sidebar.
+        Mounted once at the root (z-0), ABOVE the size-class branch, so the WebGL
+        context survives crossing 768 — which an iPad Split View drag does live,
+        mid-gesture.
       */}
       <div className="absolute inset-0 z-0">
         {mapNode}
       </div>
 
-      {isDesktop === null ? null : isDesktop ? (
-        <div className="absolute inset-0 z-10 pointer-events-none">
-          <DesktopTabletShell
-            mapNode={null} // Map is rendered globally at base layer
-            sheetNode={sheetNode}
-            detailNode={detailNode}
-          />
-        </div>
-      ) : (
-        /* Pointer-transparent down to the sheet itself — a full-size
+      {isRegular === null ? null : (
+        /* Pointer-transparent down to the panel itself — a full-size
            pointer-events-auto layer here would swallow every map gesture. */
         <div className="absolute inset-0 z-10 pointer-events-none">
-          <MobileShell
-            mapNode={null} // Map is rendered globally at base layer
-            sheetNode={sheetNode}
-            activeDetent={activeDetent}
-            setActiveDetent={setActiveDetent}
-          />
+          {isRegular ? (
+            <RegularShell {...stack} />
+          ) : (
+            <CompactShell
+              {...stack}
+              activeDetent={activeDetent}
+              setActiveDetent={setActiveDetent}
+            />
+          )}
         </div>
       )}
     </div>

@@ -158,6 +158,123 @@ export async function flushPendingVisitConfirmations(): Promise<{ sent: number; 
   return { sent, dropped };
 }
 
+/* ── Arming ───────────────────────────────────────────────────────────────────
+
+   The trigger, per USER-FLOW §5: "returning to the app after tapping 'Go there'
+   on a place, within a plausible window".
+
+   It lives here rather than in page.tsx because it is the same concern as the
+   queue above — the durable half of the visit loop — and because both halves
+   have to agree about what a visit IS. Persisted, not held in React state: "Go
+   there" hands off to a maps app, and on Android that is a real navigation. The
+   tab may be frozen, evicted or killed outright before the user comes back, so
+   an in-memory arm would be gone precisely on the path that always fires it.  */
+
+const ARMED_KEY = "wetindey.armed_visit.v1";
+
+/**
+ * Below this, they did not go — they bounced off the maps app and came straight
+ * back. Asking "was it there?" about a trip that took forty seconds invites an
+ * answer about nothing, and a fabricated confirmation is worse than no
+ * confirmation: it is the one thing this whole loop exists to prevent.
+ *
+ * The arm SURVIVES a too-soon return rather than being spent by it. Looking at
+ * the route and setting off two minutes later is the normal case.
+ */
+const MIN_DWELL_MS = 90 * 1000;
+
+/**
+ * Above this, we stop asking. Not because the trip did not happen, but because
+ * we can no longer tell whether it did — the arm cannot distinguish "walked
+ * there and back" from "tapped Go there, got distracted, closed the tab". Past a
+ * few hours the question becomes a memory test, and the answer to a memory test
+ * gets written to `observations` as though somebody had just seen it.
+ */
+const ARM_EXPIRES_MS = 4 * 60 * 60 * 1000;
+
+interface ArmedVisit {
+  visit: VisitContext;
+  /** Epoch ms at "Go there". */
+  armedAt: number;
+}
+
+/**
+ * Remember that the user went, and what they were told before they left.
+ *
+ * MUST be called synchronously from the "Go there" tap — the handoff that
+ * follows it may unload the page, so anything awaited here never lands. The
+ * caller fetches the `VisitContext` when the sheet OPENS, while it still has a
+ * connection; see `getVisitContext` in actions.ts.
+ */
+export function armVisit(visit: VisitContext): void {
+  if (typeof window === "undefined") return;
+  try {
+    const armed: ArmedVisit = { visit, armedAt: Date.now() };
+    window.localStorage.setItem(ARMED_KEY, JSON.stringify(armed));
+  } catch (err) {
+    // A full or blocked localStorage costs us the question, not the trip.
+    console.error("ConfirmVisitSheet: could not arm the visit confirmation.", err);
+  }
+}
+
+export function disarmVisit(): void {
+  if (typeof window === "undefined") return;
+  window.localStorage.removeItem(ARMED_KEY);
+}
+
+/**
+ * The visit worth asking about right now, if there is one. Consumes it.
+ *
+ * "Take" rather than "read" on purpose: a due visit is DISARMED as it is handed
+ * out, so the question is asked exactly once. If the user dismisses the sheet
+ * without answering, that is an answer — they declined — and re-asking on every
+ * subsequent focus would nag them into a tap, which is how you collect noise.
+ *
+ * Returns null in three different situations, all of them normal: nothing armed,
+ * armed too recently to be a visit (left armed — they may still be going), and
+ * armed too long ago to ask honestly (disarmed and dropped).
+ */
+export function takeDueVisit(now: number = Date.now()): VisitContext | null {
+  if (typeof window === "undefined") return null;
+
+  const raw = window.localStorage.getItem(ARMED_KEY);
+  if (!raw) return null;
+
+  let armed: ArmedVisit;
+  try {
+    armed = JSON.parse(raw) as ArmedVisit;
+  } catch {
+    console.error("ConfirmVisitSheet: the armed visit was unreadable and has been discarded.");
+    disarmVisit();
+    return null;
+  }
+
+  // Shape-check rather than trust: this came off disk, possibly written by an
+  // older build. A half-filled context would submit an observation against the
+  // wrong variant — the exact plausible-wrong failure `getVisitContext` refuses
+  // to produce on the server, so it must not sneak in through the back door.
+  const v = armed?.visit;
+  const intact =
+    Number.isFinite(armed?.armedAt) &&
+    Boolean(v?.offerId && v?.placeId && v?.itemVariantId && v?.unitId && v?.placeName) &&
+    Number.isFinite(v?.quotedPriceMin);
+  if (!intact) {
+    console.error("ConfirmVisitSheet: the armed visit was incomplete and has been discarded.");
+    disarmVisit();
+    return null;
+  }
+
+  const age = now - armed.armedAt;
+  if (age < MIN_DWELL_MS) return null;
+  if (age > ARM_EXPIRES_MS) {
+    disarmVisit();
+    return null;
+  }
+
+  disarmVisit();
+  return v;
+}
+
 /* ── Copy ─────────────────────────────────────────────────────────────────── */
 
 interface Copy {

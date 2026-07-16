@@ -28,7 +28,7 @@
  * ─────────────────────────────────────────────────────────────────────────────
  * ALIASES
  *
- * A Nigerian shopper asks for `ewa`, not "Oloyin Beans (1kg)". Each alias below
+ * A Nigerian shopper asks for `ewa`, not "Oloyin Beans". Each alias below
  * is a name people genuinely use, tagged with the language it comes from:
  *
  *   yo   Yoruba      ig   Igbo      ha   Hausa
@@ -186,7 +186,7 @@ export const SEED_ITEMS: SeedItem[] = [
   // ═══ Grains and staples ═══
   {
     slug: "rice",
-    canonicalName: "Rice (50kg bag)",
+    canonicalName: "Rice",
     description: "Local and imported parboiled rice",
     channels: ALL_CHANNELS,
     aliases: [
@@ -220,7 +220,7 @@ export const SEED_ITEMS: SeedItem[] = [
   },
   {
     slug: "oloyin-beans",
-    canonicalName: "Oloyin Beans (1kg)",
+    canonicalName: "Oloyin Beans",
     description: "Honey beans",
     channels: ALL_CHANNELS,
     aliases: [
@@ -254,7 +254,7 @@ export const SEED_ITEMS: SeedItem[] = [
   },
   {
     slug: "white-garri",
-    canonicalName: "White Garri (1 Paint)",
+    canonicalName: "White Garri",
     description: "White cassava flakes",
     channels: ALL_CHANNELS,
     aliases: [
@@ -286,7 +286,7 @@ export const SEED_ITEMS: SeedItem[] = [
   },
   {
     slug: "yellow-garri",
-    canonicalName: "Yellow Garri (1 Paint)",
+    canonicalName: "Yellow Garri",
     description: "Yellow garri, fried with palm oil",
     channels: ALL_CHANNELS,
     aliases: [
@@ -311,7 +311,7 @@ export const SEED_ITEMS: SeedItem[] = [
   },
   {
     slug: "semovita",
-    canonicalName: "Semolina (1kg)",
+    canonicalName: "Semolina",
     description: "Semolina swallow flour",
     channels: ALL_CHANNELS,
     // "Semovita" is a Flour Mills brand that became the generic word for the
@@ -339,7 +339,7 @@ export const SEED_ITEMS: SeedItem[] = [
   },
   {
     slug: "wheat-meal",
-    canonicalName: "Wheat Meal (1kg)",
+    canonicalName: "Wheat Meal",
     description: "Wheat swallow flour",
     channels: ALL_CHANNELS,
     aliases: [{ alias: "alikama", locale: "ha", weight: 3 }],
@@ -355,7 +355,7 @@ export const SEED_ITEMS: SeedItem[] = [
   },
   {
     slug: "ogi-pap",
-    canonicalName: "Pap (1kg)",
+    canonicalName: "Pap",
     description: "Fermented maize pap",
     channels: MARKET_AND_KIOSK,
     aliases: [
@@ -384,7 +384,7 @@ export const SEED_ITEMS: SeedItem[] = [
   // ═══ Tubers, plantain, vegetables ═══
   {
     slug: "yam",
-    canonicalName: "Yam (1 Tuber)",
+    canonicalName: "Yam",
     description: "Yam tuber",
     channels: ALL_CHANNELS,
     aliases: [
@@ -411,7 +411,7 @@ export const SEED_ITEMS: SeedItem[] = [
   },
   {
     slug: "sweet-potato",
-    canonicalName: "Sweet Potato (1kg)",
+    canonicalName: "Sweet Potato",
     description: "Sweet potatoes",
     channels: ALL_CHANNELS,
     aliases: [{ alias: "anamo", locale: "yo", weight: 2 }],
@@ -426,7 +426,7 @@ export const SEED_ITEMS: SeedItem[] = [
   },
   {
     slug: "plantain",
-    canonicalName: "Plantain (1 Bunch)",
+    canonicalName: "Plantain",
     description: "Ripe or unripe plantain bunch",
     channels: ALL_CHANNELS,
     // "dodo" is strictly fried plantain rather than the raw fruit, but it is
@@ -453,7 +453,7 @@ export const SEED_ITEMS: SeedItem[] = [
   },
   {
     slug: "tomatoes",
-    canonicalName: "Tomatoes (1 Paint)",
+    canonicalName: "Tomatoes",
     description: "Fresh round tomatoes",
     channels: ALL_CHANNELS,
     aliases: [
@@ -478,7 +478,7 @@ export const SEED_ITEMS: SeedItem[] = [
   },
   {
     slug: "onions",
-    canonicalName: "Onions (1kg)",
+    canonicalName: "Onions",
     description: "Red onions",
     channels: ALL_CHANNELS,
     aliases: [
@@ -503,7 +503,7 @@ export const SEED_ITEMS: SeedItem[] = [
   },
   {
     slug: "pepper",
-    canonicalName: "Pepper (1 Paint)",
+    canonicalName: "Pepper",
     description: "Fresh pepper — rodo, tatashe and shombo",
     channels: MARKET_AND_KIOSK,
     aliases: [
@@ -552,7 +552,7 @@ export const SEED_ITEMS: SeedItem[] = [
   },
   {
     slug: "ginger",
-    canonicalName: "Ginger (1kg)",
+    canonicalName: "Ginger",
     description: "Fresh ginger root",
     channels: ALL_CHANNELS,
     aliases: [
@@ -571,7 +571,7 @@ export const SEED_ITEMS: SeedItem[] = [
   },
   {
     slug: "garlic",
-    canonicalName: "Garlic (1kg)",
+    canonicalName: "Garlic",
     description: "Fresh garlic bulbs",
     channels: ALL_CHANNELS,
     aliases: [
@@ -591,7 +591,7 @@ export const SEED_ITEMS: SeedItem[] = [
   // ═══ Soup ingredients ═══
   {
     slug: "egusi",
-    canonicalName: "Egusi (1kg)",
+    canonicalName: "Egusi",
     description: "Ground melon seed for soup",
     channels: MARKET_AND_KIOSK,
     // "Egusi" is itself the local word — Yoruba and Igbo both use it. There is
@@ -618,7 +618,7 @@ export const SEED_ITEMS: SeedItem[] = [
   },
   {
     slug: "ogbono",
-    canonicalName: "Ogbono (1kg)",
+    canonicalName: "Ogbono",
     description: "Ground wild mango seed for soup",
     channels: MARKET_AND_KIOSK,
     aliases: [
@@ -643,7 +643,7 @@ export const SEED_ITEMS: SeedItem[] = [
   },
   {
     slug: "crayfish",
-    canonicalName: "Crayfish (1kg)",
+    canonicalName: "Crayfish",
     description: "Dried ground crayfish",
     channels: MARKET_AND_KIOSK,
     // Yoruba "ede" covers shrimp and crayfish. It also happens to name cocoyam,
@@ -666,7 +666,7 @@ export const SEED_ITEMS: SeedItem[] = [
   },
   {
     slug: "stockfish",
-    canonicalName: "Stockfish (1kg)",
+    canonicalName: "Stockfish",
     description: "Dried stockfish",
     channels: MARKET_ONLY,
     aliases: [{ alias: "okporoko", locale: "ig", weight: 3 }],
@@ -687,7 +687,7 @@ export const SEED_ITEMS: SeedItem[] = [
   },
   {
     slug: "dried-fish",
-    canonicalName: "Dried Fish (1kg)",
+    canonicalName: "Dried Fish",
     description: "Smoked and dried fish",
     channels: MARKET_AND_KIOSK,
     aliases: [
@@ -740,7 +740,7 @@ export const SEED_ITEMS: SeedItem[] = [
   },
   {
     slug: "salt",
-    canonicalName: "Salt (1kg)",
+    canonicalName: "Salt",
     description: "Refined table salt",
     channels: ALL_CHANNELS,
     aliases: [
@@ -767,7 +767,7 @@ export const SEED_ITEMS: SeedItem[] = [
   // ═══ Oils ═══
   {
     slug: "palm-oil",
-    canonicalName: "Palm Oil (1L)",
+    canonicalName: "Palm Oil",
     description: "Red palm oil",
     channels: ALL_CHANNELS,
     aliases: [
@@ -808,7 +808,7 @@ export const SEED_ITEMS: SeedItem[] = [
   },
   {
     slug: "groundnut-oil",
-    canonicalName: "Groundnut Oil (1L)",
+    canonicalName: "Groundnut Oil",
     description: "Groundnut cooking oil",
     channels: ALL_CHANNELS,
     aliases: [
@@ -839,7 +839,7 @@ export const SEED_ITEMS: SeedItem[] = [
   },
   {
     slug: "vegetable-oil",
-    canonicalName: "Vegetable Oil (1L)",
+    canonicalName: "Vegetable Oil",
     description: "Refined vegetable cooking oil",
     channels: ALL_CHANNELS,
     aliases: [{ alias: "ororo", locale: "yo", weight: 2 }],
@@ -954,7 +954,7 @@ export const SEED_ITEMS: SeedItem[] = [
   },
   {
     slug: "sugar",
-    canonicalName: "Sugar (1kg)",
+    canonicalName: "Sugar",
     description: "Granulated sugar",
     channels: ALL_CHANNELS,
     aliases: [
@@ -1004,7 +1004,7 @@ export const SEED_ITEMS: SeedItem[] = [
   },
   {
     slug: "spaghetti",
-    canonicalName: "Spaghetti (500g)",
+    canonicalName: "Spaghetti",
     description: "Dried spaghetti",
     channels: ALL_CHANNELS,
     aliases: [],
@@ -1026,7 +1026,7 @@ export const SEED_ITEMS: SeedItem[] = [
   },
   {
     slug: "bread",
-    canonicalName: "Bread (1 Loaf)",
+    canonicalName: "Bread",
     description: "Sliced and Agege bread",
     channels: ALL_CHANNELS,
     aliases: [
@@ -1054,7 +1054,7 @@ export const SEED_ITEMS: SeedItem[] = [
   // ═══ Protein ═══
   {
     slug: "eggs",
-    canonicalName: "Eggs (Crate of 30)",
+    canonicalName: "Eggs",
     description: "Fresh chicken eggs",
     channels: ALL_CHANNELS,
     aliases: [
@@ -1079,7 +1079,7 @@ export const SEED_ITEMS: SeedItem[] = [
   },
   {
     slug: "chicken",
-    canonicalName: "Chicken (1kg)",
+    canonicalName: "Chicken",
     description: "Frozen and live chicken",
     channels: ALL_CHANNELS,
     aliases: [
@@ -1106,7 +1106,7 @@ export const SEED_ITEMS: SeedItem[] = [
   },
   {
     slug: "beef",
-    canonicalName: "Beef (1kg)",
+    canonicalName: "Beef",
     description: "Fresh beef",
     channels: MARKET_AND_KIOSK,
     aliases: [
@@ -1125,7 +1125,7 @@ export const SEED_ITEMS: SeedItem[] = [
   },
   {
     slug: "goat-meat",
-    canonicalName: "Goat Meat (1kg)",
+    canonicalName: "Goat Meat",
     description: "Fresh goat meat",
     channels: MARKET_ONLY,
     aliases: [
@@ -1143,7 +1143,7 @@ export const SEED_ITEMS: SeedItem[] = [
   },
   {
     slug: "frozen-fish",
-    canonicalName: "Frozen Fish (1kg)",
+    canonicalName: "Frozen Fish",
     description: "Frozen titus and kote",
     channels: ALL_CHANNELS,
     // "Titus" (mackerel) and "kote" (horse mackerel) are what the cold-room

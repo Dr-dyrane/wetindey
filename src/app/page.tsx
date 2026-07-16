@@ -1,44 +1,59 @@
 "use client";
 
-import React, { useState, useEffect, useTransition, useMemo } from "react";
+import React, {
+  useState,
+  useEffect,
+  useLayoutEffect,
+  useTransition,
+  useMemo,
+  useCallback,
+  useRef
+} from "react";
 import { useAtom } from "jotai";
-import {
-  MapPin,
-  Navigation,
-  Share2,
-  AlertTriangle,
-  CheckCircle2,
-  ArrowLeft,
-  Sun,
-  Moon,
-  X,
-  Plus
-} from "lucide-react";
+import { AlertTriangle, MapPin, Navigation, Sun, Moon, X, Plus } from "lucide-react";
 
 import { Button } from "@/design-system/components/Button";
 import { SearchField } from "@/design-system/components/SearchField";
-import { Card } from "@/design-system/components/Card";
 import { AdaptiveShell } from "@/design-system/components/AdaptiveShell";
-import { MapboxCanvas } from "@/design-system/components/MapboxCanvas";
-import { Skeleton, CardListSkeleton } from "@/design-system/components/Skeleton";
+import {
+  MapboxCanvas,
+  MapRecenterControl,
+  type MapCameraHandle
+} from "@/design-system/components/MapboxCanvas";
+import { DETENT_FRACTION } from "@/design-system/components/BottomSheet";
+import { AsyncList } from "@/design-system/components/AsyncList";
 import { NigeriaLogo } from "@/design-system/components/NigeriaLogo";
 import { ItemCard, PhotoCredits, type ItemCardData } from "@/design-system/components/ItemCard";
-import { StatusDot } from "@/design-system/components/StatusBadge";
+import { StatusDot, StatusBadge } from "@/design-system/components/StatusBadge";
 import { SettingsSheet } from "@/app/_components/SettingsSheet";
 import { ReportPriceSheet } from "@/app/_components/ReportPriceSheet";
 import { ProfileSheet, Avatar } from "@/app/_components/ProfileSheet";
+import { ItemDetailSheet, offerSignal } from "@/app/_components/ItemDetailSheet";
+import { GetItSheet, type GetItTarget } from "@/app/_components/GetItSheet";
+import {
+  ConfirmVisitSheet,
+  armVisit,
+  takeDueVisit,
+  flushPendingVisitConfirmations,
+  type VisitContext
+} from "@/app/_components/ConfirmVisitSheet";
+import { LocationSheet } from "@/app/_components/LocationSheet";
 
 import { useTheme } from "@/core/context/ThemeContext";
 import { useGlobalStore } from "@/core/state/globalStore";
-import { sheetDetentAtom, activeMarkerIdAtom, searchFocusedAtom } from "@/core/state/uiAtoms";
+import { useLocationChrome, useLocationHydration, useLocationStore } from "@/core/state/locationStore";
+import { useLocaleControl, useStrings } from "@/core/i18n";
+import { useEventCallback } from "@/lib/perf";
+import { sheetDetentAtom, activeMarkerIdAtom } from "@/core/state/uiAtoms";
 import {
   searchFoodItems,
   getPopularItems,
-  getFoodItemCandidates,
   getPlaces,
   getPlaceOffers,
   getInitialSubmissionData,
-  submitObservation
+  getVisitContext,
+  submitObservation,
+  type NarrowedOffer
 } from "@/app/actions";
 import { getHaversineDistance, formatDistance } from "@/lib/geospatial";
 
@@ -53,25 +68,6 @@ interface PlaceData {
   address: string | null;
 }
 
-interface Candidate {
-  id: string;
-  placeId: string;
-  placeName: string;
-  lat: number;
-  lng: number;
-  address: string;
-  detail: {
-    priceMin: number;
-    priceMax?: number;
-    priceType: string;
-    unit: string;
-    timestamp: string;
-    sourceType: string;
-    confidenceLevel: string;
-    confidenceScore: number;
-  };
-}
-
 interface PlaceOffer {
   id: string;
   itemName: string;
@@ -83,188 +79,205 @@ interface PlaceOffer {
   freshnessState: string;
 }
 
-// Phase 3 Localization Dictionaries
-const TRANSLATIONS = {
-  en: {
-    wetin_dey: "WetinDey",
-    search_placeholder: "Wetin you dey find?",
-    popular_items: "Popular items around",
-    settings: "Settings",
-    theme: "Interface Theme",
-    radius: "Geospatial Search Radius",
-    pilot_areas: "Lagos Pilot Areas",
-    report_price: "Report Food Price",
-    done: "Done",
-    submit: "Submit Report",
-    price_paid: "Price Paid (₦)",
-    market: "Select Market",
-    item: "Select Food Item",
-    variant: "Select Quality/Type",
-    unit: "Select Packaging",
-    availability: "Is it available?",
-    available: "Yes, available",
-    unavailable: "No, out of stock",
-    success_msg: "Report saved successfully!",
-    offline_msg: "Saved offline. Will sync when back online!",
-    no_results: "No items found",
-    locations_found: "locations found",
-    reported_price: "Reported Price",
-    freshness: "Freshness Status",
-    data_confidence: "Data Confidence",
-    data_source: "Data Source",
-    directions: "Directions",
-    share: "Share",
-    clear_search: "Clear Search",
-    confirmed: "Confirmed Available",
-    caution: "Likely Available",
-    language: "App Language",
-    light_mode: "Light Mode",
-    dark_mode: "Dark Mode"
-  },
-  pidgin: {
-    wetin_dey: "WetinDey",
-    search_placeholder: "Wetin you dey find?",
-    popular_items: "Things people dey buy for",
-    settings: "Settings",
-    theme: "How app dey look",
-    radius: "Distance where you dey find market",
-    pilot_areas: "Places where we dey work for Lagos",
-    report_price: "Tell us how much dem sell food",
-    done: "O ti tan",
-    submit: "Send Report",
-    price_paid: "Money inside Naira (₦)",
-    market: "Which market you go?",
-    item: "Which food be dat?",
-    variant: "How the quality be?",
-    unit: "How dem pack am?",
-    availability: "Food dey there?",
-    available: "Yes, e dey",
-    unavailable: "No, e don finish",
-    success_msg: "We don save your report, correct!",
-    offline_msg: "Network bad. We save am offline, we go sync later!",
-    no_results: "We no find anything",
-    locations_found: "places where we see am",
-    reported_price: "Price dem tell us",
-    freshness: "E dey fresh?",
-    data_confidence: "How we trust the report",
-    data_source: "Who tell us",
-    directions: "Show me road",
-    share: "Share",
-    clear_search: "Comot Search",
-    confirmed: "True-true e dey",
-    caution: "Maybe e dey",
-    language: "App Language",
-    light_mode: "Day time style",
-    dark_mode: "Night time style"
-  },
-  yoruba: {
-    wetin_dey: "Kilo n ṣẹlẹ",
-    search_placeholder: "Kini o n wa?",
-    popular_items: "Awọn ounjẹ ti o wọpọ ni",
-    settings: "Eto",
-    theme: "Irisi Ohun elo",
-    radius: "Ijinna Wiwa Ọja",
-    pilot_areas: "Awọn agbegbe Lagos ti a n ṣiṣẹ",
-    report_price: "Sọ idiyele ounjẹ",
-    done: "O ti tan",
-    submit: "Firanṣẹ",
-    price_paid: "Iye owo ni Naira (₦)",
-    market: "Yan Ọja",
-    item: "Yan Ounjẹ",
-    variant: "Yan Iru rẹ",
-    unit: "Yan Iṣakojọpọ",
-    availability: "Ṣe o wa?",
-    available: "Bẹẹni, o wa",
-    unavailable: "Rara, o ti tan",
-    success_msg: "O ti ṣaṣeyọri firanṣẹ tuntun!",
-    offline_msg: "Ko si netiwọọki. A ti fipamọ offline lati sync nigbamii!",
-    no_results: "A kò rí kankan",
-    locations_found: "awọn ọja ti o wa",
-    reported_price: "Iye owo ti a sọ",
-    freshness: "Ṣe o tun jẹ tuntun?",
-    data_confidence: "Igbekele Data",
-    data_source: "Orisun Data",
-    directions: "Fi ọna han mi",
-    share: "Pin",
-    clear_search: "Nu Wiwa kuro",
-    confirmed: "Daju pe o wa",
-    caution: "O le wa",
-    language: "Ede Ohun elo",
-    light_mode: "Ipo Imọlẹ",
-    dark_mode: "Ipo Okunkun"
-  }
-};
+/**
+ * The map chrome's error strip.
+ *
+ * `MapRecenterControl` reports a denied permission, a device that cannot fix, or
+ * a timeout, and its contract says do not swallow it. There is no toast system
+ * in this app and one control does not justify inventing one, so the message
+ * lands here: on the map, under the pill, dismissible, and gone on its own after
+ * a beat. Solid fill rather than the translucent material — this is the one
+ * thing on the map that has to be read rather than seen through.
+ */
+function MapNotice({ message, onDismiss }: { message: string; onDismiss: () => void }) {
+  useEffect(() => {
+    const id = window.setTimeout(onDismiss, 6000);
+    return () => window.clearTimeout(id);
+  }, [message, onDismiss]);
 
-type LangType = "en" | "pidgin" | "yoruba";
+  return (
+    <div
+      role="alert"
+      className="pointer-events-auto flex items-start gap-2 squircle bg-status-caution-bg px-3 py-2
+                 shadow-raised animate-fade-in"
+    >
+      <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-status-caution-fg" />
+      <span className="text-footnote text-status-caution-fg">{message}</span>
+      <button
+        type="button"
+        onClick={onDismiss}
+        aria-label="Dismiss"
+        className="-my-1 -mr-1 grid h-8 w-8 shrink-0 place-items-center squircle-full
+                   text-status-caution-fg active:opacity-60 transition-opacity duration-instant"
+      >
+        <X className="h-3.5 w-3.5" />
+      </button>
+    </div>
+  );
+}
 
 export default function HomePage() {
   const { theme, toggleTheme } = useTheme();
-  
-  // Zustand Global State (L3)
-  const {
-    mapCenter,
-    setMapCenter,
-    setSelectedItemId,
-    activeRadiusKm,
-    setActiveRadiusKm,
-    selectedAreaName
-  } = useGlobalStore();
 
-  // Jotai Atomic State (L5)
+  /**
+   * Copy comes from `@/core/i18n`, not from a dictionary in this file.
+   *
+   * There was a 110-line `TRANSLATIONS` literal here, and it was the reason
+   * every sheet built after this file — GetItSheet, ItemDetailSheet,
+   * LocationSheet — is hardcoded English: no component could add a key without
+   * editing a 1000-line page component, so none of them tried. It had also
+   * already forked, into ConfirmVisitSheet's own `COPY`. `useStrings()` returns
+   * the same shape under the same key names, so the sheets that take `t` as a
+   * prop are unchanged.
+   */
+  const t = useStrings();
+  const [locale, setLocale] = useLocaleControl();
+
+  // Zustand global state — the camera anchor and the search radius. Where the
+  // USER is lives in locationStore; these two are not the same fact.
+  const { mapCenter, setMapCenter, activeRadiusKm, setActiveRadiusKm } = useGlobalStore();
+
+  useLocationHydration();
+  const location = useLocationChrome();
+
+  // Jotai atomic state
   const [activeDetent, setActiveDetent] = useAtom(sheetDetentAtom);
   const [activeMarkerId, setActiveMarkerId] = useAtom(activeMarkerIdAtom);
-  const [_searchFocused, setSearchFocused] = useAtom(searchFocusedAtom);
 
-  // React Transitions
+  // React transitions
   const [isPending, startTransition] = useTransition();
 
-  // Navigation Panel Views
+  const mapCameraRef = useRef<MapCameraHandle>(null);
+
+  /**
+   * How much of the leading edge the shell's panel covers, in px.
+   *
+   * AdaptiveShell publishes this as `--shell-leading-inset` precisely so this
+   * file can pad the camera by it — otherwise a selected pin lands UNDER the
+   * panel, including the pin the user just tapped.
+   *
+   * MEASURED, not recomputed. The value is
+   * `calc(clamp(12px,1.5vw,24px) + clamp(320px,36vw,420px))` — continuous, so
+   * there is no constant to copy, and `getComputedStyle` hands back that string
+   * unresolved rather than a number. A zero-height probe styled with the
+   * variable makes the browser do the arithmetic, and a ResizeObserver on it
+   * tracks every viewport change AND the compact↔regular flip for free. Copying
+   * the clamps into JS would be a second source of truth that silently drifts
+   * the day the panel is retuned — which is exactly what happened to the
+   * hardcoded `452` this replaces (it was the old 420px panel + its 24px inset,
+   * and both numbers are gone).
+   */
+  const insetProbeRef = useRef<HTMLDivElement>(null);
+  const [leadingInset, setLeadingInset] = useState(0);
+  useLayoutEffect(() => {
+    const el = insetProbeRef.current;
+    if (!el) return;
+    const measure = () => setLeadingInset(el.getBoundingClientRect().width);
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
+  /**
+   * The panel is up. Read from the shell's own published geometry rather than
+   * from a second copy of its media query: a `useMediaQuery("(min-width:768px)")`
+   * here would be this file guessing at a breakpoint AdaptiveShell owns, and the
+   * two would disagree the moment it moves. Zero until measured, which is the
+   * compact default — and ThemeProvider hides the tree until mount, so that
+   * frame is never seen.
+   */
+  const isRegular = leadingInset > 0;
+
+  // Presented surfaces
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isReportOpen, setIsReportOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
-  const [appLang, setAppLang] = useState<LangType>("en");
+  const [isLocationOpen, setIsLocationOpen] = useState(false);
+  /** The item ItemDetailSheet is resolving down to a unit. Non-null = presented. */
+  const [detailItem, setDetailItem] = useState<ItemCardData | null>(null);
+  /** The place GetItSheet is about to hand off to. Non-null = presented. */
+  const [getItTarget, setGetItTarget] = useState<GetItTarget | null>(null);
+  /** A trip that happened. Non-null = we are asking how it went. */
+  const [pendingVisit, setPendingVisit] = useState<VisitContext | null>(null);
 
-  // General App States
+  // General app state
   const [searchQuery, setSearchQuery] = useState("");
-  const [popularItems, setPopularItems] = useState<ItemCardData[]>([]);
+  /**
+   * `undefined` until the first fetch settles. `[]` would claim we looked and
+   * found nothing, which AsyncList would correctly render as "No prices yet" —
+   * on the very first frame, before the effect has even run.
+   */
+  const [popularItems, setPopularItems] = useState<ItemCardData[] | undefined>(undefined);
   const [searchResults, setSearchResults] = useState<ItemCardData[]>([]);
   const [loadError, setLoadError] = useState<string | null>(null);
-  const [selectedItem, setSelectedItem] = useState<ItemCardData | null>(null);
-  const [matchingOffers, setMatchingOffers] = useState<Candidate[]>([]);
+  /** The narrowed set ItemDetailSheet is showing. The map pins ARE this list. */
+  const [itemOffers, setItemOffers] = useState<NarrowedOffer[]>([]);
   const [allPlaces, setAllPlaces] = useState<PlaceData[]>([]);
-  const [placeOffers, setPlaceOffers] = useState<PlaceOffer[]>([]);
+  const [placeOffers, setPlaceOffers] = useState<PlaceOffer[] | undefined>(undefined);
+  const [placeOffersError, setPlaceOffersError] = useState<string | null>(null);
   const [isSearching, setIsSearching] = useState(false);
-  const [isOffersLoading, setIsOffersLoading] = useState(false);
   const [isPlaceOffersLoading, setIsPlaceOffersLoading] = useState(false);
+  const [locateError, setLocateError] = useState<string | null>(null);
+  /** Stable: MapNotice keys its auto-dismiss timer on this, and a fresh identity
+   *  every render would restart the countdown forever and never dismiss. */
+  const dismissLocateError = useCallback(() => setLocateError(null), []);
 
-  // Report Submission Lookup Metadata
+  // Report submission lookup metadata
   const [submitPlaces, setSubmitPlaces] = useState<{ id: string; name: string }[]>([]);
   const [submitItems, setSubmitItems] = useState<{ id: string; name: string }[]>([]);
-  const [submitVariants, setSubmitVariants] = useState<{ id: string; itemId: string; displayName: string }[]>([]);
+  const [submitVariants, setSubmitVariants] = useState<
+    { id: string; itemId: string; displayName: string }[]
+  >([]);
   const [submitUnits, setSubmitUnits] = useState<{ id: string; displayName: string }[]>([]);
 
-  // Price Submission Form Field States
+  // Price submission form fields
   const [formPlaceId, setFormPlaceId] = useState("");
   const [formItemId, setFormItemId] = useState("");
   const [formVariantId, setFormVariantId] = useState("");
   const [formUnitId, setFormUnitId] = useState("");
   const [formPrice, setFormPrice] = useState("");
   const [formAvailable, setFormAvailable] = useState<"available" | "unavailable">("available");
-  
-  // Submission Statuses
+
+  // Submission statuses
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [isOfflineSaved, setIsOfflineSaved] = useState(false);
 
-  // Load baseline data on mount
+  /**
+   * The persisted position is the source of truth for the camera. This runs
+   * after rehydration and on every location change, so a reload reopens where
+   * the user actually left off rather than snapping back to Festac.
+   */
+  const locPosition = useLocationStore((s) => s.position);
   useEffect(() => {
+    setMapCenter({ lat: locPosition.lat, lng: locPosition.lng });
+  }, [locPosition.lat, locPosition.lng, setMapCenter]);
+
+  /**
+   * Where the user IS. Every distance, radius and "Nearest" measures from here.
+   *
+   * NOT `mapCenter`, and the difference is not academic: tapping a result flies
+   * the camera to that market, so a query keyed on `mapCenter` would measure the
+   * next search from the last shop you looked at rather than from you. Open rice,
+   * tap a stall two streets away, go back and open beans, and "Nearest" would
+   * quietly mean "nearest to that stall". The camera follows the position; the
+   * position never follows the camera.
+   */
+  const searchOrigin = useMemo(
+    () => ({ lat: locPosition.lat, lng: locPosition.lng }),
+    [locPosition.lat, locPosition.lng]
+  );
+
+  /** A callback, not an effect body: the error state needs a retry handle. */
+  const loadBaseline = useCallback(() => {
     startTransition(async () => {
       try {
         setLoadError(null);
 
-        // Fetch in parallel — these three don't depend on each other, and doing
-        // them in series stacked three round-trips before anything rendered.
+        // In parallel — these three don't depend on each other, and doing them
+        // in series stacked three round-trips before anything rendered.
         const [items, placesList, metadata] = await Promise.all([
           getPopularItems(8),
           getPlaces(),
@@ -279,7 +292,7 @@ export default function HomePage() {
         setSubmitVariants(metadata.variants);
         setSubmitUnits(metadata.units);
 
-        // Set baseline form defaults
+        // Baseline form defaults
         if (metadata.places.length > 0) setFormPlaceId(metadata.places[0].id);
         if (metadata.items.length > 0) setFormItemId(metadata.items[0].id);
         if (metadata.units.length > 0) setFormUnitId(metadata.units[0].id);
@@ -287,90 +300,186 @@ export default function HomePage() {
         // Previously this effect had no catch, so a database that was down
         // produced an empty map and an empty sheet with no explanation.
         console.error("Failed to load initial data:", err);
+        // Settled, and we know nothing — NOT "never fetched". Without this the
+        // list stays undefined and skeletons spin forever behind the error.
+        setPopularItems([]);
         setLoadError("We no fit reach the price data right now.");
       }
     });
   }, []);
 
-  // Phase 4: Sync offline entries once connection is back online
   useEffect(() => {
-    const syncOfflineEntries = async () => {
+    loadBaseline();
+  }, [loadBaseline]);
+
+  /**
+   * Drain both offline queues once a connection is back.
+   *
+   * Two queues, one drain: `pending_observations` holds price reports typed into
+   * the form, `pending_visit_confirmations` holds answers about trips people
+   * actually made. They are replayed together because they refresh the same
+   * thing, and refreshing it twice would be two round-trips for one event.
+   */
+  useEffect(() => {
+    const drain = async () => {
       if (typeof window === "undefined" || !navigator.onLine) return;
+
+      let changed = false;
+
       const cached = localStorage.getItem("pending_observations");
-      if (!cached) return;
+      if (cached) {
+        try {
+          const queue = JSON.parse(cached) as Array<{
+            placeId: string;
+            itemVariantId: string;
+            unitId: string;
+            priceAmount: number;
+            availabilityState: "available" | "unavailable";
+          }>;
+
+          if (queue.length > 0) {
+            console.log(`Syncing ${queue.length} offline price reports…`);
+            for (const item of queue) {
+              await submitObservation(item);
+            }
+            localStorage.removeItem("pending_observations");
+            changed = true;
+          }
+        } catch (err) {
+          console.error("Failed to sync offline observations:", err);
+        }
+      }
 
       try {
-        const queue = JSON.parse(cached) as Array<{
-          placeId: string;
-          itemVariantId: string;
-          unitId: string;
-          priceAmount: number;
-          availabilityState: "available" | "unavailable";
-        }>;
-
-        if (queue.length === 0) return;
-
-        console.log(`Syncing ${queue.length} offline price reports…`);
-        for (const item of queue) {
-          await submitObservation(item);
-        }
-
-        // Clean cache queue once synced
-        localStorage.removeItem("pending_observations");
-        
-        // Refresh active listings
-        const updatedPlaces = await getPlaces();
-        setAllPlaces(updatedPlaces);
-        if (selectedItem) {
-          const freshCandidates = await getFoodItemCandidates(selectedItem.id);
-          setMatchingOffers(freshCandidates);
-        }
+        const { sent } = await flushPendingVisitConfirmations();
+        if (sent > 0) changed = true;
       } catch (err) {
-        console.error("Failed to sync offline observations:", err);
+        console.error("Failed to flush queued visit confirmations:", err);
       }
+
+      // One refetch, and a real one. The old code called `getPlaces()` here,
+      // which carries no price data at all, so nothing the user could see ever
+      // changed after a sync.
+      if (changed) loadBaseline();
     };
 
-    window.addEventListener("online", syncOfflineEntries);
-    // Sync immediately if we are online on mount
-    syncOfflineEntries();
+    window.addEventListener("online", drain);
+    void drain();
+    return () => window.removeEventListener("online", drain);
+  }, [loadBaseline]);
 
-    return () => window.removeEventListener("online", syncOfflineEntries);
-  }, [selectedItem]);
+  /**
+   * The loop closes here.
+   *
+   * Somebody tapped "Go there", we armed the question on the way out, and they
+   * are back. `takeDueVisit` decides whether enough time passed to have been a
+   * visit and whether too much has passed to ask honestly; it consumes the arm
+   * either way, so the question is asked exactly once.
+   *
+   * Checked on mount as well as on focus, because "returning" can mean the PWA
+   * was evicted while the user was in the maps app and is starting cold.
+   */
+  useEffect(() => {
+    const check = () => {
+      if (document.visibilityState !== "visible") return;
+      const due = takeDueVisit();
+      if (due) setPendingVisit((prev) => prev ?? due);
+    };
 
-  // Synchronize item selection with its matching variants list
+    check();
+    document.addEventListener("visibilitychange", check);
+    window.addEventListener("focus", check);
+    return () => {
+      document.removeEventListener("visibilitychange", check);
+      window.removeEventListener("focus", check);
+    };
+  }, []);
+
+  // Keep the variant field in step with the item field in the report form.
   useEffect(() => {
     const matched = submitVariants.filter((v) => v.itemId === formItemId);
-    if (matched.length > 0) {
-      setFormVariantId(matched[0].id);
-    } else {
-      setFormVariantId("");
-    }
+    setFormVariantId(matched.length > 0 ? matched[0].id : "");
   }, [formItemId, submitVariants]);
 
-  // Fetch available food items and prices in a market when a pin is clicked on startup
+  // What is on sale at the place whose pin is selected.
   useEffect(() => {
-    if (activeMarkerId && !selectedItem) {
-      setIsPlaceOffersLoading(true);
-      startTransition(async () => {
-        const offers = await getPlaceOffers(activeMarkerId);
-        setPlaceOffers(offers);
-        setIsPlaceOffersLoading(false);
-      });
-    } else {
-      setPlaceOffers([]);
+    if (!activeMarkerId) {
+      setPlaceOffers(undefined);
+      setPlaceOffersError(null);
+      return;
     }
-  }, [activeMarkerId, selectedItem]);
 
-  // Handle Search Input transitions
+    let cancelled = false;
+    setIsPlaceOffersLoading(true);
+    setPlaceOffersError(null);
+
+    getPlaceOffers(activeMarkerId)
+      .then((offers) => {
+        if (cancelled) return;
+        setPlaceOffers(offers);
+      })
+      .catch((err) => {
+        if (cancelled) return;
+        // This had no catch at all, so a failure here was an unhandled rejection
+        // and an empty panel that read as "this market sells nothing".
+        console.error("Failed to load offers for place:", err);
+        setPlaceOffers([]);
+        setPlaceOffersError("We no fit load this market right now.");
+      })
+      .finally(() => {
+        if (!cancelled) setIsPlaceOffersLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [activeMarkerId]);
+
+  /**
+   * Snapshot the claim, on the way OUT.
+   *
+   * Fetched when GetItSheet opens rather than when "Go there" is tapped, and the
+   * reason is the handoff itself: on Android it assigns `window.location.href`,
+   * so a promise started on the tap may never resolve — the page is gone. By the
+   * time the tap happens this is already in hand and arming is a synchronous
+   * write. It is also the last moment we are guaranteed a connection; the person
+   * walking back from a market is the least likely user in the product to have one.
+   */
+  const visitContextRef = useRef<VisitContext | null>(null);
+  const armedOfferId = getItTarget?.offer?.offerId ?? null;
+  useEffect(() => {
+    visitContextRef.current = null;
+    if (!armedOfferId) return;
+
+    let cancelled = false;
+    getVisitContext(armedOfferId)
+      .then((ctx) => {
+        if (!cancelled) visitContextRef.current = ctx;
+      })
+      .catch((err) => {
+        // No snapshot means no question. That is the honest outcome — asking
+        // "was the price right?" without knowing what price we quoted would file
+        // an answer against nothing.
+        console.error("Could not snapshot the visit; the trip will not be confirmed:", err);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [armedOfferId]);
+
+  const handleArmVisit = useEventCallback(() => {
+    const ctx = visitContextRef.current;
+    if (!ctx) return;
+    armVisit(ctx);
+  });
+
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
     setSearchQuery(val);
 
     if (val.trim() === "") {
-      setSelectedItem(null);
-      setSelectedItemId(null);
       setSearchResults([]);
-      setMatchingOffers([]);
       return;
     }
 
@@ -382,49 +491,86 @@ export default function HomePage() {
     });
   };
 
-  // Resolve selecting a specific item
-  const handleSelectItem = (item: ItemCardData) => {
-    setSelectedItem(item);
-    setSelectedItemId(item.id);
-    setSearchQuery(item.name);
-    setIsOffersLoading(true);
+  /**
+   * Picking an item presents the narrowing sheet — it does not dump a flat list.
+   *
+   * `rice → long-grain → 50 kg bag` is three decisions (USER-FLOW §2). This used
+   * to make one and hand back every offer for every variant at every size,
+   * unsorted, with no radius. ItemDetailSheet makes all three and ranks what is
+   * left; it runs its own query, so nothing is fetched here.
+   */
+  const handleSelectItem = useEventCallback((item: ItemCardData) => {
+    setDetailItem(item);
+    // A new item is a new question: drop the previous item's pins rather than
+    // leave tomatoes on the map while the sheet talks about rice.
+    setItemOffers([]);
+    setActiveMarkerId(null);
+  });
 
-    startTransition(async () => {
-      const candidates = await getFoodItemCandidates(item.id);
-      setMatchingOffers(candidates);
-      setIsOffersLoading(false);
+  /** The pins are the list. See ItemDetailSheet's `onOffersChange`. */
+  const handleItemOffersChange = useEventCallback((offers: NarrowedOffer[]) => {
+    setItemOffers(offers);
+  });
 
-      // Reset selection focus
-      setActiveMarkerId(null);
+  /**
+   * An offer was chosen: centre it, and offer to act on it.
+   *
+   * This is where the lookup becomes a trip. The old path ended at a card with
+   * two buttons that had no `onClick` at all.
+   */
+  const handleSelectOffer = useEventCallback((offer: NarrowedOffer) => {
+    const signal = offerSignal(offer, Date.now());
 
-      // Auto center on first result if exists
-      if (candidates.length > 0) {
-        setMapCenter({ lat: candidates[0].lat, lng: candidates[0].lng });
+    setDetailItem(null);
+    setActiveMarkerId(offer.placeId);
+    setMapCenter({ lat: offer.lat, lng: offer.lng });
+    setGetItTarget({
+      placeId: offer.placeId,
+      placeName: offer.placeName,
+      lat: offer.lat,
+      lng: offer.lng,
+      address: offer.address,
+      areaName: location.label,
+      offer: {
+        offerId: offer.id,
+        itemName: detailItem?.name ?? offer.variantName,
+        variantName: offer.variantName,
+        unit: offer.unitName,
+        priceMin: offer.priceMin,
+        priceMax: offer.priceMax ?? undefined,
+        observedAt: offer.lastObservedAt,
+        freshnessKind: signal.kind,
+        freshnessLabel: signal.short
       }
     });
-  };
+  });
 
-  const handleMarkerSelection = (placeId: string) => {
+  /**
+   * Stable identity, forever.
+   *
+   * This was a plain function declaration, so it took a new identity on every
+   * render — and it is a dependency of MapboxCanvas's marker effect, which
+   * clears and rebuilds every pin when it re-runs. Every unrelated re-render
+   * (a keystroke, a focus) tore down and reconstructed the whole map.
+   */
+  const handleMarkerSelection = useEventCallback((placeId: string) => {
     setActiveMarkerId(placeId);
     setActiveDetent("medium");
 
-    // Center map on selected pin
     const match = allPlaces.find((p) => p.id === placeId);
     if (match) {
       setMapCenter({ lat: match.location.lat, lng: match.location.lng });
     }
-  };
+  });
 
   const clearSearch = () => {
     setSearchQuery("");
-    setSelectedItem(null);
-    setSelectedItemId(null);
-    setActiveMarkerId(null);
     setSearchResults([]);
-    setMatchingOffers([]);
+    setDetailItem(null);
+    setItemOffers([]);
+    setActiveMarkerId(null);
   };
 
-  // Phase 1 Price Report submission
   const handlePriceSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitError("");
@@ -452,19 +598,18 @@ export default function HomePage() {
       availabilityState: formAvailable
     };
 
-    // Phase 4: Handle offline queueing
+    // Offline queueing
     if (typeof window !== "undefined" && !navigator.onLine) {
       try {
         const cached = localStorage.getItem("pending_observations");
         const queue = cached ? JSON.parse(cached) : [];
         queue.push(payload);
         localStorage.setItem("pending_observations", JSON.stringify(queue));
-        
+
         setIsOfflineSaved(true);
         setFormPrice("");
         setIsSubmitting(false);
 
-        // Auto close after 2 seconds
         setTimeout(() => {
           setIsReportOpen(false);
           setIsOfflineSaved(false);
@@ -483,15 +628,12 @@ export default function HomePage() {
         setFormPrice("");
         setIsSubmitting(false);
 
-        // Refresh places and item candidates to show pin updates instantly
-        const updatedPlaces = await getPlaces();
-        setAllPlaces(updatedPlaces);
-        if (selectedItem) {
-          const freshCandidates = await getFoodItemCandidates(selectedItem.id);
-          setMatchingOffers(freshCandidates);
-        }
+        // Refetch what the user can actually see. The old code called
+        // `getPlaces()`, which returns no price data, and never re-fetched
+        // `popularItems` at all — so reporting a price from the landing screen,
+        // the common case, changed nothing on screen.
+        loadBaseline();
 
-        // Auto close after 2 seconds
         setTimeout(() => {
           setIsReportOpen(false);
           setSubmitSuccess(false);
@@ -503,29 +645,38 @@ export default function HomePage() {
     }
   };
 
-  // Format price in NGN Naira currency
-  const formatPrice = (koboAmount: number) => {
-    return new Intl.NumberFormat("en-NG", {
+  const formatPrice = (koboAmount: number) =>
+    new Intl.NumberFormat("en-NG", {
       style: "currency",
       currency: "NGN",
       maximumFractionDigits: 0
     }).format(koboAmount / 100);
-  };
 
-  // Retrieve selected offer when filtering by item
-  const selectedOffer = useMemo(() => {
-    return matchingOffers.find((o) => o.placeId === activeMarkerId);
-  }, [matchingOffers, activeMarkerId]);
+  const selectedPlace = useMemo(
+    () => allPlaces.find((p) => p.id === activeMarkerId),
+    [allPlaces, activeMarkerId]
+  );
 
-  // Retrieve selected place when clicking neutral pins
-  const selectedPlace = useMemo(() => {
-    return allPlaces.find((p) => p.id === activeMarkerId);
-  }, [allPlaces, activeMarkerId]);
-
-  // Map markers: Use candidates if item selected, otherwise show all places as neutral pins
+  /**
+   * Pins: the narrowed offers when there are some, otherwise every place.
+   *
+   * The status comes from `offerSignal` — the same derivation the rows use —
+   * rather than from `freshnessState` directly. Reading the column here would
+   * paint a pin green while the row beside it said "Needs checking" for the same
+   * expired offer, and nothing would tell the user which to believe.
+   */
   const mapMarkers = useMemo(() => {
-    if (selectedItem && matchingOffers.length > 0) {
-      return matchingOffers;
+    if (itemOffers.length > 0) {
+      const now = Date.now();
+      return itemOffers.map((o) => ({
+        id: o.id,
+        placeId: o.placeId,
+        placeName: o.placeName,
+        lat: o.lat,
+        lng: o.lng,
+        address: o.address ?? "",
+        detail: { confidenceLevel: offerSignal(o, now).kind }
+      }));
     }
     return allPlaces.map((p) => ({
       id: p.id,
@@ -533,54 +684,121 @@ export default function HomePage() {
       placeName: p.name,
       lat: p.location.lat,
       lng: p.location.lng,
-      address: p.address || "",
+      address: p.address || ""
     }));
-  }, [selectedItem, matchingOffers, allPlaces]);
+  }, [itemOffers, allPlaces]);
 
-  // 1. Map Node (Base layer)
+  // 1. Map node (base layer)
   const mapNode = (
     <div className="relative w-full h-full">
+      {/* Resolves `--shell-leading-inset` to px. Zero-height and inert; it exists
+          only to be measured. Must stay inside the shell's subtree, which is
+          where the variable is set. */}
+      <div
+        ref={insetProbeRef}
+        aria-hidden
+        className="pointer-events-none absolute left-0 top-0 h-0"
+        style={{ width: "var(--shell-leading-inset, 0px)" }}
+      />
+
       <MapboxCanvas
+        ref={mapCameraRef}
         candidates={mapMarkers}
         selectedPlaceId={activeMarkerId}
         onMarkerClick={handleMarkerSelection}
         center={mapCenter}
+        /* At regular width the shell mounts no bottom sheet, so there is nothing
+           below to compensate for — but the panel covers the leading edge, and
+           without that padding a pin can be flown to and land behind it. */
+        detent={isRegular ? null : activeDetent}
+        padding={isRegular ? { left: leadingInset } : undefined}
       />
 
       {/* Floating controls. These sit directly on the map, so they use the
           translucent material rather than a solid surface — the map needs to
           stay legible through them. */}
+      {/* `left` clears the shell's panel rather than sitting at a flat left-4.
+          This chrome lives in the z-0 map layer, so at every regular width the
+          panel was simply drawn on top of the location pill. Pure CSS, so it
+          tracks the panel's clamp with no measurement and no resize listener. */}
       <div
-        className="absolute left-4 right-4 z-10 flex items-start justify-between pointer-events-none"
-        style={{ top: "calc(var(--safe-area-top) + 12px)" }}
+        className="absolute right-4 z-10 flex flex-col gap-2 pointer-events-none"
+        style={{
+          top: "calc(var(--safe-area-top) + 12px)",
+          left: "calc(var(--shell-leading-inset, 0px) + 16px)"
+        }}
       >
-        <div className="pointer-events-auto flex items-center gap-2 squircle-full material-thick px-3 py-1.5 shadow-raised">
-          <StatusDot kind="confirmed" pulse />
-          <span className="text-footnote font-medium text-text-primary">Showing {selectedAreaName}</span>
+        <div className="flex items-start justify-between gap-2">
+          {/* A control, not a label. It was a `div` printing the literal
+              "Festac" — a string nothing could change, next to a green dot that
+              claimed a confirmed position we had never asked for. */}
+          <button
+            type="button"
+            onClick={() => setIsLocationOpen(true)}
+            aria-label="Change location"
+            className="pointer-events-auto flex min-h-tap items-center gap-2 squircle-full material-thick
+                       px-3 py-1.5 shadow-raised active:opacity-60 transition-opacity duration-instant"
+          >
+            <StatusDot
+              kind={location.isSimulated ? "caution" : "confirmed"}
+              pulse={!location.isSimulated}
+            />
+            <span className="text-footnote font-medium text-text-primary">
+              Showing {location.label}
+            </span>
+            {/* The honesty guard: "Simulated" / "Manual pin" / "Default area",
+                and null only for a real device fix. Every distance on this map is
+                measured from that position. */}
+            {location.tag && <StatusBadge kind={location.tag.kind}>{location.tag.label}</StatusBadge>}
+          </button>
+
+          <button
+            onClick={toggleTheme}
+            aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+            className="pointer-events-auto grid h-9 w-9 shrink-0 place-items-center squircle-full
+                       material-thick shadow-raised text-text-primary
+                       active:scale-90 transition-transform duration-instant"
+          >
+            {theme === "dark" ? <Sun className="h-[18px] w-[18px]" /> : <Moon className="h-[18px] w-[18px]" />}
+          </button>
         </div>
 
-        <button
-          onClick={toggleTheme}
-          aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
-          className="pointer-events-auto grid h-9 w-9 place-items-center squircle-full material-thick
-                     shadow-raised text-text-primary
-                     active:scale-90 transition-transform duration-instant"
-        >
-          {theme === "dark" ? <Sun className="h-[18px] w-[18px]" /> : <Moon className="h-[18px] w-[18px]" />}
-        </button>
+        {locateError && <MapNotice message={locateError} onDismiss={dismissLocateError} />}
+      </div>
+
+      {/* Recenter. Parked above the peek detent so the sheet never covers it —
+          the fraction is imported rather than typed as "20vh", so retuning the
+          detent moves this with it. */}
+      <div
+        className="absolute right-4 z-10 pointer-events-none"
+        style={{ bottom: isRegular ? "1rem" : `calc(${DETENT_FRACTION.peek * 100}vh + 16px)` }}
+      >
+        <MapRecenterControl
+          /* recenterTo ONLY. Writing the position to the store here would fire
+             the mapCenter effect above, and its state-driven flyTo would land a
+             commit later and interrupt this animation mid-flight — freezing the
+             zoom at whatever value it had reached. Two things must never drive
+             the camera for one interaction. This is the camera control; the
+             location pill is the position control. */
+          onLocate={({ lat, lng }) => {
+            setLocateError(null);
+            mapCameraRef.current?.recenterTo(lat, lng);
+          }}
+          onError={(message) => setLocateError(message)}
+        />
       </div>
     </div>
   );
 
-  // 2. Sheet Node (Left Sidebar / Mobile Bottom Sheet)
+  // 2. Sheet node (left sidebar on desktop / bottom sheet on mobile)
   const sheetNode = (
     <div className="flex flex-col h-full overflow-hidden">
-      {/* Brand & Search Header */}
+      {/* Brand & search header */}
       <div className="px-4 pt-3 pb-2.5 flex flex-col gap-2.5">
         <div className="flex items-center justify-between w-full">
           <div className="flex items-center space-x-2.5">
             <NigeriaLogo className="h-7 w-7" />
-            <span className="text-headline tracking-tight">{TRANSLATIONS[appLang].wetin_dey}</span>
+            <span className="text-headline tracking-tight">{t.wetin_dey}</span>
           </div>
 
           {/* Both actions present a sheet over this one rather than replacing
@@ -590,7 +808,7 @@ export default function HomePage() {
               onClick={() => setIsReportOpen(true)}
               className="grid place-items-center h-8 w-8 rounded-full bg-fillSecondary text-text-primary
                          active:scale-90 transition-transform duration-instant"
-              aria-label={TRANSLATIONS[appLang].report_price}
+              aria-label={t.report_price}
             >
               <Plus className="h-[18px] w-[18px]" strokeWidth={2.5} />
             </button>
@@ -606,391 +824,290 @@ export default function HomePage() {
           </div>
         </div>
 
-        {selectedItem && (
-          <div className="flex items-center">
-            <Button variant="ghost" size="sm" onClick={clearSearch} className="h-7 px-2 -ml-2 text-status-info">
-              <ArrowLeft className="h-4 w-4 mr-1" />
-              {TRANSLATIONS[appLang].clear_search}
-            </Button>
-          </div>
-        )}
-
         <SearchField
           value={searchQuery}
           onChange={handleSearchChange}
           onClear={clearSearch}
-          onFocus={() => setSearchFocused(true)}
-          onBlur={() => setSearchFocused(false)}
-          placeholder={TRANSLATIONS[appLang].search_placeholder}
+          placeholder={t.search_placeholder}
         />
       </div>
 
-      {/* Scrollable Contents */}
+      {/* Scrollable contents */}
       <div className="flex-1 overflow-y-auto px-3 pb-5">
-          <div className="space-y-4">
-            {/* A. Popular Items Suggestions */}
-            {!searchQuery && !selectedItem && (
-              <div className="space-y-2.5">
-                <div className="flex items-baseline justify-between px-0.5">
-                  <h4 className="text-[13px] font-semibold text-text-primary">
-                    {TRANSLATIONS[appLang].popular_items} {selectedAreaName}
-                  </h4>
-                  {popularItems.length > 0 && (
-                    <span className="text-[12px] text-text-secondary tabular-nums">
-                      {popularItems.reduce((n, i) => n + (i.offerCount ?? 0), 0)} prices
-                    </span>
-                  )}
-                </div>
-
-                {loadError ? (
-                  <div className="squircle bg-surface shadow-card p-5 text-center space-y-2">
-                    <StatusDot kind="unavailable" />
-                    <p className="text-[14px] font-semibold text-text-primary">{loadError}</p>
-                    <p className="text-[12px] text-text-secondary">Check your network and pull down to try again.</p>
-                  </div>
-                ) : isPending && popularItems.length === 0 ? (
-                  <CardListSkeleton count={4} />
-                ) : popularItems.length === 0 ? (
-                  <div className="squircle bg-surface shadow-card p-5 text-center">
-                    <p className="text-[14px] font-semibold text-text-primary">No prices yet</p>
-                    <p className="text-[12px] text-text-secondary mt-1">Be the first to report one.</p>
-                  </div>
-                ) : (
-                  <>
-                    <div className="grid grid-cols-1 gap-2">
-                      {popularItems.map((item) => (
-                        <ItemCard key={item.id} item={item} onSelect={handleSelectItem} />
-                      ))}
-                    </div>
-                    <PhotoCredits items={popularItems} />
-                  </>
+        <div className="space-y-4">
+          {/* A. Popular items */}
+          {!searchQuery && (
+            <div className="space-y-2.5">
+              <div className="flex items-baseline justify-between px-0.5">
+                <h4 className="text-footnote font-semibold text-text-primary">
+                  {t.popular_items} {location.label}
+                </h4>
+                {popularItems && popularItems.length > 0 && (
+                  <span className="text-caption-1 text-text-secondary tabular-nums">
+                    {popularItems.reduce((n, i) => n + (i.offerCount ?? 0), 0)} prices
+                  </span>
                 )}
               </div>
-            )}
 
-            {/* B. Searching Loading Indicator */}
-            {isSearching && (
-              <div className="space-y-2">
-                <Skeleton className="h-12 w-full squircle" />
-                <Skeleton className="h-12 w-full squircle" />
-                <Skeleton className="h-12 w-full squircle" />
-              </div>
-            )}
+              {/* NO `subject`, deliberately — AsyncList: "omit it only for a list
+                  whose subject never changes". This one's never does, because
+                  `getPopularItems` takes no location and no radius: it ranks every
+                  item in the database. Passing `location.label` would flash
+                  skeletons on every area change for a refetch that returns byte-
+                  identical rows. The header above says "around {area}" and is the
+                  thing that is wrong here; see the handover — the fix is a
+                  center/radiusKm argument on the action, which I do not own. */}
+              <AsyncList
+                items={popularItems}
+                isLoading={isPending}
+                error={loadError}
+                onRetry={loadBaseline}
+                keyExtractor={(item) => item.id}
+                renderItem={(item) => <ItemCard item={item} onSelect={handleSelectItem} />}
+                skeletonCount={4}
+                empty={{
+                  title: "No prices yet",
+                  description: "Be the first to report one."
+                }}
+                errorState={{
+                  title: loadError ?? "Could not load",
+                  description: "Check your network and try again.",
+                  retryLabel: "Try again"
+                }}
+                footer={popularItems && <PhotoCredits items={popularItems} />}
+              />
+            </div>
+          )}
 
-            {/* C. Search Results Suggestions */}
-            {searchQuery && !selectedItem && !isSearching && (
-              <div className="space-y-2">
-                {searchResults.length > 0 ? (
-                  searchResults.map((item) => (
-                    <ItemCard key={item.id} item={item} onSelect={handleSelectItem} />
-                  ))
-                ) : (
-                  <div className="text-center py-10 space-y-3">
-                    <div className="inline-flex p-3.5 rounded-full bg-status-caution-bg text-status-caution-fg">
-                      <AlertTriangle className="h-7 w-7" />
-                    </div>
-                    <h3 className="text-sm font-bold">{TRANSLATIONS[appLang].no_results}</h3>
-                    <p className="text-[12px] text-text-secondary">Try a local name like &ldquo;ewa&rdquo; or &ldquo;dodo&rdquo;.</p>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* D. Offers loading state */}
-            {isOffersLoading && <CardListSkeleton count={2} />}
-
-            {/* E. List Result View (Rendered inside sheet) */}
-            {selectedItem && !isOffersLoading && (
-              <div className="space-y-3">
-                <div className="pb-2 mb-1">
-                  <h2 className="text-headline text-text-primary">{selectedItem.name}</h2>
-                  <p className="text-footnote text-text-secondary mt-0.5">
-                    {matchingOffers.length} {TRANSLATIONS[appLang].locations_found}
-                  </p>
-                </div>
-
-                {matchingOffers.length > 0 ? (
-                  <div className="space-y-2.5">
-                    {matchingOffers.map((offer) => {
-                      const isSelected = activeMarkerId === offer.placeId;
-
-                      return (
-                        <Card
-                          key={offer.id}
-                          hoverable
-                          onClick={() => handleMarkerSelection(offer.placeId)}
-                          className={`transition-all duration-standard ${
-                            isSelected ? "bg-fillSecondary/80" : ""
-                          }`}
-                        >
-                          <div className="p-4 space-y-3">
-                            <div className="flex items-start justify-between">
-                              <div>
-                                <h3 className="font-bold text-text-primary text-sm">{offer.placeName}</h3>
-                                <p className="text-xs text-text-secondary mt-0.5 leading-snug flex items-center">
-                                  <MapPin className="h-3.5 w-3.5 text-accent mr-1 shrink-0" />
-                                  {formatDistance(getHaversineDistance(mapCenter.lat, mapCenter.lng, offer.lat, offer.lng))} • {offer.address}
-                                </p>
-                              </div>
-                            </div>
-
-                            <div className="flex items-baseline justify-between pt-1">
-                              <div>
-                                <span className="text-lg font-black text-accent">
-                                  {formatPrice(offer.detail.priceMin)}
-                                </span>
-                                {offer.detail.priceMax && (
-                                  <span className="text-lg font-black text-accent">
-                                    {" - "}{formatPrice(offer.detail.priceMax)}
-                                  </span>
-                                )}
-                                <span className="text-xs text-text-secondary ml-1">/ {offer.detail.unit}</span>
-                              </div>
-                            </div>
-
-                            {/* Mobile selection detail buttons embedded in sheet */}
-                            {isSelected && (
-                              <div className="md:hidden pt-3 mt-1 grid grid-cols-2 gap-2 animate-fade-in">
-                                <Button
-                                  variant="primary"
-                                  size="sm"
-                                  className="h-9 text-xs flex items-center justify-center"
-                                >
-                                  <Navigation className="h-3.5 w-3.5 mr-1" />
-                                  {TRANSLATIONS[appLang].directions}
-                                </Button>
-                                <Button
-                                  variant="secondary"
-                                  size="sm"
-                                  className="h-9 text-xs flex items-center justify-center"
-                                >
-                                  <Share2 className="h-3.5 w-3.5 mr-1" />
-                                  {TRANSLATIONS[appLang].share}
-                                </Button>
-                              </div>
-                            )}
-                          </div>
-                        </Card>
-                      );
-                    })}
-                  </div>
-                ) : (
-                  <div className="text-center py-8">
-                    <MapPin className="h-6 w-6 text-text-tertiary/40 mx-auto" />
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
+          {/* B. Search results. One branch, not two — the old "searching" branch
+              rendered h-12 bars that stood in for ItemCards and jumped the layout
+              the moment real rows arrived. */}
+          {searchQuery && (
+            <AsyncList
+              items={searchResults}
+              isLoading={isSearching}
+              subject={searchQuery}
+              keyExtractor={(item) => item.id}
+              renderItem={(item) => <ItemCard item={item} onSelect={handleSelectItem} />}
+              skeletonCount={3}
+              empty={{
+                icon: <AlertTriangle className="h-7 w-7" />,
+                title: t.no_results,
+                description: "Try a local name like “ewa” or “dodo”."
+              }}
+            />
+          )}
+        </div>
       </div>
     </div>
   );
 
-  // 3. Desktop Detail Sidebar Node (Right panel overlay on Desktop)
-  // Reusable detail drawer content dynamically mapped to item-selection or market-selection state
+  // 3. Desktop detail sidebar (right panel)
+  //
+  // The offer branch that used to live here is gone: it showed the same five
+  // dimensions ItemDetailSheet now shows on BOTH shells, computed worse
+  // (`supportingObservationCount * 10`, so ten reports from one person read as
+  // 100% confidence), behind two buttons with no handlers.
   const detailNode = useMemo(() => {
-    if (selectedOffer) {
-      return (
-        <div className="space-y-5 h-full flex flex-col justify-between">
-          <div className="space-y-4">
-            {/* Detail Panel Header */}
-            <div className="flex items-start justify-between">
-              <div className="flex-1 pr-4">
-                <h2 className="text-base font-black tracking-tight leading-snug text-text-primary">
-                  {selectedOffer.placeName}
-                </h2>
-                <p className="text-xs text-text-secondary mt-1 flex items-center">
-                  <MapPin className="h-3.5 w-3.5 text-accent mr-1 shrink-0" />
-                  {formatDistance(getHaversineDistance(mapCenter.lat, mapCenter.lng, selectedOffer.lat, selectedOffer.lng))} • {selectedOffer.address}
-                </p>
-              </div>
-              <button
-                onClick={() => setActiveMarkerId(null)}
-                className="p-1.5 rounded-full bg-fillSecondary text-text-secondary hover:text-text-primary transition-colors"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            </div>
+    if (!selectedPlace) return undefined;
 
-            {/* Price Tag Info */}
-            <div className="p-4 squircle bg-fillSecondary/50 flex flex-col space-y-1">
-              <span className="text-footnote text-text-secondary">
-                {TRANSLATIONS[appLang].reported_price}
-              </span>
-              <div className="flex items-baseline">
-                <span className="text-xl font-black text-accent">
-                  {formatPrice(selectedOffer.detail.priceMin)}
-                </span>
-                {selectedOffer.detail.priceMax && (
-                  <span className="text-xl font-black text-accent">
-                    {" - "}{formatPrice(selectedOffer.detail.priceMax)}
-                  </span>
-                )}
-                <span className="text-xs text-text-secondary ml-1">/ {selectedOffer.detail.unit}</span>
-              </div>
+    return (
+      <div className="space-y-5 h-full flex flex-col justify-between">
+        <div className="space-y-4">
+          <div className="flex items-start justify-between">
+            <div className="flex-1 pr-4">
+              <h2 className="text-headline tracking-tight text-text-primary">{selectedPlace.name}</h2>
+              <p className="text-caption-1 text-text-secondary mt-1 flex items-center">
+                <MapPin className="h-3.5 w-3.5 text-accent mr-1 shrink-0" />
+                {/* From the user, not from the camera — this panel opens by
+                    tapping a pin, which centres the camera ON that pin, so
+                    measuring from `mapCenter` printed "0 m away" for every
+                    market you clicked. */}
+                {formatDistance(
+                  getHaversineDistance(
+                    searchOrigin.lat,
+                    searchOrigin.lng,
+                    selectedPlace.location.lat,
+                    selectedPlace.location.lng
+                  )
+                )}{" "}
+                • {selectedPlace.address || `${location.label}, Lagos`}
+              </p>
             </div>
-
-            {/* Info stats */}
-            <div className="space-y-3">
-              <div className="flex items-center justify-between text-xs py-2">
-                <span className="text-text-secondary">{TRANSLATIONS[appLang].freshness}</span>
-                <span
-                  className={`font-semibold px-2 py-0.5 rounded-full flex items-center ${
-                    selectedOffer.detail.confidenceLevel === "confirmed"
-                      ? "bg-status-confirmed/10 text-status-confirmed"
-                      : selectedOffer.detail.confidenceLevel === "caution"
-                      ? "bg-status-caution/10 text-status-caution"
-                      : "bg-status-unavailable/10 text-status-unavailable"
-                  }`}
-                >
-                  {selectedOffer.detail.confidenceLevel === "confirmed"
-                    ? TRANSLATIONS[appLang].confirmed
-                    : selectedOffer.detail.confidenceLevel === "caution"
-                    ? TRANSLATIONS[appLang].caution
-                    : TRANSLATIONS[appLang].unavailable}
-                </span>
-              </div>
-              <div className="flex items-center justify-between text-xs py-2">
-                <span className="text-text-secondary">{TRANSLATIONS[appLang].data_confidence}</span>
-                <span className="font-semibold text-text-primary flex items-center">
-                  <CheckCircle2 className="h-3.5 w-3.5 text-accent mr-1" />
-                  {selectedOffer.detail.confidenceScore}%
-                </span>
-              </div>
-              <div className="flex items-center justify-between text-xs py-2">
-                <span className="text-text-secondary">{TRANSLATIONS[appLang].data_source}</span>
-                <span className="font-semibold text-text-primary">
-                  {selectedOffer.detail.sourceType}
-                </span>
-              </div>
-            </div>
+            <button
+              onClick={() => setActiveMarkerId(null)}
+              aria-label="Close"
+              className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-fillSecondary
+                         text-text-secondary hover:text-text-primary transition-colors"
+            >
+              <X className="h-4 w-4" />
+            </button>
           </div>
 
-          {/* Sticky Bottom Actions */}
-          <div className="grid grid-cols-2 gap-3 pt-4 mt-2">
-            <Button variant="primary" size="md" className="w-full flex items-center justify-center">
-              <Navigation className="h-4 w-4 mr-1.5" />
-              {TRANSLATIONS[appLang].directions}
-            </Button>
-            <Button variant="secondary" size="md" className="w-full flex items-center justify-center">
-              <Share2 className="h-4 w-4 mr-1.5" />
-              {TRANSLATIONS[appLang].share}
-            </Button>
-          </div>
-        </div>
-      );
-    }
-
-    if (selectedPlace) {
-      return (
-        <div className="space-y-5 h-full flex flex-col justify-between">
-          <div className="space-y-4">
-            <div className="flex items-start justify-between">
-              <div className="flex-1 pr-4">
-                <h2 className="text-base font-black tracking-tight leading-snug text-text-primary">
-                  {selectedPlace.name}
-                </h2>
-                <p className="text-xs text-text-secondary mt-1 flex items-center">
-                  <MapPin className="h-3.5 w-3.5 text-accent mr-1 shrink-0" />
-                  {formatDistance(getHaversineDistance(mapCenter.lat, mapCenter.lng, selectedPlace.location.lat, selectedPlace.location.lng))} • {selectedPlace.address || `${selectedAreaName}, Lagos`}
-                </p>
-              </div>
-              <button
-                onClick={() => setActiveMarkerId(null)}
-                className="p-1.5 rounded-full bg-fillSecondary text-text-secondary hover:text-text-primary transition-colors"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            </div>
-
-            {/* List of food items and prices currently available in this specific market */}
-            <div className="space-y-3">
-              <h4 className="text-footnote text-text-secondary">
-                Available Prices in Market
-              </h4>
-              {isPlaceOffersLoading ? (
-                <div className="space-y-2">
-                  <Skeleton className="h-10 w-full squircle" />
-                  <Skeleton className="h-10 w-full squircle" />
-                </div>
-              ) : placeOffers.length > 0 ? (
-                <div className="space-y-2 max-h-[40vh] overflow-y-auto pr-1">
-                  {placeOffers.map((offer) => (
-                    <div 
-                      key={offer.id}
-                      className="p-3 squircle bg-fillSecondary/40 flex items-center justify-between"
-                    >
-                      <div>
-                        <div className="text-xs font-bold text-text-primary">{offer.itemName}</div>
-                        <div className="text-[10px] text-text-secondary mt-0.5">{offer.variantName}</div>
-                      </div>
-                      <div className="text-right">
-                        <div className="text-xs font-black text-accent">{formatPrice(offer.priceMin)}</div>
-                        <div className="text-[9px] text-text-tertiary">/ {offer.unit}</div>
-                      </div>
+          {/* What this market is currently selling. */}
+          <div className="space-y-3">
+            <h4 className="text-footnote text-text-secondary">Available prices in market</h4>
+            <AsyncList
+              items={placeOffers}
+              isLoading={isPlaceOffersLoading}
+              error={placeOffersError}
+              subject={activeMarkerId ?? ""}
+              keyExtractor={(offer) => offer.id}
+              className="max-h-[40vh] overflow-y-auto pr-1"
+              renderItem={(offer) => (
+                <div className="p-3 squircle bg-fillSecondary/40 flex items-center justify-between">
+                  <div className="min-w-0">
+                    <div className="truncate text-caption-1 font-bold text-text-primary">
+                      {offer.itemName}
                     </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-6">
-                  <MapPin className="h-5 w-5 text-text-tertiary/40 mx-auto" />
+                    <div className="truncate text-caption-2 text-text-secondary mt-0.5">
+                      {offer.variantName}
+                    </div>
+                  </div>
+                  <div className="text-right shrink-0 pl-2">
+                    <div className="text-caption-1 font-black text-accent tabular-nums">
+                      {formatPrice(offer.priceMin)}
+                    </div>
+                    <div className="text-caption-2 text-text-tertiary">/ {offer.unit}</div>
+                  </div>
                 </div>
               )}
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-3 pt-4 mt-2">
-            <Button variant="primary" size="md" className="w-full flex items-center justify-center">
-              <Navigation className="h-4 w-4 mr-1.5" />
-              {TRANSLATIONS[appLang].directions}
-            </Button>
-            <Button variant="secondary" size="md" className="w-full flex items-center justify-center">
-              <Share2 className="h-4 w-4 mr-1.5" />
-              {TRANSLATIONS[appLang].share}
-            </Button>
+              /* This empty state was a bare grey pin with no words at all. */
+              empty={{
+                icon: <MapPin className="h-6 w-6" />,
+                title: "No prices here yet",
+                description: "Nobody has reported a price at this market."
+              }}
+              errorState={{
+                title: placeOffersError ?? "Could not load",
+                description: "Check your network and try again."
+              }}
+            />
           </div>
         </div>
-      );
-    }
 
-    return undefined;
-  }, [selectedOffer, selectedPlace, placeOffers, isPlaceOffersLoading, mapCenter.lat, mapCenter.lng, appLang, setActiveMarkerId, selectedAreaName]);
+        {/* One real action, replacing two that had no onClick. */}
+        <div className="pt-4 mt-2">
+          <Button
+            variant="primary"
+            size="md"
+            className="w-full flex items-center justify-center"
+            onClick={() =>
+              setGetItTarget({
+                placeId: selectedPlace.id,
+                placeName: selectedPlace.name,
+                lat: selectedPlace.location.lat,
+                lng: selectedPlace.location.lng,
+                address: selectedPlace.address,
+                areaName: location.label,
+                // Reached from a pin, so there is no single price under test —
+                // and therefore nothing to confirm on the way back.
+                offer: null
+              })
+            }
+          >
+            <Navigation className="h-4 w-4 mr-1.5" />
+            Get it
+          </Button>
+        </div>
+      </div>
+    );
+  }, [
+    selectedPlace,
+    placeOffers,
+    placeOffersError,
+    isPlaceOffersLoading,
+    activeMarkerId,
+    searchOrigin,
+    location.label,
+    setActiveMarkerId
+  ]);
 
   return (
     <div className="relative w-full h-full min-h-screen overflow-hidden">
+      {/* `detailNode` is now a pushed level in BOTH size classes, so the place
+          detail — and its "Get it" — is reachable on a phone rather than being
+          desktop-only. The label and back handler name and pop that level. */}
       <AdaptiveShell
         mapNode={mapNode}
         sheetNode={sheetNode}
         detailNode={detailNode}
+        detailLabel={selectedPlace?.name}
+        onDetailBack={() => setActiveMarkerId(null)}
         activeDetent={activeDetent}
         setActiveDetent={setActiveDetent}
       />
 
       {/* Progressive reveal: each task presents its own surface over the map
           and the results sheet, instead of taking their place. */}
+
+      {/* rice → long-grain → 50 kg bag → ranked offers. */}
+      <ItemDetailSheet
+        open={Boolean(detailItem)}
+        onClose={() => setDetailItem(null)}
+        item={detailItem}
+        center={searchOrigin}
+        radiusKm={activeRadiusKm}
+        areaName={location.label}
+        onSelectOffer={handleSelectOffer}
+        onOffersChange={handleItemOffersChange}
+        t={t}
+      />
+
+      {/* The lookup becomes a trip. */}
+      <GetItSheet
+        open={Boolean(getItTarget)}
+        onClose={() => setGetItTarget(null)}
+        target={getItTarget}
+        origin={searchOrigin}
+        onGoThere={handleArmVisit}
+      />
+
+      {/* The trip becomes an answer. This is the part that compounds. */}
+      <ConfirmVisitSheet
+        open={Boolean(pendingVisit)}
+        visit={pendingVisit}
+        onClose={() => setPendingVisit(null)}
+        onConfirmed={({ queued }) => {
+          // A queued answer has changed nothing on the server yet, so refetching
+          // would only redraw the same rows.
+          if (!queued) loadBaseline();
+        }}
+        lang={locale}
+      />
+
+      <LocationSheet
+        open={isLocationOpen}
+        onClose={() => setIsLocationOpen(false)}
+        radiusKm={activeRadiusKm}
+        onCommit={(coords) => setMapCenter(coords)}
+      />
+
       <SettingsSheet
         open={isSettingsOpen}
         onClose={() => setIsSettingsOpen(false)}
-        lang={appLang}
-        onLangChange={setAppLang}
+        lang={locale}
+        onLangChange={setLocale}
         theme={theme}
         onToggleTheme={toggleTheme}
         radiusKm={activeRadiusKm}
         onRadiusChange={setActiveRadiusKm}
-        t={TRANSLATIONS[appLang]}
+        t={t}
       />
 
       <ProfileSheet
         open={isProfileOpen}
         onClose={() => setIsProfileOpen(false)}
         onOpenSettings={() => setIsSettingsOpen(true)}
+        onChangeArea={() => setIsLocationOpen(true)}
+        currentAreaName={location.label}
         user={null}
       />
 
       <ReportPriceSheet
         open={isReportOpen}
         onClose={() => setIsReportOpen(false)}
-        t={TRANSLATIONS[appLang]}
+        t={t}
         places={submitPlaces}
         items={submitItems}
         variants={submitVariants}

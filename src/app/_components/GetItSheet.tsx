@@ -9,6 +9,15 @@ import { getPlaceContactPolicy, type PlaceContactPolicy } from "@/app/actions";
 
 /** The offer the user was looking at when they tapped "Get it", if any. */
 export interface GetItOffer {
+  /**
+   * `offers_current.id` — the claim the user is about to go and test.
+   *
+   * Carried so the caller can snapshot it with `getVisitContext` while the sheet
+   * is open and still has a connection, and arm the post-visit question against
+   * it on the way out. Optional because a place reached from a neutral pin has
+   * no offer, and therefore no claim under test and nothing to confirm.
+   */
+  offerId?: string;
   itemName: string;
   variantName?: string;
   /** Display name of the unit, e.g. "50 kg bag". */
@@ -41,6 +50,16 @@ interface GetItSheetProps {
   target: GetItTarget | null;
   /** Where the user is now — becomes the route's start point when known. */
   origin?: { lat: number; lng: number } | null;
+  /**
+   * The user is leaving for the market. Fired synchronously, after the
+   * coordinate has been checked and BEFORE the handoff — on Android the handoff
+   * is a real navigation, so anything deferred past this point may never run.
+   *
+   * This is the seam the trust loop hangs on: going is the event worth
+   * remembering, and this sheet is the only place that knows it happened.
+   * Handlers must not await.
+   */
+  onGoThere?: () => void;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -319,7 +338,7 @@ type ShareResult = { kind: "idle" } | { kind: "copied" } | { kind: "manual"; tex
  * component exists because Directions and Share rendered without handlers, and
  * a control that looks alive and does nothing is worse than no control.
  */
-export function GetItSheet({ open, onClose, target, origin }: GetItSheetProps) {
+export function GetItSheet({ open, onClose, target, origin, onGoThere }: GetItSheetProps) {
   const [platform, setPlatform] = useState<MapsPlatform | null>(null);
   const [canShare, setCanShare] = useState(false);
   const [shareResult, setShareResult] = useState<ShareResult>({ kind: "idle" });
@@ -384,6 +403,12 @@ export function GetItSheet({ open, onClose, target, origin }: GetItSheetProps) {
     if (!target) return;
     assertCoordinate(target.lat, target.lng, target.placeName);
 
+    // Before the handoff, never after: `openAndroidMaps` assigns
+    // `window.location.href`, and a page that has been navigated away from does
+    // not run the rest of this function. Ordered after the coordinate check so
+    // a visit is never armed against a place we would refuse to route to.
+    onGoThere?.();
+
     // Detected live rather than read from state: state exists for the label,
     // but the handoff must be right even on the first frame after mount.
     const p = detectMapsPlatform();
@@ -395,7 +420,7 @@ export function GetItSheet({ open, onClose, target, origin }: GetItSheetProps) {
       openExternal(googleMapsUrl(target, origin));
     }
     onClose();
-  }, [target, origin, onClose]);
+  }, [target, origin, onClose, onGoThere]);
 
   const handleShare = useCallback(async () => {
     if (!target) return;
@@ -451,7 +476,11 @@ export function GetItSheet({ open, onClose, target, origin }: GetItSheetProps) {
           {(freshLabel || fresh) && (
             <div className="mt-2 flex items-center gap-2">
               {freshLabel && <StatusBadge kind={freshKind}>{freshLabel}</StatusBadge>}
-              {fresh && <span className="text-caption-1 text-text-tertiary">Confirmed {fresh}</span>}
+              {/* "Last seen", not "Confirmed": this line states WHEN we heard,
+                  and the badge beside it states WHAT we heard. Saying "confirmed"
+                  here read as confirmed-available next to a red "Not dey" badge —
+                  the two halves of the row contradicting each other. */}
+              {fresh && <span className="text-caption-1 text-text-tertiary">Last seen {fresh}</span>}
             </div>
           )}
         </div>
