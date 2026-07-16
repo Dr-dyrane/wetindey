@@ -71,3 +71,13 @@ export function OfferCardSkeleton() {
     </div>
   );
 }
+
+export function CardListSkeleton({ count = 3 }: { count?: number }) {
+  return (
+    <div className="space-y-3">
+      {Array.from({ length: count }).map((_, i) => (
+        <OfferCardSkeleton key={i} />
+      ))}
+    </div>
+  );
+}

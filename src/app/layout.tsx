@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { ThemeProvider } from "@/core/context/ThemeContext";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -31,8 +32,29 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="h-full">
+      <head>
+        <link href="https://api.mapbox.com/mapbox-gl-js/v3.1.2/mapbox-gl.css" rel="stylesheet" />
+        <script src="https://api.mapbox.com/mapbox-gl-js/v3.1.2/mapbox-gl.js" defer />
+      </head>
       <body className="h-full min-h-screen selection:bg-accent selection:text-white">
-        {children}
+        <ThemeProvider>
+          {children}
+        </ThemeProvider>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              if ('serviceWorker' in navigator) {
+                window.addEventListener('load', function() {
+                  navigator.serviceWorker.register('/sw.js').then(function(reg) {
+                    console.log('SW registered on scope:', reg.scope);
+                  }).catch(function(err) {
+                    console.log('SW registration failed:', err);
+                  });
+                });
+              }
+            `
+          }}
+        />
       </body>
     </html>
   );
