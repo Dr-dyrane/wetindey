@@ -16,12 +16,16 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    // Determine the initial theme state
-    const savedTheme = localStorage.getItem("theme") as Theme | null;
-    const systemPrefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-    
-    const initialTheme = savedTheme || (systemPrefersDark ? "dark" : "light");
-    setTheme(initialTheme);
+    /**
+     * Read the theme the blocking script in <head> already resolved, rather
+     * than deriving it a second time.
+     *
+     * Two derivations of the same value drift. The head script is authoritative
+     * because it runs before paint — which is what lets the map choose the
+     * right basemap at construction — so this just adopts its answer.
+     */
+    const applied: Theme = document.documentElement.classList.contains("dark") ? "dark" : "light";
+    setTheme(applied);
     setMounted(true);
   }, []);
 

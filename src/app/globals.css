@@ -198,6 +198,28 @@
   * {
     border-style: none;
   }
+
+  /**
+   * No scrollbars, anywhere.
+   *
+   * Native iOS shows a transient scroll indicator that fades; the web's is a
+   * persistent widget that takes layout width on Windows/Linux and paints over
+   * content on macOS. Neither reads as native, and a bar hugging the inside of
+   * a squircled sheet is the single most "this is a web page" tell in the UI.
+   *
+   * Scrolling remains fully available — this hides the indicator, not the
+   * behaviour. Position is still legible from the content itself, which is how
+   * the platform does it.
+   */
+  * {
+    scrollbar-width: none;              /* Firefox */
+    -ms-overflow-style: none;           /* legacy Edge */
+  }
+  *::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+    display: none;                      /* WebKit / Blink */
+  }
 }
 
 @layer components {

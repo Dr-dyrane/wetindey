@@ -43,6 +43,34 @@ export default function RootLayout({
   return (
     <html lang="en" className="h-full">
       <head>
+        {/**
+         * Resolve the theme BEFORE first paint.
+         *
+         * This is blocking and inline on purpose. Everything downstream reads
+         * `documentElement.classList` to decide what it is: the CSS variables,
+         * and — critically — the map, which must choose streets-v12 vs dark-v11
+         * at construction. ThemeContext applies that class in an effect, so
+         * anything else reading it from an effect is racing the provider, and
+         * effect order between sibling components is not guaranteed. The map
+         * only picked the right basemap because its CDN await happened to push
+         * init later. That is luck.
+         *
+         * Running here makes the class true from the first byte of paint: no
+         * flash, and every consumer — including a map that reloads — reads a
+         * settled value. Wrapped in try/catch because localStorage throws
+         * outright in some privacy modes, and a theme is not worth a blank page.
+         */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{
+              var t=localStorage.getItem('theme');
+              if(t!=='dark'&&t!=='light'){t=window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';}
+              var r=document.documentElement;
+              r.classList.toggle('dark',t==='dark');
+              r.style.colorScheme=t;
+            }catch(e){}})();`
+          }}
+        />
         <link href="https://api.mapbox.com/mapbox-gl-js/v3.1.2/mapbox-gl.css" rel="stylesheet" />
         <script src="https://api.mapbox.com/mapbox-gl-js/v3.1.2/mapbox-gl.js" defer />
       </head>
