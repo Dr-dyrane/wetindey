@@ -114,10 +114,24 @@ export function ItemCard({ item, onSelect }: { item: ItemCardData; onSelect: (it
         )}
       </div>
 
-      <div className="min-w-0 flex-1 py-2.5 pr-3">
-        <h3 className="truncate text-subhead font-semibold text-text-primary">{item.name}</h3>
-        <p className="mt-0.5 truncate text-callout font-semibold tabular-nums text-text-primary">{priceLabel}</p>
-        <div className="mt-1.5 flex items-center gap-2">
+      {/**
+       * Two tiers, not four.
+       *
+       * Name and price sit at the SAME level — subhead, semibold — because they
+       * answer one question together ("what, and how much"). Previously the
+       * price was rendered a step LARGER than the name, which inverted the
+       * hierarchy: the thing you scan for last shouted loudest.
+       *
+       * Everything else is one tier down and secondary. Weight and colour carry
+       * the hierarchy here rather than size, so the row stays compact when
+       * Dynamic Type scales it up.
+       */}
+      <div className="min-w-0 flex-1 py-2 pr-3">
+        <div className="flex items-baseline justify-between gap-2">
+          <h3 className="min-w-0 truncate text-subhead font-semibold text-text-primary">{item.name}</h3>
+        </div>
+        <p className="truncate text-subhead font-semibold tabular-nums text-text-primary">{priceLabel}</p>
+        <div className="mt-1 flex items-center gap-1.5">
           <StatusBadge kind={status}>{STATUS_LABEL[status]}</StatusBadge>
           {item.placeCount ? (
             <span className="truncate text-caption-1 text-text-secondary">

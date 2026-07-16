@@ -22,7 +22,7 @@ interface SettingsSheetProps {
 function Group({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <section className="space-y-2">
-      <h3 className="px-4 text-[13px] font-normal uppercase tracking-wide text-text-secondary">{title}</h3>
+      <h3 className="px-4 text-footnote text-text-secondary">{title}</h3>
       <div className="mx-4 squircle bg-surface shadow-card overflow-hidden">
         {children}
       </div>

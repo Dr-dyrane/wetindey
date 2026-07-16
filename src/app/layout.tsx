@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { Analytics } from "@vercel/analytics/next";
 import { ThemeProvider } from "@/core/context/ThemeContext";
 import "./globals.css";
 
@@ -49,6 +50,10 @@ export default function RootLayout({
         <ThemeProvider>
           {children}
         </ThemeProvider>
+        {/* Vercel Web Analytics. Cookieless and no cross-site tracking, so it
+            needs no consent banner. Only reports once deployed to Vercel; it
+            no-ops locally. */}
+        <Analytics />
         <script
           dangerouslySetInnerHTML={{
             __html: `

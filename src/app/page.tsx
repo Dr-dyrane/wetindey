@@ -12,7 +12,6 @@ import {
   Sun,
   Moon,
   X,
-  Settings,
   Plus
 } from "lucide-react";
 
@@ -27,6 +26,7 @@ import { ItemCard, PhotoCredits, type ItemCardData } from "@/design-system/compo
 import { StatusDot } from "@/design-system/components/StatusBadge";
 import { SettingsSheet } from "@/app/_components/SettingsSheet";
 import { ReportPriceSheet } from "@/app/_components/ReportPriceSheet";
+import { ProfileSheet, Avatar } from "@/app/_components/ProfileSheet";
 
 import { useTheme } from "@/core/context/ThemeContext";
 import { useGlobalStore } from "@/core/state/globalStore";
@@ -221,6 +221,7 @@ export default function HomePage() {
   // Navigation Panel Views
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isReportOpen, setIsReportOpen] = useState(false);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [appLang, setAppLang] = useState<LangType>("en");
 
   // General App States
@@ -309,7 +310,7 @@ export default function HomePage() {
 
         if (queue.length === 0) return;
 
-        console.log(`Syncing ${queue.length} offline price reports to Neon database...`);
+        console.log(`Syncing ${queue.length} offline price reports…`);
         for (const item of queue) {
           await submitObservation(item);
         }
@@ -579,7 +580,7 @@ export default function HomePage() {
         <div className="flex items-center justify-between w-full">
           <div className="flex items-center space-x-2.5">
             <NigeriaLogo className="h-7 w-7" />
-            <span className="font-extrabold text-base tracking-tight">{TRANSLATIONS[appLang].wetin_dey}</span>
+            <span className="text-headline tracking-tight">{TRANSLATIONS[appLang].wetin_dey}</span>
           </div>
 
           {/* Both actions present a sheet over this one rather than replacing
@@ -595,12 +596,12 @@ export default function HomePage() {
             </button>
 
             <button
-              onClick={() => setIsSettingsOpen(true)}
-              className="grid place-items-center h-8 w-8 rounded-full bg-fillSecondary text-text-primary
+              onClick={() => setIsProfileOpen(true)}
+              className="grid place-items-center squircle-full
                          active:scale-90 transition-transform duration-instant"
-              aria-label={TRANSLATIONS[appLang].settings}
+              aria-label="Account"
             >
-              <Settings className="h-[18px] w-[18px]" strokeWidth={2.2} />
+              <Avatar size={32} />
             </button>
           </div>
         </div>
@@ -701,14 +702,11 @@ export default function HomePage() {
             {/* E. List Result View (Rendered inside sheet) */}
             {selectedItem && !isOffersLoading && (
               <div className="space-y-3">
-                <div className="pb-3 mb-1 flex items-center justify-between">
-                  <div>
-                    <h2 className="text-base font-black text-text-primary">{selectedItem.name}</h2>
-                    <p className="text-xs text-text-secondary mt-0.5">{matchingOffers.length} {TRANSLATIONS[appLang].locations_found}</p>
-                  </div>
-                  <span className="text-[9px] font-black tracking-wider uppercase px-2 py-0.5 rounded bg-accent/10 text-accent">
-                    Neon DB
-                  </span>
+                <div className="pb-2 mb-1">
+                  <h2 className="text-headline text-text-primary">{selectedItem.name}</h2>
+                  <p className="text-footnote text-text-secondary mt-0.5">
+                    {matchingOffers.length} {TRANSLATIONS[appLang].locations_found}
+                  </p>
                 </div>
 
                 {matchingOffers.length > 0 ? (
@@ -816,7 +814,7 @@ export default function HomePage() {
 
             {/* Price Tag Info */}
             <div className="p-4 squircle bg-fillSecondary/50 flex flex-col space-y-1">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-text-tertiary">
+              <span className="text-footnote text-text-secondary">
                 {TRANSLATIONS[appLang].reported_price}
               </span>
               <div className="flex items-baseline">
@@ -907,7 +905,7 @@ export default function HomePage() {
 
             {/* List of food items and prices currently available in this specific market */}
             <div className="space-y-3">
-              <h4 className="text-[10px] font-bold uppercase tracking-wider text-text-tertiary">
+              <h4 className="text-footnote text-text-secondary">
                 Available Prices in Market
               </h4>
               {isPlaceOffersLoading ? (
@@ -980,6 +978,13 @@ export default function HomePage() {
         radiusKm={activeRadiusKm}
         onRadiusChange={setActiveRadiusKm}
         t={TRANSLATIONS[appLang]}
+      />
+
+      <ProfileSheet
+        open={isProfileOpen}
+        onClose={() => setIsProfileOpen(false)}
+        onOpenSettings={() => setIsSettingsOpen(true)}
+        user={null}
       />
 
       <ReportPriceSheet

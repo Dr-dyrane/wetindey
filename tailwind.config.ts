@@ -60,18 +60,31 @@ const config: Config = {
        * is transcribed rather than invented. Headline is the only semibold.
        * https://developer.apple.com/design/human-interface-guidelines/typography
        */
+      /**
+       * The iOS type ramp at Large (default) Dynamic Type, from HIG — one of the
+       * few parts of iOS Apple documents numerically, so transcribed rather than
+       * invented. Headline is the only semibold in the ramp.
+       *
+       * Expressed in rem, NOT px. This is the web's Dynamic Type: rem scales
+       * with the reader's browser font-size setting, px ignores it outright. A
+       * px ramp means someone who has enlarged their system font gets no change
+       * at all — the accessibility setting silently does nothing. Divide by 16
+       * to read these as points: 1.0625rem = 17pt.
+       *
+       * https://developer.apple.com/design/human-interface-guidelines/typography
+       */
       fontSize: {
-        "large-title": ["34px", { lineHeight: "41px", letterSpacing: "0.374px" }],
-        "title-1": ["28px", { lineHeight: "34px", letterSpacing: "0.364px" }],
-        "title-2": ["22px", { lineHeight: "28px", letterSpacing: "0.352px" }],
-        "title-3": ["20px", { lineHeight: "25px", letterSpacing: "0.38px" }],
-        headline: ["17px", { lineHeight: "22px", letterSpacing: "-0.408px", fontWeight: "600" }],
-        body: ["17px", { lineHeight: "22px", letterSpacing: "-0.408px" }],
-        callout: ["16px", { lineHeight: "21px", letterSpacing: "-0.32px" }],
-        subhead: ["15px", { lineHeight: "20px", letterSpacing: "-0.24px" }],
-        footnote: ["13px", { lineHeight: "18px", letterSpacing: "-0.078px" }],
-        "caption-1": ["12px", { lineHeight: "16px", letterSpacing: "0px" }],
-        "caption-2": ["11px", { lineHeight: "13px", letterSpacing: "0.066px" }],
+        "large-title": ["2.125rem", { lineHeight: "2.5625rem", letterSpacing: "0.023em" }],   /* 34 / 41 */
+        "title-1": ["1.75rem", { lineHeight: "2.125rem", letterSpacing: "0.013em" }],         /* 28 / 34 */
+        "title-2": ["1.375rem", { lineHeight: "1.75rem", letterSpacing: "0.016em" }],         /* 22 / 28 */
+        "title-3": ["1.25rem", { lineHeight: "1.5625rem", letterSpacing: "0.019em" }],        /* 20 / 25 */
+        headline: ["1.0625rem", { lineHeight: "1.375rem", letterSpacing: "-0.024em", fontWeight: "600" }], /* 17 / 22 */
+        body: ["1.0625rem", { lineHeight: "1.375rem", letterSpacing: "-0.024em" }],           /* 17 / 22 */
+        callout: ["1rem", { lineHeight: "1.3125rem", letterSpacing: "-0.02em" }],             /* 16 / 21 */
+        subhead: ["0.9375rem", { lineHeight: "1.25rem", letterSpacing: "-0.016em" }],         /* 15 / 20 */
+        footnote: ["0.8125rem", { lineHeight: "1.125rem", letterSpacing: "-0.006em" }],       /* 13 / 18 */
+        "caption-1": ["0.75rem", { lineHeight: "1rem", letterSpacing: "0em" }],               /* 12 / 16 */
+        "caption-2": ["0.6875rem", { lineHeight: "0.8125rem", letterSpacing: "0.006em" }],    /* 11 / 13 */
       },
 
       spacing: {
