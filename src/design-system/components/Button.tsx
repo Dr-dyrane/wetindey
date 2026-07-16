@@ -15,18 +15,18 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         ref={ref}
         className={twMerge(
           clsx(
-            "inline-flex items-center justify-center font-medium transition-colors duration-micro ease-decelerate rounded-button focus-visible:outline-none disabled:opacity-50 disabled:pointer-events-none active:scale-[0.98]",
+            "inline-flex items-center justify-center font-semibold transition-all duration-micro ease-decelerate focus-visible:outline-none disabled:opacity-50 disabled:pointer-events-none active:scale-[0.97]",
             {
               // Variants
-              "bg-accent hover:bg-accent/90 active:bg-accent-pressed text-white shadow-sm": variant === "primary",
-              "bg-surface border border-separator text-text-primary hover:bg-background": variant === "secondary",
-              "bg-status-unavailable text-white hover:bg-status-unavailable/90": variant === "danger",
-              "bg-transparent text-text-secondary hover:text-text-primary hover:bg-background": variant === "ghost",
+              "bg-accent text-white hover:bg-opacity-90 active:bg-accent/80": variant === "primary",
+              "bg-fillSecondary text-accent hover:bg-opacity-80 active:bg-opacity-70": variant === "secondary",
+              "bg-status-unavailable text-white hover:bg-opacity-90 active:bg-opacity-80": variant === "danger",
+              "bg-transparent text-accent hover:bg-fillSecondary active:bg-opacity-80": variant === "ghost",
 
               // Sizes
-              "h-9 px-3 text-sm": size === "sm",
-              "h-11 px-4 text-base": size === "md",
-              "h-12 px-6 text-lg": size === "lg",
+              "h-10 px-4 text-sm rounded-[14px]": size === "sm",
+              "h-12 px-5 text-base rounded-[16px]": size === "md",
+              "h-14 px-6 text-lg rounded-[18px]": size === "lg",
             },
             className
           )

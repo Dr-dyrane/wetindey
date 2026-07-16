@@ -44,8 +44,13 @@ You **MUST** write an Architectural Decision Record (ADR) in [docs/adr/](file://
 Every user interface element must comply with the following Apple HIG principles:
 
 ### A. Border & Depth Rules
-- **No Border Zero**: The use of `border-0` is prohibited. All UI elements, buttons, cards, and panel structures must have at least a hairline border (`border border-separator` or `1px` lines).
-- **Surface Differentiation**: Depth is created using calculated surface color contrast across layers (e.g. background `#F7F7F5` vs elevated surface `#FFFFFF`) rather than heavy shadows. Drop shadows must be kept minimal and subtle.
+- **No Borders (Contrast Surfaces)**: Hairline borders are removed. Use borderless structures (`border-0` or `border-none`) and rely entirely on HSL background surface contrast to establish layout depth and layout containment.
+- **Smart Squircles (Continuous Corner Radii)**: Standard square corners are prohibited. Ensure all card containers use a smooth squircle radius (`rounded-[24px]` or `rounded-[32px]`) and all controls/buttons/inputs use (`rounded-[14px]` or `rounded-[16px]`).
+- **Surface Contrast Hierarchy**: Depth is established by color contrasts across layers:
+  - Base layer (Map Canvas): Bottom-most.
+  - Page Background: Light `#F2F2F7` | Dark `#000000`.
+  - Sheet Surfaces: Light `#FFFFFF` | Dark `#1C1C1E` (with opacity + backdrop blur).
+  - Button/Input Backgrounds: Light `#E5E5EA` | Dark `#2C2C2E`.
 - **Spatial Awareness**: Z-indices must align with visual layering: Map canvas (bottom) -> Interactive Context Sheet (middle) -> Floating elements/Modals (top).
 
 ### B. Animation Rules

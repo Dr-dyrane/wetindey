@@ -17,6 +17,7 @@
   --color-status-unavailable: #C9342F;
   --color-status-info: #2678D9;
   --color-focus-ring: #0A84FF;
+  --color-fill-secondary: #E5E5EA;
 
   /* Safe Area variables mapped to fallbacks if not in standalone PWA */
   --safe-area-top: env(safe-area-inset-top, 0px);
@@ -40,6 +41,7 @@
   --color-status-unavailable: #F06A64;
   --color-status-info: #64A8FF;
   --color-focus-ring: #64A8FF;
+  --color-fill-secondary: #2C2C2E;
 }
 
 @layer base {

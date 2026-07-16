@@ -34,6 +34,7 @@ const config: Config = {
           info: "var(--color-status-info)",
         },
         focusRing: "var(--color-focus-ring)",
+        fillSecondary: "var(--color-fill-secondary)",
       },
       borderRadius: {
         control: "10px",

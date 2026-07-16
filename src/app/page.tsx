@@ -1,11 +1,10 @@
 "use client";
 
-import React, { useState, useEffect, useTransition } from "react";
+import React, { useState, useEffect, useTransition, useMemo } from "react";
 import { useAtom } from "jotai";
 import {
   Search,
   MapPin,
-  Compass,
   Navigation,
   Share2,
   AlertTriangle,
@@ -13,15 +12,13 @@ import {
   ArrowLeft,
   Sun,
   Moon,
-  X,
-  Map as MapIcon,
-  List as ListIcon
+  X
 } from "lucide-react";
 
 import { Button } from "@/design-system/components/Button";
 import { Input } from "@/design-system/components/Input";
 import { Card } from "@/design-system/components/Card";
-import { ContextLayout } from "@/design-system/components/ContextLayout";
+import { AdaptiveShell } from "@/design-system/components/AdaptiveShell";
 import { MapboxCanvas } from "@/design-system/components/MapboxCanvas";
 import { Skeleton, CardListSkeleton } from "@/design-system/components/Skeleton";
 
@@ -70,7 +67,7 @@ export default function HomePage() {
   const [activeMarkerId, setActiveMarkerId] = useAtom(activeMarkerIdAtom);
   const [_searchFocused, setSearchFocused] = useAtom(searchFocusedAtom);
 
-  // React Transitions for concurrent render support (Next.js 15 optimization)
+  // React Transitions for concurrent render support
   const [isPending, startTransition] = useTransition();
 
   // Component States
@@ -79,16 +76,12 @@ export default function HomePage() {
   const [searchResults, setSearchResults] = useState<FoodItem[]>([]);
   const [selectedItem, setSelectedItem] = useState<FoodItem | null>(null);
   const [matchingOffers, setMatchingOffers] = useState<Candidate[]>([]);
-  const [showLocationPrompt, setShowLocationPrompt] = useState(true);
-  const [_locationDenied, setLocationDenied] = useState(false);
-  const [isMobileList, setIsMobileList] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
   const [isOffersLoading, setIsOffersLoading] = useState(false);
 
-  // Load baseline popular items from the Neon database on mount
+  // Load baseline popular items from database on mount
   useEffect(() => {
     startTransition(async () => {
-      // Fetch staples using wildcard search
       const items = await searchFoodItems(" ");
       setPopularItems(items.slice(0, 5));
     });
@@ -160,7 +153,12 @@ export default function HomePage() {
     }).format(koboAmount / 100);
   };
 
-  // Render Map Section Node
+  // Retrieve the selected offer details based on activeMarkerId
+  const selectedOffer = useMemo(() => {
+    return matchingOffers.find((o) => o.placeId === activeMarkerId);
+  }, [matchingOffers, activeMarkerId]);
+
+  // 1. Map Node (Base layer)
   const mapNode = (
     <div className="relative w-full h-full">
       <MapboxCanvas
@@ -170,67 +168,38 @@ export default function HomePage() {
         center={mapCenter}
       />
 
-      {/* Location prompt modal overlay */}
-      {showLocationPrompt && (
-        <div className="absolute bottom-4 left-4 right-4 md:left-6 md:right-auto md:max-w-sm z-30">
-          <Card className="p-4 shadow-xl border-accent/20 bg-surface/95 backdrop-blur">
-            <div className="flex items-start space-x-3">
-              <div className="p-2 bg-accent/10 rounded-full text-accent">
-                <Compass className="h-6 w-6 animate-pulse" />
-              </div>
-              <div className="flex-1">
-                <h3 className="text-base font-bold text-text-primary">See what’s available around you</h3>
-                <p className="text-sm text-text-secondary mt-1">
-                  Allow location once, or choose your area yourself.
-                </p>
-                <div className="mt-4 flex items-center space-x-2">
-                  <Button 
-                    variant="primary" 
-                    size="sm" 
-                    onClick={() => setShowLocationPrompt(false)} 
-                    className="flex-1"
-                  >
-                    Use my location
-                  </Button>
-                  <Button 
-                    variant="secondary" 
-                    size="sm" 
-                    onClick={() => { setLocationDenied(true); setShowLocationPrompt(false); }} 
-                    className="flex-1"
-                  >
-                    Choose area
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </Card>
-        </div>
-      )}
+      {/* Floating System Controls on Map (Theme Toggle) */}
+      <div className="absolute top-4 right-4 z-10">
+        <Button
+          variant="secondary"
+          size="sm"
+          onClick={toggleTheme}
+          className="w-10 h-10 p-0 rounded-full shadow-md bg-surface/90 dark:bg-surface-elevated/90 backdrop-blur"
+          aria-label="Toggle theme"
+        >
+          {theme === "dark" ? <Sun className="h-5 w-5 text-accent" /> : <Moon className="h-5 w-5 text-text-secondary" />}
+        </Button>
+      </div>
     </div>
   );
 
-  // Render Sliding Context Sheet Node
+  // 2. Sheet Node (Left Sidebar / Mobile Bottom Sheet)
   const sheetNode = (
-    <div className="flex-1 flex flex-col h-full overflow-hidden">
-      {/* Mobile handle drawer indicator */}
-      <div
-        className="md:hidden flex justify-center py-2 cursor-pointer"
-        onClick={() => {
-          if (activeDetent === "peek") setActiveDetent("medium");
-          else if (activeDetent === "medium") setActiveDetent("large");
-          else setActiveDetent("peek");
-        }}
-      >
-        <div className="w-10 h-1 bg-text-tertiary/40 rounded-full" />
-      </div>
+    <div className="flex flex-col h-full overflow-hidden">
+      {/* Brand & Search Header */}
+      <div className="px-5 pt-4 pb-3 flex flex-col space-y-3">
+        <div className="flex items-center space-x-2">
+          <div className="h-7 w-7 rounded-lg bg-accent flex items-center justify-center text-white font-black text-sm">
+            W
+          </div>
+          <span className="font-extrabold text-base tracking-tight">WetinDey</span>
+        </div>
 
-      {/* Search Header Area */}
-      <div className="px-4 py-3 border-b border-separator flex flex-col space-y-2">
         {selectedItem && (
-          <div className="flex items-center space-x-2 pb-1 text-accent font-semibold text-sm">
+          <div className="flex items-center space-x-2 pb-1 text-accent font-semibold text-xs">
             <Button variant="ghost" size="sm" onClick={clearSearch} className="h-7 px-2 -ml-2 text-accent">
-              <ArrowLeft className="h-4 w-4 mr-1" />
-              Clear search
+              <ArrowLeft className="h-4.5 w-4.5 mr-1" />
+              Clear Search
             </Button>
           </div>
         )}
@@ -254,57 +223,50 @@ export default function HomePage() {
             </button>
           )}
         </div>
-
-        <div className="sm:hidden flex items-center text-xs font-semibold text-text-secondary">
-          <MapPin className="h-3.5 w-3.5 text-accent mr-1" />
-          Showing around Yaba
-        </div>
       </div>
 
-      {/* Content Scrolling Pane */}
-      <div className="flex-1 overflow-y-auto px-4 py-3 space-y-4">
-        {/* A. Suggestions State (Search empty) */}
+      {/* Scrollable List Contents */}
+      <div className="flex-1 overflow-y-auto px-5 pb-5 space-y-4">
+        {/* A. Popular Items Suggestions */}
         {!searchQuery && !selectedItem && (
-          <div className="space-y-4">
-            <div>
-              <h4 className="text-xs font-bold uppercase tracking-wider text-text-tertiary mb-2">
-                Popular around this area
-              </h4>
-              <div className="grid grid-cols-1 gap-2">
-                {isPending && popularItems.length === 0 ? (
-                  <CardListSkeleton count={3} />
-                ) : (
-                  popularItems.map((item) => (
-                    <button
-                      key={item.id}
-                      onClick={() => handleSelectItem(item)}
-                      className="flex items-center space-x-3 w-full p-3 rounded-input bg-background/50 hover:bg-background border border-separator hover:border-accent transition-all duration-micro text-left"
-                    >
-                      <div className="p-2 rounded-full bg-accent/10 text-accent text-sm">🛍️</div>
-                      <div>
-                        <div className="font-semibold text-text-primary text-sm">{item.name}</div>
-                        <div className="text-xs text-text-tertiary truncate">
-                          {item.description || "Fresh staple item available locally"}
-                        </div>
+          <div className="space-y-3">
+            <h4 className="text-[11px] font-bold uppercase tracking-wider text-text-tertiary">
+              Popular items around Yaba
+            </h4>
+            <div className="grid grid-cols-1 gap-2">
+              {isPending && popularItems.length === 0 ? (
+                <CardListSkeleton count={3} />
+              ) : (
+                popularItems.map((item) => (
+                  <button
+                    key={item.id}
+                    onClick={() => handleSelectItem(item)}
+                    className="flex items-center space-x-3 w-full p-3.5 rounded-[16px] bg-fillSecondary/50 hover:bg-fillSecondary active:scale-[0.98] transition-all duration-micro text-left border-0"
+                  >
+                    <div className="p-2.5 rounded-full bg-accent/10 text-accent text-base">🛍️</div>
+                    <div className="flex-1 min-w-0">
+                      <div className="font-semibold text-text-primary text-sm">{item.name}</div>
+                      <div className="text-xs text-text-secondary truncate mt-0.5">
+                        {item.description || "Fresh staple item available locally"}
                       </div>
-                    </button>
-                  ))
-                )}
-              </div>
+                    </div>
+                  </button>
+                ))
+              )}
             </div>
           </div>
         )}
 
-        {/* B. Searching loading state */}
+        {/* B. Searching Loading Indicator */}
         {isSearching && (
           <div className="space-y-2">
-            <Skeleton className="h-10 w-full" />
-            <Skeleton className="h-10 w-full" />
-            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-12 w-full rounded-[14px]" />
+            <Skeleton className="h-12 w-full rounded-[14px]" />
+            <Skeleton className="h-12 w-full rounded-[14px]" />
           </div>
         )}
 
-        {/* C. Search Query matches but no item selected */}
+        {/* C. Search Results Suggestions */}
         {searchQuery && !selectedItem && !isSearching && (
           <div className="space-y-2">
             {searchResults.length > 0 ? (
@@ -312,24 +274,21 @@ export default function HomePage() {
                 <button
                   key={item.id}
                   onClick={() => handleSelectItem(item)}
-                  className="flex items-center justify-between w-full p-3 rounded-input bg-background/50 hover:bg-background border border-separator hover:border-accent transition-all duration-micro text-left"
+                  className="flex items-center justify-between w-full p-3.5 rounded-[16px] bg-fillSecondary/50 hover:bg-fillSecondary active:scale-[0.98] transition-all duration-micro text-left border-0"
                 >
                   <div className="font-semibold text-text-primary text-sm">{item.name}</div>
-                  <span className="text-xs text-accent">Select</span>
+                  <span className="text-xs text-accent font-bold">Select</span>
                 </button>
               ))
             ) : (
               <div className="text-center py-10 space-y-3">
-                <div className="inline-flex p-3 rounded-full bg-status-caution/10 text-status-caution">
-                  <AlertTriangle className="h-8 w-8" />
+                <div className="inline-flex p-3.5 rounded-full bg-status-caution/10 text-status-caution">
+                  <AlertTriangle className="h-7 w-7" />
                 </div>
-                <h3 className="text-base font-bold">We never support this item yet</h3>
-                <p className="text-sm text-text-secondary max-w-[280px] mx-auto">
-                  Try another name, or tell us the item you want us to add.
+                <h3 className="text-sm font-bold">No items found</h3>
+                <p className="text-xs text-text-secondary max-w-[220px] mx-auto leading-normal">
+                  Try searching for Rice, Beans, Garri, Yam or Palm Oil.
                 </p>
-                <Button variant="secondary" size="sm" className="mt-2">
-                  Request Item
-                </Button>
               </div>
             )}
           </div>
@@ -338,21 +297,21 @@ export default function HomePage() {
         {/* D. Offers loading state */}
         {isOffersLoading && <CardListSkeleton count={2} />}
 
-        {/* E. Results State */}
+        {/* E. List Result View (Rendered inside sheet) */}
         {selectedItem && !isOffersLoading && (
           <div className="space-y-3">
             <div className="pb-2 border-b border-separator flex items-center justify-between">
               <div>
-                <h2 className="text-lg font-bold text-text-primary">{selectedItem.name}</h2>
-                <p className="text-xs text-text-secondary">{matchingOffers.length} locations found</p>
+                <h2 className="text-base font-black text-text-primary">{selectedItem.name}</h2>
+                <p className="text-xs text-text-secondary mt-0.5">{matchingOffers.length} locations found</p>
               </div>
-              <span className="text-[11px] font-bold px-2 py-0.5 rounded bg-accent/10 text-accent">
-                Neon Database
+              <span className="text-[9px] font-black tracking-wider uppercase px-2 py-0.5 rounded bg-accent/10 text-accent">
+                Neon DB
               </span>
             </div>
 
             {matchingOffers.length > 0 ? (
-              <div className="space-y-3">
+              <div className="space-y-2.5">
                 {matchingOffers.map((offer) => {
                   const isSelected = activeMarkerId === offer.placeId;
 
@@ -362,79 +321,40 @@ export default function HomePage() {
                       hoverable
                       onClick={() => handleMarkerSelection(offer.placeId)}
                       className={`transition-all duration-standard ${
-                        isSelected ? "border-accent ring-1 ring-accent" : "border-separator"
+                        isSelected ? "bg-fillSecondary/80" : ""
                       }`}
                     >
                       <div className="p-4 space-y-3">
                         <div className="flex items-start justify-between">
                           <div>
-                            <h3 className="font-bold text-text-primary text-base">{offer.placeName}</h3>
-                            <p className="text-xs text-text-secondary flex items-center mt-0.5">
-                              <MapPin className="h-3 w-3 mr-1" />
+                            <h3 className="font-bold text-text-primary text-sm">{offer.placeName}</h3>
+                            <p className="text-xs text-text-secondary mt-0.5 leading-snug">
                               {offer.address}
                             </p>
                           </div>
-                          <span
-                            className={`text-xs font-semibold px-2 py-0.5 rounded-full flex items-center space-x-1 ${
-                              offer.detail.confidenceLevel === "confirmed"
-                                ? "bg-status-confirmed/10 text-status-confirmed"
-                                : offer.detail.confidenceLevel === "caution"
-                                ? "bg-status-caution/10 text-status-caution"
-                                : "bg-status-unavailable/10 text-status-unavailable"
-                            }`}
-                          >
-                            <span
-                              className={`w-1.5 h-1.5 rounded-full mr-1 ${
-                                offer.detail.confidenceLevel === "confirmed"
-                                  ? "bg-status-confirmed"
-                                  : offer.detail.confidenceLevel === "caution"
-                                  ? "bg-status-caution"
-                                  : "bg-status-unavailable"
-                              }`}
-                            />
-                            {offer.detail.confidenceLevel === "confirmed"
-                              ? "Confirmed Available"
-                              : offer.detail.confidenceLevel === "caution"
-                              ? "Likely Available"
-                              : "Out of Stock"}
-                          </span>
                         </div>
 
                         <div className="flex items-baseline justify-between pt-1">
                           <div>
-                            <span className="text-2xl font-black text-accent">
+                            <span className="text-lg font-black text-accent">
                               {formatPrice(offer.detail.priceMin)}
                             </span>
                             {offer.detail.priceMax && (
-                              <span className="text-2xl font-black text-accent">
+                              <span className="text-lg font-black text-accent">
                                 {" - "}{formatPrice(offer.detail.priceMax)}
                               </span>
                             )}
                             <span className="text-xs text-text-secondary ml-1">/ {offer.detail.unit}</span>
                           </div>
-                          <span className="text-xs font-semibold text-text-tertiary">
-                            {offer.detail.priceType} Price
-                          </span>
                         </div>
 
-                        {/* Source Confidence indicators */}
-                        <div className="pt-2 border-t border-separator flex items-center justify-between text-xs text-text-secondary">
-                          <span className="flex items-center">
-                            <CheckCircle2 className="h-3.5 w-3.5 text-accent mr-1" />
-                            Confidence: {offer.detail.confidenceScore}%
-                          </span>
-                          <span className="px-1.5 py-0.5 bg-background rounded border border-separator text-[10px]">
-                            {offer.detail.sourceType}
-                          </span>
-                        </div>
-
-                        {/* Expanded interactive controls on card selection */}
+                        {/* Mobile selection detail buttons embedded in sheet */}
                         {isSelected && (
-                          <div className="pt-3 border-t border-separator grid grid-cols-3 gap-2 animate-fade-in">
+                          <div className="md:hidden pt-3 border-t border-separator/15 grid grid-cols-2 gap-2 animate-fade-in">
                             <Button
                               variant="primary"
                               size="sm"
-                              className="h-9 text-xs px-2 flex items-center justify-center"
+                              className="h-9 text-xs flex items-center justify-center"
                             >
                               <Navigation className="h-3.5 w-3.5 mr-1" />
                               Directions
@@ -442,17 +362,10 @@ export default function HomePage() {
                             <Button
                               variant="secondary"
                               size="sm"
-                              className="h-9 text-xs px-2 flex items-center justify-center"
+                              className="h-9 text-xs flex items-center justify-center"
                             >
                               <Share2 className="h-3.5 w-3.5 mr-1" />
                               Share
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-9 text-xs px-2 border border-dashed border-separator text-status-unavailable hover:bg-status-unavailable/5"
-                            >
-                              Report Issue
                             </Button>
                           </div>
                         )}
@@ -463,7 +376,7 @@ export default function HomePage() {
               </div>
             ) : (
               <div className="text-center py-10">
-                <p className="text-sm text-text-secondary">No current offers found for this item around Yaba.</p>
+                <p className="text-xs text-text-secondary">No locations reported around Yaba.</p>
               </div>
             )}
           </div>
@@ -472,63 +385,104 @@ export default function HomePage() {
     </div>
   );
 
-  return (
-    <div className="relative w-full h-full min-h-screen overflow-hidden">
-      {/* 1. Header Toolbar (Unified Top Bar) */}
-      <header className="absolute top-0 left-0 right-0 z-30 h-16 px-4 bg-surface/85 backdrop-blur border-b border-separator flex items-center justify-between">
-        <div className="flex items-center space-x-2">
-          <div className="h-8 w-8 rounded-lg bg-accent flex items-center justify-center text-white font-bold text-lg">
-            W
+  // 3. Desktop Detail Sidebar Node (Right panel overlay on Desktop)
+  const detailNode = selectedOffer ? (
+    <div className="space-y-5 h-full flex flex-col justify-between">
+      <div className="space-y-4">
+        {/* Detail Panel Header */}
+        <div className="flex items-start justify-between">
+          <div className="flex-1 pr-4">
+            <h2 className="text-lg font-black tracking-tight leading-snug text-text-primary">
+              {selectedOffer.placeName}
+            </h2>
+            <p className="text-xs text-text-secondary mt-1 flex items-center">
+              <MapPin className="h-3.5 w-3.5 text-accent mr-1 shrink-0" />
+              {selectedOffer.address}
+            </p>
           </div>
-          <span className="font-bold text-lg tracking-tight">WetinDey</span>
-        </div>
-
-        <div className="flex items-center space-x-2">
-          <div className="hidden sm:flex items-center bg-background px-3 py-1.5 rounded-full text-xs font-semibold text-text-secondary border border-separator">
-            <MapPin className="h-3.5 w-3.5 text-accent mr-1" />
-            Showing around Yaba
-          </div>
-
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={toggleTheme}
-            className="w-9 h-9 p-0 rounded-full"
-            aria-label="Toggle theme"
+          <button
+            onClick={() => setActiveMarkerId(null)}
+            className="p-1.5 rounded-full bg-fillSecondary text-text-secondary hover:text-text-primary transition-colors border-0"
           >
-            {theme === "dark" ? <Sun className="h-5 w-5 text-accent" /> : <Moon className="h-5 w-5 text-text-secondary" />}
-          </Button>
+            <X className="h-4 w-4" />
+          </button>
         </div>
-      </header>
 
-      {/* 2. Severe Modular Monolith Context Layout */}
-      <ContextLayout
-        mapNode={mapNode}
-        sheetNode={sheetNode}
-        isMobileListActive={isMobileList}
-      />
+        {/* Price Tag Info */}
+        <div className="p-4 rounded-[20px] bg-fillSecondary/50 flex flex-col space-y-1">
+          <span className="text-[10px] font-bold uppercase tracking-wider text-text-tertiary">
+            Reported Price
+          </span>
+          <div className="flex items-baseline">
+            <span className="text-2xl font-black text-accent">
+              {formatPrice(selectedOffer.detail.priceMin)}
+            </span>
+            {selectedOffer.detail.priceMax && (
+              <span className="text-2xl font-black text-accent">
+                {" - "}{formatPrice(selectedOffer.detail.priceMax)}
+              </span>
+            )}
+            <span className="text-xs text-text-secondary ml-1">/ {selectedOffer.detail.unit}</span>
+          </div>
+        </div>
 
-      {/* 3. Mobile Toggle Bar (Toggles between Map & List view) */}
-      <footer className="md:hidden absolute bottom-4 left-1/2 -translate-x-1/2 z-30 bg-surface/90 dark:bg-surface-elevated/90 backdrop-blur shadow-xl border border-separator px-4 py-2 rounded-full flex items-center space-x-2">
-        <Button
-          variant={isMobileList ? "secondary" : "primary"}
-          size="sm"
-          onClick={() => setIsMobileList(false)}
-          className="rounded-full h-9 px-4 text-xs font-bold"
-        >
-          <MapIcon className="h-3.5 w-3.5 mr-1" />
-          Map View
+        {/* Info stats */}
+        <div className="space-y-3">
+          <div className="flex items-center justify-between text-xs py-1 border-b border-separator/10">
+            <span className="text-text-secondary">Freshness Status</span>
+            <span
+              className={`font-semibold px-2 py-0.5 rounded-full flex items-center ${
+                selectedOffer.detail.confidenceLevel === "confirmed"
+                  ? "bg-status-confirmed/10 text-status-confirmed"
+                  : selectedOffer.detail.confidenceLevel === "caution"
+                  ? "bg-status-caution/10 text-status-caution"
+                  : "bg-status-unavailable/10 text-status-unavailable"
+              }`}
+            >
+              {selectedOffer.detail.confidenceLevel === "confirmed"
+                ? "Confirmed Available"
+                : selectedOffer.detail.confidenceLevel === "caution"
+                ? "Likely Available"
+                : "Out of Stock"}
+            </span>
+          </div>
+          <div className="flex items-center justify-between text-xs py-1 border-b border-separator/10">
+            <span className="text-text-secondary">Data Confidence</span>
+            <span className="font-semibold text-text-primary flex items-center">
+              <CheckCircle2 className="h-3.5 w-3.5 text-accent mr-1" />
+              {selectedOffer.detail.confidenceScore}%
+            </span>
+          </div>
+          <div className="flex items-center justify-between text-xs py-1 border-b border-separator/10">
+            <span className="text-text-secondary">Data Source</span>
+            <span className="font-semibold text-text-primary">
+              {selectedOffer.detail.sourceType}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* Sticky Bottom Actions */}
+      <div className="grid grid-cols-2 gap-3 pt-4 border-t border-separator/10">
+        <Button variant="primary" size="md" className="w-full flex items-center justify-center">
+          <Navigation className="h-4 w-4 mr-1.5" />
+          Directions
         </Button>
-        <Button
-          variant={isMobileList ? "primary" : "secondary"}
-          size="sm"
-          onClick={() => setIsMobileList(true)}
-          className="rounded-full h-9 px-4 text-xs font-bold"
-        >
-          <ListIcon className="h-3.5 w-3.5 mr-1" />
-          List View
+        <Button variant="secondary" size="md" className="w-full flex items-center justify-center">
+          <Share2 className="h-4 w-4 mr-1.5" />
+          Share
         </Button>
-      </footer>
+      </div>
     </div>
+  ) : undefined;
+
+  return (
+    <AdaptiveShell
+      mapNode={mapNode}
+      sheetNode={sheetNode}
+      detailNode={detailNode}
+      activeDetent={activeDetent}
+      setActiveDetent={setActiveDetent}
+    />
   );
 }
