@@ -1,0 +1,64 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --color-background: #F7F7F5;
+  --color-surface: #FFFFFF;
+  --color-surface-elevated: #FFFFFF;
+  --color-text-primary: #111113;
+  --color-text-secondary: #626268;
+  --color-text-tertiary: #85858C;
+  --color-separator: rgba(60, 60, 67, 0.18);
+  --color-accent: #087A50;
+  --color-accent-pressed: #066540;
+  --color-status-confirmed: #248A3D;
+  --color-status-caution: #A96500;
+  --color-status-unavailable: #C9342F;
+  --color-status-info: #2678D9;
+  --color-focus-ring: #0A84FF;
+
+  /* Safe Area variables mapped to fallbacks if not in standalone PWA */
+  --safe-area-top: env(safe-area-inset-top, 0px);
+  --safe-area-right: env(safe-area-inset-right, 0px);
+  --safe-area-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-area-left: env(safe-area-inset-left, 0px);
+}
+
+.dark {
+  --color-background: #0B0B0C;
+  --color-surface: #1C1C1E;
+  --color-surface-elevated: #252528;
+  --color-text-primary: #F5F5F7;
+  --color-text-secondary: #B1B1B7;
+  --color-text-tertiary: #85858C;
+  --color-separator: rgba(84, 84, 88, 0.60);
+  --color-accent: #35B57B;
+  --color-accent-pressed: #2DA16C;
+  --color-status-confirmed: #45B85B;
+  --color-status-caution: #E1A23A;
+  --color-status-unavailable: #F06A64;
+  --color-status-info: #64A8FF;
+  --color-focus-ring: #64A8FF;
+}
+
+@layer base {
+  body {
+    @apply bg-background text-text-primary antialiased;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
+
+  /* Safe interactive outline focus states */
+  :focus-visible {
+    outline: 2px solid var(--color-focus-ring);
+    outline-offset: 2px;
+  }
+}
+
+/* Standalone PWA adjustments */
+@media (display-mode: standalone) {
+  body {
+    padding-top: var(--safe-area-top);
+    padding-bottom: var(--safe-area-bottom);
+  }
+}
