@@ -13,7 +13,8 @@ import {
   Sun,
   Moon,
   X,
-  Settings
+  Settings,
+  Plus
 } from "lucide-react";
 
 import { Button } from "@/design-system/components/Button";
@@ -27,7 +28,14 @@ import { NigeriaLogo } from "@/design-system/components/NigeriaLogo";
 import { useTheme } from "@/core/context/ThemeContext";
 import { useGlobalStore } from "@/core/state/globalStore";
 import { sheetDetentAtom, activeMarkerIdAtom, searchFocusedAtom } from "@/core/state/uiAtoms";
-import { searchFoodItems, getFoodItemCandidates, getPlaces, getPlaceOffers } from "@/app/actions";
+import { 
+  searchFoodItems, 
+  getFoodItemCandidates, 
+  getPlaces, 
+  getPlaceOffers,
+  getInitialSubmissionData,
+  submitObservation 
+} from "@/app/actions";
 import { getHaversineDistance, formatDistance } from "@/lib/geospatial";
 
 interface FoodItem {
@@ -77,6 +85,120 @@ interface PlaceOffer {
   freshnessState: string;
 }
 
+// Phase 3 Localization Dictionaries
+const TRANSLATIONS = {
+  en: {
+    wetin_dey: "WetinDey",
+    search_placeholder: "Wetin you dey find?",
+    popular_items: "Popular items around Yaba",
+    settings: "Settings",
+    theme: "Interface Theme",
+    radius: "Geospatial Search Radius",
+    pilot_areas: "Lagos Pilot Areas",
+    report_price: "Report Food Price",
+    done: "Done",
+    submit: "Submit Report",
+    price_paid: "Price Paid (₦)",
+    market: "Select Market",
+    item: "Select Food Item",
+    variant: "Select Quality/Type",
+    unit: "Select Packaging",
+    availability: "Is it available?",
+    available: "Yes, available",
+    unavailable: "No, out of stock",
+    success_msg: "Report saved successfully!",
+    offline_msg: "Saved offline. Will sync when back online!",
+    no_results: "No items found",
+    locations_found: "locations found",
+    reported_price: "Reported Price",
+    freshness: "Freshness Status",
+    data_confidence: "Data Confidence",
+    data_source: "Data Source",
+    directions: "Directions",
+    share: "Share",
+    clear_search: "Clear Search",
+    confirmed: "Confirmed Available",
+    caution: "Likely Available",
+    language: "App Language",
+    light_mode: "Light Mode",
+    dark_mode: "Dark Mode"
+  },
+  pidgin: {
+    wetin_dey: "WetinDey",
+    search_placeholder: "Wetin you dey find?",
+    popular_items: "Things people dey buy for Yaba",
+    settings: "Settings",
+    theme: "How app dey look",
+    radius: "Distance where you dey find market",
+    pilot_areas: "Places where we dey work for Lagos",
+    report_price: "Tell us how much dem sell food",
+    done: "O ti tan",
+    submit: "Send Report",
+    price_paid: "Money inside Naira (₦)",
+    market: "Which market you go?",
+    item: "Which food be dat?",
+    variant: "How the quality be?",
+    unit: "How dem pack am?",
+    availability: "Food dey there?",
+    available: "Yes, e dey",
+    unavailable: "No, e don finish",
+    success_msg: "We don save your report, correct!",
+    offline_msg: "Network bad. We save am offline, we go sync later!",
+    no_results: "We no find anything",
+    locations_found: "places where we see am",
+    reported_price: "Price dem tell us",
+    freshness: "E dey fresh?",
+    data_confidence: "How we trust the report",
+    data_source: "Who tell us",
+    directions: "Show me road",
+    share: "Share",
+    clear_search: "Comot Search",
+    confirmed: "True-true e dey",
+    caution: "Maybe e dey",
+    language: "App Language",
+    light_mode: "Day time style",
+    dark_mode: "Night time style"
+  },
+  yoruba: {
+    wetin_dey: "Kilo n ṣẹlẹ",
+    search_placeholder: "Kini o n wa?",
+    popular_items: "Awọn ounjẹ ti o wọpọ ni Yaba",
+    settings: "Eto",
+    theme: "Irisi Ohun elo",
+    radius: "Ijinna Wiwa Ọja",
+    pilot_areas: "Awọn agbegbe Lagos ti a n ṣiṣẹ",
+    report_price: "Sọ idiyele ounjẹ",
+    done: "O ti tan",
+    submit: "Firanṣẹ",
+    price_paid: "Iye owo ni Naira (₦)",
+    market: "Yan Ọja",
+    item: "Yan Ounjẹ",
+    variant: "Yan Iru rẹ",
+    unit: "Yan Iṣakojọpọ",
+    availability: "Ṣe o wa?",
+    available: "Bẹẹni, o wa",
+    unavailable: "Rara, o ti tan",
+    success_msg: "O ti ṣaṣeyọri firanṣẹ tuntun!",
+    offline_msg: "Ko si netiwọọki. A ti fipamọ offline lati sync nigbamii!",
+    no_results: "A kò rí kankan",
+    locations_found: "awọn ọja ti o wa",
+    reported_price: "Iye owo ti a sọ",
+    freshness: "Ṣe o tun jẹ tuntun?",
+    data_confidence: "Igbekele Data",
+    data_source: "Orisun Data",
+    directions: "Fi ọna han mi",
+    share: "Pin",
+    clear_search: "Nu Wiwa kuro",
+    confirmed: "Daju pe o wa",
+    caution: "O le wa",
+    language: "Ede Ohun elo",
+    light_mode: "Ipo Imọlẹ",
+    dark_mode: "Ipo Okunkun"
+  }
+};
+
+type LangType = "en" | "pidgin" | "yoruba";
+
 export default function HomePage() {
   const { theme, toggleTheme } = useTheme();
   
@@ -97,7 +219,12 @@ export default function HomePage() {
   // React Transitions
   const [isPending, startTransition] = useTransition();
 
-  // Component States
+  // Navigation Panel Views
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isReportOpen, setIsReportOpen] = useState(false);
+  const [appLang, setAppLang] = useState<LangType>("en");
+
+  // General App States
   const [searchQuery, setSearchQuery] = useState("");
   const [popularItems, setPopularItems] = useState<FoodItem[]>([]);
   const [searchResults, setSearchResults] = useState<FoodItem[]>([]);
@@ -108,9 +235,28 @@ export default function HomePage() {
   const [isSearching, setIsSearching] = useState(false);
   const [isOffersLoading, setIsOffersLoading] = useState(false);
   const [isPlaceOffersLoading, setIsPlaceOffersLoading] = useState(false);
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
-  // Load baseline data (popular items and all places) from database on mount
+  // Report Submission Lookup Metadata
+  const [submitPlaces, setSubmitPlaces] = useState<{ id: string; name: string }[]>([]);
+  const [submitItems, setSubmitItems] = useState<{ id: string; name: string }[]>([]);
+  const [submitVariants, setSubmitVariants] = useState<{ id: string; itemId: string; displayName: string }[]>([]);
+  const [submitUnits, setSubmitUnits] = useState<{ id: string; displayName: string }[]>([]);
+
+  // Price Submission Form Field States
+  const [formPlaceId, setFormPlaceId] = useState("");
+  const [formItemId, setFormItemId] = useState("");
+  const [formVariantId, setFormVariantId] = useState("");
+  const [formUnitId, setFormUnitId] = useState("");
+  const [formPrice, setFormPrice] = useState("");
+  const [formAvailable, setFormAvailable] = useState<"available" | "unavailable">("available");
+  
+  // Submission Statuses
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState("");
+  const [submitSuccess, setSubmitSuccess] = useState(false);
+  const [isOfflineSaved, setIsOfflineSaved] = useState(false);
+
+  // Load baseline data on mount
   useEffect(() => {
     startTransition(async () => {
       const items = await searchFoodItems(" ");
@@ -118,8 +264,75 @@ export default function HomePage() {
 
       const placesList = await getPlaces();
       setAllPlaces(placesList);
+
+      // Load metadata for form drop-downs
+      const metadata = await getInitialSubmissionData();
+      setSubmitPlaces(metadata.places);
+      setSubmitItems(metadata.items);
+      setSubmitVariants(metadata.variants);
+      setSubmitUnits(metadata.units);
+
+      // Set baseline form defaults
+      if (metadata.places.length > 0) setFormPlaceId(metadata.places[0].id);
+      if (metadata.items.length > 0) setFormItemId(metadata.items[0].id);
+      if (metadata.units.length > 0) setFormUnitId(metadata.units[0].id);
     });
   }, []);
+
+  // Phase 4: Sync offline entries once connection is back online
+  useEffect(() => {
+    const syncOfflineEntries = async () => {
+      if (typeof window === "undefined" || !navigator.onLine) return;
+      const cached = localStorage.getItem("pending_observations");
+      if (!cached) return;
+
+      try {
+        const queue = JSON.parse(cached) as Array<{
+          placeId: string;
+          itemVariantId: string;
+          unitId: string;
+          priceAmount: number;
+          availabilityState: "available" | "unavailable";
+        }>;
+
+        if (queue.length === 0) return;
+
+        console.log(`Syncing ${queue.length} offline price reports to Neon database...`);
+        for (const item of queue) {
+          await submitObservation(item);
+        }
+
+        // Clean cache queue once synced
+        localStorage.removeItem("pending_observations");
+        
+        // Refresh active listings
+        const updatedPlaces = await getPlaces();
+        setAllPlaces(updatedPlaces);
+        if (selectedItem) {
+          const freshCandidates = await getFoodItemCandidates(selectedItem.id);
+          setMatchingOffers(freshCandidates);
+        }
+      } catch (err) {
+        console.error("Failed to sync offline observations:", err);
+      }
+    };
+
+    window.addEventListener("online", syncOfflineEntries);
+    // Sync immediately if we are online on mount
+    syncOfflineEntries();
+
+    return () => window.removeEventListener("online", syncOfflineEntries);
+  }, [selectedItem]);
+
+  // Synchronize item selection with its matching variants list
+  useEffect(() => {
+    const matched = submitVariants.filter((v) => v.itemId === formItemId);
+    if (matched.length > 0) {
+      setFormVariantId(matched[0].id);
+    } else {
+      setFormVariantId("");
+    }
+  }, [formItemId, submitVariants]);
 
   // Fetch available food items and prices in a market when a pin is clicked on startup
   useEffect(() => {
@@ -198,6 +411,85 @@ export default function HomePage() {
     setMatchingOffers([]);
   };
 
+  // Phase 1 Price Report submission
+  const handlePriceSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSubmitError("");
+    setSubmitSuccess(false);
+    setIsOfflineSaved(false);
+
+    if (!formPlaceId || !formVariantId || !formUnitId || !formPrice) {
+      setSubmitError("Please fill out all fields.");
+      return;
+    }
+
+    const priceNum = parseFloat(formPrice);
+    if (isNaN(priceNum) || priceNum <= 0) {
+      setSubmitError("Please enter a valid price amount.");
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    const payload = {
+      placeId: formPlaceId,
+      itemVariantId: formVariantId,
+      unitId: formUnitId,
+      priceAmount: priceNum,
+      availabilityState: formAvailable
+    };
+
+    // Phase 4: Handle offline queueing
+    if (typeof window !== "undefined" && !navigator.onLine) {
+      try {
+        const cached = localStorage.getItem("pending_observations");
+        const queue = cached ? JSON.parse(cached) : [];
+        queue.push(payload);
+        localStorage.setItem("pending_observations", JSON.stringify(queue));
+        
+        setIsOfflineSaved(true);
+        setFormPrice("");
+        setIsSubmitting(false);
+
+        // Auto close after 2 seconds
+        setTimeout(() => {
+          setIsReportOpen(false);
+          setIsOfflineSaved(false);
+        }, 2000);
+      } catch (_err) {
+        setSubmitError("Failed to store offline entry.");
+        setIsSubmitting(false);
+      }
+      return;
+    }
+
+    try {
+      const res = await submitObservation(payload);
+      if (res.success) {
+        setSubmitSuccess(true);
+        setFormPrice("");
+        setIsSubmitting(false);
+
+        // Refresh places and item candidates to show pin updates instantly
+        const updatedPlaces = await getPlaces();
+        setAllPlaces(updatedPlaces);
+        if (selectedItem) {
+          const freshCandidates = await getFoodItemCandidates(selectedItem.id);
+          setMatchingOffers(freshCandidates);
+        }
+
+        // Auto close after 2 seconds
+        setTimeout(() => {
+          setIsReportOpen(false);
+          setSubmitSuccess(false);
+        }, 2000);
+      }
+    } catch (_err) {
+      setSubmitError("Submission failed. Try again.");
+      setIsSubmitting(false);
+    }
+  };
+
   // Format price in NGN Naira currency
   const formatPrice = (koboAmount: number) => {
     return new Intl.NumberFormat("en-NG", {
@@ -265,35 +557,53 @@ export default function HomePage() {
         <div className="flex items-center justify-between w-full">
           <div className="flex items-center space-x-2.5">
             <NigeriaLogo className="h-7 w-7" fillColor="fill-text-primary dark:fill-white" />
-            <span className="font-extrabold text-base tracking-tight">WetinDey</span>
+            <span className="font-extrabold text-base tracking-tight">{TRANSLATIONS[appLang].wetin_dey}</span>
           </div>
 
-          <button
-            onClick={() => setIsSettingsOpen(!isSettingsOpen)}
-            className={`p-2 rounded-full hover:bg-fillSecondary transition-colors border-0 text-text-secondary hover:text-text-primary active:scale-95 ${isSettingsOpen ? "text-accent bg-fillSecondary" : ""}`}
-            aria-label="Settings"
-          >
-            <Settings className="h-5 w-5" />
-          </button>
+          <div className="flex items-center space-x-2">
+            {/* Price Report plus button trigger */}
+            <button
+              onClick={() => {
+                setIsReportOpen(!isReportOpen);
+                setIsSettingsOpen(false);
+              }}
+              className={`p-2 rounded-full hover:bg-fillSecondary transition-colors border-0 text-text-secondary hover:text-text-primary active:scale-95 ${isReportOpen ? "text-accent bg-fillSecondary" : ""}`}
+              aria-label="Report Price"
+            >
+              <Plus className="h-5 w-5" />
+            </button>
+
+            {/* Settings Toggle Trigger Button */}
+            <button
+              onClick={() => {
+                setIsSettingsOpen(!isSettingsOpen);
+                setIsReportOpen(false);
+              }}
+              className={`p-2 rounded-full hover:bg-fillSecondary transition-colors border-0 text-text-secondary hover:text-text-primary active:scale-95 ${isSettingsOpen ? "text-accent bg-fillSecondary" : ""}`}
+              aria-label="Settings"
+            >
+              <Settings className="h-5 w-5" />
+            </button>
+          </div>
         </div>
 
-        {!isSettingsOpen && selectedItem && (
+        {!isSettingsOpen && !isReportOpen && selectedItem && (
           <div className="flex items-center space-x-2 pb-1 text-accent font-semibold text-xs">
             <Button variant="ghost" size="sm" onClick={clearSearch} className="h-7 px-2 -ml-2 text-accent">
               <ArrowLeft className="h-4.5 w-4.5 mr-1" />
-              Clear Search
+              {TRANSLATIONS[appLang].clear_search}
             </Button>
           </div>
         )}
 
-        {!isSettingsOpen && (
+        {!isSettingsOpen && !isReportOpen && (
           <div className="relative">
             <Input
               value={searchQuery}
               onChange={handleSearchChange}
               onFocus={() => setSearchFocused(true)}
               onBlur={() => setSearchFocused(false)}
-              placeholder="Wetin you dey find?"
+              placeholder={TRANSLATIONS[appLang].search_placeholder}
               icon={<Search className="h-5 w-5" />}
               className="pr-10"
             />
@@ -311,19 +621,42 @@ export default function HomePage() {
 
       {/* Scrollable Contents */}
       <div className="flex-1 overflow-y-auto px-5 pb-5">
-        {isSettingsOpen ? (
+        {isSettingsOpen && (
           <div className="space-y-6 pt-2">
             <div className="flex items-center justify-between pb-2 border-b border-separator/10">
-              <h3 className="text-base font-bold text-text-primary">Settings</h3>
+              <h3 className="text-base font-bold text-text-primary">{TRANSLATIONS[appLang].settings}</h3>
               <Button variant="ghost" size="sm" onClick={() => setIsSettingsOpen(false)} className="h-8 px-3">
-                Done
+                {TRANSLATIONS[appLang].done}
               </Button>
             </div>
 
-            {/* A. Theme Toggle Settings */}
+            {/* A. Language Selector (Phase 3) */}
             <div className="space-y-2">
               <label className="text-xs font-bold uppercase tracking-wider text-text-tertiary">
-                Interface Theme
+                {TRANSLATIONS[appLang].language}
+              </label>
+              <div className="grid grid-cols-3 gap-2 p-1 bg-fillSecondary/50 rounded-[14px]">
+                {(["en", "pidgin", "yoruba"] as const).map((l) => (
+                  <button
+                    key={l}
+                    type="button"
+                    onClick={() => setAppLang(l)}
+                    className={`py-1.5 text-xs font-semibold rounded-[12px] transition-all border-0 ${
+                      appLang === l 
+                        ? "bg-surface text-accent shadow-sm" 
+                        : "bg-transparent text-text-secondary hover:text-text-primary"
+                    }`}
+                  >
+                    {l === "en" ? "English" : l === "pidgin" ? "Pidgin" : "Yorùbá"}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* B. Theme Toggle Settings */}
+            <div className="space-y-2">
+              <label className="text-xs font-bold uppercase tracking-wider text-text-tertiary">
+                {TRANSLATIONS[appLang].theme}
               </label>
               <div className="grid grid-cols-2 gap-2 p-1 bg-fillSecondary/50 rounded-[14px]">
                 <button
@@ -336,7 +669,7 @@ export default function HomePage() {
                   }`}
                 >
                   <Sun className="h-4 w-4 mr-1.5" />
-                  Light Mode
+                  {TRANSLATIONS[appLang].light_mode}
                 </button>
                 <button
                   type="button"
@@ -348,16 +681,16 @@ export default function HomePage() {
                   }`}
                 >
                   <Moon className="h-4 w-4 mr-1.5" />
-                  Dark Mode
+                  {TRANSLATIONS[appLang].dark_mode}
                 </button>
               </div>
             </div>
 
-            {/* B. Search Radius Configuration */}
+            {/* C. Search Radius Configuration */}
             <div className="space-y-3">
               <div className="flex justify-between items-baseline">
                 <label className="text-xs font-bold uppercase tracking-wider text-text-tertiary">
-                  Geospatial Search Radius
+                  {TRANSLATIONS[appLang].radius}
                 </label>
                 <span className="text-sm font-black text-accent">{activeRadiusKm} km</span>
               </div>
@@ -378,24 +711,169 @@ export default function HomePage() {
               </div>
             </div>
 
-            {/* C. Pilot Area Info Card */}
+            {/* D. Pilot Area Info Card */}
             <div className="p-4 rounded-[20px] bg-fillSecondary/30 space-y-2 border-0">
               <h4 className="text-xs font-bold text-text-primary flex items-center">
                 <MapPin className="h-4 w-4 text-accent mr-1.5" />
-                Lagos Pilot Areas
+                {TRANSLATIONS[appLang].pilot_areas}
               </h4>
               <p className="text-xs text-text-secondary leading-relaxed">
                 WetinDey observations are active in Yaba, Ebute Metta, Bariga, Surulere, and Mushin. Geolocation measurements automatically calibrate search radii.
               </p>
             </div>
           </div>
-        ) : (
+        )}
+
+        {/* Phase 1: Price Submission Form View */}
+        {isReportOpen && (
+          <form onSubmit={handlePriceSubmit} className="space-y-5 pt-2">
+            <div className="flex items-center justify-between pb-2 border-b border-separator/10">
+              <h3 className="text-base font-bold text-text-primary">{TRANSLATIONS[appLang].report_price}</h3>
+              <Button variant="ghost" size="sm" type="button" onClick={() => setIsReportOpen(false)} className="h-8 px-3">
+                {TRANSLATIONS[appLang].done}
+              </Button>
+            </div>
+
+            {submitSuccess && (
+              <div className="p-4 rounded-[16px] bg-status-confirmed/10 text-status-confirmed flex items-center space-x-2 text-xs font-bold animate-fade-in">
+                <CheckCircle2 className="h-5 w-5 shrink-0" />
+                <span>{TRANSLATIONS[appLang].success_msg}</span>
+              </div>
+            )}
+
+            {isOfflineSaved && (
+              <div className="p-4 rounded-[16px] bg-status-caution/10 text-status-caution flex items-center space-x-2 text-xs font-bold animate-fade-in">
+                <AlertTriangle className="h-5 w-5 shrink-0" />
+                <span>{TRANSLATIONS[appLang].offline_msg}</span>
+              </div>
+            )}
+
+            {submitError && (
+              <div className="p-4 rounded-[16px] bg-status-unavailable/10 text-status-unavailable flex items-center space-x-2 text-xs font-bold animate-fade-in">
+                <AlertTriangle className="h-5 w-5 shrink-0" />
+                <span>{submitError}</span>
+              </div>
+            )}
+
+            {/* A. Market Selection */}
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-text-secondary uppercase tracking-wider">{TRANSLATIONS[appLang].market}</label>
+              <select
+                value={formPlaceId}
+                onChange={(e) => setFormPlaceId(e.target.value)}
+                className="w-full h-12 bg-fillSecondary text-text-primary border-0 rounded-[14px] px-4 text-sm focus:outline-none focus:ring-2 focus:ring-accent/40"
+              >
+                {submitPlaces.map((p) => (
+                  <option key={p.id} value={p.id}>{p.name}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* B. Food Item Selection */}
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-text-secondary uppercase tracking-wider">{TRANSLATIONS[appLang].item}</label>
+              <select
+                value={formItemId}
+                onChange={(e) => setFormItemId(e.target.value)}
+                className="w-full h-12 bg-fillSecondary text-text-primary border-0 rounded-[14px] px-4 text-sm focus:outline-none focus:ring-2 focus:ring-accent/40"
+              >
+                {submitItems.map((i) => (
+                  <option key={i.id} value={i.id}>{i.name}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* C. Quality/Variant Selection */}
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-text-secondary uppercase tracking-wider">{TRANSLATIONS[appLang].variant}</label>
+              <select
+                value={formVariantId}
+                onChange={(e) => setFormVariantId(e.target.value)}
+                className="w-full h-12 bg-fillSecondary text-text-primary border-0 rounded-[14px] px-4 text-sm focus:outline-none focus:ring-2 focus:ring-accent/40"
+                disabled={!formItemId}
+              >
+                {submitVariants
+                  .filter((v) => v.itemId === formItemId)
+                  .map((v) => (
+                    <option key={v.id} value={v.id}>{v.displayName}</option>
+                  ))}
+              </select>
+            </div>
+
+            {/* D. Unit Selection */}
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-text-secondary uppercase tracking-wider">{TRANSLATIONS[appLang].unit}</label>
+              <select
+                value={formUnitId}
+                onChange={(e) => setFormUnitId(e.target.value)}
+                className="w-full h-12 bg-fillSecondary text-text-primary border-0 rounded-[14px] px-4 text-sm focus:outline-none focus:ring-2 focus:ring-accent/40"
+              >
+                {submitUnits.map((u) => (
+                  <option key={u.id} value={u.id}>{u.displayName}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* E. Price Input */}
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-text-secondary uppercase tracking-wider">{TRANSLATIONS[appLang].price_paid}</label>
+              <Input
+                type="number"
+                value={formPrice}
+                onChange={(e) => setFormPrice(e.target.value)}
+                placeholder="₦ e.g. 3500"
+                className="px-4"
+              />
+            </div>
+
+            {/* F. Availability toggle */}
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-text-secondary uppercase tracking-wider">{TRANSLATIONS[appLang].availability}</label>
+              <div className="grid grid-cols-2 gap-2 p-1 bg-fillSecondary/50 rounded-[14px]">
+                <button
+                  type="button"
+                  onClick={() => setFormAvailable("available")}
+                  className={`py-2 text-xs font-semibold rounded-[12px] transition-all border-0 ${
+                    formAvailable === "available" 
+                      ? "bg-surface text-accent shadow-sm" 
+                      : "bg-transparent text-text-secondary hover:text-text-primary"
+                  }`}
+                >
+                  {TRANSLATIONS[appLang].available}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFormAvailable("unavailable")}
+                  className={`py-2 text-xs font-semibold rounded-[12px] transition-all border-0 ${
+                    formAvailable === "unavailable" 
+                      ? "bg-surface text-accent shadow-sm" 
+                      : "bg-transparent text-text-secondary hover:text-text-primary"
+                  }`}
+                >
+                  {TRANSLATIONS[appLang].unavailable}
+                </button>
+              </div>
+            </div>
+
+            <Button
+              type="submit"
+              variant="primary"
+              size="md"
+              className="w-full"
+              disabled={isSubmitting || submitSuccess || isOfflineSaved}
+            >
+              {isSubmitting ? "Submitting..." : TRANSLATIONS[appLang].submit}
+            </Button>
+          </form>
+        )}
+
+        {!isSettingsOpen && !isReportOpen && (
           <div className="space-y-4">
             {/* A. Popular Items Suggestions */}
             {!searchQuery && !selectedItem && (
               <div className="space-y-3">
                 <h4 className="text-[11px] font-bold uppercase tracking-wider text-text-tertiary">
-                  Popular items around Yaba
+                  {TRANSLATIONS[appLang].popular_items}
                 </h4>
                 <div className="grid grid-cols-1 gap-2">
                   {isPending && popularItems.length === 0 ? (
@@ -449,7 +927,7 @@ export default function HomePage() {
                     <div className="inline-flex p-3.5 rounded-full bg-status-caution/10 text-status-caution">
                       <AlertTriangle className="h-7 w-7" />
                     </div>
-                    <h3 className="text-sm font-bold">No items found</h3>
+                    <h3 className="text-sm font-bold">{TRANSLATIONS[appLang].no_results}</h3>
                     <p className="text-xs text-text-secondary max-w-[220px] mx-auto leading-normal">
                       Try searching for Rice, Beans, Garri, Yam or Palm Oil.
                     </p>
@@ -467,7 +945,7 @@ export default function HomePage() {
                 <div className="pb-2 border-b border-separator flex items-center justify-between">
                   <div>
                     <h2 className="text-base font-black text-text-primary">{selectedItem.name}</h2>
-                    <p className="text-xs text-text-secondary mt-0.5">{matchingOffers.length} locations found</p>
+                    <p className="text-xs text-text-secondary mt-0.5">{matchingOffers.length} {TRANSLATIONS[appLang].locations_found}</p>
                   </div>
                   <span className="text-[9px] font-black tracking-wider uppercase px-2 py-0.5 rounded bg-accent/10 text-accent">
                     Neon DB
@@ -522,7 +1000,7 @@ export default function HomePage() {
                                   className="h-9 text-xs flex items-center justify-center"
                                 >
                                   <Navigation className="h-3.5 w-3.5 mr-1" />
-                                  Directions
+                                  {TRANSLATIONS[appLang].directions}
                                 </Button>
                                 <Button
                                   variant="secondary"
@@ -530,7 +1008,7 @@ export default function HomePage() {
                                   className="h-9 text-xs flex items-center justify-center"
                                 >
                                   <Share2 className="h-3.5 w-3.5 mr-1" />
-                                  Share
+                                  {TRANSLATIONS[appLang].share}
                                 </Button>
                               </div>
                             )}
@@ -581,7 +1059,7 @@ export default function HomePage() {
             {/* Price Tag Info */}
             <div className="p-4 rounded-[20px] bg-fillSecondary/50 flex flex-col space-y-1">
               <span className="text-[10px] font-bold uppercase tracking-wider text-text-tertiary">
-                Reported Price
+                {TRANSLATIONS[appLang].reported_price}
               </span>
               <div className="flex items-baseline">
                 <span className="text-xl font-black text-accent">
@@ -599,7 +1077,7 @@ export default function HomePage() {
             {/* Info stats */}
             <div className="space-y-3">
               <div className="flex items-center justify-between text-xs py-1 border-b border-separator/10">
-                <span className="text-text-secondary">Freshness Status</span>
+                <span className="text-text-secondary">{TRANSLATIONS[appLang].freshness}</span>
                 <span
                   className={`font-semibold px-2 py-0.5 rounded-full flex items-center ${
                     selectedOffer.detail.confidenceLevel === "confirmed"
@@ -610,21 +1088,21 @@ export default function HomePage() {
                   }`}
                 >
                   {selectedOffer.detail.confidenceLevel === "confirmed"
-                    ? "Confirmed Available"
+                    ? TRANSLATIONS[appLang].confirmed
                     : selectedOffer.detail.confidenceLevel === "caution"
-                    ? "Likely Available"
-                    : "Out of Stock"}
+                    ? TRANSLATIONS[appLang].caution
+                    : TRANSLATIONS[appLang].unavailable}
                 </span>
               </div>
               <div className="flex items-center justify-between text-xs py-1 border-b border-separator/10">
-                <span className="text-text-secondary">Data Confidence</span>
+                <span className="text-text-secondary">{TRANSLATIONS[appLang].data_confidence}</span>
                 <span className="font-semibold text-text-primary flex items-center">
                   <CheckCircle2 className="h-3.5 w-3.5 text-accent mr-1" />
                   {selectedOffer.detail.confidenceScore}%
                 </span>
               </div>
               <div className="flex items-center justify-between text-xs py-1 border-b border-separator/10">
-                <span className="text-text-secondary">Data Source</span>
+                <span className="text-text-secondary">{TRANSLATIONS[appLang].data_source}</span>
                 <span className="font-semibold text-text-primary">
                   {selectedOffer.detail.sourceType}
                 </span>
@@ -636,11 +1114,11 @@ export default function HomePage() {
           <div className="grid grid-cols-2 gap-3 pt-4 border-t border-separator/10">
             <Button variant="primary" size="md" className="w-full flex items-center justify-center">
               <Navigation className="h-4 w-4 mr-1.5" />
-              Directions
+              {TRANSLATIONS[appLang].directions}
             </Button>
             <Button variant="secondary" size="md" className="w-full flex items-center justify-center">
               <Share2 className="h-4 w-4 mr-1.5" />
-              Share
+              {TRANSLATIONS[appLang].share}
             </Button>
           </div>
         </div>
@@ -708,11 +1186,11 @@ export default function HomePage() {
           <div className="grid grid-cols-2 gap-3 pt-4 border-t border-separator/10">
             <Button variant="primary" size="md" className="w-full flex items-center justify-center">
               <Navigation className="h-4 w-4 mr-1.5" />
-              Directions
+              {TRANSLATIONS[appLang].directions}
             </Button>
             <Button variant="secondary" size="md" className="w-full flex items-center justify-center">
               <Share2 className="h-4 w-4 mr-1.5" />
-              Share
+              {TRANSLATIONS[appLang].share}
             </Button>
           </div>
         </div>
@@ -720,7 +1198,7 @@ export default function HomePage() {
     }
 
     return undefined;
-  }, [selectedOffer, selectedPlace, placeOffers, isPlaceOffersLoading, mapCenter.lat, mapCenter.lng, setActiveMarkerId]);
+  }, [selectedOffer, selectedPlace, placeOffers, isPlaceOffersLoading, mapCenter.lat, mapCenter.lng, appLang, setActiveMarkerId]);
 
   return (
     <AdaptiveShell
