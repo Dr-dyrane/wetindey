@@ -475,7 +475,8 @@ export function ItemDetailSheet({
     }));
   }, [offers]);
 
-  const countLabel = `${offers.length} ${t?.locations_found ?? (offers.length === 1 ? "place" : "places")}`;
+  const visiblePlaceCount = new Set(offers.map((offer) => offer.placeId)).size;
+  const countLabel = `${visiblePlaceCount} ${t?.locations_found ?? (visiblePlaceCount === 1 ? "place" : "places")}`;
 
   /**
    * The Maps place-card order: photo bleeding to the panel's top edge, then the

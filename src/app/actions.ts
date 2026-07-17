@@ -41,6 +41,8 @@ const itemCard = {
   imageSourceUrl: items.imageSourceUrl,
 };
 
+const DEFAULT_DETAIL_OFFER_LIMIT = 60;
+
 // 1. Search food items in the database (deprecated - use searchItems)
 export async function searchFoodItems(query: string) {
   return searchItems(query, "food");
@@ -199,14 +201,8 @@ export async function getPopularItems(input: {
   // coordinate since. lat/lng/radiusKm are checked below by searchOrigin and
   // searchRadiusMetres; the cap is the part nothing else enforces.
   const limit = parsePopularItemsLimit(input.limit ?? 8);
-
-  if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
-    throw new Error(`getPopularItems: invalid centre lat=${lat}, lng=${lng}`);
-  }
-  if (!Number.isFinite(radiusKm) || radiusKm <= 0) {
-    throw new Error(`getPopularItems: invalid radius ${radiusKm} km`);
-  }
-  const radiusM = radiusKm * 1000;
+  const origin = searchOrigin({ lat, lng });
+  const radiusM = searchRadiusMetres(radiusKm);
   /**
    * The price range is computed WITHIN A SINGLE UNIT, the one the item is most
    * commonly sold in, and the unit is returned so the card can name it.
@@ -254,7 +250,7 @@ export async function getPopularItems(input: {
       WHERE o.expires_at > now()
         AND ST_DWithin(
           pl.location,
-          ST_SetSRID(ST_MakePoint(${lng}, ${lat}), 4326)::geography,
+          ${origin}::geography,
           ${radiusM}
         )
     ),
@@ -278,13 +274,52 @@ export async function getPopularItems(input: {
       SELECT DISTINCT ON (item_id) item_id, unit_id
       FROM offer_units
       ORDER BY item_id, offers_in_unit DESC, unit_id
+    ),
+    detail_candidates AS (
+      /*
+       * The card's price stays tied to its fresh modal unit, but its place
+       * count is the detail sheet's initial visible window. getOffersNarrowed
+       * starts unfiltered by variant or unit, includes unavailable and expired
+       * offers, orders unavailable last then nearest/cheapest, and returns only
+       * DEFAULT_DETAIL_OFFER_LIMIT rows. ROW_NUMBER applies that same window
+       * independently to every popular item before venues are deduplicated.
+       *
+       * ST_DistanceSphere does not use the geography GiST expression used by
+       * nearby's ST_DWithin. That cost is accepted only at the current pilot
+       * scale because this predicate must exactly match the visible detail
+       * window; revisit the shared distance contract before scaling this read.
+       */
+      SELECT
+        iv.item_id,
+        o.place_id,
+        ROW_NUMBER() OVER (
+          PARTITION BY iv.item_id
+          ORDER BY
+            (o.availability_state = 'unavailable') ASC,
+            ST_DistanceSphere(pl.location::geometry, ${origin}) ASC,
+            o.price_min ASC,
+            o.id ASC
+        ) AS candidate_rank
+      FROM ${offersCurrent} o
+      JOIN ${itemVariants} iv ON iv.id = o.item_variant_id
+      JOIN ${places} pl ON pl.id = o.place_id
+      WHERE iv.active = true
+        AND ST_DistanceSphere(pl.location::geometry, ${origin}) <= ${radiusM}
+    ),
+    detail_places AS (
+      SELECT
+        item_id,
+        COUNT(DISTINCT place_id)::int AS place_count
+      FROM detail_candidates
+      WHERE candidate_rank <= ${DEFAULT_DETAIL_OFFER_LIMIT}
+      GROUP BY item_id
     )
     SELECT
       i.id, i.slug, i.canonical_name AS name, i.description,
       i.image_url, i.image_attribution, i.image_license, i.image_source_url,
       u.display_name                                   AS "unitLabel",
       COUNT(o.id)::int                                 AS "offerCount",
-      COUNT(DISTINCT o.place_id)::int                  AS "placeCount",
+      COALESCE(dp.place_count, 0)::int                 AS "placeCount",
       MIN(o.price_min)::int                            AS "priceFrom",
       MAX(COALESCE(o.price_max, o.price_min))::int     AS "priceTo",
       (array_agg(o.freshness_state ORDER BY o.last_observed_at DESC))[1] AS freshest,
@@ -294,8 +329,9 @@ export async function getPopularItems(input: {
     JOIN ${itemVariants}  v ON v.item_id = i.id
     JOIN nearby           o ON o.item_variant_id = v.id AND o.unit_id = mu.unit_id
     JOIN ${units}         u ON u.id = mu.unit_id
+    LEFT JOIN detail_places dp ON dp.item_id = i.id
     WHERE i.active = true AND i.category = ${category}
-    GROUP BY i.id, u.display_name
+    GROUP BY i.id, u.display_name, dp.place_count
     ORDER BY COUNT(o.id) DESC, i.canonical_name ASC
     LIMIT ${limit}
   `);
@@ -1274,7 +1310,7 @@ export async function getOffersNarrowed(input: NarrowingInput): Promise<Narrowed
   // rows, and drops the ordering. Not injection, a wrong answer wearing a
   // plausible face, which is the failure this codebase exists to refuse.
   const sort: OfferSort = input.sort ?? "nearest";
-  const limit = input.limit ?? 60;
+  const limit = input.limit ?? DEFAULT_DETAIL_OFFER_LIMIT;
   const origin = searchOrigin(input.center);
   const radiusM = searchRadiusMetres(input.radiusKm);
   const distanceM = sql<number>`ST_DistanceSphere(${places.location}::geometry, ${origin})`;
@@ -1322,7 +1358,7 @@ export async function getOffersNarrowed(input: NarrowingInput): Promise<Narrowed
     .innerJoin(units, eq(offersCurrent.unitId, units.id))
     .innerJoin(places, eq(offersCurrent.placeId, places.id))
     .where(and(...filters))
-    .orderBy(sql`(${offersCurrent.availabilityState} = 'unavailable') asc, ${ranking}`)
+    .orderBy(sql`(${offersCurrent.availabilityState} = 'unavailable') asc, ${ranking}, ${offersCurrent.id} asc`)
     .limit(limit);
 
   return rows.map((r) => {
