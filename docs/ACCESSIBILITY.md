@@ -12,7 +12,7 @@ stylesheet (`npx tailwindcss -i src/app/globals.css -o out.css`), not the source
 because Tailwind reorders layers and that reordering is where two of the findings live.
 
 **Verdict: the app fails WCAG 2.1 AA.** Not marginally — there are three defects
-(P0-1, P0-2, P0-3) that independently make core flows unusable, and one of them
+(P0-1, P0-2, ~~P0-3~~ — **P0-3 fixed 2026-07-17**) that independently make core flows unusable, and one of them
 (P0-2) means a keyboard user cannot submit a price at all, which is the app's only
 write path.
 
@@ -24,7 +24,7 @@ write path.
 |---|---|---|---|
 | P0-1 | `focus-visible:outline-none` deletes the focus ring from every `Button` | 2.4.7 | Fails AA |
 | P0-2 | `ModalSheet` steals focus on every parent re-render — price cannot be typed | 2.1.1, 2.4.3 | Fails A |
-| P0-3 | `userScalable: false` blocks pinch-zoom | 1.4.4 | Fails AA |
+| P0-3 | ~~`userScalable: false` blocks pinch-zoom~~ | 1.4.4 | **FIXED 2026-07-17** |
 | P0-4 | Map markers are unfocusable, unnamed `<div>`s | 2.1.1, 4.1.2 | Fails A |
 | P0-5 | `text-secondary` is 3.30:1 in light — the app's second-most-used text colour | 1.4.3 | Fails AA |
 | P0-6 | `status-confirmed-fg` is 3.55:1 on its own tint — the "-fg passes on -bg" claim is false | 1.4.3 | Fails AA |
@@ -660,7 +660,7 @@ The brief asked for this specifically. Setting the browser root to 24px (1.5×):
    seam between them.
 
 Note that **page zoom** (Ctrl+`+`) scales `px` too, so 1.4.4 is satisfiable on desktop
-despite P1-7. On mobile, P0-3 removes the equivalent. The two defects compound: the `px`
+despite P1-7. On mobile, P0-3 removed the equivalent — **fixed 2026-07-17, so this compounding no longer holds**; P1-7 stands alone. The two defects compounded: the `px`
 labels can only be enlarged by zoom, and zoom is disabled.
 
 ---
@@ -717,7 +717,8 @@ invariant erodes. `StatusDot` also has no `aria-hidden`, so it leaks into the tr
    One-line fix at `ModalSheet.tsx:63` (drop `onKeyDown` from the deps and read `onClose`
    through a ref), plus `data-autofocus` at `:56` while you're there.
 2. **P0-1** — delete `focus-visible:outline-none` from `Button.tsx:18`. One word.
-3. **P0-3** — delete `maximumScale`/`userScalable` from `layout.tsx:21-22`. Product call.
+3. ~~**P0-3**~~ — **DONE 2026-07-17.** `maximumScale`/`userScalable` deleted from `layout.tsx`. **It was not a product call.** `git log -S userScalable` puts the line in the INITIAL COMMIT, and it was the only non-obvious line in that file with no justifying comment. Nobody chose it.
+   **The remediation as written was also incomplete, and would have shipped a no-op.** Deleting the viewport lock buys nothing on its own: `touch-action` overrides it. The map canvas is `touch-action: none` from Mapbox's own v3.1.2 stylesheet, and `BottomSheet` was `pan-y` — which excludes `pinch-zoom` (`manipulation` is *defined* as `pan-x pan-y pinch-zoom`; the definition would be redundant otherwise). Between them: the whole viewport. The real fix is `BottomSheet.tsx` → `pan-y pinch-zoom`, done in the same change. Verified in-browser: the "E sure" badge's touch-action chain now reads `pan-y pinch-zoom`.
 4. **P0-4** — markers get `role="button"`, `tabindex="0"`, `aria-label`, a `keydown`
    handler, `aria-hidden` on the svg, and 44×44. Same edit fixes P0-7's marker case and
    the colour-only encoding.

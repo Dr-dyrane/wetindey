@@ -18,8 +18,43 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  maximumScale: 1,
-  userScalable: false,
+  /**
+   * NO `maximumScale` AND NO `userScalable: false`. Their absence is the point,
+   * so it is written down — an empty space cannot defend itself from the next
+   * person who adds them back to make the PWA "feel native".
+   *
+   * Together they disable pinch-zoom, which is WCAG 2.1 SC 1.4.4 (Resize Text,
+   * AA): text must reach 200% without assistive technology. `docs/ACCESSIBILITY.md`
+   * carries it as **P0-3** and calls it "the single most cited AA failure in mobile
+   * web… no interpretation, no edge case".
+   *
+   * It is not a neutral default here. iOS Safari has ignored `user-scalable=no`
+   * since iOS 10; **Android Chrome honours it** — so it bit Android, which is most
+   * of this pilot's audience. (Reported to be ignored on web *pages* but possibly
+   * honoured in standalone web views, and this app ships `appleWebApp.capable`
+   * with `display: "standalone"` — unverified, so the blast radius may be wider
+   * than Android alone, not narrower.)
+   *
+   * WHAT THIS LINE DOES *NOT* BUY, because the first draft of this comment claimed
+   * it did and was wrong: it does not, by itself, let anyone zoom anything.
+   * `touch-action` decides that, and it wins. The map canvas carries
+   * `touch-action: none` from Mapbox's own v3.1.2 stylesheet, and the bottom sheet
+   * carried `pan-y` — between them, the entire viewport. Removing the viewport lock
+   * is **necessary and not sufficient**; the fix lands in `BottomSheet.tsx`, which
+   * now says `pan-y pinch-zoom`. Verified in-browser, not reasoned about:
+   * `.mapboxgl-canvas` → `none`, sheet root → `pan-y`, and the "E sure" badge's
+   * nearest touch-action ancestor was that sheet.
+   *
+   * The audit flagged rather than fixed it, on the reasonable ground that "someone
+   * chose this". **Nobody did.** It arrived in the initial commit as boilerplate
+   * and was the only non-obvious line in this file with no comment — in a file
+   * where the theme-color literals below get six lines explaining themselves. An
+   * undocumented default is not a decision.
+   *
+   * The usual defence is that document zoom fights the map. Mapbox GL manages its
+   * own gestures via `touch-action` on its canvas; it never needed the whole
+   * document's zoom disabled to do it.
+   */
   viewportFit: "cover",
   /**
    * The only colour literals in the app, and they cannot be tokens.

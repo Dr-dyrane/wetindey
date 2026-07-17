@@ -494,7 +494,26 @@ export function BottomSheet({ children, detent, onDetentChange }: BottomSheetPro
            * has no answer for. The grabber overrides with `touch-none`, so a drag
            * that starts there is never a candidate for panning at all.
            */
-          touchAction: "pan-y",
+          /**
+           * `pinch-zoom` is not decoration on the value above — it is the whole
+           * of WCAG 1.4.4 for this app's text, and `pan-y` alone silently vetoes
+           * it. `manipulation` is defined as `pan-x pan-y pinch-zoom`, which is
+           * the proof: if `pan-y` implied zoom, that definition would be
+           * redundant. So every price, badge and label inside this sheet — which
+           * is nearly all the text in the product — could not be zoomed, no
+           * matter what the viewport meta said.
+           *
+           * Removing `user-scalable=no` from `layout.tsx` was necessary and, on
+           * its own, close to a no-op: the map canvas carries `touch-action:none`
+           * from Mapbox's own stylesheet, and this sheet carried `pan-y`. Between
+           * them they are the entire viewport. This line is where the fix
+           * actually lands.
+           *
+           * It does not cost the drag. `onPointerMove` (:271) ignores any pointer
+           * that is not the tracked `pointerId`, and a pinch is two — so the
+           * second finger was never a drag candidate.
+           */
+          touchAction: "pan-y pinch-zoom",
           /**
            * How much of this 94vh box hangs below the viewport at rest. The
            * scrollers must reserve it as bottom padding or their last rows sit in
