@@ -98,10 +98,36 @@
   --color-status-unavailable-bg: rgba(255, 59, 48, 0.14);
   --color-status-info-bg: rgba(0, 122, 255, 0.12);
 
-  /* Darkened for small text on a tint; the pure hue stays for dots and bars. */
-  --color-status-confirmed-fg: #248A3D;
-  --color-status-caution-fg: #B25000;
-  --color-status-unavailable-fg: #C1271B;
+  /* Ink for small text on a tint. Darkened until it PASSES — measured, not aimed
+   * at. The pure hue above stays for dots and bars, so fidelity lives there and
+   * costs this token nothing.
+   *
+   * The floor is 4.5:1: StatusBadge renders `text-[11px] font-semibold`, and that
+   * is hard px, so it never reaches large-text size at any root scale. Both real
+   * backings count — a badge sits on `surface` in a card and on `background`
+   * inside a sheet — so each value is checked against the worse of the two, with
+   * the tint composited over it.
+   *
+   *                 on surface #FFFFFF   on background #F2F2F7
+   *   confirmed          5.07                 4.59
+   *   caution            5.04                 4.57
+   *   unavailable        5.01                 4.51
+   *   info               5.43                 4.92
+   *
+   * The previous values (#248A3D / #B25000 / #C1271B) failed three of four:
+   * confirmed 3.92/3.55, caution 4.64/4.21, unavailable 4.88/4.39. Confirmed was
+   * the worst, and it is the badge that tells a shopper a price is trustworthy.
+   * The shift is ~1 ΔE — no eye resolves it; only the arithmetic changed.
+   *
+   * DO NOT re-derive these by nudging a hex until one cell goes green. Every value
+   * appears over both backings and `-fg` has ~15 consumers beyond StatusBadge —
+   * `page.tsx`, `LocationSheet`, `AsyncList`, `Input`. Recompute both columns.
+   *
+   * docs/ACCESSIBILITY.md P0-6.
+   */
+  --color-status-confirmed-fg: #1E7634;
+  --color-status-caution-fg: #A94C00;
+  --color-status-unavailable-fg: #BE261B;
   --color-status-info-fg: #0058D0;
 
   --color-focus-ring: #007AFF;
@@ -163,10 +189,35 @@
   --color-status-unavailable-bg: rgba(255, 69, 58, 0.18);
   --color-status-info-bg: rgba(10, 132, 255, 0.20);
 
+  /* Dark ink, and it is NOT simply the pure hue — two of the four never passed.
+   *
+   * Setting `-fg` = the hue reads as elegant and fails: measured on
+   * `surface #1C1C1E` with the 18% tint composited, `unavailable #FF453A` is
+   * **4.34** and `info #0A84FF` is **4.14**, both under the 4.5:1 floor that
+   * StatusBadge's 11px/600 text carries. They passed on `background #000` and
+   * failed on the surface a badge actually sits on inside a card.
+   *
+   * So the polarity flips between themes and the fix flips with it: light darkens
+   * its ink, dark LIGHTENS it. Confirmed and caution already clear it comfortably
+   * (6.58 / 6.46 on surface) and keep the hue.
+   *
+   *                 on surface #1C1C1E   on background #000000
+   *   confirmed          6.58                 8.80    (hue, unchanged)
+   *   caution            6.46                 8.64    (hue, unchanged)
+   *   unavailable        5.24                 6.69    (was 4.34 FAIL)
+   *   info               5.33                 6.82    (was 4.14 FAIL)
+   *
+   * The pure hue is still on `--color-status-*` above for dots and bars, which is
+   * where fidelity belongs. This token is ink, and ink has to be readable.
+   *
+   * docs/ACCESSIBILITY.md P0-6 tabulated this and it was missed once: a first pass
+   * at this file asserted "dark mode passes comfortably; this is light-only",
+   * which is false and contradicted the very document it cited.
+   */
   --color-status-confirmed-fg: #30D158;
   --color-status-caution-fg: #FF9F0A;
-  --color-status-unavailable-fg: #FF453A;
-  --color-status-info-fg: #0A84FF;
+  --color-status-unavailable-fg: #FF6961;
+  --color-status-info-fg: #409CFF;
 
   --color-focus-ring: #0A84FF;
 

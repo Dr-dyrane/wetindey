@@ -27,7 +27,7 @@ write path.
 | P0-3 | ~~`userScalable: false` blocks pinch-zoom~~ | 1.4.4 | **FIXED 2026-07-17** |
 | P0-4 | Map markers are unfocusable, unnamed `<div>`s | 2.1.1, 4.1.2 | Fails A |
 | P0-5 | `text-secondary` is 3.30:1 in light — the app's second-most-used text colour | 1.4.3 | Fails AA |
-| P0-6 | `status-confirmed-fg` is 3.55:1 on its own tint — the "-fg passes on -bg" claim is false | 1.4.3 | Fails AA |
+| P0-6 | ~~`status-confirmed-fg` is 3.55:1 on its own tint~~ | 1.4.3 | **FIXED 2026-07-17**, light AND dark. Retuned against the worse backing: light 4.59–5.43, dark 5.24–8.80. All 16 combinations pass. |
 | P0-7 | `text-onStatus` (white) is 2.22:1 on `status-confirmed` | 1.4.3 | Fails AA |
 | P0-8 | `page.tsx:840-843` puts the pure hue on a 10% tint — 2.03:1 | 1.4.3 | Fails AA |
 | P1-1 | Input/SearchField `focus:outline-none`; the replacement cue is 1.15:1 | 2.4.7, 1.4.11 | Fails AA |
@@ -286,8 +286,8 @@ Dark theme, where `-fg` is set equal to the pure hue (`globals.css:166-169`):
 | `unavailable-fg #FF453A` | **4.05** | 5.25 | fails on `surface` |
 | `info-fg #0A84FF` | **3.65** | 4.79 | fails on `surface` |
 
-Six of sixteen combinations fail. The pattern is diagnostic: **the `-fg` values were
-tuned against one backing and then used over two.** `confirmed` fails everywhere in
+~~Six of sixteen combinations fail.~~ **FIXED 2026-07-17 — all sixteen pass.** The pattern was *partly* diagnostic: **the `-fg` values were
+tuned against one backing and then used over two** — but that does not explain `confirmed`, which failed at **4.40 on bare `#FFFFFF` with the tint removed entirely**. Backing was never its variable; only a darker ink was. The retune darkens light ink and *lightens* dark ink, because the polarity flips between themes. `confirmed` fails everywhere in
 light; `caution` and `unavailable` pass on `surface` and fail on `background`; in dark the
 polarity flips and `unavailable`/`info` fail on `surface` while passing on `background`.
 The tokens are not wrong so much as under-specified — a `-fg` token cannot be correct
