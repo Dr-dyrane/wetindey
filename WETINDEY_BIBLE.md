@@ -4441,6 +4441,7 @@ The team should consider pivoting the mechanism or problem when:
 | No checkout/delivery in V1 | Accepted | Protect core decision experience |
 | Fulfilment is out of scope entirely; buyer and seller arrange it themselves via Contact seller | Accepted — see [ADR-001](docs/adr/001-fulfilment-is-out-of-scope.md) | A WetinDey price is a dated observation, not a quotable commitment; and the catalogue is market stalls, which no courier platform can represent |
 | `docs/architecture/SERVICE-ARCHITECTURE.md` is the architecture of record; correctness work precedes boundary work | Accepted — see [ADR-002](docs/adr/002-service-architecture-of-record.md) | The modular architecture in Section 25/26 and `AGENTS.md` was never implemented. Documentation that describes a system that does not exist has already produced two generations of dead code |
+| Multi-Category Expansion and Core Pillars | Accepted — see [ADR-008](docs/adr/008-category-filtering-and-pillars.md) | Expands product scope beyond Food to cover 6 core pillars of daily uncertainty (Food, Home, Health, Money, Transport, Community), dynamically adjusting metadata (title/description) on toggle |
 
 > **Section 25 and Section 26 describe a TARGET, not the current system.** Verified 16 July 2026:
 > `WetinDeyModule` has zero live implementations, `src/modules/food/` is orphaned, and
