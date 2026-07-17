@@ -2,6 +2,7 @@
 
 import React from "react";
 import { ChevronRight } from "lucide-react";
+import { haptics } from "@/lib/haptics";
 
 interface ListRowProps {
   icon?: React.ReactNode;
@@ -31,6 +32,11 @@ export function ListRow({ icon, iconTint, label, detail, onClick, chevron = true
     <Tag
       onClick={onClick}
       disabled={disabled}
+      onPointerDown={(e) => {
+        if (onClick && !disabled && e.pointerType === "touch") {
+          haptics.selection();
+        }
+      }}
       className={`flex min-h-tap w-full items-center gap-3 px-4 py-2 text-left
                   disabled:opacity-40
                   ${onClick ? "active:bg-fillTertiary transition-colors duration-instant" : ""}`}

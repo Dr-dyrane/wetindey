@@ -6,6 +6,7 @@ import { ModalSheet } from "@/design-system/components/ModalSheet";
 import { Button } from "@/design-system/components/Button";
 import { Input } from "@/design-system/components/Input";
 import { submitVisitConfirmation } from "@/app/actions";
+import { haptics } from "@/lib/haptics";
 import { formatNaira } from "@/lib/money";
 
 /**
@@ -527,12 +528,14 @@ export function ConfirmVisitSheet({ open, visit, onClose, onConfirmed, lang = "e
       try {
         enqueue(payload);
         setPhase("queued");
+        haptics.success();
         onConfirmed?.({ queued: true });
         return;
       } catch (err) {
         console.error("ConfirmVisitSheet: could not queue the confirmation.", err);
         sentRef.current = false;
         setPhase("failed");
+        haptics.error();
         setErrorMsg(t.failed);
         return;
       }
@@ -542,6 +545,7 @@ export function ConfirmVisitSheet({ open, visit, onClose, onConfirmed, lang = "e
     try {
       await submitVisitConfirmation(payload);
       setPhase("done");
+      haptics.success();
       onConfirmed?.({ queued: false });
     } catch (err) {
       console.error("ConfirmVisitSheet: submitting the confirmation failed.", err);
@@ -550,6 +554,7 @@ export function ConfirmVisitSheet({ open, visit, onClose, onConfirmed, lang = "e
       // same rejection. Show it and let the user decide.
       sentRef.current = false;
       setPhase("failed");
+      haptics.error();
       setErrorMsg(t.failed);
     }
   }, [visit, wasThere, priceRight, didBuy, priceNum, onConfirmed, t.failed]);

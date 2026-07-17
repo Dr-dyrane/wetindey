@@ -6,6 +6,8 @@ import { ModalSheet } from "@/design-system/components/ModalSheet";
 import { SheetPicker } from "@/design-system/components/SheetPicker";
 import { Button } from "@/design-system/components/Button";
 import { Input } from "@/design-system/components/Input";
+import { haptics } from "@/lib/haptics";
+import { useEffect } from "react";
 
 interface Option {
   id: string;
@@ -61,7 +63,17 @@ function Banner({ kind, icon, children }: { kind: "confirmed" | "caution" | "una
 export function ReportPriceSheet(p: ReportPriceSheetProps) {
   const variantsForItem = p.variants.filter((v) => v.itemId === p.itemId);
   const disabled = p.submitting || p.success || p.offlineSaved;
+  useEffect(() => {
+    if (p.success || p.offlineSaved) {
+      haptics.success();
+    }
+  }, [p.success, p.offlineSaved]);
 
+  useEffect(() => {
+    if (p.error) {
+      haptics.error();
+    }
+  }, [p.error]);
   return (
     <ModalSheet open={p.open} onClose={p.onClose} title={p.t.report_price} size="page">
       <form onSubmit={p.onSubmit} className="space-y-5 py-4">

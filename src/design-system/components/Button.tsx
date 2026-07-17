@@ -1,6 +1,7 @@
 import React from "react";
 import { clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
+import { haptics } from "@/lib/haptics";
 
 export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: "primary" | "secondary" | "danger" | "ghost";
@@ -102,6 +103,12 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
             className
           )
         )}
+        onPointerDown={(e) => {
+          if (props.onPointerDown) props.onPointerDown(e);
+          if (e.pointerType === "touch") {
+            haptics.impact();
+          }
+        }}
         {...props}
       >
         {isLoading ? (

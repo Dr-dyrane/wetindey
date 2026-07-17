@@ -5,6 +5,7 @@ import { Sun, Moon } from "lucide-react";
 import { ModalSheet } from "@/design-system/components/ModalSheet";
 import { ListGroup } from "@/design-system/components/ListRow";
 import { shippableLocales } from "@/core/i18n";
+import { haptics } from "@/lib/haptics";
 
 /**
  * A second declaration of `Locale`, kept only because `page.tsx` passes `lang`
@@ -38,6 +39,13 @@ function Segmented<T extends string>({
   value: T;
   onChange: (v: T) => void;
 }) {
+  const handleChange = (id: T) => {
+    if (id !== value) {
+      haptics.selection();
+      onChange(id);
+    }
+  };
+
   return (
     <div role="group" className="m-3 grid gap-1 squircle bg-fillTertiary p-1" style={{ gridTemplateColumns: `repeat(${options.length}, 1fr)` }}>
       {options.map((o) => {
@@ -47,7 +55,7 @@ function Segmented<T extends string>({
             key={o.id}
             aria-pressed={active}
             type="button"
-            onClick={() => onChange(o.id)}
+            onClick={() => handleChange(o.id)}
             className={`flex items-center justify-center gap-1.5 squircle py-1.5 text-[13px] font-medium transition duration-micro
               ${active ? "bg-surface text-text-primary shadow-card" : "text-text-secondary active:opacity-60"}`}
           >

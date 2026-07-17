@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { haptics } from "@/lib/haptics";
 
 export type Detent = "peek" | "medium" | "large";
 
@@ -146,7 +147,14 @@ export function BottomSheet({ children, detent, onDetentChange }: BottomSheetPro
     window.addEventListener("resize", measure);
     return () => window.removeEventListener("resize", measure);
   }, []);
-
+  const initial = useRef(true);
+  useEffect(() => {
+    if (initial.current) {
+      initial.current = false;
+      return;
+    }
+    haptics.selection();
+  }, [detent]);
   const fraction = dragFraction ?? DETENT_FRACTION[detent];
 
   /**
