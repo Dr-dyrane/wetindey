@@ -58,8 +58,16 @@
  *     reads as English with a costume on.
  *
  * A native Yorùbá speaker and a Pidgin speaker must pass over this file before
- * the language picker is presented as a finished feature. `coverage()` in
- * ./index.ts prints exactly what is outstanding.
+ * the language picker is presented as a finished feature.
+ *
+ * That sentence has been in this file since it was written, and the picker
+ * shipped anyway — which is what a comment asking people to be careful is worth.
+ * So `NEEDS_NATIVE_REVIEW` at the bottom is now load-bearing: `./index.ts`
+ * refuses to let the store hold a locale whose copy is mostly unread by someone
+ * who speaks it. Today that offers English and Pidgin and withholds Yorùbá. The
+ * list is the gate, not a note about the gate — clearing an entry here is the
+ * only thing that opens a language, and clearing one you have not actually read
+ * is now indistinguishable from shipping it.
  */
 
 /* ── Locales ──────────────────────────────────────────────────────────────── */
@@ -69,12 +77,13 @@ export type Locale = (typeof LOCALES)[number];
 
 export const DEFAULT_LOCALE: Locale = "en";
 
-/** Endonyms — a language is named in its own language, in every locale. */
-export const LOCALE_NAMES: Readonly<Record<Locale, string>> = {
-  en: "English",
-  pidgin: "Pidgin",
-  yoruba: "Yorùbá",
-};
+/* `LOCALE_NAMES` — the endonyms {en: "English", pidgin: "Pidgin", yoruba:
+   "Yorùbá"} — used to live here and had no caller. SettingsSheet.tsx:74-76
+   hardcodes those exact three literals instead, so this was not a dictionary the
+   picker read; it was a fourth copy of the picker's labels, waiting to disagree
+   with them. AGENTS.md §0 is unambiguous, so it is deleted rather than kept warm
+   for a call site that has never arrived. It comes back in the change that makes
+   SettingsSheet read it — with the caller, not before it. */
 
 export function isLocale(value: unknown): value is Locale {
   return typeof value === "string" && (LOCALES as readonly string[]).includes(value);
@@ -88,7 +97,7 @@ export function isLocale(value: unknown): value is Locale {
  * without someone typing this word next to it.
  */
 export const UNTRANSLATED: unique symbol = Symbol("i18n.untranslated");
-export type Untranslated = typeof UNTRANSLATED;
+type Untranslated = typeof UNTRANSLATED;
 
 /* ── English — the source of truth ────────────────────────────────────────── */
 
@@ -151,7 +160,7 @@ export const en = {
      could ever read. The Pidgin is in git when the count is real. */
   "profile.title_signed_in": "Account",
   "profile.title_signed_out": "You",
-  "profile.signed_out_name": "Sign in to WetinDey",
+  "profile.signed_out_name": "Sign in to see WetinDey",
   "profile.my_reports": "My reports",
   "profile.saved_markets": "Saved markets",
   "profile.change_area": "Change area",
@@ -340,11 +349,15 @@ export type StringKey = keyof typeof en;
  * A non-English locale. Mapped over the full key union, so omitting a key is a
  * compile error rather than an English string appearing at runtime in Lagos.
  */
-export type LocaleTable = { readonly [K in StringKey]: string | Untranslated };
+type LocaleTable = { readonly [K in StringKey]: string | Untranslated };
 
 /* ── Nigerian Pidgin ──────────────────────────────────────────────────────── */
 
-export const pidgin: LocaleTable = {
+/* Not exported: `TABLES` below is the only way in, so there is exactly one way
+   to reach a locale's copy and exactly one place to gate it. A component that
+   imported `pidgin` directly would read around the resolver and get a raw
+   `UNTRANSLATED` symbol for its trouble. */
+const pidgin: LocaleTable = {
   wetin_dey: "WetinDey",
   search_placeholder: "Wetin you dey find?",
   popular_items: "Things people dey buy for",
@@ -388,7 +401,7 @@ export const pidgin: LocaleTable = {
 
   "profile.title_signed_in": "Your account",
   "profile.title_signed_out": "You",
-  "profile.signed_out_name": "Sign in to WetinDey",
+  "profile.signed_out_name": "Sign in to see WetinDey",
   "profile.my_reports": "My reports",
   "profile.saved_markets": "Markets wey I save",
   "profile.change_area": "Change area",
@@ -397,7 +410,7 @@ export const pidgin: LocaleTable = {
   "profile.about": "About WetinDey",
 
   // "Sign in"/"Sign out" stay English on purpose — `profile.signed_out_name`
-  // above already reads "Sign in to WetinDey" in this table, and inventing a
+  // above already reads "Sign in to see WetinDey" in this table, and inventing a
   // Pidgin verb for it here would make one sheet disagree with itself.
   "auth.sign_in": "Sign in",
   "auth.sign_out": "Sign out",
@@ -570,7 +583,7 @@ export const pidgin: LocaleTable = {
  * produce a Yorùbá-shaped app that no Yorùbá speaker trusts, and this app is
  * about trust.
  */
-export const yoruba: LocaleTable = {
+const yoruba: LocaleTable = {
   wetin_dey: "Kilo n ṣẹlẹ",
   search_placeholder: "Kini o n wa?",
   popular_items: "Awọn ounjẹ ti o wọpọ ni",
