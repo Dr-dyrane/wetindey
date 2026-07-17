@@ -63,6 +63,7 @@ export type PresentedSurface =
   | { kind: "none" }
   | { kind: "location" }
   | { kind: "my-reports" }
+  | { kind: "manage-profile" }
   | { kind: "report-problem" }
   | { kind: "about"; page?: AboutPage };
 
@@ -101,7 +102,9 @@ function surfaceToHash(surface: PresentedSurface): string | null {
     case "report-problem":
       return "report-problem";
     default:
-      // none, location, my-reports, nothing shareable to write.
+      // none, location, my-reports, manage-profile: nothing shareable to write.
+      // manage-profile is session/PII-scoped, so like my-reports it is a union
+      // member that is deliberately absent from HASH_TO_SURFACE and writes no hash.
       return null;
   }
 }

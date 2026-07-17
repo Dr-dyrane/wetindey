@@ -4,14 +4,14 @@
  * WHY THIS FILE EXISTS
  *
  * A Next.js server action is a public HTTP endpoint. `submitObservation` is
- * reachable by anyone who can POST to this origin — auth exists now, but ADR-003
+ * reachable by anyone who can POST to this origin, auth exists now, but ADR-003
  * makes it recognition, never a gate, so the write paths stay open by design.
  * Unguarded, the action takes `priceAmount` straight from the caller and writes
  * it to `observations`, from which every offer field is derived. A single
  * ₦900,000,000 rice report is not a typo. It is a write to the price band that
  * every other user then reads.
  *
- * WIRING STATUS — every schema below has a live call site in `actions.ts`.
+ * WIRING STATUS, every schema below has a live call site in `actions.ts`.
  * Both write paths and all nine read paths are gated. Nothing here is
  * aspirational; if you add a schema, wire it in the same change or do not add it.
  *
@@ -49,12 +49,12 @@ const uuidField = (label: string) =>
 /**
  * The price band, in Naira.
  *
- * FLOOR — ₦5. The cheapest thing seeded in the pilot is ₦200 (sachet water).
+ * FLOOR, ₦5. The cheapest thing seeded in the pilot is ₦200 (sachet water).
  * Nothing on this map is sold for less than a few Naira, and the floor also
  * disposes of 0, negatives, and sub-kobo values that `Math.round(n * 100)` in
- * `submitObservation` would silently round to 0 kobo — a free item nobody sold.
+ * `submitObservation` would silently round to 0 kobo, a free item nobody sold.
  *
- * CEILING — ₦5,000,000. The dearest thing seeded is a 50 kg bag of rice at
+ * CEILING, ₦5,000,000. The dearest thing seeded is a 50 kg bag of rice at
  * ₦120,000. The ceiling is ~40x that, so it cannot reject a real report even
  * through severe inflation, and it is far below the number that matters:
  *
@@ -88,7 +88,7 @@ if (PRICE_CEILING_NAIRA * 100 > INT4_MAX_KOBO) {
  * `.finite()` is load-bearing and not decoration: JSON cannot carry NaN, but a
  * server action's payload arrives over React's serialisation, and `Infinity`
  * reaching `Math.round(n * 100)` yields `Infinity`, which Postgres rejects for
- * an integer column — after the observation row has already been reasoned about.
+ * an integer column, after the observation row has already been reasoned about.
  */
 const priceNaira = z
   .number({ required_error: "priceAmount is required", invalid_type_error: "priceAmount must be a number" })
@@ -96,7 +96,7 @@ const priceNaira = z
   .gte(PRICE_FLOOR_NAIRA, `priceAmount must be at least ₦${PRICE_FLOOR_NAIRA}`)
   .lte(
     PRICE_CEILING_NAIRA,
-    `priceAmount must be at most ₦${PRICE_CEILING_NAIRA.toLocaleString("en-NG")} — a price above this is not a typo`
+    `priceAmount must be at most ₦${PRICE_CEILING_NAIRA.toLocaleString("en-NG")}, a price above this is not a typo`
   );
 
 /**
@@ -135,7 +135,7 @@ const longitude = z.number().finite().gte(-180).lte(180);
 const worldCoordinate = z
   .object({ lat: latitude, lng: longitude })
   .refine((c) => !(c.lat === 0 && c.lng === 0), {
-    message: "coordinate (0, 0) is not a location — it is what an unparsed coordinate looks like",
+    message: "coordinate (0, 0) is not a location, it is what an unparsed coordinate looks like",
   });
 
 /**
@@ -145,7 +145,7 @@ const worldCoordinate = z
  * coordinate we would WRITE. Besides rejecting junk, the box catches the two
  * failure modes that produce a plausible wrong answer rather than an error:
  *
- *   · a swapped pair — Festac is (6.4654, 3.2846); swap it and you get
+ *   · a swapped pair, Festac is (6.4654, 3.2846); swap it and you get
  *     (3.2846, 6.4654), which is open water south of Lagos and inside no box
  *     this app cares about;
  *   · a truncated or zeroed pair, per `worldCoordinate` above.
@@ -167,7 +167,7 @@ const nigeriaCoordinate = worldCoordinate.refine(
 /**
  * A search radius, in km.
  *
- * The 500 km ceiling is not invented here — `searchRadiusMetres` (actions.ts:686)
+ * The 500 km ceiling is not invented here, `searchRadiusMetres` (actions.ts:686)
  * already enforces it for discovery. This states the same number for the
  * location actions, where `getPlacesNear` (actions.ts:961) and
  * `getCoverageForPoint` (actions.ts:1009) check only `> 0` today, so a radius of
@@ -180,7 +180,7 @@ const radiusKm = z.number().finite().gt(0, "radiusKm must be positive").lte(500,
  * A row cap.
  *
  * Every `limit` in actions.ts is a client-supplied number with a default and no
- * ceiling. Drizzle binds it as a parameter, so this is not an injection — it is
+ * ceiling. Drizzle binds it as a parameter, so this is not an injection, it is
  * an amplification: one small POST with `limit: 1e9` asks the database for the
  * world and asks the server to serialise it back.
  */
@@ -195,7 +195,7 @@ const limitField = (max: number) => z.number().int("limit must be a whole number
    ──────────────────────────────────────────────────────────────────────────── */
 
 /**
- * `submitObservation` — the unauthenticated write.
+ * `submitObservation`, the unauthenticated write.
  *
  * Note what this schema CANNOT do: it proves the payload is well formed, not
  * that the person sending it went anywhere. See the audit note on rate limiting
@@ -219,14 +219,14 @@ type SubmitObservationInput = z.infer<typeof submitObservationInput>;
  * A discriminated union rather than a bag of optionals, because the action's own
  * comments say the shape is conditional and then enforce it with three hand-rolled
  * throws (actions.ts:559, 579, 584). Two of those checks are the ones this union
- * states declaratively; the third — `actualPrice` having no CEILING at
- * actions.ts:559 — is a hole this closes. `submitVisitConfirmation` delegates to
+ * states declaratively; the third, `actualPrice` having no CEILING at
+ * actions.ts:559, is a hole this closes. `submitVisitConfirmation` delegates to
  * `submitObservation` (actions.ts:587), so an attacker who cannot write ₦900M
  * through the front door can write it through the visit path unless both are gated.
  *
  * `didBuy` is typed `boolean` and lands in `observations.raw_payload`
  * (actions.ts:606), a jsonb column. At runtime an unvalidated `didBuy` is
- * whatever was sent — including a multi-megabyte object. jsonb will store it.
+ * whatever was sent, including a multi-megabyte object. jsonb will store it.
  */
 const visitIdentity = {
   placeId: uuidField("placeId"),
@@ -237,7 +237,7 @@ const visitIdentity = {
 /**
  * The `actualPrice` rule hangs off the union rather than the `wasAvailable: true`
  * branch because zod v3's `discriminatedUnion` only accepts plain ZodObjects as
- * members — a `.refine()`d branch is a ZodEffects and is rejected at the type
+ * members, a `.refine()`d branch is a ZodEffects and is rejected at the type
  * level. Refining the assembled union is the same rule in the only place v3 will
  * take it.
  */
@@ -249,7 +249,7 @@ const visitConfirmationInput = z
         wasAvailable: z.literal(false),
       })
       // No priceWasRight, no actualPrice, no didBuy. You cannot buy what is not
-      // there, and "not there right now" says nothing about what it costs — the
+      // there, and "not there right now" says nothing about what it costs, the
       // action deliberately leaves the price bounds alone on this path
       // (actions.ts:534-550). Anything sent alongside is a caller bug.
       .strict(),
@@ -291,7 +291,7 @@ type VisitConfirmationInput =
  *
  * The cap is the point. The query is interpolated into a LIKE pattern
  * (actions.ts:25) against `items.canonical_name`, `items.slug` AND
- * `item_aliases.alias` across a `selectDistinctOn` with a left join — three
+ * `item_aliases.alias` across a `selectDistinctOn` with a left join, three
  * ILIKE scans per call, on every keystroke, with no index able to serve a
  * leading `%`. An 8 KB query string is a cheap way to make that expensive.
  *
@@ -327,13 +327,13 @@ const offersNarrowedInput = z
     radiusKm,
     // Unvalidated, this string indexes an object literal (the `ranking` table in
     // getOffersNarrowed). Object literals inherit from Object.prototype, so
-    // `sort: "toString"` does not miss — it resolves to a function.
+    // `sort: "toString"` does not miss, it resolves to a function.
     //
     // It is NOT interpolated as raw SQL, and an earlier version of this comment
     // was wrong to imply it. Measured against the live database: Drizzle binds
     // the function as a PARAMETER, Postgres receives `ORDER BY $1` with null,
     // accepts it, and returns rows with the ordering silently dropped. So the
-    // real failure is not injection — it is "cheapest" quietly not being
+    // real failure is not injection, it is "cheapest" quietly not being
     // cheapest, which is the class of bug this project has already paid for
     // once in the Gulf of Guinea. The enum is what stops that.
     sort: z.enum(["nearest", "cheapest", "freshest"]).optional(),
@@ -351,7 +351,7 @@ const placesNearInput = z
   })
   .strict()
   .refine((v) => !(v.lat === 0 && v.lng === 0), {
-    message: "coordinate (0, 0) is not a location — it is what an unparsed coordinate looks like",
+    message: "coordinate (0, 0) is not a location, it is what an unparsed coordinate looks like",
   })
   .refine(
     (v) =>
@@ -363,13 +363,13 @@ const placesNearInput = z
   );
 
 /**
- * `getCoverageForPoint` — deliberately `worldCoordinate`, NOT `nigeriaCoordinate`.
+ * `getCoverageForPoint`, deliberately `worldCoordinate`, NOT `nigeriaCoordinate`.
  *
  * This is the one action whose purpose is to answer "am I outside coverage?".
  * Rejecting a point outside Nigeria would refuse to answer the question it was
  * built to answer, and the action's own docstring (actions.ts:998) commits to
  * telling an uncovered user so rather than teleporting them to Festac. (0, 0) is
- * still refused, because that is not a user somewhere else — that is a bug.
+ * still refused, because that is not a user somewhere else, that is a bug.
  */
 const coverageForPointInput = z
   .object({
@@ -379,26 +379,26 @@ const coverageForPointInput = z
   })
   .strict()
   .refine((v) => !(v.lat === 0 && v.lng === 0), {
-    message: "coordinate (0, 0) is not a location — it is what an unparsed coordinate looks like",
+    message: "coordinate (0, 0) is not a location, it is what an unparsed coordinate looks like",
   });
 
 /**
- * `submitProblemReport` — the second unauthenticated public write, after
+ * `submitProblemReport`, the second unauthenticated public write, after
  * `submitObservation`. Same exposure exactly: a Server Action is a public HTTP
  * endpoint, ADR-003 keeps it open to anonymous callers by design, and there is
- * no rate limiter in this app (no middleware, no upstash/arcjet dependency — the
+ * no rate limiter in this app (no middleware, no upstash/arcjet dependency, the
  * device-cookie throttle is still Phase 2, and when it lands it owns BOTH this
  * endpoint and submitObservation). So this schema is the only guard standing
  * between the open internet and a `text` column.
  *
- * `body` is where that matters. Uncapped, one POST can write an 8 KB essay — or
- * a 10 MB one — into the reports table for free, which is storage exhaustion by
+ * `body` is where that matters. Uncapped, one POST can write an 8 KB essay, or
+ * a 10 MB one, into the reports table for free, which is storage exhaustion by
  * the same reasoning `searchQueryInput` caps its query at 80. `.max(1000)` is
  * well past a phone paragraph and far below anything worth storing in bulk;
  * `.min(1)` after `.trim()` refuses an empty filing, so a blank report cannot be
  * logged as if it said something.
  *
- * `kind` is a closed enum — the enum IS the guard, the same as `sort` at the
+ * `kind` is a closed enum, the enum IS the guard, the same as `sort` at the
  * offers path. Anything outside the four the reader triages by would sit in the
  * column meaning nothing.
  *
@@ -406,7 +406,7 @@ const coverageForPointInput = z
  * security-sensitive, so the client supplies it and the enum bounds it. `userId`
  * is deliberately ABSENT from this payload: attribution is resolved server-side
  * from the session in the action, never taken from the caller, for the same
- * reason `getMyReports` takes no arguments — a client-supplied identity on a
+ * reason `getMyReports` takes no arguments, a client-supplied identity on a
  * public endpoint is a breach waiting for a curl.
  */
 const problemReportKind = z.enum(["price_wrong", "place_wrong", "app_bug", "other"], {
@@ -427,6 +427,53 @@ const submitProblemReportInput = z
 
 type SubmitProblemReportInput = z.infer<typeof submitProblemReportInput>;
 
+/**
+ * `updateMyProfile`: a signed-in user editing their OWN contact channel.
+ *
+ * Unlike `submitObservation` and `submitProblemReport`, this write is NOT
+ * anonymous-first: the action resolves the session server-side and refuses
+ * without one, because a profile belongs to exactly one account and the UI never
+ * offers this control signed out. So identity is the action's job; the guard this
+ * schema provides is shape and length.
+ *
+ * NAME AND EMAIL ARE ABSENT FROM THIS PAYLOAD ON PURPOSE. They live in
+ * `neon_auth.user`, a Neon-managed table this app cannot write through Drizzle:
+ * the UI edits the name client-side via `authClient.updateUser({ name })`, and
+ * email is display-only (there is no mounted change-email route on this SDK). This
+ * schema and `updateMyProfile` govern ONLY the contact pair, which is the piece
+ * that lands in our own `user_profiles` table.
+ *
+ * The pair is both-or-neither, mirroring the `places` contact columns: a value
+ * without a kind is not dialable, and a kind without a value is not a contact.
+ * Sending null for both is how the UI clears a channel. `kind` is a closed enum
+ * and the enum IS the guard; `value` is capped at the column width (255) so an
+ * unthrottled write cannot turn a contact field into free storage, the same
+ * reasoning as `body` on the problem report. Format is deliberately not pinned
+ * tighter than length, because phone, whatsapp and sms are all phone-number
+ * channels and over-rejecting a real number is worse than storing a loose one.
+ */
+const contactChannelKind = z.enum(["phone", "whatsapp", "sms"], {
+  errorMap: () => ({ message: "contact channel must be one of phone, whatsapp, sms" }),
+});
+
+const updateMyProfileInput = z
+  .object({
+    contactChannelKind: contactChannelKind.nullish(),
+    contactChannelValue: z
+      .string({ invalid_type_error: "contact must be a string" })
+      .trim()
+      .min(1, "a contact needs a value")
+      .max(255, "keep the contact under 255 characters")
+      .nullish(),
+  })
+  .strict()
+  .refine((v) => (v.contactChannelKind == null) === (v.contactChannelValue == null), {
+    message: "a contact needs both a channel and a value, or clear both",
+    path: ["contactChannelValue"],
+  });
+
+type UpdateMyProfileInput = z.infer<typeof updateMyProfileInput>;
+
 /* ─────────────────────────────────────────────────────────────────────────────
    The helper
    ──────────────────────────────────────────────────────────────────────────── */
@@ -436,7 +483,7 @@ type SubmitProblemReportInput = z.infer<typeof submitProblemReportInput>;
  *
  * The rejected VALUE is never echoed. Two reasons: a reflected payload is a log
  * injection vector and a way to have the server store attacker-chosen bytes for
- * free, and Next.js redacts server-action error messages in production anyway —
+ * free, and Next.js redacts server-action error messages in production anyway ,
  * the client gets a digest, the message reaches the server log. Naming the path
  * and the rule is all the message needs to do, and the length cap keeps a
  * hostile payload from turning a hundred field errors into a log flood.
@@ -451,11 +498,11 @@ function assertValid<T>(schema: z.ZodType<T>, data: unknown, action: string): T 
     .join("; ")
     .slice(0, 400);
 
-  throw new Error(`${action}: rejected invalid input — ${detail}`);
+  throw new Error(`${action}: rejected invalid input, ${detail}`);
 }
 
 /* ─────────────────────────────────────────────────────────────────────────────
-   Typed parsers — one per action, so wiring is one line and nothing below it moves.
+   Typed parsers, one per action, so wiring is one line and nothing below it moves.
    ──────────────────────────────────────────────────────────────────────────── */
 
 export function parseSubmitObservation(data: unknown): SubmitObservationInput {
@@ -504,4 +551,8 @@ export function parseCoverageForPoint(data: unknown): z.infer<typeof coverageFor
 
 export function parseSubmitProblemReport(data: unknown): SubmitProblemReportInput {
   return assertValid(submitProblemReportInput, data, "submitProblemReport");
+}
+
+export function parseUpdateMyProfile(data: unknown): UpdateMyProfileInput {
+  return assertValid(updateMyProfileInput, data, "updateMyProfile");
 }

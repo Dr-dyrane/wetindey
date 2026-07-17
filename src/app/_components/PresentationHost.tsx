@@ -3,6 +3,7 @@
 import React from "react";
 import { LocationSheet } from "@/app/_components/LocationSheet";
 import { MyReportsSheet } from "@/app/_components/MyReportsSheet";
+import { ManageProfileSheet } from "@/app/_components/ManageProfileSheet";
 import { ReportProblemSheet } from "@/app/_components/ReportProblemSheet";
 import { AboutSheet } from "@/app/_components/AboutSheet";
 import type { PresentedSurface } from "@/core/navigation/usePresentation";
@@ -23,6 +24,18 @@ interface PresentationHostProps {
    * stays page.tsx's own boolean (it carries ~15 form fields this controller does not own).
    */
   onReportPrice: () => void;
+  /**
+   * ManageProfileSheet: the signed-in identity to seed the edit form. Null while
+   * signed out, but the row that opens this surface is signed-in-only, so the
+   * sheet is not reachable in that state.
+   */
+  manageProfileUser: { name: string; email: string } | null;
+  /**
+   * ManageProfileSheet committed a name change; re-read the session so the
+   * map-header avatar and the mini-profile pick up the new initials. Same
+   * `refetchSession` ProfileSheet is handed.
+   */
+  onSessionChange: () => void;
 }
 
 /**
@@ -47,6 +60,8 @@ export function PresentationHost({
   onCommitLocation,
   signedIn,
   onReportPrice,
+  manageProfileUser,
+  onSessionChange,
 }: PresentationHostProps) {
   return (
     <>
@@ -62,6 +77,13 @@ export function PresentationHost({
         onClose={onClose}
         signedIn={signedIn}
         onReportPrice={onReportPrice}
+      />
+
+      <ManageProfileSheet
+        open={surface.kind === "manage-profile"}
+        onClose={onClose}
+        user={manageProfileUser}
+        onSessionChange={onSessionChange}
       />
 
       <ReportProblemSheet open={surface.kind === "report-problem"} onClose={onClose} />

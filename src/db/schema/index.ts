@@ -3,8 +3,8 @@ import { pgTable, uuid, varchar, timestamp, text, integer, doublePrecision, bool
 /**
  * Decode a PostGIS POINT from hex-encoded EWKB.
  *
- * This is what `node-postgres` actually hands back for a `geography` column —
- * e.g. "0101000020E6100000FDA4DAA7E3310A402BF697DD93E71940" — NOT the WKT
+ * This is what `node-postgres` actually hands back for a `geography` column ,
+ * e.g. "0101000020E6100000FDA4DAA7E3310A402BF697DD93E71940", NOT the WKT
  * "POINT(3.37 6.51)" you might expect. PostGIS only emits WKT if you ask for it
  * explicitly via ST_AsText().
  *
@@ -59,7 +59,7 @@ export const geographyPoint = customType<{
     /**
      * Fail loudly. The previous version returned { lng: 0, lat: 0 } here, and
      * because the WKT regex never matched the EWKB the driver really sends,
-     * EVERY place in the app silently became (0,0) — a point in the Gulf of
+     * EVERY place in the app silently became (0,0), a point in the Gulf of
      * Guinea. Markers stacked in the ocean, distances were nonsense, and
      * selecting an item flew the map out to sea, which read as "the map
      * broke". A silent wrong answer hid that for the life of the project; an
@@ -85,8 +85,8 @@ export const areas = pgTable("areas", {
 }, (t) => [
   /**
    * GIST on a geography column is what makes ST_DWithin an index scan instead
-   * of a seq scan. Forward-looking at 9 rows — the planner will ignore it until
-   * `areas` grows past the pilot — but it is the standard companion to any
+   * of a seq scan. Forward-looking at 9 rows, the planner will ignore it until
+   * `areas` grows past the pilot, but it is the standard companion to any
    * geography column and costs nothing to carry.
    *
    * Note it does NOT accelerate `ORDER BY ST_Distance(center, ...)` at
@@ -111,14 +111,14 @@ export const places = pgTable("places", {
    * How a trader has agreed to be reached, and at what address on that channel.
    *
    * `getPlaceContactPolicy` (actions.ts:1082) already reads `contactVisibility`
-   * and already documents why it cannot work: ":1066-1067 — there is also no
-   * channel column — no phone, no handle — so even an explicit 'public' does
+   * and already documents why it cannot work: ":1066-1067, there is also no
+   * channel column, no phone, no handle, so even an explicit 'public' does
    * not yield something to dial". The policy function is not missing logic; it
    * is missing a column. This is that column.
    *
    * Both are nullable with no default, and NULL is meaningful: "this trader has
    * published no channel". That is exactly what the app answers today, so
-   * adding these changes no current answer — an existing row keeps behaving as
+   * adding these changes no current answer, an existing row keeps behaving as
    * it does now. The pair travels together: a value without a kind is not
    * dialable, and a kind without a value is not a contact.
    *
@@ -133,7 +133,7 @@ export const places = pgTable("places", {
 }, (t) => [
   /**
    * The only spatial index the live code can actually use, and only for the two
-   * `ST_DWithin(location, ...)` geography predicates — getPlacesNear
+   * `ST_DWithin(location, ...)` geography predicates, getPlacesNear
    * (actions.ts:977) and getCoverageForPoint (actions.ts:1034).
    *
    * It deliberately does NOT help getItemNarrowingOptions (actions.ts:729) or
@@ -211,25 +211,25 @@ export const units = pgTable("units", {
 });
 
 /**
- * 7. Sources Table — an IDENTITY table with a category column.
+ * 7. Sources Table, an IDENTITY table with a category column.
  *
- * What a row means, as of this migration: one contributor of observations —
+ * What a row means, as of this migration: one contributor of observations ,
  * an account, or the anonymous shared row for a category.
  *
  * What a row meant before it: a category, and nothing else. The table held
- * exactly three rows (seed.ts:253-256 — 'Contributor', 'Public data',
+ * exactly three rows (seed.ts:253-256, 'Contributor', 'Public data',
  * 'Vendor'; verified against the live database), and every app contribution
  * resolved to the single shared 'Contributor' row (actions.ts:313-322). The
  * table was fixed-size; it now grows with the contributor base.
  *
- * `sourceType` is unchanged and stays non-null — it remains the category of
+ * `sourceType` is unchanged and stays non-null, it remains the category of
  * the row. `userId` is the column that makes a row an identity rather than a
  * category.
  *
  * The column ships ahead of its writer. This migration only opens the column;
  * the write path that resolves a session to a per-user row is a separate
  * change against actions.ts. Until that lands, every row carries NULL here and
- * the table answers exactly as it does today — which is what makes the
+ * the table answers exactly as it does today, which is what makes the
  * migration safe to apply on its own, not what makes it finished.
  *
  * This is the row `distinct_source_count` counts (actions.ts:785) and the key
@@ -252,15 +252,15 @@ export const sources = pgTable("sources", {
    * NULL is meaningful and permanent: "no account behind this source". It is
    * what the anonymous shared row per category carries, and what a
    * contribution arriving without a session resolves to. Anonymous
-   * contribution is the product's default and ADR-003 keeps it working — an
+   * contribution is the product's default and ADR-003 keeps it working, an
    * unattributed row weighs less, it is never refused.
    *
    * There is deliberately NO foreign key to `neon_auth.user`. Neon manages
    * that schema and may rewrite it, and a hard FK into a managed table is a
    * liability. NDPR erasure also wants SET NULL semantics, which a loose
    * column gives without a constraint to fight: an id left dangling by a
-   * deleted account degrades to "unrecognised" — the same answer this app
-   * gives every contributor today — rather than blocking the delete.
+   * deleted account degrades to "unrecognised", the same answer this app
+   * gives every contributor today, rather than blocking the delete.
    */
   userId: uuid("user_id"),
   status: varchar("status", { length: 50 }).default("active").notNull(),
@@ -276,7 +276,7 @@ export const sources = pgTable("sources", {
    *
    * Not unique: the column is nullable, and the anonymous rows all hold NULL.
    * A UNIQUE index would permit those (Postgres treats NULLs as distinct), but
-   * it would encode "one source row per user" — an invariant the write path
+   * it would encode "one source row per user", an invariant the write path
    * owns, and one this lane cannot verify from the schema alone.
    */
   index("sources_user_id_idx").on(t.userId)
@@ -306,15 +306,15 @@ export const observations = pgTable("observations", {
    * on." This is the schema change it was waiting on.
    *
    * It earns a column rather than staying JSON because it is the only evidence
-   * in the product that a price was not just *seen* but *paid* — the difference
+   * in the product that a price was not just *seen* but *paid*, the difference
    * between a listed number and a real transaction. As a jsonb key it cannot be
    * aggregated, indexed, or constrained without a functional index over a shape
    * nothing validates; as a column it can.
    *
    * Three states, so nullable is the point, not laziness:
-   *   true  — went, bought
-   *   false — went, did not buy
-   *   NULL  — never asked (every observation not from a visit confirmation, and
+   *   true , went, bought
+   *   false, went, did not buy
+   *   NULL , never asked (every observation not from a visit confirmation, and
    *           every row written before this migration)
    * A default of false would be a lie: it would file 942 existing observations
    * as "went and declined to buy" when nobody was ever asked. This repo has
@@ -327,7 +327,7 @@ export const observations = pgTable("observations", {
    * The hottest query in the app and the one that grows fastest. Every write
    * re-derives the offer by aggregating this exact triple: actions.ts:304-306
    * (submitObservation's recompute), reached again through the visit paths.
-   * 942 rows today, and observations are immutable — this table only ever grows.
+   * 942 rows today, and observations are immutable, this table only ever grows.
    */
   index("observations_variant_unit_place_idx").on(t.itemVariantId, t.unitId, t.placeId)
 ]);
@@ -357,7 +357,7 @@ export const offersCurrent = pgTable("offers_current", {
    * code already assumes it: actions.ts:284-289, :521-526 and :570-575 all
    * select this triple with `.limit(1)` and treat the single row as *the*
    * offer. Nothing enforced it, so the read-select-then-insert-or-update in
-   * submitObservation is a race — two concurrent reports for the same triple
+   * submitObservation is a race, two concurrent reports for the same triple
    * can both miss on the select and both insert, after which one duplicate is
    * silently invisible to every subsequent `.limit(1)` and its price never
    * updates again.
@@ -370,7 +370,7 @@ export const offersCurrent = pgTable("offers_current", {
    * returns 0 groups against the live database, across all 478 rows.
    *
    * Its leading column also serves every bare `item_variant_id` lookup
-   * (actions.ts:163, :743), so no separate index on that column is warranted —
+   * (actions.ts:163, :743), so no separate index on that column is warranted ,
    * a redundant one would only cost write throughput.
    */
   uniqueIndex("offers_current_variant_unit_place_key").on(t.itemVariantId, t.unitId, t.placeId),
@@ -378,7 +378,7 @@ export const offersCurrent = pgTable("offers_current", {
   // key above, so it needs its own index.
   index("offers_current_place_id_idx").on(t.placeId),
   // eq(offersCurrent.unitId, ...) filter at actions.ts:798, and the units join
-  // at :175/:225/:762/:832 — also not a usable prefix of the natural key.
+  // at :175/:225/:762/:832, also not a usable prefix of the natural key.
   index("offers_current_unit_id_idx").on(t.unitId),
   /**
    * Serves the "freshest" ranking (actions.ts:803) and MAX(last_observed_at)
@@ -391,16 +391,16 @@ export const offersCurrent = pgTable("offers_current", {
 ]);
 
 /**
- * 10. Problem Reports — free-text "something is wrong" reports from users.
+ * 10. Problem Reports, free-text "something is wrong" reports from users.
  *
  * There is DELIBERATELY NO ADMIN UI behind this table, by the owner's own spec:
  * "we are admin, it's our site... we read the db directly, make inference". The
- * whole read surface is one query at psql — `select * from problem_reports order
+ * whole read surface is one query at psql, `select * from problem_reports order
  * by created_at desc`. Everything below is shaped for that reader, not for a
  * moderation queue that does not exist.
  *
  * NO status / moderation column, and its absence is a decision. `observations`
- * carries `moderation_status` and it is 'approved' on 949/949 rows — not because
+ * carries `moderation_status` and it is 'approved' on 949/949 rows, not because
  * that is the column default (the default is 'pending', see :298) but because
  * the seed and both write paths explicitly write 'approved' and nothing writes
  * 'rejected'. A status column here would be that same constant wearing the
@@ -408,7 +408,7 @@ export const offersCurrent = pgTable("offers_current", {
  * A report is read once by a human and acted on outside the app; there is no
  * state for the app to track.
  *
- * `userId` is nullable with NO foreign key — the exact precedent of
+ * `userId` is nullable with NO foreign key, the exact precedent of
  * `sources.userId` above (see its comment): ADR-003 makes contribution
  * anonymous-first, an anonymous report is the product's default and is never
  * refused, and a hard FK into Neon's managed `neon_auth.user` is a liability
@@ -426,7 +426,7 @@ export const offersCurrent = pgTable("offers_current", {
  * These four columns SHIP AHEAD OF A WRITER, the same way `sources.userId` and
  * `observations.didBuy` did. The entry point that captures an offer in context
  * (a "report a problem" button inside a detail sheet) is not built in this
- * change; the only opener today is the Profile row, which is cold — no offer is
+ * change; the only opener today is the Profile row, which is cold, no offer is
  * on screen there. So every row written now carries NULL here, and NULL is the
  * honest value: "filed without an offer in context", not a default pretending to
  * be a fact. The column earns its migration now because adding it later is a
@@ -439,7 +439,7 @@ export const problemReports = pgTable("problem_reports", {
   // enforced at the write boundary by zod (src/lib/validation.ts), not by the DB.
   kind: varchar("kind", { length: 50 }).notNull(),
   // The report itself. Capped at 1000 chars by validation before it reaches here
-  // — a text column is a free storage-exhaustion vector for an unthrottled public
+  //, a text column is a free storage-exhaustion vector for an unthrottled public
   // write, and length is the only in-scope guard (there is no rate limiter yet).
   body: text("body").notNull(),
   userId: uuid("user_id"),
@@ -447,7 +447,7 @@ export const problemReports = pgTable("problem_reports", {
   itemVariantId: uuid("item_variant_id"),
   unitId: uuid("unit_id"),
   contextLabel: text("context_label"),
-  // 'en' | 'pidgin' | 'yoruba' — the locale the reporter was reading. Answers
+  // 'en' | 'pidgin' | 'yoruba', the locale the reporter was reading. Answers
   // "did they see English, or something we translated?" when a bug is about copy.
   appLocale: varchar("app_locale", { length: 50 }),
   createdAt: timestamp("created_at").defaultNow().notNull()
@@ -455,4 +455,54 @@ export const problemReports = pgTable("problem_reports", {
   // The only read this table has is `order by created_at desc`. The index serves
   // it directly rather than sorting the whole table every time the owner looks.
   index("problem_reports_created_at_idx").on(t.createdAt.desc())
+]);
+
+/**
+ * 11. User Profiles: a signed-in user's OWN contact channel.
+ *
+ * WHOSE CONTACT THIS IS, AND WHOSE IT IS NOT. These columns hold the LOGGED-IN
+ * USER'S personal contact (a contributor, or a shopper who chose to leave a way
+ * to be reached). They are ENTIRELY SEPARATE from `places.contact_channel_kind` /
+ * `contact_channel_value` above, which are the SELLER's / stall's contact and are
+ * gated by `places.contactVisibility`. Do not read, write, or cross-wire the two:
+ * one is an account holder reachable at their own option, the other is a trader
+ * published under a visibility policy. They only share a column shape.
+ *
+ * `userId` is NOT NULL and UNIQUE, and both differ from `sources.userId` on
+ * purpose. There is no anonymous profile: a row here is only ever written by
+ * `updateMyProfile`, which resolves the session server-side and refuses without
+ * one, so a row with no owner is a state the write path cannot produce and would
+ * mean nothing (whose contact is it?). UNIQUE states the real invariant, one
+ * profile per user, AND is the ON CONFLICT target the upsert writes against.
+ *
+ * There is deliberately NO foreign key to `neon_auth.user`, the same reasoning as
+ * `sources.userId` (see its comment): Neon manages that schema and may rewrite
+ * it, and a hard FK into a managed table is a liability. The difference from
+ * sources is the erasure shape. A source degrades to anonymous on NDPR erasure
+ * (its user_id goes NULL and its price data survives unattributed); a profile row
+ * IS the PII, so erasure DELETES it rather than nulling it. Neither case wants a
+ * constraint to fight.
+ *
+ * The contact pair travels together, mirroring the places idiom: a value without
+ * a kind is not dialable, and a kind without a value is not a contact. Both are
+ * nullable, and NULL on both means "no channel on file". The both-or-neither rule
+ * is enforced at the write boundary by zod (src/lib/validation.ts), not the DB.
+ */
+export const userProfiles = pgTable("user_profiles", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  userId: uuid("user_id").notNull(),
+  contactChannelKind: varchar("contact_channel_kind", { length: 50 }), // 'phone', 'whatsapp', 'sms'
+  contactChannelValue: varchar("contact_channel_value", { length: 255 }),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+}, (t) => [
+  /**
+   * One profile per user, and the ON CONFLICT target `updateMyProfile` upserts
+   * against. UNIQUE here, unlike `sources_user_id_idx` which is a plain index
+   * because the anonymous rows all hold NULL and Postgres treats NULLs as
+   * distinct. Every profile row carries a real owner, so a second row for one
+   * user is a bug rather than a second identity, and the unique index is what
+   * both expresses that and lets the upsert find the row to update.
+   */
+  uniqueIndex("user_profiles_user_id_key").on(t.userId)
 ]);

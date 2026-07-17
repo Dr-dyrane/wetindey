@@ -158,7 +158,7 @@ export const en = {
      "0 prices reported" for every signed-in user, including one who had reported
      twenty. Keeping the keys would have kept `coverage()` counting Pidgin nobody
      could ever read. The Pidgin is in git when the count is real. */
-  "profile.title_signed_in": "Account",
+  "profile.title_signed_in": "Profile",
   "profile.title_signed_out": "You",
   "profile.signed_out_name": "Sign in to see WetinDey",
   "profile.my_reports": "My reports",
@@ -167,6 +167,30 @@ export const en = {
   "profile.settings": "Settings",
   "profile.report_problem": "Report a problem",
   "profile.about": "About WetinDey",
+
+  /* Manage profile, ManageProfileSheet.tsx. The first CTA row under the mini
+     profile, and the sheet it opens. `name` round-trips through
+     `authClient.updateUser`; `email` is DISPLAY-ONLY (there is no mounted
+     change-email route on this SDK, so an editable field would be a dead
+     control this codebase refuses); the contact pair round-trips through
+     `updateMyProfile`. `email_readonly_note` is the honest line that says WHY
+     the address cannot be edited here, never a promise of a change flow.
+
+     `save_error` / `load_error` are Nigerian English, matching `reports.err_load`
+     and LocationSheet's register verbatim, the app's English voice. */
+  "profile.manage": "Manage profile",
+  "profile.name_label": "Name",
+  "profile.email_label": "Email",
+  "profile.email_readonly_note": "This is how you sign in.",
+  "profile.contact_label": "Contact",
+  "profile.contact_kind_phone": "Phone",
+  "profile.contact_kind_whatsapp": "WhatsApp",
+  "profile.contact_kind_sms": "SMS",
+  "profile.contact_placeholder": "Phone number",
+  "profile.save": "Save",
+  "profile.saved": "Saved",
+  "profile.save_error": "We no fit save your profile right now.",
+  "profile.load_error": "We no fit load your profile right now.",
 
   /* My reports, MyReportsSheet.tsx.
    *
@@ -637,7 +661,7 @@ const pidgin: LocaleTable = {
   "settings.radius_a11y": "How far you wan look, for kilometre",
   "settings.radius_value": "{km} km",
 
-  "profile.title_signed_in": "Your account",
+  "profile.title_signed_in": "Profile",
   "profile.title_signed_out": "You",
   "profile.signed_out_name": "Sign in to see WetinDey",
   "profile.my_reports": "My reports",
@@ -646,6 +670,27 @@ const pidgin: LocaleTable = {
   "profile.settings": "Settings",
   "profile.report_problem": "Tell us wetin spoil",
   "profile.about": "About WetinDey",
+
+  /* Manage profile. The short UI-noun labels stay verbatim English, the same
+     treatment `profile.my_reports` and `profile.settings` get above, because a
+     Lagos speaker reads "Name" / "Email" / "Save" as-is. The prose
+     (`email_readonly_note`, `contact_placeholder`, `saved`) is UNTRANSLATED so
+     English shows through rather than a guess. `save_error` / `load_error`
+     mirror `reports.err_load`'s construction verbatim, the confident "We no fit
+     ___ right now" register this table already ships. */
+  "profile.manage": "Manage profile",
+  "profile.name_label": "Name",
+  "profile.email_label": "Email",
+  "profile.email_readonly_note": UNTRANSLATED,
+  "profile.contact_label": "Contact",
+  "profile.contact_kind_phone": "Phone",
+  "profile.contact_kind_whatsapp": "WhatsApp",
+  "profile.contact_kind_sms": "SMS",
+  "profile.contact_placeholder": UNTRANSLATED,
+  "profile.save": "Save",
+  "profile.saved": UNTRANSLATED,
+  "profile.save_error": "We no fit save your profile right now.",
+  "profile.load_error": "We no fit load your profile right now.",
 
   /* My reports.
    *
@@ -1002,6 +1047,22 @@ const yoruba: LocaleTable = {
   "profile.settings": UNTRANSLATED,
   "profile.report_problem": UNTRANSLATED,
   "profile.about": UNTRANSLATED,
+
+  /* Manage profile. Every key UNTRANSLATED, LANES H2: Yorùbá is withheld pending
+     a native speaker, and no agent may stand in for one. English shows through. */
+  "profile.manage": UNTRANSLATED,
+  "profile.name_label": UNTRANSLATED,
+  "profile.email_label": UNTRANSLATED,
+  "profile.email_readonly_note": UNTRANSLATED,
+  "profile.contact_label": UNTRANSLATED,
+  "profile.contact_kind_phone": UNTRANSLATED,
+  "profile.contact_kind_whatsapp": UNTRANSLATED,
+  "profile.contact_kind_sms": UNTRANSLATED,
+  "profile.contact_placeholder": UNTRANSLATED,
+  "profile.save": UNTRANSLATED,
+  "profile.saved": UNTRANSLATED,
+  "profile.save_error": UNTRANSLATED,
+  "profile.load_error": UNTRANSLATED,
 
   /* My reports. Every key, without exception, LANES H2: Yorùbá is withheld
      pending a native speaker, and no agent may stand in for one. English shows

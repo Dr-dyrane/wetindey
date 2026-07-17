@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { Settings, Flag, Bookmark, MapPin, TrendingUp, CircleHelp } from "lucide-react";
+import { Settings, Flag, Bookmark, MapPin, TrendingUp, CircleHelp, UserRound } from "lucide-react";
 import { ModalSheet } from "@/design-system/components/ModalSheet";
 import { ListRow, ListGroup } from "@/design-system/components/ListRow";
 import { Input } from "@/design-system/components/Input";
@@ -24,7 +24,7 @@ interface ProfileSheetProps {
    * Present the "My reports" sheet. Required, not optional, for the same reason
    * `onChangeArea` is: this row spent its whole life `disabled` over a no-op
    * `onClick`, and an optional callback is exactly how it would go dead a second
-   * time — silently, with the type checker satisfied.
+   * time, silently, with the type checker satisfied.
    *
    * It is NOT gated on the session. Auth is recognition, never a gate (ADR-003),
    * and signed-out is this app's permanent default; the sheet opens either way
@@ -37,27 +37,40 @@ interface ProfileSheetProps {
    * `onClick`, and an optional callback is how it would go dead again with the
    * type checker none the wiser.
    *
-   * Not gated on the session either — anyone can report a problem (ADR-003). See
+   * Not gated on the session either, anyone can report a problem (ADR-003). See
    * ReportProblemSheet.
    */
   onOpenReportProblem: () => void;
   /**
-   * Present the About sheet — the product's account of itself, and the way to
+   * Present the About sheet, the product's account of itself, and the way to
    * Terms of service, Privacy and Support. Required, not optional, for the same
    * reason the rows above are: `about` spent its whole life `disabled` over a
    * no-op `onClick`, and an optional callback is how it goes dead again with the
-   * type checker satisfied. Not gated on the session — About and its legal
+   * type checker satisfied. Not gated on the session, About and its legal
    * surfaces read the same for everyone. See AboutSheet.
    */
   onOpenAbout: () => void;
   /**
+   * Present the "Manage profile" sheet: the editable half of the account (name,
+   * contact; email is display-only). Required, not optional, for the same reason
+   * the rows above are: an optional callback is how a CTA goes dead with the type
+   * checker none the wiser.
+   *
+   * It is the FIRST row and it renders SIGNED-IN ONLY: there is no profile to
+   * manage without a session, and `updateMyProfile` refuses one anyway. This is
+   * the deliberate exception to "reading is anonymous": editing your own account
+   * is inherently owner-scoped, unlike My reports / Report a problem / About,
+   * which stay open to everyone.
+   */
+  onOpenManageProfile: () => void;
+  /**
    * What the location actually is, from `useLocationChrome().label`. Never the
-   * literal "Festac" — this row and the map pill must not be able to disagree
+   * literal "Festac", this row and the map pill must not be able to disagree
    * about where the user is standing.
    */
   currentAreaName: string;
   /**
-   * Null while signed out — and the sheet stays fully useful that way, on
+   * Null while signed out, and the sheet stays fully useful that way, on
    * purpose. Auth is recognition, never a gate.
    *
    * `email` is required, not decorative. Email OTP creates users with `name: ""`
@@ -66,8 +79,8 @@ interface ProfileSheetProps {
    * they set one. Without an email to fall back on there is nothing to render.
    *
    * There is deliberately no `reportCount` here. It used to be declared,
-   * optional, and never once passed — page.tsx builds `sessionUser` as
-   * `{ name, email }` — so `reportCount ?? 0` rendered "0 prices reported" to
+   * optional, and never once passed, page.tsx builds `sessionUser` as
+   * `{ name, email }`, so `reportCount ?? 0` rendered "0 prices reported" to
    * every signed-in user, and TypeScript could not object because the prop was
    * optional. In an app whose subject is trust, the first thing it said after
    * recognising you was a confident false number. Re-add it when a real count
@@ -75,7 +88,7 @@ interface ProfileSheetProps {
    */
   user?: { name: string; email: string } | null;
   /**
-   * The session changed — someone signed in, or signed out. The page re-reads
+   * The session changed, someone signed in, or signed out. The page re-reads
    * it; this sheet does not own it.
    *
    * Not `onSignedIn`: sign-out changes the session too, and a name that covers
@@ -90,12 +103,12 @@ interface ProfileSheetProps {
  * EMAIL OTP, NOT MAGIC LINK, and not by preference: magic link is disabled on
  * this Neon branch (plugin_configs.magicLink.enabled = false; POST
  * /sign-in/magic-link returns 404 while /email-otp/* returns a 400 schema error,
- * i.e. mounted). Enabling it would not help — better-auth builds the verify URL
+ * i.e. mounted). Enabling it would not help, better-auth builds the verify URL
  * from the SERVER's baseURL, so the link lands on Neon's domain and sets the
  * session cookie THERE before redirecting to us, and its challenge cookie is
  * device-bound, so requesting on a laptop and opening on a phone can never work.
  *
- * OTP keeps the same promise — check your mail, come back — and is better across
+ * OTP keeps the same promise, check your mail, come back, and is better across
  * devices: read the code on the phone, type it on the laptop. It also never
  * navigates, so the sheet survives the whole flow and none of the page's state
  * is lost.
@@ -123,12 +136,12 @@ type AuthErrorKey =
  * RENDERED AS THE MOMENT OF FAILURE.
  *
  * better-auth's session is `useAuthQuery($sessionSignal, "/get-session")`.
- * `signIn.emailOtp` does not set that data — it toggles a signal that triggers a
+ * `signIn.emailOtp` does not set that data, it toggles a signal that triggers a
  * refetch, and the fetch keeps `data: null` while it runs. So dropping to `idle`
  * on success meant `signedIn` was still false, and the sheet snapped straight
  * back to "Sign in to WetinDey" and a primary Sign in button. The user types the
  * sixth digit, the code is accepted, and the app asks them to sign in. On the
- * Lagos connections this product is built for, that is seconds — long enough to
+ * Lagos connections this product is built for, that is seconds, long enough to
  * tap the button and start over.
  *
  * It ends by itself: once the session lands, `signedIn` is true and this whole
@@ -144,7 +157,7 @@ type SignIn =
  * The backend's words are not the product's words.
  *
  * better-auth populates `error.message` with "Invalid OTP", "OTP expired", "Too
- * many attempts", "Too many requests" — its own acronyms, English-only, and
+ * many attempts", "Too many requests", its own acronyms, English-only, and
  * untranslatable because they never pass through `t()`. The previous code
  * rendered `error.message ?? "That code didn't work."`, so the fallback almost
  * never ran and what shipped to Lagos was "Invalid OTP".
@@ -180,14 +193,14 @@ const RESEND_COOLDOWN_MS = 60_000;
  * Mini profile, in the shape Apple Maps uses for its account sheet.
  *
  * This is the app's navigation hub. WetinDey is a map-first product, so it has
- * no tab bar and no page chrome to hang navigation off — the avatar is the one
+ * no tab bar and no page chrome to hang navigation off, the avatar is the one
  * persistent affordance, and everything that isn't "search the map" lives
  * behind it.
  *
  * Rows that have no destination are disabled, whatever the session says. "My
  * reports" and "Saved markets" used to be `disabled={!signedIn}` over an empty
  * `onClick`, which meant signing in ENABLED two rows that press, animate, show a
- * chevron and go nowhere — auth manufacturing exactly the dead links this file
+ * chevron and go nowhere, auth manufacturing exactly the dead links this file
  * disables rows to avoid. Being signed in is not a destination.
  */
 export function ProfileSheet({
@@ -198,6 +211,7 @@ export function ProfileSheet({
   onOpenMyReports,
   onOpenReportProblem,
   onOpenAbout,
+  onOpenManageProfile,
   currentAreaName,
   user,
   onSessionChange,
@@ -219,7 +233,7 @@ export function ProfileSheet({
 
   // Dismissing abandons a half-finished sign-in: a sheet that reopens onto a
   // stale code field looks broken, and the code has a five-minute life anyway.
-  // `email` deliberately survives — it is the one thing here that is expensive
+  // `email` deliberately survives, it is the one thing here that is expensive
   // to retype and never goes stale.
   useEffect(() => {
     if (open) return;
@@ -236,7 +250,7 @@ export function ProfileSheet({
    * Two `data-autofocus` attributes used to sit on these fields and neither did
    * anything. ModalSheet resolves them with
    * `querySelector("[data-autofocus], button, input, …")`, which returns the
-   * first node in DOCUMENT order matching ANY branch — and the header's Close
+   * first node in DOCUMENT order matching ANY branch, and the header's Close
    * button precedes every field in the panel, so Close always won. Deciding it
    * here also handles what ModalSheet structurally cannot: these steps appear
    * long after the sheet opened, so a one-shot focus on present could never
@@ -288,8 +302,8 @@ export function ProfileSheet({
    * A real resend.
    *
    * The only way to get a second code used to be "Use a different email", which
-   * works — `email` survives, so you land on a filled field and press Send again
-   * — but nobody whose code expired goes looking for a control that offers them
+   * works, `email` survives, so you land on a filled field and press Send again
+   *, but nobody whose code expired goes looking for a control that offers them
    * a DIFFERENT address. It was a resend hidden behind a label describing
    * something else. The code lives 300s and mail lands in spam; that needs a
    * control that says what it does.
@@ -332,7 +346,7 @@ export function ProfileSheet({
           codeRef.current?.focus();
           return;
         }
-        // NOT `idle` — see the `verified` note on SignIn. The session has not
+        // NOT `idle`, see the `verified` note on SignIn. The session has not
         // arrived, and `idle` renders the sign-in CTA at the exact instant the
         // sign-in succeeded.
         setSignIn({ kind: "verified" });
@@ -343,7 +357,7 @@ export function ProfileSheet({
         // The code is NOT cleared here, unlike the rejected-code path above: the
         // network failed, the six digits are probably right, and making someone
         // retype them to recover from our outage is a punishment. `showRetry`
-        // turns this exact state into a button — without one, auto-submit cannot
+        // turns this exact state into a button, without one, auto-submit cannot
         // re-fire (the value is already six long) and the step is a dead end.
         setSignIn({ ...signIn, checking: false, error: "auth.err_code_network" });
       }
@@ -382,7 +396,7 @@ export function ProfileSheet({
 
   /**
    * The name is `||`, never `??`. Email OTP mints users with `name: ""`, and
-   * `??` only catches null and undefined — so a nullish fallback renders a blank
+   * `??` only catches null and undefined, so a nullish fallback renders a blank
    * row and an initial-less avatar for a signed-in user, i.e. identical to
    * signed out. The one visible proof that sign-in worked would be the thing
    * that disappears.
@@ -395,13 +409,13 @@ export function ProfileSheet({
    * step announced a sign-in that had already started while an OTP field sat
    * under it.
    *
-   * The subtitle is where "Sent to {email}" belongs — it was a separate line
+   * The subtitle is where "Sent to {email}" belongs, it was a separate line
    * below the field, restating the flow's own position. Moved, not added: this
    * is a line of copy removed. And it is the one fact a user cannot recover for
    * themselves at that moment (did it go to the typo, or the real address?),
    * which is what makes "Use a different email" legible underneath it.
    *
-   * Signed in, the subtitle is the email — and nothing at all when the name is
+   * Signed in, the subtitle is the email, and nothing at all when the name is
    * empty, which is everyone who arrived by OTP, because the title is already
    * showing that same email.
    */
@@ -425,7 +439,7 @@ export function ProfileSheet({
      * NO SUBTITLE, and its absence is the honest answer rather than a gap.
      *
      * Apple does ask for the benefit of an account in the sign-in view. The line
-     * that was here — "Save markets and track your reports" — named the only two
+     * that was here, "Save markets and track your reports", named the only two
      * rows in this sheet that are permanently disabled, in every session state,
      * because neither has a destination yet. Signing in did not enable them and
      * could not: being signed in is not a destination, which is the rule that
@@ -434,7 +448,7 @@ export function ProfileSheet({
      * So the app was promising, to someone deciding whether to hand over their
      * email, the two things it certainly would not do. That is the same defect as
      * the `reportCount` this file already deleted for rendering a confident "0
-     * prices reported" — a false claim at the moment of recognition, in a product
+     * prices reported", a false claim at the moment of recognition, in a product
      * whose subject is trust.
      *
      * Restore a subtitle when signing in buys the user something real. The
@@ -452,10 +466,13 @@ export function ProfileSheet({
       size="form"
     >
       <div className="space-y-6 py-3">
-        {/* Identity */}
-        <div className="flex items-center gap-3 px-4">
-          <Avatar name={displayName ?? undefined} size={56} />
-          <div className="min-w-0 flex-1">
+        {/* Identity, a centered vertical stack: avatar over name over email, the
+            shape Apple Maps uses for its account sheet. The three sign-in states
+            (prompt / check-mail / verified) flow through the same `identityName` /
+            `identitySub` below, so they centre cleanly with no extra branch. */}
+        <div className="flex flex-col items-center gap-2 px-6 text-center">
+          <Avatar name={displayName ?? undefined} size={64} />
+          <div className="min-w-0 max-w-full">
             <p className="truncate text-title-3 font-semibold text-text-primary">{identityName}</p>
             {identitySub && (
               /* Wraps rather than truncates: this carries the email address, and
@@ -466,7 +483,7 @@ export function ProfileSheet({
           </div>
         </div>
 
-        {/* Sign in. Three states of one block — it never leaves the sheet.
+        {/* Sign in. Three states of one block, it never leaves the sheet.
             Keyed on the step so each one settles in rather than teleporting. */}
         {!signedIn && (
           <div
@@ -487,7 +504,7 @@ export function ProfileSheet({
             {/* Verified, session in flight. A spinner and nothing else: HIG on
                 progress indicators says to avoid labelling a spinner and to
                 "avoid vague terms like loading or authenticating because they
-                seldom add value" — and there is no honest word for this beat
+                seldom add value", and there is no honest word for this beat
                 anyway. It ends when the session lands and this branch unmounts.
 
                 The arc is Button's: a conic gradient behind a radial mask, so it
@@ -544,7 +561,7 @@ export function ProfileSheet({
 
             {signIn.kind === "code" && (
               <>
-                {/* ONE field, deliberately — not six boxes.
+                {/* ONE field, deliberately, not six boxes.
                     `autocomplete="one-time-code"` is the whole mechanism: it is
                     what makes iOS offer the code above the keyboard, and Apple's
                     own web guidance is a single input carrying exactly this
@@ -564,7 +581,7 @@ export function ProfileSheet({
                     // or a paste with whitespace, and stripping beats rejecting.
                     const next = e.target.value.replace(/\D/g, "").slice(0, 6);
                     setCode(next);
-                    // Auto-submit at six. The length IS the commit — asking for a
+                    // Auto-submit at six. The length IS the commit, asking for a
                     // tap after the last digit is a step that carries no decision.
                     if (next.length === 6 && !signIn.checking) void submitCode(next);
                   }}
@@ -611,9 +628,29 @@ export function ProfileSheet({
           </div>
         )}
 
+        {/* Manage profile, the FIRST row, and SIGNED-IN ONLY. Editing your own
+            name and contact is inherently owner-scoped (there is nothing to
+            manage without a session, and `updateMyProfile` refuses one), so unlike
+            the rows below it does not render for a signed-out reader. Its own
+            group so it sits apart as the account's primary action. */}
+        {signedIn && (
+          <ListGroup>
+            <ListRow
+              icon={<UserRound className="h-4 w-4 text-text-secondary" />}
+              label={t("profile.manage")}
+              onClick={() => {
+                // Dismiss first, like every other row here: two stacked sheets
+                // would bury this one behind the next with no way back to it.
+                onClose();
+                onOpenManageProfile();
+              }}
+            />
+          </ListGroup>
+        )}
+
         <ListGroup>
           {/* Enabled in BOTH session states, and not disabled while signed out.
-              The rule above — rows with no destination are disabled — is about
+              The rule above, rows with no destination are disabled, is about
               DESTINATIONS, not auth, and this row now has one. Signing out does
               not remove the destination; it changes what the destination says.
               Disabling it for a signed-out user would reproduce the exact "still
@@ -638,7 +675,7 @@ export function ProfileSheet({
             onClick={() => {}}
           />
           {/* The one row here that has always had somewhere to go. It is a peer
-              of the map's location pill — same store, same label — so reaching
+              of the map's location pill, same store, same label, so reaching
               it from the navigation hub and from the map lands on one sheet. */}
           <ListRow
             icon={<MapPin className="h-4 w-4 text-status-confirmed-fg" />}
@@ -686,12 +723,12 @@ export function ProfileSheet({
         </ListGroup>
 
         {/*
-          Sign out. Last, alone in its own group — where Apple puts it, and the
+          Sign out. Last, alone in its own group, where Apple puts it, and the
           only reason it needs no label above it.
 
           NOT red, and no confirmation. The HIG reserves the destructive red for
           actions "that can result in data destruction"; signing out of a price
-          map destroys nothing — the account and every report survive, and you
+          map destroys nothing, the account and every report survive, and you
           undo it by signing back in. Apple's own Settings renders Sign Out red
           because there it means erase iCloud data from this device. It does not
           mean that here. Alerts are likewise "for common, undoable actions" the
@@ -712,7 +749,7 @@ export function ProfileSheet({
             </ListGroup>
             {signOutError && (
               /* ListGroup's own `footer` slot would be the obvious home, but it
-                 paints text-secondary — a note, not a failure. Without this the
+                 paints text-secondary, a note, not a failure. Without this the
                  row is a tap that silently does nothing. */
               <p role="alert" className="px-4 text-footnote text-status-unavailable">
                 {t(signOutError)}

@@ -1078,7 +1078,7 @@ export default function HomePage() {
               onClick={() => setIsProfileOpen(true)}
               className="grid place-items-center squircle-full
                          active:scale-90 transition-transform duration-instant"
-              aria-label="Account"
+              aria-label="Profile"
             >
               {/* The one piece of persistent recognition chrome in the app.
                   Without a name it drew the anonymous silhouette forever, so
@@ -1382,6 +1382,8 @@ export default function HomePage() {
           closeSurface();
           setIsReportOpen(true);
         }}
+        manageProfileUser={sessionUser}
+        onSessionChange={refetchSession}
       />
 
       <SettingsSheet
@@ -1404,6 +1406,7 @@ export default function HomePage() {
         onOpenMyReports={() => openSurface({ kind: "my-reports" })}
         onOpenReportProblem={() => openSurface({ kind: "report-problem" })}
         onOpenAbout={() => openSurface({ kind: "about" })}
+        onOpenManageProfile={() => openSurface({ kind: "manage-profile" })}
         currentAreaName={location.label}
         user={sessionUser}
         onSessionChange={refetchSession}

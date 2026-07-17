@@ -1,7 +1,7 @@
 "use server";
 
 import { db } from "@/db";
-import { areas, items, itemAliases, itemVariants, places, offersCurrent, units, observations, sources, problemReports } from "@/db/schema";
+import { areas, items, itemAliases, itemVariants, places, offersCurrent, units, observations, sources, problemReports, userProfiles } from "@/db/schema";
 import { eq, ilike, or, and, sql, gte, isNull, isNotNull, desc } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import {
@@ -17,6 +17,7 @@ import {
   parsePlacesNear,
   parseCoverageForPoint,
   parseSubmitProblemReport,
+  parseUpdateMyProfile,
 } from "@/lib/validation";
 import { auth } from "@/lib/auth";
 import {
@@ -42,7 +43,7 @@ const itemCard = {
 // 1. Search food items in the database
 export async function searchFoodItems(query: string) {
   // Before the empty check, not after: a non-string caller reaches `.trim()`
-  // first and dies on "trim is not a function" — a 500 for what is really a
+  // first and dies on "trim is not a function", a 500 for what is really a
   // rejected input. Empty stays legal; the search box clears on every keystroke.
   const parsed = parseSearchQuery(query);
   if (parsed.trim() === "") {
@@ -73,7 +74,7 @@ export async function searchFoodItems(query: string) {
 }
 
 /**
- * Items to show on the landing surface before the user has searched anything —
+ * Items to show on the landing surface before the user has searched anything ,
  * RANKED BY WHAT IS ACTUALLY NEAR THE USER.
  *
  * The location arguments are the whole point. This function used to take only a
@@ -98,7 +99,7 @@ export async function getPopularItems(input: {
   limit?: number;
 }) {
   const { lat, lng, radiusKm } = input;
-  // Only the limit is gated here. There is no `popularItemsInput` schema — the
+  // Only the limit is gated here. There is no `popularItemsInput` schema, the
   // validators were written when this action took a bare limit, and it grew a
   // coordinate since. lat/lng/radiusKm are checked below by searchOrigin and
   // searchRadiusMetres; the cap is the part nothing else enforces.
@@ -112,8 +113,8 @@ export async function getPopularItems(input: {
   }
   const radiusM = radiusKm * 1000;
   /**
-   * The price range is computed WITHIN A SINGLE UNIT — the one the item is most
-   * commonly sold in — and the unit is returned so the card can name it.
+   * The price range is computed WITHIN A SINGLE UNIT, the one the item is most
+   * commonly sold in, and the unit is returned so the card can name it.
    *
    * The obvious version, min(priceMin)/max(priceMax) grouped by item, is wrong
    * the moment an item has variants in different units. It quoted "Palm Oil
@@ -126,8 +127,8 @@ export async function getPopularItems(input: {
    * only appeared once the taxonomy became real, which is the argument for the
    * richer seed.
    *
-   * A true price-per-litre comparison is possible — units.canonicalQuantity
-   * exists for it and is read by nothing — but normalising across a keg and a
+   * A true price-per-litre comparison is possible, units.canonicalQuantity
+   * exists for it and is read by nothing, but normalising across a keg and a
    * bottle still hides that they are different purchases. Naming the unit is the
    * honest answer; normalisation is a product decision.
    */
@@ -147,7 +148,7 @@ export async function getPopularItems(input: {
        * card presents it as current.
        *
        * A recompute cannot fix this. It repairs rows that HAVE fresh evidence; a
-       * row with none keeps its last band by design — price_min is NOT NULL, so
+       * row with none keeps its last band by design, price_min is NOT NULL, so
        * there is no "no band" to write, and the freshness badge is what makes that
        * band honest at the point it is read. An aggregate has nowhere to put a
        * badge, so an aggregate must not include it.
@@ -278,7 +279,7 @@ export async function getPlaceOffers(placeId: string) {
 }
 
 /* ─────────────────────────────────────────────────────────────────────────────
-   WHO SAID IT — resolving a contribution to a source row.
+   WHO SAID IT, resolving a contribution to a source row.
 
    ADR-003's condition, in one function. Every contribution used to funnel into
    the single shared "Contributor" row, so `distinct_source_count` was
@@ -286,7 +287,7 @@ export async function getPlaceOffers(placeId: string) {
    could not vary. The account existed and the domain never asked about it.
 
    The rule, and it is inviolable: NO SESSION IS NOT AN ERROR. Anonymous
-   contribution is the product's default and ADR-003 keeps it working — an
+   contribution is the product's default and ADR-003 keeps it working, an
    unattributed report weighs less, it is never refused. Identity is
    recognition, never a gate.
    ──────────────────────────────────────────────────────────────────────────── */
@@ -295,7 +296,7 @@ export async function getPlaceOffers(placeId: string) {
  * What a recognised contributor's own source row scores at birth.
  *
  * Signing in proves one thing: an email address received a code. That is a weak
- * claim about a person but a real claim about CONTINUITY — the row accumulates a
+ * claim about a person but a real claim about CONTINUITY, the row accumulates a
  * history, and it can be moderated, corrected, or banned. An anonymous POST
  * offers none of that.
  *
@@ -306,7 +307,7 @@ export async function getPlaceOffers(placeId: string) {
  * today.
  *
  * THIS NUMBER IS ONLY HALF OF A DECISION, and the other half is data this change
- * cannot touch. See `anonymousContributorSourceId()` — the shared anonymous row
+ * cannot touch. See `anonymousContributorSourceId()`, the shared anonymous row
  * is seeded at 98, the highest score in the table, which makes an anonymous
  * stranger the most reliable source WetinDey has. Until that row comes down,
  * this constant is below it and signing in weighs LESS than not signing in.
@@ -317,11 +318,11 @@ export async function getPlaceOffers(placeId: string) {
 const RECOGNISED_CONTRIBUTOR_RELIABILITY = 75;
 
 /**
- * The shared anonymous row for app contributions — the fallback when there is no
+ * The shared anonymous row for app contributions, the fallback when there is no
  * session, and the row every contribution resolved to before ADR-003.
  *
  * `user_id IS NULL` is load-bearing, not decoration. Per-user rows carry the
- * SAME `source_type` of 'Contributor' (the category is unchanged by ADR-003 —
+ * SAME `source_type` of 'Contributor' (the category is unchanged by ADR-003 ,
  * only the attribution is new), so the old lookup, which matched on
  * `source_type` alone with `.limit(1)`, would now be free to return some
  * signed-in stranger's personal source row and file an anonymous report against
@@ -345,14 +346,14 @@ async function anonymousContributorSourceId(): Promise<string> {
  *
  * The session is read SERVER-SIDE, here, inside the Server Action. page.tsx
  * reads it client-side through `authClient.useSession()` for a different and
- * non-transferable reason — Neon's `getSession` refreshes the session cookie,
+ * non-transferable reason, Neon's `getSession` refreshes the session cookie,
  * and a Server Component may not write cookies. A Server Action may. Copying
  * page.tsx's pattern into the write path would hand the client authority over
  * who it claims to be, which is the one thing attribution cannot allow.
  *
  * A visit confirmation and a form fill from the same person resolve to the SAME
  * row on purpose. Which of the two is worth more is answered by
- * `collection_method` (COLLECTION_METHOD_WEIGHTS in src/lib/trust.ts:85 — a
+ * `collection_method` (COLLECTION_METHOD_WEIGHTS in src/lib/trust.ts:85, a
  * visit outranks a sofa), not by minting a second identity for one human. That
  * was already this file's reasoning when both paths shared the 'Contributor'
  * row; ADR-003 changes who the row belongs to, not that reasoning.
@@ -363,12 +364,12 @@ async function contributorSourceId(): Promise<string> {
 
   /**
    * The anonymous path. Unchanged behaviour, and the default the product is
-   * built for — most reports will always arrive this way.
+   * built for, most reports will always arrive this way.
    *
    * This branch also absorbs an auth OUTAGE, deliberately: `getSession` returns
    * `{ data: null, error }` when the Neon Auth service cannot be reached, and a
    * signed-in contributor's report is then filed anonymously rather than
-   * refused. That is the correct trade in both directions — we do not claim to
+   * refused. That is the correct trade in both directions, we do not claim to
    * know who someone is when we could not check, and we do not drop a price
    * somebody walked to a market to tell us because a third party is down.
    * Losing the attribution costs that one report some weight; losing the report
@@ -380,7 +381,7 @@ async function contributorSourceId(): Promise<string> {
    * Find-or-create, serialised per user.
    *
    * "One source row per user" is an invariant this path OWNS: `sources.user_id`
-   * carries no unique constraint (see src/db/schema/index.ts:270-282 — the
+   * carries no unique constraint (see src/db/schema/index.ts:270-282, the
    * column is nullable and every anonymous row holds NULL, so a plain UNIQUE
    * index would not express it). A bare select-then-insert is therefore a race,
    * and losing it is not cosmetic: two rows for one person is that person
@@ -389,7 +390,7 @@ async function contributorSourceId(): Promise<string> {
    * sources".
    *
    * The transaction-scoped advisory lock closes it. `hashtext` collisions
-   * between two different user ids are possible and harmless — the cost is that
+   * between two different user ids are possible and harmless, the cost is that
    * one resolve briefly waits for another, never that either gets a wrong
    * answer. The lock releases with the transaction, including on error.
    *
@@ -426,7 +427,7 @@ async function contributorSourceId(): Promise<string> {
 /**
  * Every observation backing one offer that the trust model may look at.
  *
- * `moderation_status = 'approved'` — the same filter the price band uses below,
+ * `moderation_status = 'approved'`, the same filter the price band uses below,
  * so that one write derives its band and its trust level from ONE evidence set.
  * Two filters would let this function call an offer 'high' on the strength of a
  * report the band refused to price.
@@ -435,7 +436,7 @@ async function contributorSourceId(): Promise<string> {
  * `assessTrust`'s own job. It decays every observation by `ageDecay` and reaches
  * zero at `expirationHours * 2` (src/lib/trust.ts:225-230). Pre-filtering to
  * `expirationHours` here would discard evidence the model still scores as
- * partially alive — a second freshness policy competing with the real one. The
+ * partially alive, a second freshness policy competing with the real one. The
  * band is windowed because a band is a NUMBER WE PUBLISH; trust is a judgement
  * about all of it.
  */
@@ -471,7 +472,7 @@ export async function submitObservation(data: {
   /**
    * A Next.js server action is a PUBLIC HTTP ENDPOINT. Anyone can POST to it.
    *
-   * That sentence used to end "— there is no auth in this app", and the second
+   * That sentence used to end ", there is no auth in this app", and the second
    * half is now out of date without weakening the first by one inch. This
    * function resolves a session (see `contributorSourceId`), but auth here is
    * RECOGNITION, NOT A GATE: ADR-003 keeps anonymous contribution working, so an
@@ -519,7 +520,7 @@ export async function submitObservation(data: {
       /**
        * Still hardcoded, and left that way ON PURPOSE.
        *
-       * `trust_level` below is now DERIVED — that was an engineering answer
+       * `trust_level` below is now DERIVED, that was an engineering answer
        * wearing a hardcoded costume, and it had a model to come from. This is
        * not the same kind of thing. Moderation is a decision A MODERATOR makes,
        * and this product has no moderator, no queue, and no surface on which to
@@ -528,7 +529,7 @@ export async function submitObservation(data: {
        *
        * The honest alternatives are both worse today. Writing 'pending' with
        * nobody to approve it files every contribution into a queue that is never
-       * read — and since the band and the trust model below both admit only
+       * read, and since the band and the trust model below both admit only
        * 'approved' rows, it would silently stop the app from learning anything
        * from its users at all. Writing 'approved' says what is actually true:
        * this app accepts what it is told.
@@ -536,7 +537,7 @@ export async function submitObservation(data: {
        * That is a real exposure, not a resolved one (949/949 rows sit here), and
        * it is escalated in the handover rather than dressed up. What defends the
        * write path today is validation (src/lib/validation.ts) and, from Phase 2,
-       * the device-cookie rate limit — HOW OFTEN, where the source row above
+       * the device-cookie rate limit, HOW OFTEN, where the source row above
        * answers WHO. ADR-003 is explicit that the two are separate defences and
        * that neither substitutes for the other.
        */
@@ -564,13 +565,13 @@ export async function submitObservation(data: {
    *
    * This query is the fix for the worst bug in the repo. Its predecessor was
    * named `recentObs` and selected EVERY observation for this triple ever
-   * recorded — the name was the only true thing about it. Three filters were
+   * recorded, the name was the only true thing about it. Three filters were
    * missing and each one was a different bug:
    *
    *   TIME. A price from any point in history pinned the floor forever. The
    *     comment above this function already promised "recent"; now the code
    *     agrees. The window is FRESHNESS_POLICY.expirationHours from
-   *     src/lib/trust.ts — imported, never re-typed. The 72 was already written
+   *     src/lib/trust.ts, imported, never re-typed. The 72 was already written
    *     out by hand in three places, and a fourth copy is how the app and the
    *     backfill quietly come to disagree about what "fresh" means. Measured
    *     against the live database when this was written: 223 observations older
@@ -579,7 +580,7 @@ export async function submitObservation(data: {
    *     the last 72h of evidence did not support.
    *
    *   MODERATION. A rejected report priced the offer. This filter is a NO-OP
-   *     TODAY — every one of the 949 rows in the live table is 'approved',
+   *     TODAY, every one of the 949 rows in the live table is 'approved',
    *     because the insert above hardcodes it and nothing rejects anything. It
    *     is added anyway, and that is the whole point: the day a moderator can
    *     reject a row is the day its absence would become silent, permanent, and
@@ -589,12 +590,12 @@ export async function submitObservation(data: {
    *
    *   AGGREGATION. `Math.min(...prices)` spread the whole array across the
    *     argument stack. Fine at a few hundred rows, a RangeError at a large
-   *     enough one — and `observations` is immutable and only ever grows, so
+   *     enough one, and `observations` is immutable and only ever grows, so
    *     "large enough" is a matter of time, not of chance. MIN/MAX are what a
    *     database is for; this now ships two integers back instead of every price
    *     ever reported.
    *
-   * Filters and shape match scripts/recompute-bands.mjs exactly — that script
+   * Filters and shape match scripts/recompute-bands.mjs exactly, that script
    * repairs the bands this bug already wrote, and the two are a pair. If they
    * disagreed about what a band IS, the backfill would fight the write path
    * every time somebody reported a price.
@@ -621,7 +622,7 @@ export async function submitObservation(data: {
     );
 
   /**
-   * The fallback is `koboPrice` — the price just reported — and it is reachable
+   * The fallback is `koboPrice`, the price just reported, and it is reachable
    * only when this submission is itself 'unavailable', because an 'available'
    * one is always inside its own window and its own band. It is the behaviour
    * that was here before and it is preserved rather than quietly improved:
@@ -642,7 +643,7 @@ export async function submitObservation(data: {
   }
 
   /**
-   * `trust_level` and `freshness_state`, DERIVED — the reason this lane exists.
+   * `trust_level` and `freshness_state`, DERIVED, the reason this lane exists.
    *
    * They were the literals 'high' and 'confirmed'. Every offer in the product
    * therefore claimed maximum trust the instant anyone typed into it, which made
@@ -653,7 +654,7 @@ export async function submitObservation(data: {
    * site.
    *
    * `assessTrust` runs AFTER the insert above, so the report being filed right
-   * now is part of the evidence it weighs — the freshness it returns is this
+   * now is part of the evidence it weighs, the freshness it returns is this
    * observation's own, and `legacyFreshnessState` collapses it back onto the
    * single column the schema still has (:381 explains what that collapse loses,
    * and why the loss is an argument for a migration rather than for routing
@@ -731,7 +732,7 @@ export async function getInitialSubmissionData() {
    THE TRUST LOOP
 
    Everything above this line is a price lookup. What follows asks the only
-   person who actually knows — the one who went — whether the answer we gave was
+   person who actually knows, the one who went, whether the answer we gave was
    true, and folds it back into offers_current so the next lookup is better.
    ──────────────────────────────────────────────────────────────────────────── */
 
@@ -766,7 +767,7 @@ export async function getVisitContext(offerId: string) {
     .limit(1);
 
   // No fallback. A visit context we cannot build is a question we cannot ask
-  // honestly — an empty or half-filled one would submit an observation against
+  // honestly, an empty or half-filled one would submit an observation against
   // the wrong variant, which is a plausible wrong answer of exactly the kind
   // that hides for months.
   if (!row) throw new Error(`getVisitContext: no current offer with id ${offerId}`);
@@ -814,12 +815,12 @@ export async function submitVisitConfirmation(data: {
   priceWasRight?: boolean;
   /** Naira. Required when priceWasRight === false. */
   actualPrice?: number;
-  /** Required when wasAvailable. Meaningless otherwise — you cannot buy what is not there. */
+  /** Required when wasAvailable. Meaningless otherwise, you cannot buy what is not there. */
   didBuy?: boolean;
 }) {
   /**
    * The back door. This action checks `actualPrice` is finite and positive but
-   * had NO CEILING, and it delegates to submitObservation — so it could push
+   * had NO CEILING, and it delegates to submitObservation, so it could push
    * the exact ₦900,000,000 report that the front door now refuses. A validated
    * front door and an unvalidated back door is an unvalidated endpoint.
    *
@@ -834,7 +835,7 @@ export async function submitVisitConfirmation(data: {
    * Half of that sentence used to read "AND trustLevel 'high'". That half is
    * fixed: the branch now derives its trust level from `assessTrust`, so a lone
    * anonymous report no longer announces itself as certain. THE BLANKING ITSELF
-   * IS UNCHANGED, and identity does not close it either — ADR-003 says so
+   * IS UNCHANGED, and identity does not close it either, ADR-003 says so
    * outright. Accounts answer WHO; the flip needs an answer to HOW OFTEN, which
    * is Phase 2's device-cookie rate limit, explicitly NOT superseded by this
    * work. Two separate holes, two separate defences; do not let the presence of
@@ -848,7 +849,7 @@ export async function submitVisitConfirmation(data: {
   /* ── "It wasn't there" ─────────────────────────────────────────────────────
      Written directly, because submitObservation requires a price and there is
      no price to give. Passing the last known one would file a number the user
-     never saw into an immutable log — a fabricated datum. The offer update here
+     never saw into an immutable log, a fabricated datum. The offer update here
      is genuinely different logic rather than a duplicate: no price maths runs
      at all, and the price bounds are deliberately left alone, because "not
      there right now" says nothing about what it costs when it comes back. */
@@ -883,12 +884,12 @@ export async function submitVisitConfirmation(data: {
       )
       .limit(1);
 
-    // Nothing to update is a legitimate outcome — the offer may have expired
+    // Nothing to update is a legitimate outcome, the offer may have expired
     // out from under the visit. The observation still stands on its own.
     if (!offer) return { success: true, observationId: newObs.id, offerUpdated: false };
 
     /**
-     * Derived, for the same reason submitObservation's is — and with the same
+     * Derived, for the same reason submitObservation's is, and with the same
      * limit, which must not be overstated.
      *
      * `trust_level` was the literal 'high' here: one unauthenticated POST could
@@ -899,13 +900,13 @@ export async function submitVisitConfirmation(data: {
      * IT DOES NOT CLOSE THE HOLE, and nothing in this change does. The
      * availability flip still happens on one POST; only the confidence attached
      * to it becomes honest. ADR-003 is explicit that identity is NECESSARY AND
-     * NOT SUFFICIENT here — accounts answer WHO, and Phase 2's device-cookie
+     * NOT SUFFICIENT here, accounts answer WHO, and Phase 2's device-cookie
      * rate limit answers HOW OFTEN. The rate limit is not superseded by this
      * work and must not be dropped on the strength of it.
      *
      * `freshness_state` comes out of the same collapse rather than being written
      * by hand: the newest observation is the sold-out report just inserted, so
-     * `legacyFreshnessState` returns 'unavailable' — the same value that used to
+     * `legacyFreshnessState` returns 'unavailable', the same value that used to
      * be hardcoded, now for a reason the model can state.
      */
     const assessment = assessTrust(
@@ -926,7 +927,7 @@ export async function submitVisitConfirmation(data: {
         lastObservedAt: now,
         expiresAt: new Date(now.getTime() + FRESHNESS_POLICY.expirationHours * 3600 * 1000),
         // Reset, not increment. The count exists to say how many observations
-        // back the CURRENT state, and the state just flipped — every report
+        // back the CURRENT state, and the state just flipped, every report
         // that supported "available" supports nothing now. Note this differs
         // from submitObservation, which increments unconditionally; that is
         // flagged in the blockers as a model question, not settled here.
@@ -998,7 +999,7 @@ export async function submitVisitConfirmation(data: {
 }
 
 /* ───────────────────────────────────────────────────────────────────────────
-   7. Discovery — narrowing an item down to a unit, then to nearby offers.
+   7. Discovery, narrowing an item down to a unit, then to nearby offers.
 
    USER-FLOW calls for rice → Long-grain rice → 50 kg bag → offers. The taxonomy
    was already in the database and already walked by the report form; the search
@@ -1043,12 +1044,12 @@ export interface NarrowedOffer {
   freshnessState: string;
   lastObservedAt: string;
   expiresAt: string;
-  /** offers_current's own tally — how many reports back this price. */
+  /** offers_current's own tally, how many reports back this price. */
   supportingObservationCount: number;
   /**
    * How many DISTINCT sources filed those reports. This is the number that
-   * actually carries trust: `supportingObservationCount * 10` — what the old
-   * detail panel showed as a percentage — reads ten reports from one person as
+   * actually carries trust: `supportingObservationCount * 10`, what the old
+   * detail panel showed as a percentage, reads ten reports from one person as
    * 100% confidence. Two people saying the same thing is evidence; one person
    * saying it ten times is not.
    */
@@ -1082,7 +1083,7 @@ function searchRadiusMetres(radiusKm: number) {
  * `moderation_status <> 'rejected'` rather than `= 'approved'` on purpose: the
  * seeder inserts observations without a moderation status, so they all sit at
  * the column default of 'pending'. Counting only approved rows would report
- * zero sources for every offer in the pilot database — a plausible-looking
+ * zero sources for every offer in the pilot database, a plausible-looking
  * "no evidence" that is really a schema default, not a fact about the data.
  */
 const distinctSourceCount = sql<number>`(
@@ -1171,9 +1172,9 @@ export async function getOffersNarrowed(input: NarrowingInput): Promise<Narrowed
 
   // `sort` now comes from an enum, which is what keeps the lookup below on the
   // object's OWN keys. Unvalidated, `sort: "toString"` hits Object.prototype and
-  // resolves to a function — and the failure is quieter than it looks: Drizzle
+  // resolves to a function, and the failure is quieter than it looks: Drizzle
   // binds it as a parameter, so Postgres runs `ORDER BY $1` with null, returns
-  // rows, and drops the ordering. Not injection — a wrong answer wearing a
+  // rows, and drops the ordering. Not injection, a wrong answer wearing a
   // plausible face, which is the failure this codebase exists to refuse.
   const sort: OfferSort = input.sort ?? "nearest";
   const limit = input.limit ?? 60;
@@ -1279,7 +1280,7 @@ export async function getOffersNarrowed(input: NarrowingInput): Promise<Narrowed
  * a plausible value instead of raising. Throw.
  *
  * The result is interpolated into SQL as a single bound text parameter via
- * ST_GeogFromText — the numbers are proven finite before they get here, and
+ * ST_GeogFromText, the numbers are proven finite before they get here, and
  * they never reach the query as anything but a parameter.
  */
 function toEwkt(lat: number, lng: number): string {
@@ -1327,7 +1328,7 @@ export interface AreaTree {
  * exactly one of each and a select with one option is a lie about the freedom
  * you have. They are context to display, not a choice to make.
  *
- * Neighbourhoods come back GROUPED under their LGA — every group carries its
+ * Neighbourhoods come back GROUPED under their LGA, every group carries its
  * full set of children, in one round trip. The LGA is not a destination (you
  * cannot stand in "an LGA"), so no group is selectable; it exists to say which
  * neighbourhoods belong together. How that grouping reaches the screen is the
@@ -1393,7 +1394,7 @@ export async function getAreaTree(): Promise<AreaTree> {
 }
 
 /**
- * Places within `radiusKm` of a point, nearest first — filtered by PostGIS.
+ * Places within `radiusKm` of a point, nearest first, filtered by PostGIS.
  *
  * ST_DWithin on a geography column is metres on the spheroid and uses the
  * spatial index, so this is both correct and cheap. `getPlaces()` returns the
@@ -1444,7 +1445,7 @@ export interface PointCoverage {
  * Answer "where is this person, and do we have anything for them?".
  *
  * Coverage is defined as **at least one place within the user's own search
- * radius** — not as a bounding box we drew, and not as proximity to an area
+ * radius**, not as a bounding box we drew, and not as proximity to an area
  * centre. That definition is deliberate and it is the one the UI states out
  * loud: a user standing in Ikeja with a 5 km radius is not covered, and telling
  * them so is more useful than dropping them onto an empty map or silently
@@ -1455,7 +1456,7 @@ export async function getCoverageForPoint(input: {
   lng: number;
   radiusKm: number;
 }): Promise<PointCoverage> {
-  // worldCoordinate, NOT nigeriaCoordinate — deliberately. This action's whole
+  // worldCoordinate, NOT nigeriaCoordinate, deliberately. This action's whole
   // job is answering "am I outside coverage?", so rejecting a point outside
   // Nigeria would refuse the question it exists to answer. (0,0) is still
   // refused: that is not a user somewhere else, that is an unparsed coordinate.
@@ -1516,7 +1517,7 @@ export async function getCoverageForPoint(input: {
 // The column is the seller's answer, not a hint. It defaults to 'private' and
 // no seed or write path sets it to anything else, which means the honest answer
 // today is always "this seller has not agreed to be contacted". There is also
-// no channel column — no phone, no handle — so even an explicit 'public' does
+// no channel column, no phone, no handle, so even an explicit 'public' does
 // not yield something to dial. The UI states both facts rather than inventing a
 // number to fill the row.
 // ─────────────────────────────────────────────────────────────────────────────
@@ -1562,7 +1563,7 @@ export async function getPlaceContactPolicy(placeId: string): Promise<PlaceConta
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 9. Trust — the READ side
+// 9. Trust, the READ side
 //
 // The real model lives in src/lib/trust.ts, ported from FoodModule.ts:138-176,
 // which held it correctly and had zero importers. These actions are the wire.
@@ -1572,7 +1573,7 @@ export async function getPlaceContactPolicy(placeId: string): Promise<PlaceConta
 // stored answer and the computed one come from one model rather than two.
 //
 // `getFoodItemCandidates` (:194) still reports `supportingObservationCount * 10`
-// as a confidence percentage — ten reports from one person read as 100%. It is
+// as a confidence percentage, ten reports from one person read as 100%. It is
 // the last caller of the old arithmetic and it is not fixed here: its consumer
 // (ItemDetailSheet) belongs to another lane, and moving the number without the
 // surface that renders it would change what the panel says without anyone who
@@ -1600,7 +1601,7 @@ function offerKeyOf(k: OfferKey) {
  * `distinctSourceCount` at :702 exactly. The two numbers are read side by side
  * in the same panel; if they filtered differently they would disagree in front
  * of the user, and a trust panel that contradicts itself is worse than no panel.
- * (The current seed does write 'approved' — src/db/seed.ts:305 — but older rows
+ * (The current seed does write 'approved', src/db/seed.ts:305, but older rows
  * and any future non-seed writer sit at the column's 'pending' default, and
  * counting only 'approved' would report "no evidence" for all of them: a schema
  * default wearing the costume of a fact.)
@@ -1674,18 +1675,18 @@ export async function getOfferTrust(key: OfferKey): Promise<TrustAssessment> {
  * One report, as the person who filed it would recognise it: what, where, how
  * much, when.
  *
- * `priceAmount` is kobo and NULLABLE — a report can say "ee no dey" without
+ * `priceAmount` is kobo and NULLABLE, a report can say "ee no dey" without
  * naming a price. It is also non-null on reports that DO say "ee no dey" (47 of
  * them today, every one carrying a number), which is the trap this shape hands
  * to the view rather than hiding: see `MyReportsSheet`.
  *
  * There is deliberately NOTHING here about whether the report was accepted, or
  * whether it moved the price. Neither is knowable. `moderation_status` is
- * 'approved' on 949/949 rows — NOT because that is the column default (the
+ * 'approved' on 949/949 rows, NOT because that is the column default (the
  * schema default is 'pending', schema/index.ts:298) but because the seed and
  * both write paths explicitly write 'approved' (actions.ts:543, :869) and no
  * path ever writes 'rejected'. A status chip fed by it would still be a constant
- * wearing the costume of a fact — there is no moderator surface to make it vary.
+ * wearing the costume of a fact, there is no moderator surface to make it vary.
  * And `offers_current.price_min/max` is a
  * BAND over every source in a 72h window, not "your price", so no column
  * anywhere records whether your report changed anything.
@@ -1708,7 +1709,7 @@ export interface MyReport {
 /**
  * A stated cap, NOT a page. There is no pagination behind this: someone with 101
  * reports sees 100 and is told nothing about the rest. That is a real (if
- * distant) limit and the sheet says so rather than implying completeness — the
+ * distant) limit and the sheet says so rather than implying completeness, the
  * alternative was an unbounded query on the one table the schema's own comment
  * calls immutable and "only ever grows".
  */
@@ -1718,9 +1719,9 @@ const MY_REPORTS_LIMIT = 100;
  * The prices you reported, newest first.
  *
  * THE SESSION IS RESOLVED SERVER-SIDE AND THIS ACTION TAKES NO ARGUMENTS. Both
- * halves matter. A Server Action is a public HTTP endpoint — an agent extracted
+ * halves matter. A Server Action is a public HTTP endpoint, an agent extracted
  * this file's action ids from the JS bundle and POSTed them with no cookies
- * (LANES H14) — so one that returned "the reports belonging to whatever id you
+ * (LANES H14), so one that returned "the reports belonging to whatever id you
  * hand it" would be a data breach reachable with curl. Taking no input at all is
  * the strongest form of that guarantee: there is no parameter to tamper with, so
  * there is nothing for `src/lib/validation.ts` to gate. `contributorSourceId()`
@@ -1728,23 +1729,23 @@ const MY_REPORTS_LIMIT = 100;
  * that precedent, not a second mechanism.
  *
  * SIGNED OUT RETURNS EMPTY AND NEVER THROWS. ADR-003: auth is recognition, never
- * a gate. An empty list is the true answer for someone with no session — not an
+ * a gate. An empty list is the true answer for someone with no session, not an
  * error, not a login wall, and not a bug.
  *
  * IT IS ALSO EMPTY FOR EVERYONE TODAY, INCLUDING THE OWNER, and that is correct
  * rather than broken. All 949 observations resolve to the three shared anonymous
  * source rows (`user_id IS NULL`, verified live), so nothing links any of them to
- * a person and nothing ever can — the key does not exist. The first non-empty row
+ * a person and nothing ever can, the key does not exist. The first non-empty row
  * this returns will be the first report filed by a signed-in human, which is also
  * the first time `contributorSourceId()`'s find-or-create insert has ever run
  * against this database.
  *
  * NO JOIN TO `offers_current`, deliberately. "Does my report still stand?" is
- * computable — it is `offersCurrent.lastObservedAt === observations.observedAt`,
- * an exact equality since both are written from one `now` — but it CANNOT BE
+ * computable, it is `offersCurrent.lastObservedAt === observations.observedAt`,
+ * an exact equality since both are written from one `now`, but it CANNOT BE
  * EXERCISED on this data: the seed writes exactly one Contributor observation per
  * variant/unit/place, always the newest, so that equality holds for all 474
- * offers (there is no `is_latest` column — this is a derived predicate) and the
+ * offers (there is no `is_latest` column, this is a derived predicate) and the
  * superseded branch is unreachable until a signed-in human reports twice on one
  * triple. Shipping it would mean shipping a branch that has never run, on the
  * strength of a seed that makes it 100% green. The row is a receipt and is useful
@@ -1757,10 +1758,10 @@ export async function getMyReports(): Promise<MyReport[]> {
 
   /**
    * This filters `sources.user_id` and orders by `observations.observed_at`, and
-   * there is no index on `observations.source_id` — so both sides seq-scan
+   * there is no index on `observations.source_id`, so both sides seq-scan
    * (EXPLAIN confirms: Hash Join over two Seq Scans). Correct, and cheap at 949
    * rows; it is a tomorrow problem on a table that only grows. The index that
-   * serves both the filter and the sort — `(source_id, observed_at DESC)` — is
+   * serves both the filter and the sort, `(source_id, observed_at DESC)`, is
    * requested from the schema lane in the handover, because
    * `src/db/schema/index.ts` belongs to auth→trust and not to this change.
    */
@@ -1793,20 +1794,20 @@ export async function getMyReports(): Promise<MyReport[]> {
 
 /**
  * File a "something is wrong" report. Writes one row to `problem_reports`, which
- * the owner reads directly at psql — there is no admin UI and no reply channel,
+ * the owner reads directly at psql, there is no admin UI and no reply channel,
  * by the owner's spec, so this action's whole job is to land the row honestly.
  *
  * PUBLIC AND ANONYMOUS-FIRST, like `submitObservation`. A Server Action is a
  * public HTTP endpoint (an agent lifted these ids from the JS bundle and POSTed
- * with no cookies — LANES H14), so `parseSubmitProblemReport` is the guard, not
+ * with no cookies, LANES H14), so `parseSubmitProblemReport` is the guard, not
  * the session: ADR-003 keeps this open to signed-out callers by design, and the
  * length cap on `body` is the only thing between an unthrottled endpoint and a
- * `text` column (there is no rate limiter in this app yet — see validation.ts).
+ * `text` column (there is no rate limiter in this app yet, see validation.ts).
  *
  * ATTRIBUTION IS RESOLVED SERVER-SIDE AND NEVER TAKEN FROM THE PAYLOAD. `userId`
  * is read from the session here, exactly as `contributorSourceId` and
  * `getMyReports` read it, and it is nullable: signed in, the report carries your
- * id; signed out — the default — it is NULL, which is the honest "filed
+ * id; signed out, the default, it is NULL, which is the honest "filed
  * anonymously", not an error. An auth outage resolves to NULL too, and that is
  * the right trade: we do not claim to know who someone is when we could not
  * check, and we do not drop the report because a third party is down.
@@ -1832,4 +1833,115 @@ export async function submitProblemReport(data: {
     userId,
     appLocale: input.appLocale ?? null,
   });
+}
+
+/**
+ * A signed-in user's own profile, assembled from the two places their details
+ * live: `name` and `email` from the SESSION (`neon_auth.user`, Neon-managed) and
+ * the contact channel from OUR `user_profiles` row, keyed on the same user id.
+ * The caller sees one object and does not need to know the seam.
+ *
+ * NOTHING HERE IS WRITABLE THROUGH THIS APP EXCEPT THE CONTACT. `name` is edited
+ * client-side via `authClient.updateUser`; `email` is display-only (there is no
+ * mounted change-email route on this SDK); only the contact pair round-trips
+ * through our own table, via `updateMyProfile`.
+ */
+export interface MyProfile {
+  /** From `neon_auth.user`. "" for anyone created by email OTP, who set no name. */
+  name: string;
+  /** From `neon_auth.user`. The address they sign in with; display-only in the UI. */
+  email: string;
+  /** From `user_profiles`, or null when they have stored no contact channel. */
+  contactChannelKind: string | null;
+  contactChannelValue: string | null;
+}
+
+/**
+ * The current user's profile, or null when nobody is signed in.
+ *
+ * SESSION RESOLVED SERVER-SIDE, NO ARGUMENTS, exactly like `getMyReports` and
+ * `contributorSourceId`. A Server Action is a public HTTP endpoint; one that
+ * returned "the profile for whatever id you hand it" would be a data breach
+ * reachable with curl (LANES H14). There is no parameter to tamper with, so
+ * there is nothing for `src/lib/validation.ts` to gate.
+ *
+ * SIGNED OUT RETURNS NULL AND NEVER THROWS. ADR-003: auth is recognition, never a
+ * gate. No session means "not recognised", which is null here, not an error and
+ * not a login wall. The UI only opens Manage Profile for a signed-in user, so
+ * null is the defensive floor rather than the common path.
+ *
+ * The `user_profiles` row may not exist yet: a user who has never saved a
+ * contact has a session but no row. That is not an error either, the contact
+ * fields come back null, which is the honest "no channel on file", the same
+ * answer a row with both columns NULL would give.
+ */
+export async function getMyProfile(): Promise<MyProfile | null> {
+  const { data: session } = await auth.getSession();
+  const user = session?.user;
+  if (!user) return null;
+
+  const [row] = await db
+    .select({
+      contactChannelKind: userProfiles.contactChannelKind,
+      contactChannelValue: userProfiles.contactChannelValue,
+    })
+    .from(userProfiles)
+    .where(eq(userProfiles.userId, user.id))
+    .limit(1);
+
+  return {
+    name: user.name ?? "",
+    email: user.email,
+    contactChannelKind: row?.contactChannelKind ?? null,
+    contactChannelValue: row?.contactChannelValue ?? null,
+  };
+}
+
+/**
+ * Save the current user's contact channel. Upserts the single `user_profiles`
+ * row for that user.
+ *
+ * OWNER-SCOPED, AND THIS ONE THROWS SIGNED OUT, the deliberate difference from
+ * `submitObservation` / `submitProblemReport`, which are anonymous-first by
+ * ADR-003. A profile write belongs to exactly one account, the UI never offers
+ * the control without a session, and there is no anonymous row for it to degrade
+ * to. So no session is a caller error here, not a valid quieter path.
+ *
+ * ATTRIBUTION IS THE SESSION, NEVER THE PAYLOAD. `userId` is read from
+ * `auth.getSession()` exactly as `getMyReports` and `contributorSourceId` read
+ * it; the payload carries only the contact fields, so there is no id to tamper
+ * with. `parseUpdateMyProfile` enforces the both-or-neither contact rule and the
+ * length cap before anything is written.
+ *
+ * NAME AND EMAIL ARE NOT WRITTEN HERE. They live in `neon_auth.user`, which this
+ * app cannot write through Drizzle; the UI edits the name via
+ * `authClient.updateUser` client-side, and email is display-only. This action
+ * owns only the contact pair in our own table.
+ *
+ * The upsert conflict target is `user_profiles.user_id`, which is UNIQUE for
+ * exactly this purpose (schema/index.ts). Sending null for both fields clears the
+ * channel.
+ */
+export async function updateMyProfile(data: {
+  contactChannelKind?: "phone" | "whatsapp" | "sms" | null;
+  contactChannelValue?: string | null;
+}): Promise<void> {
+  const input = parseUpdateMyProfile(data);
+
+  const { data: session } = await auth.getSession();
+  const userId = session?.user?.id;
+  if (!userId) {
+    throw new Error("updateMyProfile: no session, a profile write is owner-scoped");
+  }
+
+  const contactChannelKind = input.contactChannelKind ?? null;
+  const contactChannelValue = input.contactChannelValue ?? null;
+
+  await db
+    .insert(userProfiles)
+    .values({ userId, contactChannelKind, contactChannelValue })
+    .onConflictDoUpdate({
+      target: userProfiles.userId,
+      set: { contactChannelKind, contactChannelValue, updatedAt: new Date() },
+    });
 }
