@@ -6,6 +6,7 @@ import { ModalSheet } from "@/design-system/components/ModalSheet";
 import { ListRow, ListGroup } from "@/design-system/components/ListRow";
 import { StatusBadge, type StatusKind } from "@/design-system/components/StatusBadge";
 import { getPlaceContactPolicy, type PlaceContactPolicy } from "@/app/actions";
+import { formatNaira } from "@/lib/money";
 
 /** The offer the user was looking at when they tapped "Get it", if any. */
 export interface GetItOffer {
@@ -206,14 +207,6 @@ function openAndroidMaps(t: GetItTarget, origin?: { lat: number; lng: number } |
 // ─────────────────────────────────────────────────────────────────────────────
 // Formatting
 // ─────────────────────────────────────────────────────────────────────────────
-
-function formatNaira(kobo: number): string {
-  return new Intl.NumberFormat("en-NG", {
-    style: "currency",
-    currency: "NGN",
-    maximumFractionDigits: 0,
-  }).format(kobo / 100);
-}
 
 function formatPriceRange(offer: GetItOffer): string {
   if (offer.priceMax && offer.priceMax !== offer.priceMin) {

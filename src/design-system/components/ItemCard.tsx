@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import Image from "next/image";
 import { StatusBadge, type StatusKind } from "./StatusBadge";
+import { formatNaira } from "@/lib/money";
 import { useT } from "@/core/i18n";
 
 export interface ItemCardData {
@@ -20,13 +21,6 @@ export interface ItemCardData {
   /** The unit the price range is quoted in. A price without its unit can lie. */
   unitLabel?: string | null;
 }
-
-const naira = (kobo: number) =>
-  new Intl.NumberFormat("en-NG", {
-    style: "currency",
-    currency: "NGN",
-    maximumFractionDigits: 0,
-  }).format(kobo / 100);
 
 const toStatus = (freshness?: string | null): StatusKind =>
   freshness === "confirmed" ? "confirmed" : freshness === "unavailable" ? "unavailable" : "caution";
@@ -117,8 +111,8 @@ export function ItemCard({ item, onSelect }: { item: ItemCardData; onSelect: (it
     item.priceFrom == null
       ? "No price yet"
       : item.priceTo && item.priceTo > item.priceFrom
-        ? `${naira(item.priceFrom)} – ${naira(item.priceTo)}`
-        : naira(item.priceFrom);
+        ? `${formatNaira(item.priceFrom)} – ${formatNaira(item.priceTo)}`
+        : formatNaira(item.priceFrom);
 
   return (
     <button

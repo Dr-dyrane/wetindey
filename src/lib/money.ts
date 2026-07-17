@@ -6,17 +6,12 @@
  * that constant is the storage unit leaking into the view, and it leaked into
  * five files before this one existed.
  *
- * THE FIVE COPIES THIS REPLACES, all byte-identical, none exported, three
- * different names:
- *   · src/app/page.tsx:864                          `formatPrice`
- *   · src/design-system/components/ItemCard.tsx:25  `naira`
- *   · src/app/_components/ItemDetailSheet.tsx:91    `naira`
- *   · src/app/_components/GetItSheet.tsx:211        `naira`
- *   · src/app/_components/ConfirmVisitSheet.tsx:371 `naira`
- *
- * Only the first is in this lane, so only the first is converted here. The other
- * four are handed to their owners rather than reached into — a sixth copy would
- * have been the easy thing and the wrong one.
+ * IT REPLACED FIVE byte-identical copies, none exported, under three names
+ * (`formatPrice`, `naira`, `formatNaira`). Four now import this one: `page.tsx`, `ItemCard`,
+ * `GetItSheet` (whose copy was itself named `formatNaira`, shadowing this), and
+ * `ConfirmVisitSheet`. The fifth, `ItemDetailSheet`'s `naira`, is the auth
+ * lane's and stays theirs until they convert it. A sixth copy would have been
+ * the easy thing and the wrong one.
  *
  * `maximumFractionDigits: 0` is not cosmetic. Nigerian street prices are whole
  * naira; kobo has not circulated as coin in decades, so "₦4,500.00" reads as a

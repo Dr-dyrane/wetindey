@@ -6,6 +6,7 @@ import { ModalSheet } from "@/design-system/components/ModalSheet";
 import { Button } from "@/design-system/components/Button";
 import { Input } from "@/design-system/components/Input";
 import { submitVisitConfirmation } from "@/app/actions";
+import { formatNaira } from "@/lib/money";
 
 /**
  * The visit being asked about.
@@ -367,13 +368,6 @@ const COPY: Record<Lang, Copy> = {
 
 /* ── Pieces ───────────────────────────────────────────────────────────────── */
 
-const naira = (kobo: number) =>
-  new Intl.NumberFormat("en-NG", {
-    style: "currency",
-    currency: "NGN",
-    maximumFractionDigits: 0,
-  }).format(kobo / 100);
-
 function Banner({
   kind,
   icon,
@@ -580,8 +574,8 @@ export function ConfirmVisitSheet({ open, visit, onClose, onConfirmed, lang = "e
   const busy = phase === "sending" || phase === "done" || phase === "queued";
   const quoted =
     visit.quotedPriceMax && visit.quotedPriceMax > visit.quotedPriceMin
-      ? `${naira(visit.quotedPriceMin)}–${naira(visit.quotedPriceMax)}`
-      : naira(visit.quotedPriceMin);
+      ? `${formatNaira(visit.quotedPriceMin)}–${formatNaira(visit.quotedPriceMax)}`
+      : formatNaira(visit.quotedPriceMin);
 
   return (
     <ModalSheet open={open} onClose={onClose} title={t.title} size="form">
