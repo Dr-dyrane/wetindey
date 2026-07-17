@@ -57,10 +57,10 @@
   --material-thin: rgba(255, 255, 255, 0.44);
   --material-regular: rgba(255, 255, 255, 0.58);
   --material-thick: rgba(255, 255, 255, 0.72);
-  /* Reduced-transparency fallbacks keep the same hierarchy without blur. */
-  --material-opaque-ultrathin: var(--color-island);
-  --material-opaque-thin: var(--color-island);
-  --material-opaque-regular: var(--color-island);
+  /* Reduced-transparency fallbacks retain each material's semantic surface rung. */
+  --material-opaque-ultrathin: var(--color-page);
+  --material-opaque-thin: var(--color-surface-card);
+  --material-opaque-regular: var(--color-surface-persistent);
   --material-opaque-thick: var(--color-island);
   /* Liquid Glass refracts its surroundings -- you are meant to still read
      shapes through it. 32px was fog: it destroyed the map instead of bending
