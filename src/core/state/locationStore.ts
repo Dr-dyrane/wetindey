@@ -51,7 +51,9 @@ export type LocationProvenance =
   /** Nobody has chosen yet — the pilot's opening coordinate. */
   | "default";
 
-export interface UserPosition {
+/* Not exported: the store exposes position via useLocationStore(), and no
+   external file imports UserPosition by name. */
+interface UserPosition {
   lat: number;
   lng: number;
   provenance: LocationProvenance;

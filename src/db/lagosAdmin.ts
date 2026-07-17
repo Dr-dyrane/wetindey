@@ -21,7 +21,8 @@
  * Lagos Mainland.
  */
 
-export type AdminLevel = "country" | "state" | "lga" | "neighborhood";
+/* Not exported: AdminNode.level is the only consumer, and no importer names it. */
+type AdminLevel = "country" | "state" | "lga" | "neighborhood";
 
 export interface AdminNode {
   slug: string;

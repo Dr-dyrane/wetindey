@@ -32,7 +32,9 @@
  * because an env var is unset is the same white screen with extra steps.
  */
 
-export type ErrorScope =
+/* Not exported: ReportErrorOptions.scope is the public surface; callers pass a
+   string literal and never need the union by name. */
+type ErrorScope =
   /** Route-level React error boundary — src/app/error.tsx */
   | "app/error-boundary"
   /** Root error boundary; the layout itself failed — src/app/global-error.tsx */

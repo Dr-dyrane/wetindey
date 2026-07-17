@@ -11,5 +11,6 @@ const pool = new Pool({
 });
 
 export const db = drizzle(pool, { schema });
-export type DbClient = typeof db;
+/* Not exported: no file imports DbClient. The `db` instance is the public surface. */
+type _DbClient = typeof db;
 export * from "./schema";

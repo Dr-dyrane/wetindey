@@ -143,7 +143,8 @@ const UNIT_CODES = new Set(SEED_UNITS.map((u) => u.code));
 // ITEMS
 // ─────────────────────────────────────────────────────────────────────────────
 
-export interface SeedAlias {
+/* Not exported: used by SeedItem.aliases below, never imported externally. */
+interface SeedAlias {
   alias: string;
   /** yo | ig | ha | pcm | en */
   locale: string;

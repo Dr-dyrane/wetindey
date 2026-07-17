@@ -4,7 +4,9 @@ import React, { useState } from "react";
 import { Check, ChevronDown } from "lucide-react";
 import { ModalSheet } from "./ModalSheet";
 
-export interface PickerOption {
+/* Not exported: every caller passes options as an object literal and never names
+   the type. Kept as a named interface because SheetPickerProps reads better. */
+interface PickerOption {
   id: string;
   label: string;
   /** Secondary line — a price, a distance, an address. */
