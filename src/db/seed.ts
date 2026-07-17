@@ -178,9 +178,46 @@ const run = async () => {
       name: n.name,
       type: n.level,
       center: { lng: n.center.lng, lat: n.center.lat },
-      // Only what the pilot serves is marked active, so the picker cannot offer
-      // a branch with nothing behind it.
-      coverageStatus: n.level === "lga" ? "active" : "active"
+      /**
+       * Only what the pilot serves is marked active, so the picker cannot offer
+       * a branch with nothing behind it.
+       *
+       * This line read `n.level === "lga" ? "active" : "active"` — both arms the
+       * same, so the condition decided nothing and every ancestor shipped active,
+       * INCLUDING THE COUNTRY. It sat directly under the sentence above, which
+       * says the opposite. Measured before the fix: country 1 area / 0 places,
+       * state 1 / 0, lga 6 / 0, neighbourhood 9 / 60.
+       *
+       * That is not cosmetic. `getCoverageForPoint` picks the NEAREST area
+       * `WHERE coverage_status = 'active'`, limit 1 — so `Nigeria` was a
+       * candidate answer, and measured, it wins: a point in Abuja resolves to
+       * "Nigeria, 0 places, 140 km" because the country centroid beats every
+       * neighbourhood by ~383 km.
+       *
+       * NO ANCESTOR IS EVER AN ANSWER — not the country, not the state, and NOT
+       * the LGA. A first pass at this kept LGAs active, reasoning that they are
+       * "the branch the picker drills through". That is false: `getAreaTree`
+       * filters on `type = 'neighborhood'` and walks `parent_area_id`; it selects
+       * `coverage_status` and never filters on it, and no component reads the
+       * column at all. The ONLY thing `active` does on an LGA is make a 0-place
+       * row eligible here.
+       *
+       * And that is fatal, because 5 of the 6 LGAs share an EXACT centroid — 0
+       * metres — with one of their own neighbourhoods (Amuwo Odofin, Mushin, Ojo,
+       * Somolu/Bariga, Surulere). `ORDER BY ST_Distance ASC LIMIT 1` has no
+       * tiebreaker, so the LGA wins arbitrarily: a user standing in Mushin, where
+       * 6 places sit at that exact coordinate, is told "Mushin, 0 places".
+       * Keeping LGAs active left 5 of the 9 pilot neighbourhoods broken — the
+       * same 5 as before the fix. It would have fixed Abuja and left Lagos.
+       *
+       * So: only neighbourhoods, which are inserted active below and are the only
+       * rows carrying places. The schema default is already `inactive`; this now
+       * agrees with it rather than arguing with it.
+       *
+       * The tie itself still wants a deterministic ORDER BY in
+       * `getCoverageForPoint` — coincident centroids will recur. LANES H31.
+       */
+      coverageStatus: "inactive"
     }))
   ).returning();
   const ancestorBySlug = new Map(ancestorRows.map((a) => [a.slug, a]));
