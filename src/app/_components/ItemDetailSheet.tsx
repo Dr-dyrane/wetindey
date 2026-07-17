@@ -144,7 +144,7 @@ export function offerSignal(offer: NarrowedOffer, now: number) {
   let short: string;
   if (sold) {
     kind = "unavailable";
-    short = "Not dey";
+    short = "E no dey";
   } else if (offer.freshnessState === "confirmed" && !expired) {
     kind = "confirmed";
     short = "Confirmed";

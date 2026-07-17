@@ -472,7 +472,7 @@ export function GetItSheet({ open, onClose, target, origin, onGoThere }: GetItSh
               {freshLabel && <StatusBadge kind={freshKind}>{freshLabel}</StatusBadge>}
               {/* "Last seen", not "Confirmed": this line states WHEN we heard,
                   and the badge beside it states WHAT we heard. Saying "confirmed"
-                  here read as confirmed-available next to a red "Not dey" badge —
+                  here read as confirmed-available next to a red "E no dey" badge —
                   the two halves of the row contradicting each other. */}
               {fresh && <span className="text-caption-1 text-text-tertiary">Last seen {fresh}</span>}
             </div>

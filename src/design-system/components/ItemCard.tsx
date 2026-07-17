@@ -30,10 +30,26 @@ const naira = (kobo: number) =>
 const toStatus = (freshness?: string | null): StatusKind =>
   freshness === "confirmed" ? "confirmed" : freshness === "unavailable" ? "unavailable" : "caution";
 
+/**
+ * "E no dey", not "Not dey" — corrected by a native speaker.
+ *
+ * The app's English voice is Nigerian English, not Received Standard: the search
+ * field already asks "Wetin you dey find?". So Pidgin sitting in this otherwise
+ * English map is the brand, not a leak. What was wrong was the grammar. Pidgin
+ * needs the subject: "e no dey" is *it isn't there*; "not dey" is neither Pidgin
+ * nor English, it is a foreigner's guess at Pidgin — which reads worse to a
+ * Lagos shopper than plain English would, because it is visibly an outsider
+ * imitating them.
+ *
+ * "Otilo" (Yorùbá, roughly *it has gone*) is the other true answer and is the
+ * better one where the item SOLD OUT rather than was never stocked. This map
+ * cannot tell those apart — `unavailable` covers both — so it takes the one that
+ * is right in both cases.
+ */
 const STATUS_LABEL: Record<StatusKind, string> = {
   confirmed: "Confirmed",
   caution: "Check again",
-  unavailable: "Not dey",
+  unavailable: "E no dey",
   info: "Info",
 };
 
