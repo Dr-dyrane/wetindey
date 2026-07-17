@@ -162,7 +162,7 @@ export function ItemCard({ item, onSelect }: { item: ItemCardData; onSelect: (it
        */}
       <div className="min-w-0 flex-1 py-2 pr-3">
         <div className="flex items-baseline justify-between gap-2">
-          <h3 className="min-w-0 truncate text-subhead font-semibold text-text-primary">{item.name}</h3>
+          <span className="min-w-0 truncate text-subhead font-semibold text-text-primary">{item.name}</span>
         </div>
         <p className="truncate text-subhead font-semibold tabular-nums text-text-primary">
           {priceLabel}

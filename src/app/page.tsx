@@ -298,6 +298,9 @@ export default function HomePage() {
    */
   const [popularItems, setPopularItems] = useState<ItemCardData[] | undefined>(undefined);
   const [searchResults, setSearchResults] = useState<ItemCardData[]>([]);
+  // Set when a search rejects (offline, server down). AsyncList renders it in the
+  // search list's error state instead of the whole app falling to the boundary.
+  const [searchError, setSearchError] = useState<string | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   /** Kept apart from `loadError`: the two loads fail independently, and a dead
    *  places query must not blank the list with the list's own error text. */
@@ -308,6 +311,7 @@ export default function HomePage() {
   const [placeOffers, setPlaceOffers] = useState<PlaceOffer[] | undefined>(undefined);
   const [placeOffersError, setPlaceOffersError] = useState<string | null>(null);
   const [isSearching, setIsSearching] = useState(false);
+  const [searchError, setSearchError] = useState<string | null>(null);
   const [isPlaceOffersLoading, setIsPlaceOffersLoading] = useState(false);
   const [locateError, setLocateError] = useState<string | null>(null);
   /** Stable: MapNotice keys its auto-dismiss timer on this, and a fresh identity
@@ -703,10 +707,26 @@ export default function HomePage() {
     }
 
     setIsSearching(true);
+    setSearchError(null);
     startTransition(async () => {
-      const matched = await searchFoodItems(val);
-      setSearchResults(matched);
-      setIsSearching(false);
+      try {
+        const matched = await searchFoodItems(val);
+        setSearchResults(matched);
+      } catch (err) {
+        // The third async transition in this file, and until now the only one
+        // without a catch. `searchFoodItems` is a "use server" POST; offline it
+        // rejects, and an unguarded rejection escapes the transition and
+        // unmounts the WHOLE app into the route error boundary ("Something
+        // scatter") for a single search keystroke. loadPopular (its catch
+        // below) and loadBaseline already learned this exact lesson. A search
+        // that cannot reach the network must degrade to a message in the list,
+        // not take the app down.
+        console.error("Search failed:", err);
+        setSearchResults([]);
+        setSearchError("Couldn't search. Check your connection.");
+      } finally {
+        setIsSearching(false);
+      }
     });
   };
 
@@ -1171,6 +1191,8 @@ export default function HomePage() {
             <AsyncList
               items={searchResults}
               isLoading={isSearching}
+              error={searchError}
+              errorState={searchError ? { description: searchError } : undefined}
               subject={searchQuery}
               keyExtractor={(item) => item.id}
               renderItem={(item) => <ItemCard item={item} onSelect={handleSelectItem} />}
