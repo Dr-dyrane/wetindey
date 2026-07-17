@@ -67,11 +67,32 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
              */
             "inline-flex items-center justify-center font-semibold transition duration-micro ease-decelerate disabled:opacity-50 disabled:pointer-events-none active:scale-[0.97]",
             {
-              // Variants
-              "bg-accent text-accent-contrast hover:bg-opacity-90 active:bg-accent/80": variant === "primary",
-              "bg-fillSecondary text-accent hover:bg-opacity-80 active:bg-opacity-70": variant === "secondary",
-              "bg-status-unavailable text-onStatus hover:bg-opacity-90 active:bg-opacity-80": variant === "danger",
-              "bg-transparent text-accent hover:bg-fillSecondary active:bg-opacity-80": variant === "ghost",
+              /**
+               * Press is an opacity utility. The old `bg-opacity` / slash-tint
+               * classes never worked, and the reason is structural: every colour in
+               * `tailwind.config.ts` is a bare `var(--color-*)` string, and Tailwind
+               * cannot apply slash-opacity to a bare `var()` — so the `/80` candidate
+               * was rejected outright and never compiled, while the hover rule DID
+               * compile and set an opacity variable nothing reads. Four variants
+               * looked styled and were one.
+               *
+               * `active:opacity-*` is the house pattern — 16 other controls use it and
+               * it emits a real `opacity` rule. Re-tinting the fill instead needs the
+               * tokens taught an `<alpha-value>` channel form: a design-system change,
+               * not this bug fix. (`--color-accent-pressed` exists and would work, but
+               * only `accent` has one — using it would split the press language.)
+               *
+               * 60 for text-only and non-accent fills, 80 for accent fills: that is
+               * what the other 16 do. `ghost` keeps `hover:bg-fillSecondary` — a real
+               * background swap, and the one hover here that ever worked.
+               *
+               * Class names are described, not spelled: Tailwind's scanner reads
+               * comments and would re-emit what this deletes.
+               */
+              "bg-accent text-accent-contrast active:opacity-80": variant === "primary",
+              "bg-fillSecondary text-accent active:opacity-60": variant === "secondary",
+              "bg-status-unavailable text-onStatus active:opacity-80": variant === "danger",
+              "bg-transparent text-accent hover:bg-fillSecondary active:opacity-60": variant === "ghost",
 
               // Sizes
               "h-10 px-4 text-sm squircle": size === "sm",
