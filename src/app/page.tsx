@@ -20,6 +20,7 @@ import {
   MapRecenterControl,
   type MapCameraHandle
 } from "@/design-system/components/MapboxCanvas";
+import type { RouteGeometry } from "@/integrations/maps/MapboxAdapter";
 import { DETENT_FRACTION } from "@/design-system/components/BottomSheet";
 import { AsyncList } from "@/design-system/components/AsyncList";
 import { NigeriaLogo } from "@/design-system/components/NigeriaLogo";
@@ -141,7 +142,22 @@ export default function HomePage() {
 
   // Jotai atomic state
   const [activeDetent, setActiveDetent] = useAtom(sheetDetentAtom);
-  const [activeMarkerId, setActiveMarkerId] = useAtom(activeMarkerIdAtom);
+  /**
+   * WHICH PLACE'S DETAIL LEVEL IS PUSHED. Null = none. That is the whole
+   * meaning, and writing it always costs both halves: it gates `detailPlace`,
+   * which pushes level 1, and it is the only thing `getPlaceOffers` is fetched
+   * for — `placeOffers` is read nowhere but inside `detailNode`. A flow that
+   * wants no pushed level must therefore not write it at all; there is no
+   * partial use.
+   *
+   * The atom is `activeMarkerIdAtom` at the source, a name from when this was
+   * also meant to mark the tapped pin. It never has: `MapboxCanvasProps`
+   * declares `selectedPlaceId`, and the component destructures it as
+   * `_selectedPlaceId` and reads it nowhere — pin appearance derives from
+   * `confidenceLevel` alone. Aliased rather than renamed because the atom's
+   * file is outside this change.
+   */
+  const [detailPlaceId, setDetailPlaceId] = useAtom(activeMarkerIdAtom);
 
   // React transitions
   const [isPending, startTransition] = useTransition();
@@ -455,9 +471,16 @@ export default function HomePage() {
     setFormVariantId(matched.length > 0 ? matched[0].id : "");
   }, [formItemId, submitVariants]);
 
-  // What is on sale at the place whose pin is selected.
+  /**
+   * What is on sale at the place whose detail level is open.
+   *
+   * Keyed on the pushed level rather than on any broader notion of selection:
+   * the result is rendered only inside `detailNode`, so a fetch with no level
+   * pushed would be a round-trip whose answer has nowhere to land — on
+   * connections this app is otherwise careful to spend nothing on.
+   */
   useEffect(() => {
-    if (!activeMarkerId) {
+    if (!detailPlaceId) {
       setPlaceOffers(undefined);
       setPlaceOffersError(null);
       return;
@@ -467,7 +490,7 @@ export default function HomePage() {
     setIsPlaceOffersLoading(true);
     setPlaceOffersError(null);
 
-    getPlaceOffers(activeMarkerId)
+    getPlaceOffers(detailPlaceId)
       .then((offers) => {
         if (cancelled) return;
         setPlaceOffers(offers);
@@ -487,7 +510,7 @@ export default function HomePage() {
     return () => {
       cancelled = true;
     };
-  }, [activeMarkerId]);
+  }, [detailPlaceId]);
 
   /**
    * Snapshot the claim, on the way OUT.
@@ -558,7 +581,7 @@ export default function HomePage() {
     // A new item is a new question: drop the previous item's pins rather than
     // leave tomatoes on the map while the sheet talks about rice.
     setItemOffers([]);
-    setActiveMarkerId(null);
+    setDetailPlaceId(null);
   });
 
   /** The pins are the list. See ItemDetailSheet's `onOffersChange`. */
@@ -567,16 +590,23 @@ export default function HomePage() {
   });
 
   /**
-   * An offer was chosen: centre it, and offer to act on it.
+   * An offer was chosen: centre it, and offer to act on it. This is where the
+   * lookup becomes a trip.
    *
-   * This is where the lookup becomes a trip. The old path ended at a card with
-   * two buttons that had no `onClick` at all.
+   * Writes NO `detailPlaceId`, and that absence is the flow. The user arrived
+   * from the offer list, not from a pin, so this market's detail level is a
+   * surface they never asked for and have never seen — pushing it would seat a
+   * full level under the Get it modal and leave the map covered by two surfaces
+   * at once. The camera is `setMapCenter`'s job and needs nothing from the atom.
+   *
+   * The narrowed pins in `itemOffers` are deliberately left standing: they are
+   * what remains visible behind the modal, and the geometry any route drawn
+   * between origin and offer would need.
    */
   const handleSelectOffer = useEventCallback((offer: NarrowedOffer) => {
     const signal = offerSignal(offer, Date.now());
 
     setDetailItem(null);
-    setActiveMarkerId(offer.placeId);
     setMapCenter({ lat: offer.lat, lng: offer.lng });
     setGetItTarget({
       placeId: offer.placeId,
@@ -608,7 +638,9 @@ export default function HomePage() {
    * (a keystroke, a focus) tore down and reconstructed the whole map.
    */
   const handleMarkerSelection = useEventCallback((placeId: string) => {
-    setActiveMarkerId(placeId);
+    // The pin flow, and the one place the pushed level is right: the user asked
+    // for this market by tapping it, so its prices are where they were going.
+    setDetailPlaceId(placeId);
     setActiveDetent("medium");
 
     const match = allPlaces.find((p) => p.id === placeId);
@@ -622,7 +654,7 @@ export default function HomePage() {
     setSearchResults([]);
     setDetailItem(null);
     setItemOffers([]);
-    setActiveMarkerId(null);
+    setDetailPlaceId(null);
   };
 
   const handlePriceSubmit = async (e: React.FormEvent) => {
@@ -706,9 +738,11 @@ export default function HomePage() {
       maximumFractionDigits: 0
     }).format(koboAmount / 100);
 
-  const selectedPlace = useMemo(
-    () => allPlaces.find((p) => p.id === activeMarkerId),
-    [allPlaces, activeMarkerId]
+  /** The place whose detail level is pushed — NOT "the selected place". Nothing
+   *  on this map has a selected state to be in. */
+  const detailPlace = useMemo(
+    () => allPlaces.find((p) => p.id === detailPlaceId),
+    [allPlaces, detailPlaceId]
   );
 
   /**
@@ -742,6 +776,35 @@ export default function HomePage() {
     }));
   }, [itemOffers, allPlaces]);
 
+  /**
+   * The line from you to the market you are about to walk to.
+   *
+   * Drawn only while a `GetItTarget` is open, because that is the only moment the
+   * question "how do I get from me to there" is being asked. A line to every pin
+   * would be noise, and a line to nothing is not a line.
+   *
+   * TWO POINTS TODAY, NOT A ROUTE. `setRoute` takes geometry and asks nothing
+   * about where it came from, so a real routed path — one that follows roads
+   * rather than cutting through the lagoon — is a matter of handing it more
+   * coordinates, from this same seam, with no change below. Nothing is drawn that
+   * claims to be a road: two points read as a bearing and a distance, which is
+   * exactly what we know.
+   *
+   * ADR-001 rules out couriers, dispatch and checkout. It does not rule out
+   * drawing a line — "where is it" is the question the product exists to answer,
+   * and the ADR keeps it. A directions source is not a delivery integration.
+   *
+   * `[lng, lat]` — GeoJSON order, the opposite of every other map call here. See
+   * RouteGeometry.
+   */
+  const route = useMemo<RouteGeometry | null>(() => {
+    if (!getItTarget) return null;
+    return [
+      [locPosition.lng, locPosition.lat],
+      [getItTarget.lng, getItTarget.lat]
+    ];
+  }, [getItTarget, locPosition.lat, locPosition.lng]);
+
   // 1. Map node (base layer)
   const mapNode = (
     <div className="relative w-full h-full">
@@ -758,9 +821,10 @@ export default function HomePage() {
       <MapboxCanvas
         ref={mapCameraRef}
         candidates={mapMarkers}
-        selectedPlaceId={activeMarkerId}
+        selectedPlaceId={detailPlaceId}
         onMarkerClick={handleMarkerSelection}
         center={mapCenter}
+        route={route}
         /* At regular width the shell mounts no bottom sheet, so there is nothing
            below to compensate for — but the panel covers the leading edge, and
            without that padding a pin can be flown to and land behind it. */
@@ -970,21 +1034,27 @@ export default function HomePage() {
     </div>
   );
 
-  // 3. Desktop detail sidebar (right panel)
+  // 3. Place detail — level 1 of the navigation stack, in BOTH size classes.
   //
-  // The offer branch that used to live here is gone: it showed the same five
-  // dimensions ItemDetailSheet now shows on BOTH shells, computed worse
-  // (`supportingObservationCount * 10`, so ten reports from one person read as
-  // 100% confidence), behind two buttons with no handlers.
+  // Not a sidebar and not desktop-only: RegularShell's right island is gone, so
+  // both shells hand this node to the same NavigationStack — compact inside the
+  // bottom sheet, regular inside the left panel.
+  //
+  // ONE way in: tapping a pin. The offer list hands off to GetItSheet directly
+  // and never pushes this, because a level the user did not ask for stacks under
+  // that modal and hides the map behind two full surfaces.
+  //
+  // Place → its items. Offer detail is NOT this axis and does not belong here;
+  // ItemDetailSheet owns item → its places, on both shells.
   const detailNode = useMemo(() => {
-    if (!selectedPlace) return undefined;
+    if (!detailPlace) return undefined;
 
     return (
       <div className="space-y-5 h-full flex flex-col justify-between">
         <div className="space-y-4">
           <div className="flex items-start justify-between">
             <div className="flex-1 pr-4">
-              <h2 className="text-headline tracking-tight text-text-primary">{selectedPlace.name}</h2>
+              <h2 className="text-headline tracking-tight text-text-primary">{detailPlace.name}</h2>
               <p className="text-caption-1 text-text-secondary mt-1 flex items-center">
                 <MapPin className="h-3.5 w-3.5 text-accent mr-1 shrink-0" />
                 {/* From the user, not from the camera — this panel opens by
@@ -995,15 +1065,15 @@ export default function HomePage() {
                   getHaversineDistance(
                     searchOrigin.lat,
                     searchOrigin.lng,
-                    selectedPlace.location.lat,
-                    selectedPlace.location.lng
+                    detailPlace.location.lat,
+                    detailPlace.location.lng
                   )
                 )}{" "}
-                • {selectedPlace.address || `${location.label}, Lagos`}
+                • {detailPlace.address || `${location.label}, Lagos`}
               </p>
             </div>
             <button
-              onClick={() => setActiveMarkerId(null)}
+              onClick={() => setDetailPlaceId(null)}
               aria-label="Close"
               className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-fillSecondary
                          text-text-secondary hover:text-text-primary transition-colors"
@@ -1019,7 +1089,7 @@ export default function HomePage() {
               items={placeOffers}
               isLoading={isPlaceOffersLoading}
               error={placeOffersError}
-              subject={activeMarkerId ?? ""}
+              subject={detailPlace.id}
               keyExtractor={(offer) => offer.id}
               className="max-h-[40vh] overflow-y-auto pr-1"
               renderItem={(offer) => (
@@ -1062,11 +1132,11 @@ export default function HomePage() {
             className="w-full flex items-center justify-center"
             onClick={() =>
               setGetItTarget({
-                placeId: selectedPlace.id,
-                placeName: selectedPlace.name,
-                lat: selectedPlace.location.lat,
-                lng: selectedPlace.location.lng,
-                address: selectedPlace.address,
+                placeId: detailPlace.id,
+                placeName: detailPlace.name,
+                lat: detailPlace.location.lat,
+                lng: detailPlace.location.lng,
+                address: detailPlace.address,
                 areaName: location.label,
                 // Reached from a pin, so there is no single price under test —
                 // and therefore nothing to confirm on the way back.
@@ -1081,27 +1151,26 @@ export default function HomePage() {
       </div>
     );
   }, [
-    selectedPlace,
+    detailPlace,
     placeOffers,
     placeOffersError,
     isPlaceOffersLoading,
-    activeMarkerId,
     searchOrigin,
     location.label,
-    setActiveMarkerId
+    setDetailPlaceId
   ]);
 
   return (
     <div className="relative w-full h-full min-h-screen overflow-hidden">
-      {/* `detailNode` is now a pushed level in BOTH size classes, so the place
-          detail — and its "Get it" — is reachable on a phone rather than being
-          desktop-only. The label and back handler name and pop that level. */}
+      {/* `detailLabel` and `onDetailBack` name and pop level 1. Both are driven
+          by the same `detailPlaceId` that gates `detailNode`, so the level, its
+          title and its back button cannot disagree about what is open. */}
       <AdaptiveShell
         mapNode={mapNode}
         sheetNode={sheetNode}
         detailNode={detailNode}
-        detailLabel={selectedPlace?.name}
-        onDetailBack={() => setActiveMarkerId(null)}
+        detailLabel={detailPlace?.name}
+        onDetailBack={() => setDetailPlaceId(null)}
         activeDetent={activeDetent}
         setActiveDetent={setActiveDetent}
       />

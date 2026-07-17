@@ -2,12 +2,26 @@ import type { Config } from "tailwindcss";
 
 const config: Config = {
   darkMode: "class",
+  /**
+   * `src/integrations` is here because MapboxAdapter builds its marker elements
+   * with `el.className = "..."`, and a class Tailwind never scans is a class
+   * Tailwind never emits. It was missing, so the place markers' `shadow-md`,
+   * `hover:scale-105` and `active:scale-95` resolved to nothing: every pin on
+   * the map has been flat and unresponsive to press since it was written, with
+   * no error anywhere. Their `h-9` / `bg-status-confirmed` only ever worked by
+   * coincidence — some scanned file happened to use the same class — and would
+   * have broken silently the day that unrelated usage was deleted.
+   *
+   * The rule this encodes: any directory that names a Tailwind class in a string
+   * belongs in this list, not just the ones that look like UI.
+   */
   content: [
     "./src/pages/**/*.{js,ts,jsx,tsx,mdx}",
     "./src/components/**/*.{js,ts,jsx,tsx,mdx}",
     "./src/app/**/*.{js,ts,jsx,tsx,mdx}",
     "./src/design-system/**/*.{js,ts,jsx,tsx,mdx}",
     "./src/modules/**/*.{js,ts,jsx,tsx,mdx}",
+    "./src/integrations/**/*.{js,ts,jsx,tsx,mdx}",
   ],
   theme: {
     extend: {

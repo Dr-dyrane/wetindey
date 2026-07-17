@@ -16,6 +16,12 @@
  * ~3.2753. A tilequery at the resulting point lands 52m from "24 Rd", a real
  * Festac cross-street, which corroborates the block. Treat it as accurate to
  * roughly a block, not to a doorway.
+ *
+ * Do NOT "correct" it with a geocoder. They answer this address confidently and
+ * wrongly: Mapbox puts "D Close, Lagos 10" at 6.4634, 3.4562 — 20km east of
+ * Festac — and "6th Avenue" at 6.4466, 3.5108, 26km away; Nominatim returns
+ * nothing at all. Taking either moves the pilot across Lagos and every distance
+ * in the app becomes garbage. A block of interpolation error is the good outcome.
  */
 
 export interface SeedArea {

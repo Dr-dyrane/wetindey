@@ -15,10 +15,18 @@ import {
   MapboxAdapter,
   ZERO_PADDING,
   type MapPadding,
-  type ScreenPoint
+  type RouteGeometry,
+  type RouteTint,
+  type ScreenPoint,
+  type UserPositionPrecision
 } from "@/integrations/maps/MapboxAdapter";
 import { DETENT_FRACTION, type Detent } from "./BottomSheet";
 import { useTheme } from "@/core/context/ThemeContext";
+import {
+  useLocationChrome,
+  useLocationStore,
+  type LocationProvenance
+} from "@/core/state/locationStore";
 import { MapLoading, MapFailed } from "./MapLoader";
 
 interface MapMarkerData {
@@ -50,7 +58,47 @@ interface MapboxCanvasProps {
    * derived value (`bottom` from the detent, `top` from MAP_TOP_CHROME).
    */
   padding?: Partial<MapPadding>;
+  /**
+   * The line connecting the user to whatever they are heading for, as ordered
+   * `[lng, lat]` pairs. `null`/omitted draws nothing.
+   *
+   * GEOMETRY, not a request. This component never asks anyone for a route and
+   * deliberately cannot: who computes it is the caller's business and is not
+   * knowable here. Anything that yields a GeoJSON LineString can be handed
+   * straight down, which is what keeps the source replaceable.
+   *
+   * Identity matters, as with `candidates` — memoise it, or every render
+   * re-applies the layer.
+   */
+  route?: RouteGeometry | null;
+  /**
+   * Which token colours the route. A colour selector, not a status: no route
+   * status model exists, and this is only the seam able to carry one later.
+   */
+  routeTint?: RouteTint;
 }
+
+/**
+ * Provenance → how honestly we can draw it.
+ *
+ * ONLY a device fix is a real fix; the store says so in as many words. An area
+ * centre is the middle of a neighbourhood, and the default is Festac because the
+ * pilot opens there — neither is a place anyone is standing, so neither may be
+ * drawn as a point.
+ *
+ * A Record and not `provenance === "device"`, and the difference is the whole
+ * safeguard: a new provenance added to the union cannot quietly fall through to
+ * the confident shape, because this stops compiling until its author says which
+ * claim it makes. This app has shipped that exact bug — a status dot whose
+ * condition was permanently false, so every state rendered "confirmed" — and the
+ * lesson taken was that honesty has to be structural, not remembered.
+ */
+const PRECISION_FOR: Record<LocationProvenance, UserPositionPrecision> = {
+  device: "point",
+  manual: "area",
+  simulated: "area",
+  default: "area"
+};
 
 /**
  * The map chrome — location pill and theme toggle — floats at
@@ -146,7 +194,16 @@ function whenMapboxReady(timeoutMs = 10_000): Promise<unknown | null> {
 }
 
 export const MapboxCanvas = forwardRef<MapCameraHandle, MapboxCanvasProps>(function MapboxCanvas(
-  { candidates, selectedPlaceId: _selectedPlaceId, onMarkerClick, center, detent = null, padding },
+  {
+    candidates,
+    selectedPlaceId: _selectedPlaceId,
+    onMarkerClick,
+    center,
+    detent = null,
+    padding,
+    route = null,
+    routeTint
+  },
   ref
 ) {
   const { theme } = useTheme();
@@ -274,6 +331,38 @@ export const MapboxCanvas = forwardRef<MapCameraHandle, MapboxCanvasProps>(funct
       });
     });
   }, [candidates, onMarkerClick, ready]);
+
+  /**
+   * Draw the user. Always — there is no state in which the map has nobody on it.
+   *
+   * From the STORE, never from the `center` prop, and that is not a detail:
+   * `center` is the CAMERA, and page.tsx flies it to whichever market you tap.
+   * Keyed on that, "you" would walk to the last stall you looked at. The camera
+   * follows the position; the position never follows the camera.
+   *
+   * Untouched by the marker effect above despite sitting right below it —
+   * clearMarkers() only owns the candidate pins. See setUserPosition.
+   */
+  const userPosition = useLocationStore((s) => s.position);
+  const { label: locationLabel } = useLocationChrome();
+  useEffect(() => {
+    const adapter = adapterRef.current;
+    if (!adapter) return;
+    const precision = PRECISION_FOR[userPosition.provenance];
+    adapter.setUserPosition({
+      lat: userPosition.lat,
+      lng: userPosition.lng,
+      precision,
+      // The shape says "precisely" or "roughly" to everyone who can see it.
+      // This says the same thing to everyone who cannot.
+      label: precision === "point" ? "You are here" : `Somewhere around ${locationLabel}`
+    });
+  }, [userPosition, locationLabel, ready]);
+
+  // The route is geometry the caller owns; this only hands it to the layer.
+  useEffect(() => {
+    adapterRef.current?.setRoute(route, routeTint ? { tint: routeTint } : undefined);
+  }, [route, routeTint, ready]);
 
   useImperativeHandle(
     ref,
