@@ -48,6 +48,39 @@ It does not mean your change is in scope. Scope comes from the ADRs
 
 ---
 
+## Working while the owner is away
+
+The owner is not always here to approve things, and work is expected to continue. That
+widens what you may do and **narrows what you may risk**. The asymmetry is the point: an
+unsupervised mistake is not caught for hours.
+
+**Do, without asking:**
+- Take an **unclaimed** lane. Claim it here first, in a commit, before the first edit.
+- Commit to `main` in path-scoped form — `git commit -F <file> -- <paths>`. **Never bare
+  `git add`/`git commit`**: it commits the shared index and will swallow another lane's
+  in-flight work. That has happened twice in this repo, in one hour, in both directions.
+- Delete code that is provably dead, and correct a document the code contradicts.
+
+**Do NOT, ever, unsupervised:**
+- **Push to a remote, deploy, or anything else that leaves this machine.** Local commits
+  are reversible; a deploy is not, and nobody is watching.
+- **Edit a file another lane owns**, even to fix something obviously broken. Write a
+  handoff instead. If you find a file mid-write — a syntax error that was not there a
+  minute ago — **wait, do not conclude**. It is someone typing, not a bug.
+- **Invent content only a human can supply.** Pidgin or Yorùbá copy, a trader's phone
+  number, a licence, a native-language string. This repo shipped "Not dey" — a foreigner's
+  guess at Pidgin — and it read worse to a Lagos shopper than plain English would.
+- **Buy a green check.** No knip ignores, no `continue-on-error`, no skipped assertion. A
+  check configured to pass is the lie this repo deletes code for.
+- **Report a green build as evidence.** There are zero tests. Drive the change in a browser
+  or say plainly that you did not.
+
+**When you finish, or when you are stuck:** update your row, write any handoff into the
+table above, and commit. **Leave the repo readable by someone who was not here.** That is
+the whole job when nobody is watching.
+
+---
+
 ## Hot files — exclusive claim required
 
 These are the contention points. They are large, everything touches them, and two sessions
@@ -173,6 +206,30 @@ this time it is the *domain* that is unwired, not a leaf file.
 the phase-1/trust lane. Claim before starting. The shape is in ADR-003: nullable
 `sources.user_id`, session-resolved source per writer, anonymous fallback preserved,
 `assessTrust` weighting a score that finally varies.
+
+---
+
+## Handoffs — put them HERE, not in a message
+
+**Cross-session messages need the owner present to approve them. This file does not.**
+When the owner is away, a handoff sent as a message is a handoff that does not happen. So:
+**write it here, commit it, and the next session finds it whether or not anyone was
+watching.** A handoff nobody can receive is not a handoff.
+
+Rules: name the lane it belongs to, state the evidence, and say what you already checked
+so the receiver does not redo it. **Delete a handoff when it is taken** — a stale handoff
+is the same lie as a stale claim. If you disagree with one, say so in place rather than
+silently ignoring it; the disagreement is the useful part.
+
+### Open handoffs
+
+| # | To | What | Evidence | Status |
+|---|---|---|---|---|
+| H1 | **auth→trust** (owns `actions.ts`) | **Wire `src/lib/validation.ts` — 29 unused exports, the biggest block of knip red left.** An entire validation module written and never wired: `parseSubmitObservation`, `parseVisitConfirmation`, `parsePlacesNear`, and 26 more. Same disease as every other orphan here, except **this one guards both public write paths**, so the orphan is a security gap rather than dead weight. The roadmap calls it "highest value per keystroke in the repo". | `npx knip` — `src/lib/validation.ts` is 29 exports + 2 types with zero callers. Roadmap Phase 1. | **Open.** Governance is not touching it; it lands in `actions.ts`. |
+| H2 | **owner** (needs a person, not an agent) | **Yorùbá needs a native speaker: 107 new strings + 54 re-checks.** It is withheld until then (`caef105`), so nothing is broken — but nothing improves either. The argument that settles it: `strings.ts`'s own annotation proposes "Ẹ̀tọ́" for settings, which reads as *right/entitlement* where *ètò* is arrangement. **If the note explaining why Yorùbá needs a native reviewer was itself written without one, the case is closed.** | `coverage()` measured: yoruba renders 58/165, clears 4 — "{km} km" and three map brand names. Not one Yorùbá sentence has been read by a Yorùbá speaker. | **Open.** No agent should substitute for this. |
+| H3 | **owner** | **Cold loads flash English for one frame.** `src/core/i18n/index.ts` pins hydration to `DEFAULT_LOCALE`. Invisible today because almost nothing translates; conspicuous the moment adoption lands. A cookie would fix it and would **contradict the deliberate reasoning already in that file** — which is why an agent should not just do it. | Read `index.ts`'s hydration block and the reasoning above it. | **Open.** Owner's call, not a lane's. |
+| H4 | **auth→trust** (owns `trust.ts`) | **`distinct_source_count` counts categories, and copy must never call them people again.** Corrected to "N different sources" — good. But once `sources.user_id` carries real rows the count **mixes** people and categories, so "3 sources" may be two humans and a vendor feed. Either count what it says, or say what it counts. | Measured: exceeds 1 in 319/474 offer groups. `seed.ts:254-256` seeds three category rows. ADR-003 records that identity does **not** close this. | **Open.** Flagged so ADR-003's wiring is not read as the fix. |
+| H5 | **whoever deletes `offerSignal`** (Phase 1) | **Three badge strings are a known duplicate.** `ItemDetailSheet.tsx`'s `offerSignal` hardcodes `E sure` / `Check am` / `E no dey`, duplicating `item.status_*` in the dictionary. It cannot read the dictionary: it is a plain function, not a hook, and `page.tsx` calls it from another lane. **If you change a word, change both** — or the disagreement that was just removed comes straight back. Phase 1 deletes the function; the labels go to the dictionary with it. | `ItemDetailSheet.tsx`, the comment above `offerSignal`. | **Open.** |
 
 ---
 
