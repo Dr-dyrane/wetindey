@@ -9,15 +9,11 @@ import {
   JsonLd,
   absoluteUrl,
   breadcrumbJsonLd,
+  itemPriceSummary,
   productJsonLd,
   seenLabel,
 } from "@/lib/seo";
-import {
-  getItemBySlug,
-  getItemOffers,
-  allItemSlugs,
-  type SeoItemOffer,
-} from "@/lib/seo-queries";
+import { getItemBySlug, getItemOffers, allItemSlugs } from "@/lib/seo-queries";
 
 /**
  * The item page is one half of the two indexable routes the sitemap has always
@@ -44,48 +40,6 @@ export async function generateStaticParams() {
   return (await allItemSlugs()).map((slug) => ({ slug }));
 }
 
-/**
- * The price range shown in the headline and the AggregateOffer, computed WITHIN
- * THE MODAL UNIT, never across units.
- *
- * This is `getPopularItems`' hard-won rule (actions.ts): min/max grouped by item
- * alone quoted "Palm Oil" at a 1L-bottle floor and a 25L-keg ceiling, which is
- * arithmetically fine and factually a lie. So the range is taken inside the one
- * unit the item is most sold in, and that unit is named beside the number.
- */
-function summarize(offers: SeoItemOffer[]) {
-  if (offers.length === 0) return null;
-
-  const byUnit = new Map<string, SeoItemOffer[]>();
-  for (const o of offers) {
-    const list = byUnit.get(o.unit);
-    if (list) list.push(o);
-    else byUnit.set(o.unit, [o]);
-  }
-
-  // Most offers wins; ties break on unit label so the choice is stable between
-  // builds, the same tiebreak `modal_unit` uses in actions.ts.
-  let unit = "";
-  let chosen: SeoItemOffer[] = [];
-  for (const [u, list] of byUnit) {
-    if (list.length > chosen.length || (list.length === chosen.length && u < unit)) {
-      unit = u;
-      chosen = list;
-    }
-  }
-
-  let minKobo = Infinity;
-  let maxKobo = -Infinity;
-  const places = new Set<string>();
-  for (const o of chosen) {
-    minKobo = Math.min(minKobo, o.priceMin);
-    maxKobo = Math.max(maxKobo, o.priceMax ?? o.priceMin);
-    places.add(o.placeId);
-  }
-
-  return { unit, minKobo, maxKobo, placeCount: places.size, offerCount: chosen.length };
-}
-
 export async function generateMetadata({
   params,
 }: {
@@ -95,7 +49,7 @@ export async function generateMetadata({
   const item = await loadItem(slug);
   if (!item) return {};
 
-  const summary = summarize(await loadOffers(item.id));
+  const summary = itemPriceSummary(await loadOffers(item.id));
   const title = `${item.name} price in Lagos`;
   const description = summary
     ? `${item.name} costs ${formatNaira(summary.minKobo)}${
@@ -126,7 +80,7 @@ export default async function ItemPage({ params }: { params: Promise<{ slug: str
   if (!item) notFound();
 
   const offers = await loadOffers(item.id);
-  const summary = summarize(offers);
+  const summary = itemPriceSummary(offers);
 
   return (
     <main className="mx-auto min-h-screen max-w-[720px] bg-background px-4 py-6 sm:px-6">

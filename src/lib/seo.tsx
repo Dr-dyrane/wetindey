@@ -196,3 +196,58 @@ const PLACE_TYPE_LABEL: Record<string, string> = {
 export function placeTypeLabel(placeType: string): string {
   return PLACE_TYPE_LABEL[placeType] ?? "Market";
 }
+
+export type ItemPriceSummary = {
+  unit: string;
+  minKobo: number;
+  maxKobo: number;
+  placeCount: number;
+  offerCount: number;
+};
+
+/**
+ * The headline price range for an item, taken WITHIN THE MODAL UNIT, never
+ * across units.
+ *
+ * This is `getPopularItems`' hard-won rule (actions.ts): min/max grouped by item
+ * alone quoted "Palm Oil" at a 1L-bottle floor and a 25L-keg ceiling, which is
+ * arithmetically fine and factually a lie. So the range is taken inside the one
+ * unit the item is most sold in, and that unit is named beside the number.
+ *
+ * Lives here, not in the item page, so the page body and the OG image render the
+ * SAME number from one implementation. Input is the minimal shape both have.
+ */
+export function itemPriceSummary(
+  offers: { unit: string; priceMin: number; priceMax: number | null; placeId: string }[],
+): ItemPriceSummary | null {
+  if (offers.length === 0) return null;
+
+  const byUnit = new Map<string, typeof offers>();
+  for (const o of offers) {
+    const list = byUnit.get(o.unit);
+    if (list) list.push(o);
+    else byUnit.set(o.unit, [o]);
+  }
+
+  // Most offers wins; ties break on unit label so the choice is stable, the same
+  // tiebreak `modal_unit` uses in actions.ts.
+  let unit = "";
+  let chosen: typeof offers = [];
+  for (const [u, list] of byUnit) {
+    if (list.length > chosen.length || (list.length === chosen.length && u < unit)) {
+      unit = u;
+      chosen = list;
+    }
+  }
+
+  let minKobo = Infinity;
+  let maxKobo = -Infinity;
+  const places = new Set<string>();
+  for (const o of chosen) {
+    minKobo = Math.min(minKobo, o.priceMin);
+    maxKobo = Math.max(maxKobo, o.priceMax ?? o.priceMin);
+    places.add(o.placeId);
+  }
+
+  return { unit, minKobo, maxKobo, placeCount: places.size, offerCount: chosen.length };
+}
