@@ -22,7 +22,7 @@ write path.
 
 | # | Finding | SC | Severity |
 |---|---|---|---|
-| P0-1 | `focus-visible:outline-none` deletes the focus ring from every `Button` | 2.4.7 | Fails AA |
+| P0-1 | ~~`focus-visible:outline-none` deletes the focus ring from every `Button`~~ | 2.4.7 | **Utility removed 2026-07-17 — but a Button still paints the UA's ring, not the token ring. See LANES H18.** |
 | P0-2 | `ModalSheet` steals focus on every parent re-render — price cannot be typed | 2.1.1, 2.4.3 | Fails A |
 | P0-3 | ~~`userScalable: false` blocks pinch-zoom~~ | 1.4.4 | **FIXED 2026-07-17** |
 | P0-4 | Map markers are unfocusable, unnamed `<div>`s | 2.1.1, 4.1.2 | Fails A |
