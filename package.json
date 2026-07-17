@@ -11,26 +11,26 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:seed": "tsx --env-file=.env.local src/db/seed.ts",
-    "audit:tokens": "node scripts/audit-tokens.mjs"
+    "audit:tokens": "node scripts/audit-tokens.mjs",
+    "typecheck": "tsc --noEmit",
+    "knip": "knip"
   },
   "dependencies": {
+    "@neondatabase/auth": "0.4.2-beta",
     "@vercel/analytics": "^2.0.1",
-    "@xstate/react": "^6.1.0",
     "clsx": "^2.1.1",
     "drizzle-orm": "^0.45.2",
-    "jotai": "^2.20.2",
     "lucide-react": "^0.468.0",
     "next": "^15.1.0",
     "pg": "^8.22.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "tailwind-merge": "^2.5.5",
-    "xstate": "^5.32.5",
     "zod": "^3.23.8",
-    "zustand": "^5.0.14",
-    "@neondatabase/auth": "0.4.2-beta"
+    "zustand": "^5.0.14"
   },
   "devDependencies": {
+    "@eslint/eslintrc": "^3.3.6",
     "@types/node": "^22.10.1",
     "@types/pg": "^8.20.0",
     "@types/react": "^19.0.1",
@@ -39,6 +39,7 @@
     "drizzle-kit": "^0.31.10",
     "eslint": "^9.16.0",
     "eslint-config-next": "^15.1.0",
+    "knip": "^6.27.0",
     "postcss": "^8.4.49",
     "prettier": "^3.4.2",
     "prettier-plugin-tailwindcss": "^0.6.9",

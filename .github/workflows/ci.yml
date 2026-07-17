@@ -1,0 +1,58 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# A second push to the same branch cancels the first; nothing here is worth
+# paying for twice.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: typecheck / tokens / knip
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      # `npm ci` over `npm install`: it installs exactly what the lockfile pins and
+      # fails if package.json and the lock have drifted, rather than silently fixing it.
+      - name: Install
+        run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      # ZERO borders, semantic tokens only. See scripts/audit-tokens.mjs.
+      - name: Audit tokens
+        run: npm run audit:tokens
+
+      # AGENTS.md §0: "If you write it, wire it to a live call site in the same change,
+      # or do not write it." This step is that rule, mechanised — it is the whole reason
+      # knip is here. It fails the build on unused files, exports, exported types, and
+      # unused/unlisted dependencies.
+      #
+      # THIS STEP IS RED AS OF THIS COMMIT, ON PURPOSE. It reports 79 unused exports and
+      # 21 unused exported types — chiefly src/lib/trust.ts (the orphan written to rescue
+      # the first orphan), src/lib/validation.ts and src/core/i18n/**. Those are true
+      # findings. They are not ignored, they are unowned: Phase 1 wires trust.ts to a live
+      # call site or deletes it, and this step goes green when that backlog hits zero.
+      #
+      # Two ways to "fix" this that are NOT fixes, both explicitly rejected:
+      #   1. Adding ignores to knip.jsonc to buy a green check. An ignore without a true
+      #      reason is how the next orphan hides.
+      #   2. Making this step advisory (continue-on-error) so the build passes while the
+      #      report is red. That is the same lie with extra steps: it cannot gate a merge,
+      #      and a deliberately-added unused export would sail straight through it.
+      # A knip that passes because it is configured to pass is worse than no knip at all.
+      # The check is red because the repo is dirty. Clean the repo.
+      - name: Knip (unused code)
+        run: npm run knip

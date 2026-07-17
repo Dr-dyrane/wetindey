@@ -1,0 +1,52 @@
+{
+  "$schema": "https://unpkg.com/knip@6/schema.json",
+
+  // WHY THIS FILE EXISTS
+  // AGENTS.md §0: "If you write it, wire it to a live call site in the same change, or
+  // do not write it." That rule has been in the briefs of the sessions that broke it.
+  // knip is the mechanised version, so no session can forget it. It is meant to be RED
+  // when the repo has dead code. Red is the check working.
+  //
+  // EVERY ignore BELOW CARRIES A REASON. An unexplained ignore is how the next orphan
+  // hides. If you cannot state why a thing is not dead, it is dead — delete it instead
+  // of listing it here. Adding an entry to make CI green is a lie; a knip that passes
+  // because it is configured to pass is worse than no knip at all.
+
+  // NO "entry" LIST FOR THE APP ITSELF, ON PURPOSE.
+  // knip's Next.js plugin auto-activates from the `next` dependency and resolves the App
+  // Router entry points for us: page/layout/route/manifest/robots/sitemap/error/
+  // global-error/opengraph-image, plus next.config.ts. knip also parses package.json
+  // scripts, which is what already covers `src/db/seed.ts` (db:seed) and
+  // `scripts/audit-tokens.mjs` (audit:tokens). Hand-listing those would mean a hand-list
+  // to keep in sync, and a stale entry pattern is exactly how a dead file keeps
+  // pretending to be alive. Let the plugin do it.
+
+  "entry": [
+    // Registered at runtime by URL string, never imported:
+    //   src/app/layout.tsx:127 -> navigator.serviceWorker.register('/sw.js')
+    // No import edge exists for knip to follow, so it must be told once. If that
+    // register() call ever goes away, this line becomes a lie — delete it and let knip
+    // report sw.js as the dead file it would then be.
+    "public/sw.js"
+  ],
+
+  "ignoreDependencies": [
+    // Consumed by `npm run lint` -> `next lint`, which spawns eslint as its own engine.
+    // knip resolves the `next` binary from that script but cannot see eslint underneath
+    // it, so it reads as unused. It is not.
+    "eslint",
+
+    // Consumed by eslint.config.mjs via FlatCompat:
+    //   compat.extends("next/core-web-vitals") and compat.extends("next/typescript")
+    // FlatCompat resolves those config names from plain strings at runtime, so there is
+    // no static import for knip to follow.
+    "eslint-config-next"
+  ]
+
+  // DELIBERATELY NOT IGNORED. knip currently reports 79 unused exports and 21 unused
+  // exported types, and exits 1. That is the correct state, not a defect to configure
+  // away — chiefly src/lib/trust.ts (the second-generation orphan, written to rescue the
+  // first), src/lib/validation.ts, and src/core/i18n/**. Each one is either wired to a
+  // live call site or deleted. Phase 1 owns trust.ts. Nothing here gets an ignore to buy
+  // a green check.
+}

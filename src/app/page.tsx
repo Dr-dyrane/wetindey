@@ -9,7 +9,6 @@ import React, {
   useCallback,
   useRef
 } from "react";
-import { useAtom } from "jotai";
 import { AlertTriangle, MapPin, Navigation, Sun, Moon, X, Plus } from "lucide-react";
 
 import { Button } from "@/design-system/components/Button";
@@ -22,7 +21,7 @@ import {
 } from "@/design-system/components/MapboxCanvas";
 import type { RouteGeometry } from "@/integrations/maps/MapboxAdapter";
 import { authClient } from "@/lib/auth-client";
-import { DETENT_FRACTION } from "@/design-system/components/BottomSheet";
+import { DETENT_FRACTION, type Detent } from "@/design-system/components/BottomSheet";
 import { AsyncList } from "@/design-system/components/AsyncList";
 import { NigeriaLogo } from "@/design-system/components/NigeriaLogo";
 import { ItemCard, PhotoCredits, type ItemCardData } from "@/design-system/components/ItemCard";
@@ -45,7 +44,6 @@ import { useGlobalStore } from "@/core/state/globalStore";
 import { useLocationChrome, useLocationHydration, useLocationStore } from "@/core/state/locationStore";
 import { useLocaleControl, useStrings } from "@/core/i18n";
 import { useEventCallback } from "@/lib/perf";
-import { sheetDetentAtom, activeMarkerIdAtom } from "@/core/state/uiAtoms";
 import {
   searchFoodItems,
   getPopularItems,
@@ -141,8 +139,9 @@ export default function HomePage() {
   useLocationHydration();
   const location = useLocationChrome();
 
-  // Jotai atomic state
-  const [activeDetent, setActiveDetent] = useAtom(sheetDetentAtom);
+  // Which detent the compact sheet rides at. Page-local: this component is the
+  // only writer, and it hands both halves to AdaptiveShell as props.
+  const [activeDetent, setActiveDetent] = useState<Detent>("medium");
   /**
    * WHICH PLACE'S DETAIL LEVEL IS PUSHED. Null = none. That is the whole
    * meaning, and writing it always costs both halves: it gates `detailPlace`,
@@ -150,15 +149,8 @@ export default function HomePage() {
    * for — `placeOffers` is read nowhere but inside `detailNode`. A flow that
    * wants no pushed level must therefore not write it at all; there is no
    * partial use.
-   *
-   * The atom is `activeMarkerIdAtom` at the source, a name from when this was
-   * also meant to mark the tapped pin. It never has: `MapboxCanvasProps`
-   * declares `selectedPlaceId`, and the component destructures it as
-   * `_selectedPlaceId` and reads it nowhere — pin appearance derives from
-   * `confidenceLevel` alone. Aliased rather than renamed because the atom's
-   * file is outside this change.
    */
-  const [detailPlaceId, setDetailPlaceId] = useAtom(activeMarkerIdAtom);
+  const [detailPlaceId, setDetailPlaceId] = useState<string | null>(null);
 
   // React transitions
   const [isPending, startTransition] = useTransition();
