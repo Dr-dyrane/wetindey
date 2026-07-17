@@ -30,7 +30,7 @@ write path.
 | P0-6 | ~~`status-confirmed-fg` is 3.55:1 on its own tint~~ | 1.4.3 | **FIXED 2026-07-17**, light AND dark. Retuned against the worse backing: light 4.59–5.43, dark 5.24–8.80. All 16 combinations pass. |
 | P0-7 | `text-onStatus` (white) is 2.22:1 on `status-confirmed` | 1.4.3 | Fails AA |
 | P0-8 | `page.tsx:840-843` puts the pure hue on a 10% tint — 2.03:1 | 1.4.3 | Fails AA |
-| P1-1 | Input/SearchField `focus:outline-none`; the replacement cue is 1.15:1 | 2.4.7, 1.4.11 | Fails AA |
+| P1-1 | ~~Input/SearchField `focus:outline-none`~~ | 2.4.7, 1.4.11 | **FIXED 2026-07-17.** Ring restored on both; the 1.15:1 fill lift stays as the second cue. `SearchField`'s ring had to move to the wrapper — `overflow-hidden` would have clipped it on the input. Code-verified; browser check owed (LANES H24). |
 | P1-2 | Two close buttons have no accessible name | 4.1.2 | Fails A |
 | P1-3 | `<html lang="en">` while rendering Yoruba and Pidgin | 3.1.1, 3.1.2 | Fails A/AA |
 | P1-4 | 14 controls under 44×44 | HIG | Apple guidance |
