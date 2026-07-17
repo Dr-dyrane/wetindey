@@ -116,17 +116,34 @@ export async function getPopularItems(input: {
    */
   const rows = await db.execute(sql`
     WITH nearby AS (
-      -- Every offer whose PLACE is within the radius. Everything below draws
-      -- only from here, so "near you" is established once and cannot be
-      -- forgotten by a later join.
+      /*
+       * Every offer whose PLACE is within the radius AND whose price anyone has
+       * actually seen recently. Everything below draws only from here, so both
+       * facts are established once and cannot be forgotten by a later join.
+       *
+       * expires_at > now() is the half that was missing, and it is the read-path
+       * twin of the band bug. Windowing submitObservation fixed what gets WRITTEN;
+       * priceMin is STORED, so a row whose evidence aged out kept its number and
+       * this query kept quoting it. Measured before the filter: 54 item variants
+       * could quote a floor from a price nobody had reported in over 72 hours,
+       * uncaveated, as "from ₦X" on a landing card. The number was real once. The
+       * card presents it as current.
+       *
+       * A recompute cannot fix this. It repairs rows that HAVE fresh evidence; a
+       * row with none keeps its last band by design — price_min is NOT NULL, so
+       * there is no "no band" to write, and the freshness badge is what makes that
+       * band honest at the point it is read. An aggregate has nowhere to put a
+       * badge, so an aggregate must not include it.
+       */
       SELECT o.*
       FROM ${offersCurrent} o
       JOIN ${places} pl ON pl.id = o.place_id
-      WHERE ST_DWithin(
-        pl.location,
-        ST_SetSRID(ST_MakePoint(${lng}, ${lat}), 4326)::geography,
-        ${radiusM}
-      )
+      WHERE o.expires_at > now()
+        AND ST_DWithin(
+          pl.location,
+          ST_SetSRID(ST_MakePoint(${lng}, ${lat}), 4326)::geography,
+          ${radiusM}
+        )
     ),
     offer_units AS (
       SELECT
