@@ -166,6 +166,7 @@ export interface SeedItem {
   slug: string;
   canonicalName: string;
   description: string;
+  category?: string;
   aliases: SeedAlias[];
   variants: SeedVariant[];
   /** Where this plausibly sells. A supermarket does not sell a basket of rodo. */
@@ -1175,6 +1176,205 @@ export const SEED_ITEMS: SeedItem[] = [
         unitCode: "1kg_measure",
         priceKobo: { min: naira(3_500), max: naira(5_200) },
         attributes: { species: "Horse mackerel" }
+      }
+    ]
+  },
+  // ═══ Home ═══
+  {
+    slug: "cement",
+    canonicalName: "Cement",
+    description: "50kg bag of cement (Dangote, BUA, Lafarge)",
+    category: "home",
+    channels: ALL_CHANNELS,
+    aliases: [
+      { alias: "simenti", locale: "yo", weight: 3 },
+      { alias: "simenti", locale: "ha", weight: 2 }
+    ],
+    variants: [
+      {
+        slug: "cement-dangote-50kg",
+        displayName: "Dangote Cement 3X 42.5R",
+        unitCode: "50kg_bag",
+        priceKobo: { min: naira(7_500), max: naira(8_500) }
+      },
+      {
+        slug: "cement-bua-50kg",
+        displayName: "BUA Cement 50kg",
+        unitCode: "50kg_bag",
+        priceKobo: { min: naira(7_200), max: naira(8_000) }
+      }
+    ]
+  },
+  {
+    slug: "charcoal",
+    canonicalName: "Charcoal",
+    description: "Local hardwood charcoal for cooking",
+    category: "home",
+    channels: MARKET_AND_KIOSK,
+    aliases: [
+      { alias: "edu", locale: "yo", weight: 3 },
+      { alias: "kara", locale: "ha", weight: 2 }
+    ],
+    variants: [
+      {
+        slug: "charcoal-bag",
+        displayName: "Large bag of Charcoal",
+        unitCode: "25kg_bag",
+        priceKobo: { min: naira(6_000), max: naira(7_500) }
+      }
+    ]
+  },
+  // ═══ Health ═══
+  {
+    slug: "paracetamol",
+    canonicalName: "Paracetamol",
+    description: "Standard pain relief tablets",
+    category: "health",
+    channels: ALL_CHANNELS,
+    aliases: [
+      { alias: "panadol", locale: "pcm", weight: 3 }
+    ],
+    variants: [
+      {
+        slug: "paracetamol-pack-12",
+        displayName: "Paracetamol (Pack of 12)",
+        unitCode: "each",
+        priceKobo: { min: naira(200), max: naira(400) }
+      }
+    ]
+  },
+  {
+    slug: "skincare-cream",
+    canonicalName: "Skincare Cream",
+    description: "Moisturising skincare creams",
+    category: "health",
+    channels: ALL_CHANNELS,
+    aliases: [
+      { alias: "body cream", locale: "pcm", weight: 3 }
+    ],
+    variants: [
+      {
+        slug: "skincare-cream-500ml",
+        displayName: "Body Lotion 500ml",
+        unitCode: "each",
+        priceKobo: { min: naira(2_500), max: naira(6_000) }
+      }
+    ]
+  },
+  // ═══ Money ═══
+  {
+    slug: "usd-exchange",
+    canonicalName: "USD Exchange Rate",
+    description: "Parallel (Black) market exchange rate for $1 USD",
+    category: "money",
+    channels: ALL_CHANNELS,
+    aliases: [
+      { alias: "dollar", locale: "pcm", weight: 3 },
+      { alias: "dollar rate", locale: "pcm", weight: 3 }
+    ],
+    variants: [
+      {
+        slug: "usd-cash-buy",
+        displayName: "Aboki Buy Rate (US Dollar)",
+        unitCode: "each",
+        priceKobo: { min: naira(1_500), max: naira(1_600) }
+      }
+    ]
+  },
+  {
+    slug: "gbp-exchange",
+    canonicalName: "GBP Exchange Rate",
+    description: "Parallel (Black) market exchange rate for £1 GBP",
+    category: "money",
+    channels: ALL_CHANNELS,
+    aliases: [
+      { alias: "pounds", locale: "pcm", weight: 3 },
+      { alias: "pounds rate", locale: "pcm", weight: 3 }
+    ],
+    variants: [
+      {
+        slug: "gbp-cash-buy",
+        displayName: "Aboki Buy Rate (Great British Pound)",
+        unitCode: "each",
+        priceKobo: { min: naira(1_900), max: naira(2_100) }
+      }
+    ]
+  },
+  // ═══ Transport ═══
+  {
+    slug: "danfo-bus-fare",
+    canonicalName: "Danfo Bus Fare",
+    description: "Local yellow bus transit fare",
+    category: "transport",
+    channels: MARKET_AND_KIOSK,
+    aliases: [
+      { alias: "danfo", locale: "pcm", weight: 3 },
+      { alias: "bus", locale: "pcm", weight: 2 }
+    ],
+    variants: [
+      {
+        slug: "danfo-short-trip",
+        displayName: "Short Danfo Route Fare",
+        unitCode: "each",
+        priceKobo: { min: naira(300), max: naira(600) }
+      }
+    ]
+  },
+  {
+    slug: "uber-bolt-ride",
+    canonicalName: "Ride Price",
+    description: "App-based private ride prices",
+    category: "transport",
+    channels: ALL_CHANNELS,
+    aliases: [
+      { alias: "taxi", locale: "pcm", weight: 3 },
+      { alias: "ride", locale: "pcm", weight: 2 }
+    ],
+    variants: [
+      {
+        slug: "ride-standard-trip",
+        displayName: "Standard 10km Ride Price",
+        unitCode: "each",
+        priceKobo: { min: naira(3_500), max: naira(6_000) }
+      }
+    ]
+  },
+  // ═══ Community ═══
+  {
+    slug: "electrician-service",
+    canonicalName: "Electrician",
+    description: "Local electrician service visit rate",
+    category: "community",
+    channels: ALL_CHANNELS,
+    aliases: [
+      { alias: "electrician", locale: "pcm", weight: 3 },
+      { alias: "rewire", locale: "pcm", weight: 2 }
+    ],
+    variants: [
+      {
+        slug: "electrician-base-callout",
+        displayName: "Base Callout Fee",
+        unitCode: "each",
+        priceKobo: { min: naira(2_000), max: naira(4_000) }
+      }
+    ]
+  },
+  {
+    slug: "power-grid-status",
+    canonicalName: "NEPA Power Status",
+    description: "Local grid electricity availability status",
+    category: "community",
+    channels: ALL_CHANNELS,
+    aliases: [
+      { alias: "nepa", locale: "pcm", weight: 3 },
+      { alias: "light", locale: "pcm", weight: 3 }
+    ],
+    variants: [
+      {
+        slug: "power-daily-hours",
+        displayName: "Average Daily Grid Power Hours",
+        unitCode: "each",
+        priceKobo: { min: naira(4), max: naira(18) }
       }
     ]
   }

@@ -111,6 +111,7 @@ const run = async () => {
       slug: i.slug,
       canonicalName: i.canonicalName,
       description: i.description,
+      category: i.category ?? "food",
       ...withImage(i.slug)
     }))
   ).returning();

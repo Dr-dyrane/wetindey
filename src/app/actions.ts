@@ -20,6 +20,7 @@ import {
   parseUpdateMyProfile,
 } from "@/lib/validation";
 import { auth } from "@/lib/auth";
+import { put, del } from "@vercel/blob";
 import {
   assessTrust,
   legacyFreshnessState,
@@ -40,8 +41,12 @@ const itemCard = {
   imageSourceUrl: items.imageSourceUrl,
 };
 
-// 1. Search food items in the database
+// 1. Search food items in the database (deprecated - use searchItems)
 export async function searchFoodItems(query: string) {
+  return searchItems(query, "food");
+}
+
+export async function searchItems(query: string, category: string = "food") {
   // Before the empty check, not after: a non-string caller reaches `.trim()`
   // first and dies on "trim is not a function", a 500 for what is really a
   // rejected input. Empty stays legal; the search box clears on every keystroke.
@@ -61,6 +66,7 @@ export async function searchFoodItems(query: string) {
     .where(
       and(
         eq(items.active, true),
+        eq(items.category, category),
         or(
           ilike(items.canonicalName, q),
           ilike(items.slug, q),
@@ -96,9 +102,10 @@ export async function getPopularItems(input: {
   lat: number;
   lng: number;
   radiusKm: number;
+  category?: string;
   limit?: number;
 }) {
-  const { lat, lng, radiusKm } = input;
+  const { lat, lng, radiusKm, category = "food" } = input;
   // Only the limit is gated here. There is no `popularItemsInput` schema, the
   // validators were written when this action took a bare limit, and it grew a
   // coordinate since. lat/lng/radiusKm are checked below by searchOrigin and
@@ -171,7 +178,7 @@ export async function getPopularItems(input: {
       FROM ${items}
       JOIN ${itemVariants} ON ${itemVariants.itemId} = ${items.id}
       JOIN nearby n        ON n.item_variant_id = ${itemVariants.id}
-      WHERE ${items.active} = true
+      WHERE ${items.active} = true AND ${items.category} = ${category}
       GROUP BY ${items.id}, n.unit_id
     ),
     modal_unit AS (
@@ -199,7 +206,7 @@ export async function getPopularItems(input: {
     JOIN ${itemVariants}  v ON v.item_id = i.id
     JOIN nearby           o ON o.item_variant_id = v.id AND o.unit_id = mu.unit_id
     JOIN ${units}         u ON u.id = mu.unit_id
-    WHERE i.active = true
+    WHERE i.active = true AND i.category = ${category}
     GROUP BY i.id, u.display_name
     ORDER BY COUNT(o.id) DESC, i.canonical_name ASC
     LIMIT ${limit}
@@ -1854,6 +1861,14 @@ export interface MyProfile {
   /** From `user_profiles`, or null when they have stored no contact channel. */
   contactChannelKind: string | null;
   contactChannelValue: string | null;
+  /**
+   * From `user_profiles`. Whether this user shows their location on the public
+   * map. Defaults to false, including for a session that has no row yet, so the
+   * map lane reads a definite "not sharing" rather than an absence.
+   */
+  locationSharing: boolean;
+  /** From `user_profiles`, or null when they have uploaded no avatar. A Vercel Blob URL. */
+  avatarUrl: string | null;
 }
 
 /**
@@ -1884,6 +1899,8 @@ export async function getMyProfile(): Promise<MyProfile | null> {
     .select({
       contactChannelKind: userProfiles.contactChannelKind,
       contactChannelValue: userProfiles.contactChannelValue,
+      locationSharing: userProfiles.locationSharing,
+      avatarUrl: userProfiles.avatarUrl,
     })
     .from(userProfiles)
     .where(eq(userProfiles.userId, user.id))
@@ -1894,6 +1911,10 @@ export async function getMyProfile(): Promise<MyProfile | null> {
     email: user.email,
     contactChannelKind: row?.contactChannelKind ?? null,
     contactChannelValue: row?.contactChannelValue ?? null,
+    // No row means the user has never saved a profile, which is "not sharing" and
+    // "no avatar", the same answer a row carrying the column defaults would give.
+    locationSharing: row?.locationSharing ?? false,
+    avatarUrl: row?.avatarUrl ?? null,
   };
 }
 
@@ -1921,10 +1942,18 @@ export async function getMyProfile(): Promise<MyProfile | null> {
  * The upsert conflict target is `user_profiles.user_id`, which is UNIQUE for
  * exactly this purpose (schema/index.ts). Sending null for both fields clears the
  * channel.
+ *
+ * `locationSharing` is the map's public-location opt-in and is INDEPENDENT of the
+ * contact pair. It is optional, and absence is deliberately NOT the same as false:
+ * an absent flag leaves the stored value alone, so a contact-only save can never
+ * silently un-share a user, and a flag-only save can be added later without a
+ * both-or-neither rule. It is folded into the write only when it was sent; a brand
+ * new row falls back to the column default of false.
  */
 export async function updateMyProfile(data: {
   contactChannelKind?: "phone" | "whatsapp" | "sms" | null;
   contactChannelValue?: string | null;
+  locationSharing?: boolean;
 }): Promise<void> {
   const input = parseUpdateMyProfile(data);
 
@@ -1936,12 +1965,149 @@ export async function updateMyProfile(data: {
 
   const contactChannelKind = input.contactChannelKind ?? null;
   const contactChannelValue = input.contactChannelValue ?? null;
+  // Only touch the flag when the caller actually sent one. Omitted means "leave
+  // it as it is" on an existing row, and the column default (false) on a new one.
+  const sharing: { locationSharing?: boolean } =
+    input.locationSharing === undefined ? {} : { locationSharing: input.locationSharing };
 
   await db
     .insert(userProfiles)
-    .values({ userId, contactChannelKind, contactChannelValue })
+    .values({ userId, contactChannelKind, contactChannelValue, ...sharing })
     .onConflictDoUpdate({
       target: userProfiles.userId,
-      set: { contactChannelKind, contactChannelValue, updatedAt: new Date() },
+      set: { contactChannelKind, contactChannelValue, ...sharing, updatedAt: new Date() },
     });
+}
+
+/**
+ * What the avatar upload accepts, mime and size validated on the File itself.
+ *
+ * The check lives in the action rather than in `src/lib/validation.ts` because a
+ * multipart upload does not arrive as the serialisable JSON those zod parsers
+ * gate, it arrives as a `File`. The set is narrow on purpose: three raster
+ * formats next/image can optimise, nothing that executes in a browser (no SVG),
+ * and a 2 MB ceiling. This mime-and-size pair is the ONLY guard between a public
+ * server action and blob storage, the same "the cap is the whole defence"
+ * reasoning the problem-report body length follows, so it is not optional and it
+ * is not cosmetic. The value maps mime to the file extension used in the blob key.
+ */
+const AVATAR_MIME_EXT: Record<string, string> = {
+  "image/png": "png",
+  "image/jpeg": "jpg",
+  "image/webp": "webp",
+};
+const AVATAR_MAX_BYTES = 2 * 1024 * 1024;
+
+/**
+ * Store the current user's avatar: read the File from multipart form data,
+ * validate it, put() it to Vercel Blob under a user-scoped key, and record the
+ * returned URL on the single `user_profiles` row for that user.
+ *
+ * OWNER-SCOPED AND THROWS SIGNED OUT, exactly like `updateMyProfile`: an avatar
+ * belongs to one account, the session is the identity (never the payload), and
+ * there is no anonymous row for it to degrade to. The File is validated here, not
+ * in validation.ts, because it is a File and not JSON: mime must be PNG, JPEG or
+ * WebP and size at most 2 MB (see AVATAR_MIME_EXT above).
+ *
+ * A FRESH RANDOM-SUFFIXED URL PER UPLOAD, plus a best-effort del() of the previous
+ * blob, is deliberate over overwriting a fixed key. Blob is CDN-cached by URL, so
+ * reusing one key would keep serving the old image after a change. The old blob is
+ * deleted only AFTER the new URL is committed, so a failed cleanup orphans a blob
+ * (invisible, harmless) rather than dropping the avatar that is now live.
+ */
+export async function uploadMyAvatar(formData: FormData): Promise<{ avatarUrl: string }> {
+  const { data: session } = await auth.getSession();
+  const userId = session?.user?.id;
+  if (!userId) {
+    throw new Error("uploadMyAvatar: no session, an avatar write is owner-scoped");
+  }
+
+  const file = formData.get("avatar");
+  if (!(file instanceof File) || file.size === 0) {
+    throw new Error("uploadMyAvatar: no avatar file was provided");
+  }
+
+  const ext = AVATAR_MIME_EXT[file.type];
+  if (!ext) {
+    throw new Error("uploadMyAvatar: avatar must be a PNG, JPEG, or WebP image");
+  }
+  if (file.size > AVATAR_MAX_BYTES) {
+    throw new Error("uploadMyAvatar: avatar must be at most 2MB");
+  }
+
+  // The previous blob to clean up once the new one lands, if there is one.
+  const [existing] = await db
+    .select({ avatarUrl: userProfiles.avatarUrl })
+    .from(userProfiles)
+    .where(eq(userProfiles.userId, userId))
+    .limit(1);
+
+  // Token is read from BLOB_READ_WRITE_TOKEN in the environment by the SDK. Only
+  // public access is supported by Blob; the random suffix keeps the URL from being
+  // guessable and sidesteps CDN caching of a reused key.
+  const blob = await put(`avatars/${userId}.${ext}`, file, {
+    access: "public",
+    addRandomSuffix: true,
+    contentType: file.type,
+  });
+
+  await db
+    .insert(userProfiles)
+    .values({ userId, avatarUrl: blob.url })
+    .onConflictDoUpdate({
+      target: userProfiles.userId,
+      set: { avatarUrl: blob.url, updatedAt: new Date() },
+    });
+
+  // Best effort: the new avatar is already committed above, so a failed delete
+  // leaves an orphaned blob, never a broken profile. It must not throw.
+  if (existing?.avatarUrl && existing.avatarUrl !== blob.url) {
+    try {
+      await del(existing.avatarUrl);
+    } catch {
+      // Stale blob left behind; not worth failing a successful upload over.
+    }
+  }
+
+  return { avatarUrl: blob.url };
+}
+
+/**
+ * Clear the current user's avatar: null the column, then del() the blob.
+ *
+ * OWNER-SCOPED, and it nulls the DB BEFORE deleting the blob on purpose. Reverse
+ * the order and a failed DB write would leave `avatar_url` pointing at a blob that
+ * no longer exists, a broken image on every surface that renders it. Nulling first
+ * makes the worst case an orphaned blob (invisible) rather than a dangling URL
+ * (not). The del() is best-effort for the same reason.
+ *
+ * No row, or a row with no avatar, is a no-op rather than an error: there is
+ * nothing to remove, and ADR-003 keeps recognition from becoming a gate.
+ */
+export async function removeMyAvatar(): Promise<void> {
+  const { data: session } = await auth.getSession();
+  const userId = session?.user?.id;
+  if (!userId) {
+    throw new Error("removeMyAvatar: no session, an avatar write is owner-scoped");
+  }
+
+  const [existing] = await db
+    .select({ avatarUrl: userProfiles.avatarUrl })
+    .from(userProfiles)
+    .where(eq(userProfiles.userId, userId))
+    .limit(1);
+
+  if (!existing?.avatarUrl) return;
+
+  await db
+    .update(userProfiles)
+    .set({ avatarUrl: null, updatedAt: new Date() })
+    .where(eq(userProfiles.userId, userId));
+
+  try {
+    await del(existing.avatarUrl);
+  } catch {
+    // The blob is already gone or unreachable; the profile is what matters and it
+    // is already cleared.
+  }
 }

@@ -163,10 +163,13 @@ export const items = pgTable("items", {
   imageAttribution: text("image_attribution"),
   imageLicense: varchar("image_license", { length: 64 }),
   imageSourceUrl: text("image_source_url"),
+  category: varchar("category", { length: 100 }).default("food").notNull(),
   active: boolean("active").default(true).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull()
-});
+}, (t) => [
+  index("items_category_idx").on(t.category)
+]);
 
 // 4. Item Aliases (Local variations or synonyms e.g., 'Ewa', 'Shinkafa')
 export const itemAliases = pgTable("item_aliases", {

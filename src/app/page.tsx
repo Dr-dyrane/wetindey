@@ -9,7 +9,7 @@ import React, {
   useCallback,
   useRef
 } from "react";
-import { AlertTriangle, MapPin, Navigation, Sun, Moon, X, Plus } from "lucide-react";
+import { AlertTriangle, MapPin, Navigation, Sun, Moon, X, Plus, ChevronDown } from "lucide-react";
 
 import { Button } from "@/design-system/components/Button";
 import { SearchField } from "@/design-system/components/SearchField";
@@ -29,6 +29,7 @@ import { ItemCard, PhotoCredits, type ItemCardData } from "@/design-system/compo
 import { SettingsSheet } from "@/app/_components/SettingsSheet";
 import { ReportPriceSheet } from "@/app/_components/ReportPriceSheet";
 import { ProfileSheet, Avatar } from "@/app/_components/ProfileSheet";
+import { CategorySelectorSheet, type CategoryPillar } from "@/app/_components/CategorySelectorSheet";
 import { ItemDetailSheet, offerSignal } from "@/app/_components/ItemDetailSheet";
 import { PresentationHost } from "@/app/_components/PresentationHost";
 import { formatNaira } from "@/lib/money";
@@ -48,7 +49,7 @@ import { useLocationChrome, useLocationHydration, useLocationStore } from "@/cor
 import { useLocaleControl, useStrings } from "@/core/i18n";
 import { useEventCallback } from "@/lib/perf";
 import {
-  searchFoodItems,
+  searchItems,
   getPopularItems,
   getPlaces,
   getPlaceOffers,
@@ -282,6 +283,8 @@ export default function HomePage() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isReportOpen, setIsReportOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [activeCategory, setActiveCategory] = useState<CategoryPillar>("food");
+  const [isCategoryOpen, setIsCategoryOpen] = useState(false);
   /** The item ItemDetailSheet is resolving down to a unit. Non-null = presented. */
   const [detailItem, setDetailItem] = useState<ItemCardData | null>(null);
   /** The place GetItSheet is about to hand off to. Non-null = presented. */
@@ -447,6 +450,7 @@ export default function HomePage() {
           lat: locPosition.lat,
           lng: locPosition.lng,
           radiusKm: activeRadiusKm,
+          category: activeCategory,
           limit: 8
         });
         setPopularItems(items);
@@ -458,7 +462,7 @@ export default function HomePage() {
         setPopularError("We no fit reach the price data right now.");
       }
     });
-  }, [locPosition.lat, locPosition.lng, activeRadiusKm]);
+  }, [locPosition.lat, locPosition.lng, activeRadiusKm, activeCategory]);
 
   useEffect(() => {
     loadBaseline();
@@ -467,6 +471,67 @@ export default function HomePage() {
   useEffect(() => {
     loadPopular();
   }, [loadPopular]);
+
+  useEffect(() => {
+    if (searchQuery.trim() !== "") {
+      setIsSearching(true);
+      setSearchError(null);
+      startTransition(async () => {
+        try {
+          const matched = await searchItems(searchQuery, activeCategory);
+          setSearchResults(matched);
+        } catch (err) {
+          console.error("Search failed:", err);
+          setSearchResults([]);
+          setSearchError("Couldn't search. Check your connection.");
+        } finally {
+          setIsSearching(false);
+        }
+      });
+    }
+  }, [activeCategory, searchQuery]);
+
+  useEffect(() => {
+    const categoryInfo: Record<CategoryPillar, { title: string; desc: string }> = {
+      food: {
+        title: "WetinDey — Food Prices & Availability in Lagos",
+        desc: "Find where specific food items are available nearby and compare current market prices in Lagos in real time."
+      },
+      home: {
+        title: "WetinDey — Home & Building Materials in Lagos",
+        desc: "Check prices and local stock of cement, paint, tiles, and household cooking fuels around you."
+      },
+      health: {
+        title: "WetinDey — Medicine & Skincare Availability",
+        desc: "Search nearby pharmacy prices, drug stock levels, and personal care/cosmetics in your neighborhood."
+      },
+      money: {
+        title: "WetinDey — Parallel Market FX & USD Rates",
+        desc: "Compare current black market and parallel exchange rates for USD, GBP, and EUR in Lagos."
+      },
+      transport: {
+        title: "WetinDey — Local Transport Fares & Ride Prices",
+        desc: "Check Danfo bus routes, ferry options, and standard private ride-hailing fares in Lagos."
+      },
+      community: {
+        title: "WetinDey — Local Services & NEPA Power Status",
+        desc: "See real-time NEPA power outage reports and find local service providers (mechanics, tailors)."
+      }
+    };
+
+    const info = categoryInfo[activeCategory] || categoryInfo.food;
+    document.title = info.title;
+
+    const metaDesc = document.querySelector('meta[name="description"]');
+    if (metaDesc) {
+      metaDesc.setAttribute("content", info.desc);
+    } else {
+      const newMeta = document.createElement("meta");
+      newMeta.name = "description";
+      newMeta.content = info.desc;
+      document.head.appendChild(newMeta);
+    }
+  }, [activeCategory]);
 
   /**
    * Retry only what actually broke.
@@ -709,7 +774,7 @@ export default function HomePage() {
     setSearchError(null);
     startTransition(async () => {
       try {
-        const matched = await searchFoodItems(val);
+        const matched = await searchItems(val, activeCategory);
         setSearchResults(matched);
       } catch (err) {
         // The third async transition in this file, and until now the only one
@@ -1076,9 +1141,28 @@ export default function HomePage() {
       {/* Brand & search header */}
       <div className="px-4 pt-3 pb-2.5 flex flex-col gap-2.5">
         <div className="flex items-center justify-between w-full">
-          <div className="flex items-center space-x-2.5">
+          <div className="flex items-center space-x-2">
             <NigeriaLogo className="h-7 w-7" />
-            <span className="text-headline tracking-tight">{t.wetin_dey}</span>
+            <button
+              onClick={() => setIsCategoryOpen(true)}
+              className="flex items-center gap-1 px-2.5 py-1 rounded-[14px] bg-fillSecondary text-text-primary active:scale-98 transition-all duration-instant text-[14px] font-medium"
+            >
+              <span>
+                {activeCategory === "food" && "🛒"}
+                {activeCategory === "home" && "🏠"}
+                {activeCategory === "health" && "💊"}
+                {activeCategory === "money" && "💱"}
+                {activeCategory === "transport" && "🚗"}
+                {activeCategory === "community" && "📍"}{" "}
+                {activeCategory === "food" && ((t as Record<string, string>).category_food || "Food")}
+                {activeCategory === "home" && ((t as Record<string, string>).category_home || "Home")}
+                {activeCategory === "health" && ((t as Record<string, string>).category_health || "Health")}
+                {activeCategory === "money" && ((t as Record<string, string>).category_money || "Money")}
+                {activeCategory === "transport" && ((t as Record<string, string>).category_transport || "Transport")}
+                {activeCategory === "community" && ((t as Record<string, string>).category_community || "Community")}
+              </span>
+              <ChevronDown className="h-3 w-3 text-text-secondary" />
+            </button>
           </div>
 
           {/* Both actions present a sheet over this one rather than replacing
@@ -1458,6 +1542,14 @@ export default function HomePage() {
         error={submitError}
         success={submitSuccess}
         offlineSaved={isOfflineSaved}
+      />
+
+      <CategorySelectorSheet
+        open={isCategoryOpen}
+        onClose={() => setIsCategoryOpen(false)}
+        activeCategory={activeCategory}
+        onCategoryChange={setActiveCategory}
+        t={t}
       />
     </div>
   );
