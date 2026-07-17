@@ -197,8 +197,8 @@ in either one will conflict. **Never edit these without holding the lane that ow
 
 | File | Lines | Currently owned by |
 |---|---:|---|
-| `src/app/actions.ts` | ~1358 | **auth→trust** — claimed 2026-07-16 for the ADR-003 wiring. Contested: phase-1/trust and phase-3/field-data both need it. Coordinate before taking it. |
-| `src/app/page.tsx` | ~1300 | **auth** |
+| `src/app/actions.ts` | ~1358 | **Phase 1 validated-input boundary** — controller / Sol; exact active claim below. |
+| `src/app/page.tsx` | ~1300 | **unclaimed** — the former auth claim is retired; claim narrowly before editing. |
 | `package.json` / `package-lock.json` | — | **auth** |
 | `AGENTS.md`, `DECISIONS.md`, `WETINDEY_BIBLE.md`, `docs/adr/**`, `docs/architecture/**`, `LANES.md` | — | **governance** |
 
@@ -211,6 +211,7 @@ in either one will conflict. **Never edit these without holding the lane that ow
 | **auth/UI (former Claude session)** | controller custody; implementation unassigned | ⚪ **orphaned claim retired — paths released** | — | [ADR-003](docs/adr/003-identity-for-contribution-trust.md) | 2026-07-16 | Human owner confirmed the former session no longer owns these paths. The narrow category-emoji handoff to Iconography completed in `1aec02c`; every other former auth/UI path is released and must be claimed narrowly before a future edit. This retirement does not declare ADR-003 complete. |
 | **D2 provenance boundary** | controller / Sol, Terra implementation, Sol refutation | ✅ implementation complete — paths released; migration unapplied | — | D2 / DATA-01 | 2026-07-17 | Enforced observation provenance and generated `0009`; static refutation passed after governance corrections. No migration or seed ran against any database. Deployment remains a separate authorization. |
 | **Phase 0 stale scaffolding comments** | session *iconography* with independent refuter | ✅ done — paths released | — | ADR-002 Phase 0 | 2026-07-17 | Completed in `f6ee7fa`. Comment-only cleanup removed stale module-scaffolding references while preserving the 24h/72h policy, decay-floor rationale, newest-observation rule, and confidence ordering. Forbidden-token search is empty; independent refutation passed. |
+| **Phase 1 validated-input boundary** | controller / Sol with independent read-only refuter | 🟢 active | `src/app/actions.ts` | ADR-002 Phase 1 | 2026-07-17 | After `parseSubmitObservation`, use the parsed/normalised input exclusively. No trust, query, schema, provenance, moderation, return-shape, or other-action changes. |
 | **iconography containment** | session *iconography* | ✅ done — paths released | — | Phase 1 containment | 2026-07-17 | `1aec02c` removes the six header/category emoji and raw selector check while preserving text-first context and selected-state semantics. Its independent refuter passed the component scope; runtime confirmation remains with Interaction Validation. |
 | **interaction validation** | session *motion and interaction* plus read-only refuter | ✅ done — no paths | — | Q1 UI evidence | 2026-07-17 | Runtime passed emoji removal and the Get-it surface. It refuted category coherence and popular/detail count coherence. Route line, fit, invalid-route fallback, and external maps handoff remain unverified. |
 | **category capability containment** | session *iconography* with read-only refuter | ✅ done — paths released | — | V1 containment | 2026-07-17 | `b0292bd` keeps Food as the only selectable live capability. Fuel, Home, Health, Money, Transport, and Community remain visible only as disabled future context and cannot change header, results, search, or contribution state. Independent refutation passed. |
