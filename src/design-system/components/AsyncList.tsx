@@ -121,17 +121,74 @@ export function AsyncList<T>({
    */
   const [lastSubject, setLastSubject] = useState(subject);
   const [supersededItems, setSupersededItems] = useState<T[] | undefined>(undefined);
+  /** Has the valve below already spent its one pass? See it for why. */
+  const [armed, setArmed] = useState(false);
 
   if (subject !== lastSubject) {
     setLastSubject(subject);
     setSupersededItems(items);
+    // Every new subject waits its own pass. Without this reset, a subject that
+    // changed again while the valve below was already armed would release on the
+    // spot and show the outgoing rows, which is the whole bug this prevents.
+    setArmed(false);
   }
 
-  // If no load ever materialises for the new subject, stop withholding the rows
-  // we have rather than showing skeletons forever.
+  /**
+   * The safety valve: if no load ever materialises for the new subject, stop
+   * withholding the rows we have rather than showing skeletons forever.
+   *
+   * IT WAITS ONE EFFECT PASS, AND THE WAIT IS THE WHOLE CORRECTNESS OF IT.
+   *
+   * This used to clear the moment `!isLoading`, with no delay, and that defeated
+   * the mechanism above for any caller that starts its load in an effect.
+   * **React runs child effects before parent effects.** On the commit where the
+   * subject changes, the parent has not run its effect yet, so `isLoading` is
+   * still false and this fired instantly: it withdrew the guard before the load
+   * it was waiting for could possibly have started, and the outgoing rows came
+   * straight back. Measured, with a probe modelling `page.tsx`'s exact shape:
+   * subject B on screen, `isPending` true, rendering subject A's rows.
+   *
+   * It only ever worked for callers that set loading in the SAME commit as the
+   * subject. The search list does that and was always fine; the main "Popular
+   * items around X" list drives `loadPopular` from a `useEffect` and takes its
+   * `isLoading` from `useTransition`, so its flag flips a full effect pass late.
+   * That is the list this bug was visible in: change your area or your radius
+   * and you read the previous area's prices while the new ones load.
+   *
+   * "No load is coming" and "the load has not started yet" are indistinguishable
+   * in the commit where the subject changes, and distinguishable in the very
+   * next one. So this waits exactly ONE effect pass before giving up, which is
+   * all it takes: React flushes child effects and then parent effects in the
+   * same pass, so by the time `armed` brings us back here, the parent has
+   * already started its load if it was ever going to, and `isLoading` says so.
+   *
+   * ONE PASS, NOT ONE FRAME, and that is a correctness difference rather than a
+   * style one. The first version of this fix used `requestAnimationFrame`, and a
+   * probe caught it: rAF does not run in a hidden tab, so the release never
+   * fired and the list hung on a skeleton forever. It traded a wrong list for a
+   * dead one. A React state pass has no such dependency: it is scheduled by
+   * React, not by the compositor, and it runs whether or not anyone is looking.
+   * `setTimeout` would also fire, but it invents a duration this does not need.
+   *
+   * The identity check above still does the ordinary work: the instant a new
+   * array arrives it fails on its own and the rows render, no pass involved.
+   * This exists only for the two dead ends, a load that never starts and a load
+   * that returns the very same array reference.
+   */
   useEffect(() => {
-    if (!isLoading && supersededItems !== undefined) setSupersededItems(undefined);
-  }, [isLoading, supersededItems]);
+    if (supersededItems === undefined) return;
+    if (isLoading) {
+      // A load owns the outcome now; the identity check will release us.
+      if (armed) setArmed(false);
+      return;
+    }
+    if (!armed) {
+      setArmed(true); // Come back once more, after the parent has had its pass.
+      return;
+    }
+    setSupersededItems(undefined);
+    setArmed(false);
+  }, [isLoading, supersededItems, armed]);
 
   const isSuperseded = supersededItems !== undefined && supersededItems === items;
   const data = isSuperseded ? undefined : items;
