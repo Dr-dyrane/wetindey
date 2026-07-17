@@ -43,6 +43,27 @@
       "when": 1784312030209,
       "tag": "0005_handy_brood",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1784316697473,
+      "tag": "0006_ordinary_meltdown",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1784317329757,
+      "tag": "0007_gray_king_cobra",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1784317496453,
+      "tag": "0008_sturdy_lockjaw",
+      "breakpoints": true
     }
   ]
 }

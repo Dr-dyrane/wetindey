@@ -51,6 +51,8 @@ import { useEventCallback } from "@/lib/perf";
 import {
   searchItems,
   getPopularItems,
+  getMyProfile,
+  type MyProfile,
   getPlaces,
   getPlaceOffers,
   getInitialSubmissionData,
@@ -285,6 +287,7 @@ export default function HomePage() {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [activeCategory, setActiveCategory] = useState<CategoryPillar>("food");
   const [isCategoryOpen, setIsCategoryOpen] = useState(false);
+  const [userProfile, setUserProfile] = useState<MyProfile | null>(null);
   /** The item ItemDetailSheet is resolving down to a unit. Non-null = presented. */
   const [detailItem, setDetailItem] = useState<ItemCardData | null>(null);
   /** The place GetItSheet is about to hand off to. Non-null = presented. */
@@ -377,6 +380,15 @@ export default function HomePage() {
     // the email rather than rendering an empty identity.
     return { name: u.name ?? "", email: u.email };
   }, [session]);
+
+  // Load user profile when signed in to fetch locationSharing and avatarUrl (H41)
+  useEffect(() => {
+    if (sessionUser) {
+      getMyProfile().then(setUserProfile).catch(() => {});
+    } else {
+      setUserProfile(null);
+    }
+  }, [sessionUser]);
 
   /**
    * Where the user IS. Every distance, radius and "Nearest" measures from here.
@@ -478,7 +490,7 @@ export default function HomePage() {
       setSearchError(null);
       startTransition(async () => {
         try {
-          const matched = await searchItems(searchQuery, activeCategory);
+          const matched = await searchItems(searchQuery, activeCategory, { lat: locPosition.lat, lng: locPosition.lng, radiusKm: activeRadiusKm });
           setSearchResults(matched);
         } catch (err) {
           console.error("Search failed:", err);
@@ -774,7 +786,7 @@ export default function HomePage() {
     setSearchError(null);
     startTransition(async () => {
       try {
-        const matched = await searchItems(val, activeCategory);
+        const matched = await searchItems(val, activeCategory, { lat: locPosition.lat, lng: locPosition.lng, radiusKm: activeRadiusKm });
         setSearchResults(matched);
       } catch (err) {
         // The third async transition in this file, and until now the only one
@@ -980,6 +992,7 @@ export default function HomePage() {
         id: o.id,
         placeId: o.placeId,
         placeName: o.placeName,
+        placeType: o.placeType,
         lat: o.lat,
         lng: o.lng,
         address: o.address ?? "",
@@ -990,6 +1003,7 @@ export default function HomePage() {
       id: p.id,
       placeId: p.id,
       placeName: p.name,
+      placeType: p.placeType,
       lat: p.location.lat,
       lng: p.location.lng,
       address: p.address || ""
@@ -1188,7 +1202,7 @@ export default function HomePage() {
                   signing in changed nothing anyone could see: you were
                   recognised only inside the sheet you had to reopen to check.
                   `||`, not `??`, email OTP mints users with name: "". */}
-              <Avatar name={sessionUser ? sessionUser.name || sessionUser.email : undefined} size={32} />
+              <Avatar name={sessionUser ? sessionUser.name || sessionUser.email : undefined} url={userProfile?.avatarUrl} size={32} />
             </button>
           </div>
         </div>

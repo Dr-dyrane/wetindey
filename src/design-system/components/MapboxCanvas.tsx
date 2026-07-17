@@ -33,6 +33,7 @@ interface MapMarkerData {
   id: string;
   placeId: string;
   placeName: string;
+  placeType?: string | null;
   lat: number;
   lng: number;
   detail?: {

@@ -21,11 +21,11 @@ export const metadata: Metadata = {
    * dashes in copy, and titles are copy.
    */
   title: {
-    default: "WetinDey: street-food prices in Lagos",
+    default: "WetinDey: nearby live local information",
     template: "%s · WetinDey",
   },
   description:
-    "See what street food costs around south-west Lagos, market by market, reported by the people who saw the price. Know before you go.",
+    "Understand nearby live local information before you leave. Food price and availability are WetinDey's current V1 capability in south-west Lagos; coverage and freshness vary.",
   applicationName: "WetinDey",
   // app/manifest.ts is served at /manifest.webmanifest, not /manifest.json.
   manifest: "/manifest.webmanifest",
@@ -40,15 +40,15 @@ export const metadata: Metadata = {
     siteName: "WetinDey",
     locale: "en_NG",
     url: "/",
-    title: "WetinDey: street-food prices in Lagos",
+    title: "WetinDey: nearby live local information",
     description:
-      "See what street food costs around south-west Lagos, reported by the people who saw the price.",
+      "Nearby live local information for south-west Lagos. Food price and availability are WetinDey's current V1 capability; coverage and freshness vary.",
   },
   twitter: {
     card: "summary_large_image",
-    title: "WetinDey: street-food prices in Lagos",
+    title: "WetinDey: nearby live local information",
     description:
-      "See what street food costs around south-west Lagos, reported by the people who saw the price.",
+      "Nearby live local information for south-west Lagos. Food price and availability are WetinDey's current V1 capability; coverage and freshness vary.",
   },
   /**
    * Google Search Console verification, emitted as
@@ -164,7 +164,7 @@ export default function RootLayout({
               var r=document.documentElement;
               r.classList.toggle('dark',t==='dark');
               r.style.colorScheme=t;
-            }catch(e){}})();`
+            }catch(e){}})();`,
           }}
         />
         {/**
@@ -236,7 +236,7 @@ export default function RootLayout({
                 for(;i<256;i++)h[i]=(i+256).toString(16).slice(1);
                 return h[b[0]]+h[b[1]]+h[b[2]]+h[b[3]]+'-'+h[b[4]]+h[b[5]]+'-'+h[b[6]]+h[b[7]]+'-'+h[b[8]]+h[b[9]]+'-'+h[b[10]]+h[b[11]]+h[b[12]]+h[b[13]]+h[b[14]]+h[b[15]];
               };
-            }catch(e){}})();`
+            }catch(e){}})();`,
           }}
         />
         <link href="https://api.mapbox.com/mapbox-gl-js/v3.1.2/mapbox-gl.css" rel="stylesheet" />
@@ -250,9 +250,7 @@ export default function RootLayout({
             each route; this is the WebSite + Organization every page shares. */}
         <JsonLd data={websiteJsonLd()} />
         <JsonLd data={organizationJsonLd()} />
-        <ThemeProvider>
-          {children}
-        </ThemeProvider>
+        <ThemeProvider>{children}</ThemeProvider>
         {/* Vercel Web Analytics. Cookieless and no cross-site tracking, so it
             needs no consent banner. Only reports once deployed to Vercel; it
             no-ops locally. */}
@@ -302,7 +300,7 @@ export default function RootLayout({
                   }
                 });
               }
-            `
+            `,
           }}
         />
       </body>

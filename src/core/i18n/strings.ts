@@ -261,7 +261,7 @@ export const en = {
   "problem.sending": "Sending…",
   "problem.success_title": "Thanks, we got it.",
   "problem.success_body":
-    "This goes to the people who run WetinDey. We read every one, but we can't always write back.",
+    "This goes to the people who run WetinDey. They may not be able to reply.",
   "problem.err_send": "We no fit send your report right now.",
 
   /* About / legal / support, AboutSheet.tsx.
@@ -278,23 +278,20 @@ export const en = {
    * what is collected is worse than none. The owner must have a lawyer review it
    * before it is relied on.
    *
-   * The privacy copy states only what the scout verified is collected, email
-   * (only if you sign in), the prices you report, and device-local preferences ,
-   * and the third parties that receive data BY CONSTRUCTION: Mapbox (location, to
-   * draw the map + measure distance), Neon (email + auth + the reports), Vercel
-   * (cookieless analytics + hosting). It names Wikimedia (food photos) and the
-   * Apple/Google Maps hand-off ("Go there"). It does NOT mention Sentry: the DSN
-   * is empty and @sentry/nextjs is not installed, so no error reports leave the
-   * device, claiming otherwise would be the same false statement in reverse. */
-  "about.lede": "Street-food prices around south-west Lagos, reported by the people who saw them.",
+   * The privacy copy stays at the product boundary rather than making unreviewed
+   * commitments about processing, retention, deletion, or service providers.
+   * Human legal review must complete those details before this becomes a notice. */
+  "about.title": "About WetinDey",
+  "about.lede":
+    "WetinDey helps you understand nearby local information before you leave. Food price and availability are our first live capability in south-west Lagos.",
   "about.body_what":
-    "WetinDey tells you where food is and what it costs. It doesn't sell or deliver anything: tap Go there and your own maps app takes over.",
+    "Coverage and freshness vary. Information may be incomplete, stale, synthetic, demonstration-only or uncertain.",
   "about.body_prices":
-    "Every price is something a person saw and reported, so each one shows when it was seen and how many people have seen it. Know before you go.",
+    "WetinDey does not sell or deliver anything, and information should be confirmed before you travel.",
   "about.body_account":
-    "You never need an account to read. Sign in only so the prices you report gather in one place.",
+    "Browsing needs no account. Signing in is optional and can support recognized attribution and history where available.",
   "about.body_pilot":
-    "This is an early pilot in south-west Lagos. Some areas hold more prices than others.",
+    "Food price and availability are the current V1 capability; other categories are not presented here as live services.",
 
   /* Row labels + the back affordance. `about.back` is the NavigationStack back
      row's label: it names where back goes (the About hub), the way iOS shows the
@@ -307,34 +304,34 @@ export const en = {
   /* The review marker every drafted legal surface must carry. Shown at the top
      of Terms and Privacy, in a caution tint, so it cannot be mistaken for the
      copy it guards. */
-  "about.draft_notice":
-    "Plain-language draft. It describes how WetinDey works today and is waiting on the owner's review, not yet a formal policy.",
+  "about.draft_notice": "Product-accurate draft — pending human legal review",
 
   "about.terms_title": "Terms of service",
   "about.terms_intro":
-    "WetinDey is a community price map. Anyone can read it, and anyone can add a price they saw.",
+    "This is not a final legal agreement. WetinDey is a live local information service; Food price and availability are its current V1 capability.",
   "about.terms_prices":
-    "Prices come from other people, not from the shops, so they can be wrong, out of date, or missing. Always confirm at the market before you rely on one.",
+    "Coverage and freshness vary. Information may be incomplete, stale, synthetic, demonstration-only or uncertain; price and availability are not guaranteed when you arrive.",
   "about.terms_fulfilment":
-    "WetinDey does not sell food, take payment, or deliver. It points you to a place: getting there and buying is between you and the trader.",
+    "WetinDey does not sell, accept payment, provide checkout, deliver, dispatch or fulfil orders. Go there passes a destination to your chosen maps app; travel and any purchase are your decision.",
   "about.terms_reporting":
-    "When you report a price, you add it for everyone. Report only what you actually saw.",
+    "You may contribute structured information when useful. Browsing needs no account; signing in is optional and can support recognized attribution and history where available.",
 
   "about.privacy_title": "Privacy",
   "about.privacy_intro":
-    "You can use WetinDey without an account, and most people do. Here is what it keeps, and what it doesn't.",
+    "This is not a final legal notice. You can browse WetinDey without an account.",
   "about.privacy_collect":
-    "If you sign in, WetinDey keeps your email address: that's how it recognises you next time. The prices and availability you report are saved too, linked to you when you're signed in, anonymous when you're not.",
+    "If you sign in, account information can support recognized attribution and history where available. Information you contribute may be kept with that contribution.",
   "about.privacy_device":
-    "Your language and theme stay on your device, and so does your location: it is never stored on our servers. Location is sent to the map provider only to draw the map and measure distance, and your reports record the market, never where you were standing.",
+    "You can choose an area manually. A manual area represents its centre, not your exact personal location.",
   "about.privacy_third":
-    "To work, WetinDey shares data with a few services: Mapbox draws the map and receives your location to do it; Neon stores your email, sign-in and reports; Vercel hosts the app and counts visits without cookies. Food photos load from Wikimedia, and tapping Go there hands your destination to Apple or Google Maps.",
-  "about.privacy_ads": "There are no adverts, and no tracking for advertising.",
-  "about.privacy_delete": "To have your account and email removed, email {email}.",
+    "Map and destination features may involve your browser and the maps app you choose. This product-accurate draft will be completed through human legal review.",
+  "about.privacy_ads": "This is not a complete retention, deletion or service-provider notice.",
+  "about.privacy_delete":
+    "Contact support for account-related requests at {email}. The final deletion and retention process is still under review.",
 
   "about.support_title": "Support",
   "about.support_body":
-    "Found a problem, a price that's off, or have a question? Send us a mail.",
+    "For a problem, account-related request or question, contact support. A reply may not always be possible.",
   "about.support_cta": "Email support",
 
   /* The four reading surfaces reached from the About hub and by hash
@@ -357,16 +354,27 @@ export const en = {
   "about.attributions": "Attributions",
 
   "about.how_title": "How WetinDey works",
-  "about.how_intro":
-    "WetinDey is a price map for street food around south-west Lagos. It shows what things cost and where, so you can know before you go.",
-  "about.how_report":
-    "Every price comes from a person who saw it. Anyone can add one: pick the market, the item and what you paid, and it joins the map for everyone. You never need an account to read, and you never need one to report.",
-  "about.how_fresh":
-    "Each price shows how fresh it is. A recent one still in stock reads E sure. An older one reads Check am, a nudge to verify before you travel. One reported finished reads E no dey.",
-  "about.how_trust":
-    "Each price also shows how many reports stand behind it, so one that several reports agree on reads stronger than one seen just once.",
-  "about.how_goto":
-    "WetinDey does not sell food, take payment, or deliver. Once you have found what you want, Go there hands the address to your own maps app, and the rest is between you and the trader.",
+  "about.how_area_title": "Choose your area",
+  "about.how_area_body":
+    "Choose an area manually or use your device's location for nearby results. A manual area represents its centre, not your exact personal location.",
+  "about.how_need_title": "Choose what you need",
+  "about.how_need_body":
+    "Food is WetinDey's current V1 capability. Search Food price and availability near your chosen area.",
+  "about.how_signal_title": "Read the local signal",
+  "about.how_signal_body":
+    "Food results can show price, availability, place and freshness. Information may be incomplete, uncertain, synthetic or demonstration-only.",
+  "about.how_freshness_title": "Check freshness and source limits",
+  "about.how_freshness_body":
+    "Look at freshness and any source information available. They help you judge a local signal; they do not make it a guarantee.",
+  "about.how_maps_title": "Continue in your maps app",
+  "about.how_maps_body":
+    "Go there passes a destination to the maps app you choose. WetinDey does not arrange travel, payment, delivery or any order.",
+  "about.how_contribute_title": "Contribute when useful",
+  "about.how_contribute_body":
+    "You can add structured information when useful. Browsing needs no account; signing in can support recognized attribution and history where available.",
+  "about.how_confirm_title": "Confirm before travelling",
+  "about.how_confirm_body":
+    "Prices and stock can change. Confirm details with the place before travelling: information does not guarantee availability when you arrive.",
 
   "about.a11y_title": "Accessibility",
   "about.a11y_intro":
@@ -566,7 +574,7 @@ export const en = {
     "This seller's contact setting could not be read, so nothing is shown. Rather than guess, WetinDey shows nothing at all.",
   "get.contact_private": "Not shared",
   "get.contact_private_footer":
-    "This seller keeps their contact details private. You can still go there: every price here comes from someone who did.",
+    "This seller keeps their contact details private. You can still go there, but details may change before you arrive.",
   "get.contact_none": "None on file",
   "get.contact_none_footer":
     "This seller allows contact, but WetinDey holds no phone number or handle for them yet. There is nothing to dial, and nothing is being withheld.",
@@ -751,6 +759,7 @@ const pidgin: LocaleTable = {
      false statement to a user about their own information. The row labels ride
      the same decision: English ("Support", "Privacy") shows through honestly
      rather than a Pidgin coinage no Lagos speaker vouched for. */
+  "about.title": UNTRANSLATED,
   "about.lede": UNTRANSLATED,
   "about.body_what": UNTRANSLATED,
   "about.body_prices": UNTRANSLATED,
@@ -786,11 +795,20 @@ const pidgin: LocaleTable = {
   "about.licenses": UNTRANSLATED,
   "about.attributions": UNTRANSLATED,
   "about.how_title": UNTRANSLATED,
-  "about.how_intro": UNTRANSLATED,
-  "about.how_report": UNTRANSLATED,
-  "about.how_fresh": UNTRANSLATED,
-  "about.how_trust": UNTRANSLATED,
-  "about.how_goto": UNTRANSLATED,
+  "about.how_area_title": UNTRANSLATED,
+  "about.how_area_body": UNTRANSLATED,
+  "about.how_need_title": UNTRANSLATED,
+  "about.how_need_body": UNTRANSLATED,
+  "about.how_signal_title": UNTRANSLATED,
+  "about.how_signal_body": UNTRANSLATED,
+  "about.how_freshness_title": UNTRANSLATED,
+  "about.how_freshness_body": UNTRANSLATED,
+  "about.how_maps_title": UNTRANSLATED,
+  "about.how_maps_body": UNTRANSLATED,
+  "about.how_contribute_title": UNTRANSLATED,
+  "about.how_contribute_body": UNTRANSLATED,
+  "about.how_confirm_title": UNTRANSLATED,
+  "about.how_confirm_body": UNTRANSLATED,
   "about.a11y_title": UNTRANSLATED,
   "about.a11y_intro": UNTRANSLATED,
   "about.a11y_vision": UNTRANSLATED,
@@ -944,7 +962,7 @@ const pidgin: LocaleTable = {
     "We no fit read wetin this seller talk about contact, so we no dey show anything. Rather than guess, WetinDey no dey show anything at all.",
   "get.contact_private": "Dem no share am",
   "get.contact_private_footer":
-    "This seller keep im contact private. You still fit go there: every price for here come from person wey go.",
+    "This seller keep im contact private. You still fit go there, but details fit change before you reach.",
   "get.contact_none": "We no get am",
   "get.contact_none_footer":
     "This seller allow contact, but WetinDey never get phone number abi handle for dem. Nothing dey to call, and we no dey hide anything.",
@@ -1096,6 +1114,7 @@ const yoruba: LocaleTable = {
   /* About / legal / support. Every key, without exception, LANES H2: Yorùbá is
      withheld pending a native speaker, and no agent may stand in for one, least
      of all for a privacy notice. English shows through, on purpose. */
+  "about.title": UNTRANSLATED,
   "about.lede": UNTRANSLATED,
   "about.body_what": UNTRANSLATED,
   "about.body_prices": UNTRANSLATED,
@@ -1131,11 +1150,20 @@ const yoruba: LocaleTable = {
   "about.licenses": UNTRANSLATED,
   "about.attributions": UNTRANSLATED,
   "about.how_title": UNTRANSLATED,
-  "about.how_intro": UNTRANSLATED,
-  "about.how_report": UNTRANSLATED,
-  "about.how_fresh": UNTRANSLATED,
-  "about.how_trust": UNTRANSLATED,
-  "about.how_goto": UNTRANSLATED,
+  "about.how_area_title": UNTRANSLATED,
+  "about.how_area_body": UNTRANSLATED,
+  "about.how_need_title": UNTRANSLATED,
+  "about.how_need_body": UNTRANSLATED,
+  "about.how_signal_title": UNTRANSLATED,
+  "about.how_signal_body": UNTRANSLATED,
+  "about.how_freshness_title": UNTRANSLATED,
+  "about.how_freshness_body": UNTRANSLATED,
+  "about.how_maps_title": UNTRANSLATED,
+  "about.how_maps_body": UNTRANSLATED,
+  "about.how_contribute_title": UNTRANSLATED,
+  "about.how_contribute_body": UNTRANSLATED,
+  "about.how_confirm_title": UNTRANSLATED,
+  "about.how_confirm_body": UNTRANSLATED,
   "about.a11y_title": UNTRANSLATED,
   "about.a11y_intro": UNTRANSLATED,
   "about.a11y_vision": UNTRANSLATED,
@@ -1309,9 +1337,7 @@ export const TABLES: Readonly<Record<Locale, LocaleTable>> = {
  *
  * Clear an entry only when a native speaker has actually read it.
  */
-export const NEEDS_NATIVE_REVIEW: Readonly<
-  Record<Exclude<Locale, "en">, readonly StringKey[]>
-> = {
+export const NEEDS_NATIVE_REVIEW: Readonly<Record<Exclude<Locale, "en">, readonly StringKey[]>> = {
   /**
    * Nigerian Pidgin. The inherited keys are uneven in register, `radius`
    * ("Distance where you dey find market") is a description, not a label, and

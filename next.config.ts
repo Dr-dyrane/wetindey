@@ -13,6 +13,15 @@ const nextConfig: NextConfig = {
         hostname: "upload.wikimedia.org",
         pathname: "/wikipedia/commons/**",
       },
+      // User avatars live in Vercel Blob (see uploadMyAvatar in actions.ts). Public
+      // blobs are served from a per-store subdomain of public.blob.vercel-storage.com,
+      // so the store id is wildcarded; without this next/image rejects the host and
+      // every avatar renders broken.
+      {
+        protocol: "https",
+        hostname: "*.public.blob.vercel-storage.com",
+        pathname: "/**",
+      },
     ],
   },
 };

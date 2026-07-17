@@ -4324,6 +4324,12 @@ Payment MUST NOT:
 - alter organic “recommended” ranking without clear sponsorship;
 - or buy access to precise user location.
 
+Partner rewards, discounts, loyalty perks, or promotional benefits may be considered only
+under a separate accepted ADR. They consume an explicit eligibility result; they never
+create identity verification, reputation, claim confidence, moderation approval, earned
+status, or organic rank. WetinDey does not become a wallet, payout, checkout, order, or
+fulfilment system through rewards.
+
 ## 37.5 No ads in the hero flow initially
 
 Version One should not place advertising between item search and decision result.
@@ -4343,6 +4349,10 @@ A new module may enter discovery only when:
 - the new problem is validated;
 - reliable data supply exists;
 - and the module can use the existing context → intent → trust → decision model.
+
+It must also define a typed subject, primary live signal, observation semantics,
+freshness/conflict policy, contribution path, and outcome. A category string, changed
+metadata, or price-shaped seed value does not implement a module.
 
 ## 38.2 Module acceptance questions
 
@@ -4441,8 +4451,8 @@ The team should consider pivoting the mechanism or problem when:
 | No checkout/delivery in V1 | Accepted | Protect core decision experience |
 | Fulfilment is out of scope entirely; buyer and seller arrange it themselves via Contact seller | Accepted — see [ADR-001](docs/adr/001-fulfilment-is-out-of-scope.md) | A WetinDey price is a dated observation, not a quotable commitment; and the catalogue is market stalls, which no courier platform can represent |
 | `docs/architecture/SERVICE-ARCHITECTURE.md` is the architecture of record; correctness work precedes boundary work | Accepted — see [ADR-002](docs/adr/002-service-architecture-of-record.md) | The modular architecture in Section 25/26 and `AGENTS.md` was never implemented. Documentation that describes a system that does not exist has already produced two generations of dead code |
-| Multi-Category Expansion and Core Pillars | Accepted — see [ADR-008](docs/adr/008-category-filtering-and-pillars.md) | Expands product scope beyond Food to cover 6 core pillars of daily uncertainty (Food, Home, Health, Money, Transport, Community), dynamically adjusting metadata (title/description) on toggle |
-| Polymorphic Ratings and Reviews System | Accepted — see [ADR-009](docs/adr/009-polymorphic-ratings-and-reviews.md) | Introduces a generic ratings and reviews schema (`reviews`, `review_helpful_votes`, `review_aggregates`) leveraging polymorphic string-referencing to rate any entity type without future schema edits |
+| Multi-Category Expansion and Core Pillars | Accepted — see [ADR-008](docs/adr/008-category-filtering-and-pillars.md); proposed amendment ADR-010 | Expands product scope beyond Food to 6 pillars. The existing selector is partial: a category value does not supply a typed subject, signal, contribution, filter, marker, trust, or outcome model |
+| Polymorphic Ratings and Reviews System | Accepted — see [ADR-009](docs/adr/009-polymorphic-ratings-and-reviews.md); proposed amendment ADR-011 | Introduces review schema, not a live review capability. Reviews remain subjective and do not become current-state evidence or usable rating filters merely because tables exist |
 
 > **Section 25 and Section 26 describe a TARGET, not the current system.** Verified 16 July 2026:
 > `WetinDeyModule` has zero live implementations, `src/modules/food/` is orphaned, and
@@ -4452,6 +4462,13 @@ The team should consider pivoting the mechanism or problem when:
 
 ## 40.2 Open decisions
 
+- [ADR-010](docs/adr/010-typed-live-local-information-platform.md): detailed ontology for
+  the owner-directed correction that WetinDey is a live local information platform rather
+  than a universal price app. The proposal separates pillars, selectable capabilities,
+  signal types, claims, observations, and current-state projections.
+- [ADR-011](docs/adr/011-earned-trust-graph-and-reputation.md): detailed Trust Graph and
+  earned-reputation boundaries. The owner-directed principles are that trust is earned,
+  verification and status cannot be purchased, and confidence remains claim-specific.
 - Pilot city and exact coverage boundary.
 - Initial 8–12 items.
 - Canonical and local unit policy.
@@ -5153,7 +5170,10 @@ Product claims should identify their current grade until validated.
 # 48. Glossary
 
 **Availability** — Time-bound evidence that a defined item can be obtained at a place.  
+**Category capability** — Proposed term for a complete selectable vertical that owns its
+typed signals, queries, filters, contribution, map, presentation, trust, and outcomes.  
 **Canonical item** — Stable internal food identity used to unify aliases.  
+**Claim** — Proposed term for one typed proposition about a subject in local context.  
 **Confidence** — Internal assessment of how strongly evidence supports a claim.  
 **Context** — Place, time, item, unit, and intention relevant to a decision.  
 **Decision result** — A user-facing synthesis of place, availability, price, freshness, and trust.  
@@ -5164,9 +5184,15 @@ Product claims should identify their current grade until validated.
 **Local unit** — Informal or regional measure used in commerce.  
 **Module** — A problem domain using the shared WetinDey core.  
 **Observation** — Immutable report about an item, place, time, availability, or price.  
+**Pillar** — Proposed term for a product-portfolio grouping; it is not itself a database
+signal type or proof that a vertical is implemented.  
 **Place** — Market, store, seller location, or other purchasable destination.  
 **Product flow** — How WetinDey turns context and signals into a decision, action, and learning loop.  
 **Source** — Person, partner, vendor, dataset, or system behind an observation.  
+**Reputation** — Proposed term for scoped, versioned history derived from independently
+validated outcomes, including sample size and uncertainty.  
+**Signal type** — Proposed typed family of nearby state, such as price, stock, exchange
+rate, power status, route status, service availability, or event status.  
 **Trust level** — User-facing explanation of evidence strength.  
 **Unit** — Defined quantity to which a price applies.  
 **User flow** — Screens and actions a user takes to complete a task.  
@@ -5214,7 +5240,12 @@ Documentation changes. Engineering decisions that depend on current platform beh
 
 # Final product mandate
 
-WetinDey Version One is successful when a person can open a calm, fast interface, state the food item they need, see where it was recently confirmed around them, understand the expected price for the exact unit, judge the quality of the evidence, and take the next action without confusion.
+WetinDey exists to help a person understand the current state of nearby reality before
+they leave. Version One proves that mission through one honest Food vertical: a person can
+open a calm, fast interface, state the food item they need, see where it was recently
+confirmed, understand the expected price for the exact unit, judge the evidence, and take
+the next action without confusion. Future categories earn their place by representing
+their own primary live signal honestly rather than forcing everything through price.
 
 The map is not the product.  
 The sheet is not the product.  

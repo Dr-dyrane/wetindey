@@ -15,23 +15,32 @@ Written against the working tree at `main` / `019f3f3`, which was dirty at autho
 
 ## Read this first
 
-Five things. If you read nothing else, read these.
+Six things. If you read nothing else, read these.
 
 1. **`AGENTS.md` documents an architecture that does not exist.** It mandates that every capability implement `WetinDeyModule` (`src/core/module-contract.ts`). The contract has exactly one importer — its own orphaned implementation, `src/modules/food/application/FoodModule.ts`, which is backed by a five-item mock array. Capabilities implementing it: **zero**. The real application is `src/app/page.tsx` (~1,241 lines) plus `src/app/actions.ts` (~1,358 lines) doing everything directly. `src/db/queries/` — where the data layer is documented to live — contains one `.gitkeep`. Treat the docs in `docs/` as archaeology, not specification. `docs/APP-MAP.md` is confidently wrong about its own headline finding and cites files that are not on disk.
 
-2. **Delivery and fulfilment are OUT, by decision (ADR-001, 16 Jul 2026).** This is a food **price and availability** app — Bible Section 2.5. Buyer and seller arrange the rest themselves via "Contact seller." Do not design dispatch, courier, logistics, cart, checkout, or payments. Anyone proposing them is re-litigating a closed decision.
+2. **Delivery and fulfilment are OUT, by decision (ADR-001, 16 Jul 2026).** Food **price and availability** are the current V1 vertical, not the universal product ontology. WetinDey's owner-directed mission is live local information: help a person understand nearby reality before leaving. Buyer and seller arrange any transaction themselves via "Contact seller." Do not design dispatch, courier, logistics, cart, checkout, or payments.
 
 3. **This is a modular monolith on Vercel.** "Service" in this document means *a bounded module with an owner inside one deployment*. Not a process. Not a container. Proposing Kubernetes, a service mesh, an event bus, or separate deploys for a pre-launch PWA with 478 offers is a failure of judgement, not a display of thoroughness.
 
-4. **The product's one claim is not backed by code.** "Know before you go" is a claim about evidence quality. Trust is currently the string literal `"high"`, hardcoded on every write. Four disagreeing trust derivations ship simultaneously; the two good ones are dead. The price band is computed over all history despite the variable being named `recentObs`. Offline shows green badges from stale cache with no age signal. Everything else in this document is subordinate to fixing that.
+4. **The product's one claim is still not backed end to end.** "Know before you go" is a claim about evidence quality. The current tree now calls `assessTrust` on observation writes, but item detail and map markers still use competing UI heuristics and `getOfferTrustBatch` has no live UI caller. Synthetic seed rows are indistinguishable from observed reports, expired rows remain on important read surfaces, and offline cache age is not one authoritative signal. Everything else in this document is subordinate to fixing that.
 
 5. **The shape of the fix is subtraction, and the biggest risk is writing more dead code.** This repo has produced two generations of orphans (`FoodModule`, then `src/lib/trust.ts` written to rescue it and orphaned identically) because passes were forbidden from editing their own call sites — the source says so in its own comments. Before adding anything, delete the fiction and add a tool that makes orphans fail CI.
+
+6. **The category selector is ahead of the category architecture.** Six pillars are
+selectable and partially affect search, popular results, metadata, and the header, while
+the data model, item detail, narrowed offers, contribution flow, map fallbacks, outcomes,
+and much of the copy remain Food/price-shaped. Proposed
+[ADR-010](../adr/010-typed-live-local-information-platform.md) and
+[ADR-011](../adr/011-earned-trust-graph-and-reputation.md) define the requested evolution.
+Their detailed model is not accepted implementation scope. See
+[LIVE-INFORMATION-AND-TRUST-EVOLUTION.md](LIVE-INFORMATION-AND-TRUST-EVOLUTION.md).
 
 ---
 
 ## 1. Product Summary
 
-A Lagos **food price and availability** PWA. One question, asked well: *is this food there, what does it cost, and how much should I trust that answer?* The product's output is a decision, not a transaction. If the answer is wrong, the product has no reason to exist — a confidently wrong price is worse than the market rumour it replaces.
+A Lagos **live local information** PWA whose current V1 vertical is Food price and availability. One question, asked well: *what is the current nearby state of the thing I need to decide about, and how much should I trust that answer?* The product's output is a decision, not a transaction. If the answer is wrong, the product has no reason to exist.
 
 **Shipping shape.** Next.js App Router PWA on Vercel · Neon Postgres + PostGIS · Mapbox GL loaded from the runtime CDN, not a package dependency · anonymous browse · **one page route** (`src/app/page.tsx`) · Server Actions for all product data · modular monolith in name only.
 
@@ -57,10 +66,10 @@ A Lagos **food price and availability** PWA. One question, asked well: *is this 
 |---|---|---|
 | Architecture | Vertical modules implementing `WetinDeyModule` | Two god-files. Contract importers: 1, its own orphan. Implementations in use: 0. |
 | Data access | `src/db/queries/` | One `.gitkeep`. Every SQL statement is inline in `actions.ts`. |
-| Trust model | `src/lib/trust.ts` — source-weighted, per-source capped | One importer, feeding two exported actions that have **zero callers**. The live model is the literal `"high"`. |
+| Trust model | `src/lib/trust.ts` — source-weighted, per-source capped | Writes now call `assessTrust`, but item detail and map markers still use competing heuristics; the batched read action has no UI caller. One authoritative read model still does not exist. |
 | Freshness | Domain layer, per-category windows | Computed in a React component — `offerSignal` in `ItemDetailSheet`, imported *back out* by `page.tsx` to colour map pins. |
 | API | Ten `/api/v1` endpoints | **One** route handler — `src/app/api/auth/[...path]/route.ts`, the auth proxy ([ADR-003](../adr/003-identity-for-contribution-trust.md)). Zero of the ten documented `/api/v1` endpoints. All product data flows through Server Actions, which is correct. |
-| Identity | Anonymous browse | Anonymous browse **plus optional email-OTP accounts** (ADR-003, shipped `26350ba`). Recognition works; the trust benefit does not — `sources` has no `user_id` and `actions.ts` has no session awareness, so every contribution still funnels into one shared `"Contributor"` row. |
+| Identity | Anonymous browse | Anonymous browse **plus optional email-OTP accounts**. Current writes resolve recognized contributors into `sources.user_id`; the remaining trust model is unsafe because the shared seeded anonymous Contributor reliability is `98`, recognized contributors start at `75`, and no earned outcome ledger exists. |
 
 ### Users
 
@@ -1200,3 +1209,57 @@ Three overdue ADRs — **Drizzle**, **Mapbox**, **the freshness window** — all
 ---
 
 **The through-line.** Phases 0–2 are days-to-two-weeks and they are the difference between a product that answers *correctly* and one that answers *confidently*. Phase 5 — the part that looks most like architecture — is deliberately fifth, because a beautifully bounded module that stamps `trustLevel:"high"` on a two-year-old price is still lying to a woman in Festac about the cost of rice.
+
+---
+
+## 13. Proposed evolution: typed live information and earned trust
+
+The owner has directed two product corrections:
+
+1. WetinDey is a live local information platform, not a universal price app.
+2. Its long-term moat is earned, verifiable community trust, not purchasable status.
+
+The detailed decisions remain Proposed in ADR-010 and ADR-011. The review model, logical
+ERD, correction inventory, trust boundaries, filter model, debt register, dependency
+graph, legal handoff, and release phases are in
+[LIVE-INFORMATION-AND-TRUST-EVOLUTION.md](LIVE-INFORMATION-AND-TRUST-EVOLUTION.md).
+
+This section is the architecture-of-record pointer. The addendum is not a second
+architecture of record.
+
+### 13.1 Current containment
+
+The existing category selector is a partial capability. Until a category has a typed
+subject, signal, query, contribution flow, filters, map semantics, trust explanation,
+outcome, and real provenance, it must not be treated as a live vertical merely because a
+category row or selector option exists.
+
+The integration freeze remains in force. No category, Trust Graph, reputation, review,
+RLS, partner, reward, or generic filtering schema is authorized before migration lineage,
+provenance, search correctness, and hot-file ownership are reconciled.
+
+### 13.2 Candidate Phase 5A - prove contextual capability with one non-price vertical
+
+**Gate.** Phases 0-4 are complete; migration history is reproducible; synthetic data is
+quarantined; ADR-010 and ADR-011 are accepted; and all required UI, map, action, validation,
+and schema paths have explicit owners and handoffs.
+
+**Goal.** Make selected category one global interaction context and prove that WetinDey can
+render one non-price local-state capability without routing it through item, sale-unit,
+price, offer, seller, or purchase semantics.
+
+**Required behavior.**
+
+- Header order: Brand, Selected category, Contextual filter, Add contribution, Avatar.
+- Food plus exactly one complete non-price capability.
+- Category-scoped, strictly parsed filter state.
+- Atomic context switching across map, search, sheet, filters, contribution, sort, marker
+  semantics, and empty-state copy.
+- A typed capability extracted only after two live implementations exist.
+- One shared trust explanation contract without one shared primary-signal formula.
+
+**Exit.** A category switch cannot leave results, markers, filters, drafts, sort, or copy
+from the prior capability. The non-price vertical works without currency, sale unit,
+price range, seller contact, or purchase. Every filter is enforced server-side and every
+capability export has a live caller. An adversarial reviewer defaults the phase to refuted
+when evidence is incomplete.

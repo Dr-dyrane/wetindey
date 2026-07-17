@@ -8,6 +8,8 @@ import { Input } from "@/design-system/components/Input";
 import { Button } from "@/design-system/components/Button";
 import { useT } from "@/core/i18n";
 import { authClient } from "@/lib/auth-client";
+import Image from "next/image";
+import { getMyProfile, type MyProfile } from "@/app/actions";
 
 interface ProfileSheetProps {
   open: boolean;
@@ -218,6 +220,16 @@ export function ProfileSheet({
 }: ProfileSheetProps) {
   const t = useT();
   const signedIn = Boolean(user);
+
+  const [profile, setProfile] = useState<MyProfile | null>(null);
+
+  useEffect(() => {
+    if (open && signedIn) {
+      getMyProfile().then(setProfile).catch(() => {});
+    } else {
+      setProfile(null);
+    }
+  }, [open, signedIn, user]);
 
   const [signIn, setSignIn] = useState<SignIn>({ kind: "idle" });
   const [email, setEmail] = useState("");
@@ -471,7 +483,7 @@ export function ProfileSheet({
             (prompt / check-mail / verified) flow through the same `identityName` /
             `identitySub` below, so they centre cleanly with no extra branch. */}
         <div className="flex flex-col items-center gap-2 px-6 text-center">
-          <Avatar name={displayName ?? undefined} size={64} />
+          <Avatar name={displayName ?? undefined} url={profile?.avatarUrl} size={64} />
           <div className="min-w-0 max-w-full">
             <p className="truncate text-title-3 font-semibold text-text-primary">{identityName}</p>
             {identitySub && (
@@ -767,7 +779,7 @@ export function ProfileSheet({
  * Uses accent/accent-contrast rather than a literal, so it inverts with theme
  * instead of going white-on-white.
  */
-export function Avatar({ name, size = 32 }: { name?: string; size?: number }) {
+export function Avatar({ name, url, size = 32 }: { name?: string; url?: string | null; size?: number }) {
   const initials = (name ?? "")
     .split(" ")
     .filter(Boolean)
@@ -778,10 +790,18 @@ export function Avatar({ name, size = 32 }: { name?: string; size?: number }) {
   return (
     <span
       aria-hidden
-      className="grid shrink-0 place-items-center squircle-full bg-fillPrimary text-text-primary"
+      className="relative grid shrink-0 place-items-center squircle-full bg-fillPrimary text-text-primary overflow-hidden"
       style={{ width: size, height: size }}
     >
-      {initials ? (
+      {url ? (
+        <Image
+          src={url}
+          alt={name ?? "Avatar"}
+          fill
+          sizes={`${size}px`}
+          className="object-cover"
+        />
+      ) : initials ? (
         <span className="text-subhead font-semibold">{initials}</span>
       ) : (
         <svg viewBox="0 0 24 24" fill="none" className="h-1/2 w-1/2" aria-hidden>

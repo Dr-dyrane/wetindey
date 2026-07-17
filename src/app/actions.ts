@@ -46,7 +46,11 @@ export async function searchFoodItems(query: string) {
   return searchItems(query, "food");
 }
 
-export async function searchItems(query: string, category: string = "food") {
+export async function searchItems(
+  query: string,
+  category: string = "food",
+  coords?: { lat: number; lng: number; radiusKm: number }
+) {
   // Before the empty check, not after: a non-string caller reaches `.trim()`
   // first and dies on "trim is not a function", a 500 for what is really a
   // rejected input. Empty stays legal; the search box clears on every keystroke.
@@ -56,27 +60,111 @@ export async function searchItems(query: string, category: string = "food") {
   }
 
   const q = `%${parsed.trim()}%`;
+  const lat = coords?.lat;
+  const lng = coords?.lng;
+  const radiusKm = coords?.radiusKm;
+  const useLocation = lat !== undefined && lng !== undefined && radiusKm !== undefined;
+  const radiusM = radiusKm ? radiusKm * 1000 : 0;
 
-  // Match the canonical name, the slug, or a local-language alias, so "ewa",
-  // "shinkafa" and "dodo" find their items the way a Nigerian shopper would ask.
-  const matched = await db
-    .selectDistinctOn([items.id], itemCard)
-    .from(items)
-    .leftJoin(itemAliases, eq(itemAliases.itemId, items.id))
-    .where(
-      and(
-        eq(items.active, true),
-        eq(items.category, category),
-        or(
-          ilike(items.canonicalName, q),
-          ilike(items.slug, q),
-          ilike(itemAliases.alias, q)
+  const rows = await db.execute(sql`
+    WITH matched_items AS (
+      SELECT DISTINCT i.id
+      FROM ${items} i
+      LEFT JOIN ${itemAliases} ia ON ia.item_id = i.id
+      WHERE i.active = true 
+        AND i.category = ${category}
+        AND (
+          i.canonical_name ILIKE ${q} OR
+          i.slug ILIKE ${q} OR
+          ia.alias ILIKE ${q}
         )
-      )
+    ),
+    nearby AS (
+      SELECT o.*
+      FROM ${offersCurrent} o
+      JOIN ${places} pl ON pl.id = o.place_id
+      WHERE o.expires_at > now()
+        ${useLocation ? sql`AND ST_DWithin(pl.location, ST_SetSRID(ST_MakePoint(${lng}, ${lat}), 4326)::geography, ${radiusM})` : sql``}
+    ),
+    offer_units AS (
+      SELECT
+        mi.id               AS item_id,
+        n.unit_id           AS unit_id,
+        COUNT(n.id)         AS offers_in_unit
+      FROM matched_items mi
+      JOIN ${itemVariants} iv ON iv.item_id = mi.id
+      JOIN nearby n        ON n.item_variant_id = iv.id
+      GROUP BY mi.id, n.unit_id
+    ),
+    modal_unit AS (
+      SELECT DISTINCT ON (item_id) item_id, unit_id
+      FROM offer_units
+      ORDER BY item_id, offers_in_unit DESC, unit_id
+    ),
+    fallback_unit AS (
+      SELECT DISTINCT ON (item_id) item_id, unit_id
+      FROM (
+        SELECT iv.item_id, iv.unit_id, iv.id
+        FROM ${itemVariants} iv
+        JOIN matched_items mi ON mi.id = iv.item_id
+        ORDER BY iv.item_id, iv.id ASC
+      ) f
+    ),
+    resolved_unit AS (
+      SELECT 
+        mi.id AS item_id,
+        COALESCE(mu.unit_id, fu.unit_id) AS unit_id
+      FROM matched_items mi
+      LEFT JOIN modal_unit mu ON mu.item_id = mi.id
+      LEFT JOIN fallback_unit fu ON fu.item_id = mi.id
     )
-    .limit(10);
+    SELECT
+      i.id, i.slug, i.canonical_name AS name, i.description,
+      i.image_url, i.image_attribution, i.image_license, i.image_source_url,
+      u.display_name                                   AS "unitLabel",
+      COALESCE(COUNT(o.id), 0)::int                    AS "offerCount",
+      COALESCE(COUNT(DISTINCT o.place_id), 0)::int     AS "placeCount",
+      MIN(o.price_min)::int                            AS "priceFrom",
+      MAX(COALESCE(o.price_max, o.price_min))::int     AS "priceTo",
+      (array_agg(o.freshness_state ORDER BY o.last_observed_at DESC))[1] AS freshest,
+      MAX(o.last_observed_at)                          AS "lastObservedAt"
+    FROM matched_items mi
+    JOIN ${items} i ON i.id = mi.id
+    JOIN resolved_unit ru ON ru.item_id = i.id
+    JOIN ${units} u ON u.id = ru.unit_id
+    LEFT JOIN ${itemVariants} v ON v.item_id = i.id AND v.unit_id = ru.unit_id
+    LEFT JOIN nearby o ON o.item_variant_id = v.id AND o.unit_id = ru.unit_id
+    GROUP BY i.id, u.display_name
+    ORDER BY COUNT(o.id) DESC, i.canonical_name ASC
+    LIMIT 10
+  `);
 
-  return matched;
+  type Row = {
+    id: string; slug: string; name: string; description: string | null;
+    image_url: string | null; image_attribution: string | null;
+    image_license: string | null; image_source_url: string | null;
+    unitLabel: string; offerCount: number; placeCount: number;
+    priceFrom: number | null; priceTo: number | null;
+    freshest: string | null; lastObservedAt: Date | null;
+  };
+
+  return (rows.rows as unknown as Row[]).map((r) => ({
+    id: r.id,
+    slug: r.slug,
+    name: r.name,
+    description: r.description,
+    imageUrl: r.image_url,
+    imageAttribution: r.image_attribution,
+    imageLicense: r.image_license,
+    imageSourceUrl: r.image_source_url,
+    unitLabel: r.unitLabel,
+    offerCount: r.offerCount,
+    placeCount: r.placeCount,
+    priceFrom: r.priceFrom ?? null,
+    priceTo: r.priceTo ?? null,
+    freshest: r.freshest ?? "stale", // Default to stale status if no local offers exist
+    lastObservedAt: r.lastObservedAt ? new Date(r.lastObservedAt).toISOString() : null,
+  }));
 }
 
 /**

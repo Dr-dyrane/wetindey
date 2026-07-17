@@ -1,6 +1,6 @@
 # Instructions for AI Coding Agents
 
-Welcome to the **WetinDey** repository. You are working on a map-and-sheet Progressive Web App designed to confirm local food availability and price ranges. 
+Welcome to the **WetinDey** repository. You are working on a map-and-sheet live local information Progressive Web App. Food price and availability are the current V1 vertical; price is not the universal product model. The platform promise is to help people understand the current state of nearby reality before they leave.
 
 Before proposing any changes, writing any code, or introducing dependencies, you **MUST** read and adhere to these guidelines.
 
@@ -35,6 +35,24 @@ slice through to the UI, or leave it alone.
 No delivery, dispatch, courier, tracking, cart, checkout, or payments. Buyer and seller
 arrange it themselves via Contact seller. `docs/research/DELIVERY-API-LAGOS.md` recommends
 integrating a courier API and is **superseded** — do not act on it.
+
+**The multi-category UI is ahead of the domain model.** The current tree exposes category
+selection, but observations, offers, details, contributions, sharing, and several SEO
+surfaces still assume item + unit + price. Read proposed
+[ADR-010](docs/adr/010-typed-live-local-information-platform.md) and the
+[architecture evolution addendum](docs/architecture/LIVE-INFORMATION-AND-TRUST-EVOLUTION.md).
+Do not model Power, Exchange, Services, Events, or another non-price domain as a Food item
+with a price-shaped value. Do not create a `CategoryCapability` registry, generic filter
+builder, EAV schema, or empty module during V1. A capability abstraction is justified only
+when two complete live verticals wire map, search, sheet, filters, contribution, sort,
+markers, copy, and trust in the same coordinated work.
+
+**A Trust Graph is a proposed logical architecture, not permission to add a graph store,
+service, generic edge table, reputation score, badge, or reward system.** Read proposed
+[ADR-011](docs/adr/011-earned-trust-graph-and-reputation.md). Identity, reputation,
+claim-specific confidence, verification assertions, lifecycle status, authorization roles,
+and rewards are separate. None may be purchased. Current migration, provenance, and
+read-side trust blockers come first.
 
 For the verified state of the system, read the architecture of record,
 [docs/architecture/SERVICE-ARCHITECTURE.md](docs/architecture/SERVICE-ARCHITECTURE.md),

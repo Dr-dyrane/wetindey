@@ -451,6 +451,12 @@ type SubmitProblemReportInput = z.infer<typeof submitProblemReportInput>;
  * reasoning as `body` on the problem report. Format is deliberately not pinned
  * tighter than length, because phone, whatsapp and sms are all phone-number
  * channels and over-rejecting a real number is worse than storing a loose one.
+ *
+ * `locationSharing` is a SINGLE optional flag, NOT part of the contact pair and
+ * with no both-or-neither rule to satisfy: it is the map's public-location opt-in
+ * (`user_profiles.location_sharing`, off by default). Optional is meaningful: an
+ * absent flag means "leave it unchanged", which is why the action folds it in
+ * only when it was sent rather than defaulting it to false on every save.
  */
 const contactChannelKind = z.enum(["phone", "whatsapp", "sms"], {
   errorMap: () => ({ message: "contact channel must be one of phone, whatsapp, sms" }),
@@ -465,6 +471,9 @@ const updateMyProfileInput = z
       .min(1, "a contact needs a value")
       .max(255, "keep the contact under 255 characters")
       .nullish(),
+    locationSharing: z
+      .boolean({ invalid_type_error: "locationSharing must be true or false" })
+      .optional(),
   })
   .strict()
   .refine((v) => (v.contactChannelKind == null) === (v.contactChannelValue == null), {

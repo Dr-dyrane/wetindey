@@ -1,14 +1,23 @@
 "use client";
 
 import React, { useCallback, useEffect, useRef, useState } from "react";
+import Image from "next/image";
+import { Camera } from "lucide-react";
 import { ModalSheet } from "@/design-system/components/ModalSheet";
 import { ListGroup } from "@/design-system/components/ListRow";
 import { Input } from "@/design-system/components/Input";
 import { Button } from "@/design-system/components/Button";
 import { useT } from "@/core/i18n";
 import { authClient } from "@/lib/auth-client";
-import { getMyProfile, updateMyProfile, type MyProfile } from "@/app/actions";
+import {
+  getMyProfile,
+  updateMyProfile,
+  uploadMyAvatar,
+  removeMyAvatar,
+  type MyProfile,
+} from "@/app/actions";
 import { Avatar } from "@/app/_components/ProfileSheet";
+import { haptics } from "@/lib/haptics";
 
 /**
  * Manage profile: the editable half of the account.
@@ -99,6 +108,43 @@ function Spinner() {
   );
 }
 
+/**
+ * iOS switch: a track and a knob, and no stroke, so the no-border rule holds. On
+ * is systemGreen (`status-confirmed`); the knob is a raised chip (`bg-surface` +
+ * `shadow-card`), the same material the Segmented control's active segment uses,
+ * so the two controls read as one system. Named by the row's own label via
+ * `aria-labelledby` rather than a duplicated `aria-label`.
+ */
+function Switch({
+  checked,
+  onChange,
+  disabled,
+  labelledBy,
+}: {
+  checked: boolean;
+  onChange: (next: boolean) => void;
+  disabled?: boolean;
+  labelledBy: string;
+}) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={checked}
+      aria-labelledby={labelledBy}
+      disabled={disabled}
+      onClick={() => onChange(!checked)}
+      className={`relative inline-flex h-[31px] w-[51px] shrink-0 items-center squircle-full p-0.5 transition-colors duration-micro active:opacity-80 disabled:opacity-40
+        ${checked ? "bg-status-confirmed" : "bg-fillTertiary"}`}
+    >
+      <span
+        className={`h-[27px] w-[27px] squircle-full bg-surface shadow-card transition-transform duration-micro
+          ${checked ? "translate-x-5" : "translate-x-0"}`}
+      />
+    </button>
+  );
+}
+
 export function ManageProfileSheet({
   open,
   onClose,
@@ -133,6 +179,17 @@ export function ManageProfileSheet({
   const [saveError, setSaveError] = useState<string | null>(null);
   const [justSaved, setJustSaved] = useState(false);
 
+  // Location sharing and the avatar apply IMMEDIATELY, not through the Save
+  // button: a switch and a photo picker are instant controls on iOS, so each
+  // owns its own in-flight and error state rather than joining the name/contact
+  // form's dirtiness. The Save button stays for the two text fields only.
+  const [sharingBusy, setSharingBusy] = useState(false);
+  const [sharingError, setSharingError] = useState<string | null>(null);
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [avatarBusy, setAvatarBusy] = useState<"upload" | "remove" | null>(null);
+  const [avatarError, setAvatarError] = useState<string | null>(null);
+
   /**
    * The `user` prop is a fallback the loader reads through a ref, never a
    * dependency. Saving a name calls `onSessionChange`, which refetches the
@@ -164,6 +221,8 @@ export function ManageProfileSheet({
         email: userRef.current?.email ?? "",
         contactChannelKind: null,
         contactChannelValue: null,
+        locationSharing: false,
+        avatarUrl: null,
       };
       setProfile(resolved);
       setName(resolved.name);
@@ -229,10 +288,12 @@ export function ManageProfileSheet({
       }
       // Only a name touches the session; the avatar and mini-profile read from it.
       if (nameDirty) onSessionChange();
-      // Rebase so the form is clean and Save disables until the next edit.
+      // Rebase so the form is clean and Save disables until the next edit. Spread
+      // the loaded profile so fields this form does not touch (locationSharing,
+      // avatarUrl) carry through unchanged rather than being reset.
       setProfile({
+        ...profile,
         name: trimmedName,
-        email: profile.email,
         contactChannelKind: nextKind,
         contactChannelValue: nextValue,
       });
@@ -245,6 +306,63 @@ export function ManageProfileSheet({
       setSaveError(t("profile.save_error"));
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function handleAvatarUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    haptics.selection();
+    setAvatarBusy("upload");
+    setAvatarError(null);
+
+    const formData = new FormData();
+    formData.append("avatar", file);
+
+    try {
+      const res = await uploadMyAvatar(formData);
+      setProfile((prev) => (prev ? { ...prev, avatarUrl: res.avatarUrl } : null));
+      onSessionChange();
+    } catch (err) {
+      console.error("ManageProfileSheet: failed to upload avatar", err);
+      setAvatarError("Could not upload photo. Must be PNG/JPG/WebP under 2MB.");
+    } finally {
+      setAvatarBusy(null);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  }
+
+  async function handleAvatarRemove() {
+    haptics.selection();
+    setAvatarBusy("remove");
+    setAvatarError(null);
+
+    try {
+      await removeMyAvatar();
+      setProfile((prev) => (prev ? { ...prev, avatarUrl: null } : null));
+      onSessionChange();
+    } catch (err) {
+      console.error("ManageProfileSheet: failed to remove avatar", err);
+      setAvatarError("Could not remove photo. Check your connection.");
+    } finally {
+      setAvatarBusy(null);
+    }
+  }
+
+  async function handleLocationSharingChange(next: boolean) {
+    haptics.selection();
+    setSharingBusy(true);
+    setSharingError(null);
+
+    try {
+      await updateMyProfile({ locationSharing: next });
+      setProfile((prev) => (prev ? { ...prev, locationSharing: next } : null));
+    } catch (err) {
+      console.error("ManageProfileSheet: failed to toggle location sharing", err);
+      setSharingError("Could not update settings. Check your connection.");
+    } finally {
+      setSharingBusy(false);
     }
   }
 
@@ -281,10 +399,48 @@ export function ManageProfileSheet({
         </div>
       ) : profile ? (
         <div className="space-y-6 py-4">
-          {/* Identity anchor. Initials update live as the name is typed; the avatar
-              has no upload affordance yet (deferred to the image-CRUD phase). */}
-          <div className="flex justify-center px-4">
-            <Avatar name={name || profile.email || undefined} size={64} />
+          {/* Avatar photo picker with camera overlay & remove option */}
+          <div className="flex flex-col items-center gap-2.5 px-4">
+            <div className="relative group">
+              <button
+                type="button"
+                disabled={Boolean(avatarBusy)}
+                onClick={() => fileInputRef.current?.click()}
+                className="relative block rounded-full focus:outline-none focus-ring"
+                aria-label="Upload avatar photo"
+              >
+                <Avatar name={name || profile.email || undefined} url={profile.avatarUrl} size={80} />
+                <div className="absolute inset-0 grid place-items-center bg-black/40 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-micro">
+                  <Camera className="h-6 w-6 text-white" />
+                </div>
+                {avatarBusy && (
+                  <div className="absolute inset-0 grid place-items-center bg-black/50 rounded-full">
+                    <Spinner />
+                  </div>
+                )}
+              </button>
+              <input
+                type="file"
+                ref={fileInputRef}
+                className="hidden"
+                accept="image/png,image/jpeg,image/webp"
+                onChange={handleAvatarUpload}
+              />
+            </div>
+            {profile.avatarUrl && !avatarBusy && (
+              <button
+                type="button"
+                onClick={handleAvatarRemove}
+                className="text-[13px] font-medium text-status-unavailable active:opacity-60 transition duration-micro"
+              >
+                Remove Photo
+              </button>
+            )}
+            {avatarError && (
+              <p role="alert" className="text-footnote text-status-unavailable text-center max-w-[280px]">
+                {avatarError}
+              </p>
+            )}
           </div>
 
           <ListGroup header={t("profile.name_label")}>
@@ -330,6 +486,32 @@ export function ManageProfileSheet({
                 maxLength={255}
               />
             </div>
+          </ListGroup>
+
+          {/* Location Sharing Opt-in Switch */}
+          <ListGroup
+            header="Location Sharing"
+            footer="When active, other verified contributors can see your approximate location on the map. Opt-in only."
+          >
+            <div className="flex min-h-tap items-center justify-between px-4 py-2">
+              <span id="loc-share-label" className="text-body text-text-primary">
+                Share My Location
+              </span>
+              <div className="flex items-center gap-2">
+                {sharingBusy && <Spinner />}
+                <Switch
+                  checked={profile.locationSharing}
+                  onChange={handleLocationSharingChange}
+                  disabled={sharingBusy}
+                  labelledBy="loc-share-label"
+                />
+              </div>
+            </div>
+            {sharingError && (
+              <div className="px-4 pb-3">
+                <p role="alert" className="text-footnote text-status-unavailable">{sharingError}</p>
+              </div>
+            )}
           </ListGroup>
 
           {justSaved && !isDirty && (

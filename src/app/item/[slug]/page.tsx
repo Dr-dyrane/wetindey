@@ -50,14 +50,14 @@ export async function generateMetadata({
   if (!item) return {};
 
   const summary = itemPriceSummary(await loadOffers(item.id));
-  const title = `${item.name} price in Lagos`;
+  const title = `${item.name} food price and availability in Lagos`;
   const description = summary
-    ? `${item.name} costs ${formatNaira(summary.minKobo)}${
-        summary.maxKobo > summary.minKobo ? ` to ${formatNaira(summary.maxKobo)}` : ""
-      } per ${summary.unit} across ${summary.placeCount} ${
+    ? `${item.name} food price and availability information across ${summary.placeCount} ${
         summary.placeCount === 1 ? "market" : "markets"
-      } in south-west Lagos, reported by people who saw it. Know before you go.`
-    : `Prices for ${item.name} in south-west Lagos, reported by the people who saw them. Know before you go.`;
+      } in south-west Lagos. Prices currently range from ${formatNaira(summary.minKobo)}${
+        summary.maxKobo > summary.minKobo ? ` to ${formatNaira(summary.maxKobo)}` : ""
+      } per ${summary.unit}. Coverage and freshness vary, and price or availability may change before arrival.`
+    : `Food price and availability information for ${item.name} in south-west Lagos. Coverage and freshness vary, and availability is not guaranteed at arrival.`;
 
   const canonical = `/item/${item.slug}`;
   return {
@@ -112,8 +112,14 @@ export default async function ItemPage({ params }: { params: Promise<{ slug: str
 
       <header className="flex flex-col gap-4 sm:flex-row sm:items-start">
         {item.imageUrl && (
-          <div className="relative h-40 w-40 shrink-0 overflow-hidden squircle bg-fillTertiary">
-            <Image src={item.imageUrl} alt={item.name} fill sizes="160px" className="object-cover" />
+          <div className="squircle relative h-40 w-40 shrink-0 overflow-hidden bg-fillTertiary">
+            <Image
+              src={item.imageUrl}
+              alt={item.name}
+              fill
+              sizes="160px"
+              className="object-cover"
+            />
           </div>
         )}
         <div className="min-w-0">
@@ -123,8 +129,9 @@ export default async function ItemPage({ params }: { params: Promise<{ slug: str
           {summary ? (
             <p className="mt-2 text-body text-text-secondary">
               {formatNaira(summary.minKobo)}
-              {summary.maxKobo > summary.minKobo ? ` to ${formatNaira(summary.maxKobo)}` : ""} per{" "}
-              {summary.unit}, seen at {summary.placeCount}{" "}
+              {summary.maxKobo > summary.minKobo
+                ? ` to ${formatNaira(summary.maxKobo)}`
+                : ""} per {summary.unit}, seen at {summary.placeCount}{" "}
               {summary.placeCount === 1 ? "market" : "markets"} near south-west Lagos.
             </p>
           ) : (
@@ -146,7 +153,7 @@ export default async function ItemPage({ params }: { params: Promise<{ slug: str
               <li key={o.offerId}>
                 <Link
                   href={`/place/${o.placeSlug}`}
-                  className="flex items-center justify-between gap-3 squircle bg-surface px-3.5 py-3 shadow-card transition-opacity duration-instant active:opacity-80"
+                  className="squircle flex items-center justify-between gap-3 bg-surface px-3.5 py-3 shadow-card transition-opacity duration-instant active:opacity-80"
                 >
                   <span className="min-w-0">
                     <span className="block truncate text-callout text-text-primary">
@@ -193,7 +200,7 @@ export default async function ItemPage({ params }: { params: Promise<{ slug: str
       <div className="mt-8">
         <Link
           href="/"
-          className="flex min-h-tap w-full items-center justify-center squircle bg-accent px-4 text-headline text-accent-contrast transition-opacity duration-micro ease-decelerate active:opacity-80"
+          className="squircle flex min-h-tap w-full items-center justify-center bg-accent px-4 text-headline text-accent-contrast transition-opacity duration-micro ease-decelerate active:opacity-80"
         >
           See it on the map
         </Link>

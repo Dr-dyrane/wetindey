@@ -42,13 +42,7 @@ const SUPPORT_EMAIL = "support@wetindey.live";
  * `/#how-it-works`).
  */
 type AboutPage =
-  | "terms"
-  | "privacy"
-  | "support"
-  | "how-it-works"
-  | "accessibility"
-  | "licenses"
-  | "attributions";
+  "terms" | "privacy" | "support" | "how-it-works" | "accessibility" | "licenses" | "attributions";
 
 interface AboutSheetProps {
   open: boolean;
@@ -95,7 +89,7 @@ export function AboutSheet({ open, onClose, initialPage }: AboutSheetProps) {
    * decides the level the next present starts from.
    */
   useEffect(() => {
-    setPage(open ? initialPage ?? null : null);
+    setPage(open ? (initialPage ?? null) : null);
   }, [open, initialPage]);
 
   const detailTitle: string | undefined = !page
@@ -130,22 +124,21 @@ export function AboutSheet({ open, onClose, initialPage }: AboutSheetProps) {
 /**
  * Level 0, what the app is, then the way into each surface.
  *
- * The prose is the honest core of this whole build: this product's one claim is
- * that every price carries evidence of how fresh it is and who saw it, and About
- * is where that is said plainly. It brings its own scroller because
+ * The prose is the honest core of this whole build: WetinDey is a live local
+ * information service, with Food price and availability as its current V1
+ * capability. It brings its own scroller because
  * NavigationStack's root is a fixed-size, overflow-hidden host and only pads and
  * scrolls level 1.
  */
 function AboutHub({ onSelect }: { onSelect: (page: AboutPage) => void }) {
   const t = useT();
   return (
-    <div className="h-full overflow-y-auto overscroll-contain space-y-6 py-3">
+    <div className="h-full space-y-6 overflow-y-auto overscroll-contain py-3">
       <div className="space-y-3 px-4">
+        <h2 className="text-title-3 font-semibold text-text-primary">{t("about.title")}</h2>
         <p className="text-body text-text-primary">{t("about.lede")}</p>
         <p className="text-subhead leading-relaxed text-text-secondary">{t("about.body_what")}</p>
         <p className="text-subhead leading-relaxed text-text-secondary">{t("about.body_prices")}</p>
-        <p className="text-subhead leading-relaxed text-text-secondary">{t("about.body_account")}</p>
-        <p className="text-subhead leading-relaxed text-text-secondary">{t("about.body_pilot")}</p>
       </div>
 
       {/* Three groups, not one list: the way iOS separates unlike things on a
@@ -217,10 +210,9 @@ function AboutRow({
     <button
       type="button"
       onClick={onClick}
-      className="flex min-h-tap w-full items-center gap-3 px-4 py-2 text-left
-                 active:bg-fillTertiary transition-colors duration-instant"
+      className="flex min-h-tap w-full items-center gap-3 px-4 py-2 text-left transition-colors duration-instant active:bg-fillTertiary"
     >
-      <span className="grid h-7 w-7 shrink-0 place-items-center squircle bg-fillTertiary">
+      <span className="squircle grid h-7 w-7 shrink-0 place-items-center bg-fillTertiary">
         {icon}
       </span>
       <span className="min-w-0 flex-1 truncate text-body text-text-primary">{label}</span>
@@ -249,7 +241,7 @@ function AboutDetail({ page }: { page: AboutPage }) {
 function DraftNotice() {
   const t = useT();
   return (
-    <div className="flex gap-2.5 squircle-card bg-status-caution-bg p-4">
+    <div className="squircle-card flex gap-2.5 bg-status-caution-bg p-4">
       <Info className="mt-0.5 h-4 w-4 shrink-0 text-status-caution-fg" aria-hidden />
       <p className="text-footnote leading-relaxed text-text-secondary">{t("about.draft_notice")}</p>
     </div>
@@ -308,10 +300,9 @@ function SupportPage() {
           rather than sinking into it in dark. */}
       <a
         href={`mailto:${SUPPORT_EMAIL}`}
-        className="flex items-center gap-3 squircle-card bg-surface px-4 py-3 shadow-card
-                   transition-colors duration-instant active:bg-fillTertiary dark:bg-surface-elevated"
+        className="squircle-card flex items-center gap-3 bg-surface px-4 py-3 shadow-card transition-colors duration-instant active:bg-fillTertiary dark:bg-surface-elevated"
       >
-        <span className="grid h-7 w-7 shrink-0 place-items-center squircle bg-status-info-bg">
+        <span className="squircle grid h-7 w-7 shrink-0 place-items-center bg-status-info-bg">
           <Mail className="h-4 w-4 text-status-info-fg" aria-hidden />
         </span>
         <span className="min-w-0 flex-1">
@@ -326,23 +317,46 @@ function SupportPage() {
 /**
  * How WetinDey works, the product explained to a first-time reader.
  *
- * Every paragraph is a fact the code and the ADRs already hold: reporting and
- * anonymous reading (ADR-003), the freshness verdicts (ADR-006, and the same
- * words the status badge prints), the evidence count, and the hand-off to a maps
- * app with no fulfilment of our own (ADR-001). Nothing here is a promise the app
- * does not already keep, so it carries no draft marker.
+ * This explains the current Food flow without treating every result as a
+ * human-observed or verified claim. It retains anonymous browsing, optional
+ * recognition, and the maps hand-off without fulfilment (ADR-001).
  */
 function HowItWorksPage() {
   const t = useT();
   return (
     <div className="space-y-4">
       <PageHeading>{t("about.how_title")}</PageHeading>
-      <Paragraph>{t("about.how_intro")}</Paragraph>
-      <Paragraph>{t("about.how_report")}</Paragraph>
-      <Paragraph>{t("about.how_fresh")}</Paragraph>
-      <Paragraph>{t("about.how_trust")}</Paragraph>
-      <Paragraph>{t("about.how_goto")}</Paragraph>
+      <HowItWorksSection title={t("about.how_area_title")}>
+        {t("about.how_area_body")}
+      </HowItWorksSection>
+      <HowItWorksSection title={t("about.how_need_title")}>
+        {t("about.how_need_body")}
+      </HowItWorksSection>
+      <HowItWorksSection title={t("about.how_signal_title")}>
+        {t("about.how_signal_body")}
+      </HowItWorksSection>
+      <HowItWorksSection title={t("about.how_freshness_title")}>
+        {t("about.how_freshness_body")}
+      </HowItWorksSection>
+      <HowItWorksSection title={t("about.how_maps_title")}>
+        {t("about.how_maps_body")}
+      </HowItWorksSection>
+      <HowItWorksSection title={t("about.how_contribute_title")}>
+        {t("about.how_contribute_body")}
+      </HowItWorksSection>
+      <HowItWorksSection title={t("about.how_confirm_title")}>
+        {t("about.how_confirm_body")}
+      </HowItWorksSection>
     </div>
+  );
+}
+
+function HowItWorksSection({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <section className="space-y-1.5">
+      <h3 className="text-headline text-text-primary">{title}</h3>
+      <Paragraph>{children}</Paragraph>
+    </section>
   );
 }
 
@@ -388,7 +402,7 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
  */
 function CreditGroup({ children }: { children: React.ReactNode }) {
   return (
-    <div className="overflow-hidden squircle-card bg-surface shadow-card dark:bg-surface-elevated">
+    <div className="squircle-card overflow-hidden bg-surface shadow-card dark:bg-surface-elevated">
       {children}
     </div>
   );
@@ -421,8 +435,7 @@ function CreditLink({ href, name, licence }: { href: string; name: string; licen
       href={href}
       target="_blank"
       rel="noopener noreferrer"
-      className="flex min-h-tap w-full items-center gap-3 px-4 py-2 text-left
-                 transition-colors duration-instant active:bg-fillTertiary"
+      className="flex min-h-tap w-full items-center gap-3 px-4 py-2 text-left transition-colors duration-instant active:bg-fillTertiary"
     >
       <span className="min-w-0 flex-1 truncate text-body text-accent">{name}</span>
       <span className="shrink-0 text-footnote text-text-secondary">{licence}</span>
