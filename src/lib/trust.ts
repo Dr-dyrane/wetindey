@@ -558,8 +558,37 @@ export function assessTrust(
  *
  * Ties break on freshness, then on distinct sources: between two equal scores,
  * prefer the one we heard about more recently, then the one more people saw.
+ *
+ * EXPORTED DELIBERATELY, WITH NO IMPORTER — and that is the honest state, not an
+ * oversight. It was proposed for deletion as a second-generation orphan: dead,
+ * ported from a file that was itself deleted for being dead. The evidence says
+ * otherwise. [ADR-006](../../docs/adr/006-freshness-windows.md) **ratifies this
+ * sort by name**, alongside linear age decay and newest-observation-wins, "as
+ * part of the same model and for the same reason (they are the shape of the
+ * answer, and re-deciding them re-defines the badges)". That ADR is Accepted and
+ * says plainly of this entire file: "a decision about which model is
+ * authoritative, not a claim that it is wired... Roadmap Phase 1 makes the
+ * decision true by routing the live surfaces through trust.ts." Deleting this
+ * would not retire dead code; it would silently amend an accepted ADR, which a
+ * lint warning has no standing to do.
+ *
+ * WHY THE EXPORT, WHEN THIS FILE JUST UN-EXPORTED FIFTEEN OTHERS. The export
+ * follows the CALL GRAPH, not a preference. `ageDecay` and
+ * `COLLECTION_METHOD_WEIGHTS` are ADR-006 material too, and they stay unexported
+ * because they have live callers INSIDE this file — they are internals, and an
+ * export would claim an audience they do not have. This function has **zero**
+ * internal callers and can only ever be reached from outside; unexported, it is
+ * not a private helper, it is a symbol with no possible caller at all.
+ *
+ * The export is therefore not cosmetic — it moves this from an invisible lint
+ * WARNING (which knip cannot see, because knip only checks exports, and which
+ * nothing blocks on) into the same visible knip red as `getOfferTrust` and
+ * `getOfferTrustBatch`, its Phase 1 siblings. That is the opposite of buying
+ * green: the debt is now declared where the repo already tracks it, instead of
+ * rotting somewhere only `next lint` mumbles about. **Wire it in Phase 1 or
+ * delete it in Phase 1 — but decide it with the rest of the model, not alone.**
  */
-function rankByConfidence<T>(
+export function rankByConfidence<T>(
   candidates: T[],
   assessmentOf: (candidate: T) => TrustAssessment
 ): T[] {
