@@ -1246,7 +1246,7 @@ export default function HomePage() {
               keyExtractor={(offer) => offer.id}
               className="max-h-[40vh] overflow-y-auto pr-1"
               renderItem={(offer) => (
-                <div className="p-3 squircle bg-fillSecondary/40 flex items-center justify-between">
+                <div className="p-3 squircle bg-fillTertiary flex items-center justify-between">
                   <div className="min-w-0">
                     <div className="truncate text-caption-1 font-bold text-text-primary">
                       {offer.itemName}
