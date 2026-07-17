@@ -21,6 +21,7 @@ import {
   type MapCameraHandle
 } from "@/design-system/components/MapboxCanvas";
 import type { RouteGeometry } from "@/integrations/maps/MapboxAdapter";
+import { authClient } from "@/lib/auth-client";
 import { DETENT_FRACTION } from "@/design-system/components/BottomSheet";
 import { AsyncList } from "@/design-system/components/AsyncList";
 import { NigeriaLogo } from "@/design-system/components/NigeriaLogo";
@@ -272,6 +273,32 @@ export default function HomePage() {
   useEffect(() => {
     setMapCenter({ lat: locPosition.lat, lng: locPosition.lng });
   }, [locPosition.lat, locPosition.lng, setMapCenter]);
+
+  /**
+   * Who the user is, if we know. NEVER a gate.
+   *
+   * Read on the CLIENT, not in a Server Component, and that is not a stylistic
+   * choice: Neon's `getSession` writes a refreshed session cookie through an
+   * UNGUARDED `ctx.setCookie`, and Next throws ReadonlyRequestCookiesError for a
+   * cookie write in an RSC. It would pass every test while signed out (the write
+   * is skipped when there are no cookies to set) and then 500 the whole map for
+   * exactly the people we had just recognised. Server Actions may write cookies;
+   * Server Components may not.
+   *
+   * `pending` is deliberately unused. This resolves after first paint and the
+   * map must never wait on it — a shopper reading prices is not asked to sign in,
+   * so signed-out IS the ready state, not a loading state. If the fetch fails,
+   * `data` is null, which means "not recognised" — the honest degradation, and
+   * identical to the anonymous path the app is built around.
+   */
+  const { data: session, refetch: refetchSession } = authClient.useSession();
+  const sessionUser = useMemo(() => {
+    const u = session?.user;
+    if (!u) return null;
+    // `name` is "" for anyone created by email OTP; ProfileSheet falls back to
+    // the email rather than rendering an empty identity.
+    return { name: u.name ?? "", email: u.email };
+  }, [session]);
 
   /**
    * Where the user IS. Every distance, radius and "Nearest" measures from here.
@@ -932,7 +959,12 @@ export default function HomePage() {
                          active:scale-90 transition-transform duration-instant"
               aria-label="Account"
             >
-              <Avatar size={32} />
+              {/* The one piece of persistent recognition chrome in the app.
+                  Without a name it drew the anonymous silhouette forever, so
+                  signing in changed nothing anyone could see: you were
+                  recognised only inside the sheet you had to reopen to check.
+                  `||`, not `??` — email OTP mints users with name: "". */}
+              <Avatar name={sessionUser ? sessionUser.name || sessionUser.email : undefined} size={32} />
             </button>
           </div>
         </div>
@@ -1238,7 +1270,8 @@ export default function HomePage() {
         onOpenSettings={() => setIsSettingsOpen(true)}
         onChangeArea={() => setIsLocationOpen(true)}
         currentAreaName={location.label}
-        user={null}
+        user={sessionUser}
+        onSessionChange={refetchSession}
       />
 
       <ReportPriceSheet

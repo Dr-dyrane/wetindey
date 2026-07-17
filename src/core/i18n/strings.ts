@@ -140,19 +140,62 @@ export const en = {
   "settings.radius_a11y": "Search radius in kilometres",
   "settings.radius_value": "{km} km",
 
-  /* Profile — ProfileSheet.tsx:32-94, hardcoded English today. */
+  /* Profile — ProfileSheet.tsx. No line numbers: they rot, and a comment that
+     points at the wrong line is worse than no comment.
+
+     `profile.reports_one` / `profile.reports_other` used to live here. They were
+     deleted, not disabled: `reportCount` was never once supplied — page.tsx
+     builds `sessionUser` as `{ name, email }` — so the pluralisation resolved to
+     "0 prices reported" for every signed-in user, including one who had reported
+     twenty. Keeping the keys would have kept `coverage()` counting Pidgin nobody
+     could ever read. The Pidgin is in git when the count is real. */
   "profile.title_signed_in": "Account",
   "profile.title_signed_out": "You",
   "profile.signed_out_name": "Sign in to WetinDey",
-  "profile.signed_out_sub": "Save markets and track your reports",
-  "profile.reports_one": "1 price reported",
-  "profile.reports_other": "{count} prices reported",
   "profile.my_reports": "My reports",
   "profile.saved_markets": "Saved markets",
   "profile.change_area": "Change area",
   "profile.settings": "Settings",
   "profile.report_problem": "Report a problem",
   "profile.about": "About WetinDey",
+
+  /* Sign in — ProfileSheet.tsx.
+   *
+   * There is no sign-up copy here because there is no sign-up step:
+   * `signIn.emailOtp` creates the user if the email is unknown. Nothing in this
+   * block may say "create an account" or "register".
+   *
+   * WHY THE ERROR KEYS EXIST. better-auth populates `error.message` itself, and
+   * its words are "Invalid OTP", "OTP expired", "Too many attempts", "Too many
+   * requests" — another codebase's acronyms, English-only, untranslatable
+   * because they never pass through `t()`. Rendering them shipped a developer's
+   * voice to Lagos. These are keyed off `error.code` and `error.status` instead,
+   * which is why there are nine of them: each one is a different thing to DO. */
+  "auth.sign_in": "Sign in",
+  "auth.sign_out": "Sign out",
+  "auth.email_label": "Your email",
+  "auth.send_code": "Send code",
+  "auth.check_mail": "Check your mail",
+  "auth.sent_to": "Sent to {email}",
+  "auth.code_label": "6-digit code",
+  "auth.resend": "Resend code",
+  "auth.resend_in": "Resend in {seconds}s",
+  "auth.different_email": "Use a different email",
+  "auth.retry": "Try again",
+  "auth.err_send": "That didn't send. Try again.",
+  "auth.err_send_network": "That didn't send. Check your network.",
+  "auth.err_email_invalid": "That email doesn't look right.",
+  // The rate limiter is 3 sends per 60s. "Wait a minute" is the only part of
+  // that a user can act on, so it is the only part that is said.
+  "auth.err_rate_limited": "Too many tries. Wait a minute.",
+  "auth.err_code_wrong": "That code isn't right.",
+  // Expired and attempts-exhausted share a remedy but not a cause, and the cause
+  // is what tells someone whether they mistyped or simply took too long.
+  "auth.err_code_expired": "That code has expired. Get a new one.",
+  "auth.err_code_attempts": "Too many tries. Get a new code.",
+  "auth.err_code_network": "We couldn't check that code. Check your network.",
+  "auth.err_code": "That code didn't work.",
+  "auth.err_sign_out": "That didn't work. Try again.",
 
   /* Geolocation problem titles. Shared verbatim between AreaPickerSheet and
      LocationSheet; only the remedy (the body) differs, so only the body forks.
@@ -346,15 +389,43 @@ export const pidgin: LocaleTable = {
   "profile.title_signed_in": "Your account",
   "profile.title_signed_out": "You",
   "profile.signed_out_name": "Sign in to WetinDey",
-  "profile.signed_out_sub": "Keep your markets, follow your reports",
-  "profile.reports_one": "1 price wey you report",
-  "profile.reports_other": "{count} prices wey you report",
   "profile.my_reports": "My reports",
   "profile.saved_markets": "Markets wey I save",
   "profile.change_area": "Change area",
   "profile.settings": "Settings",
   "profile.report_problem": "Tell us wetin spoil",
   "profile.about": "About WetinDey",
+
+  // "Sign in"/"Sign out" stay English on purpose — `profile.signed_out_name`
+  // above already reads "Sign in to WetinDey" in this table, and inventing a
+  // Pidgin verb for it here would make one sheet disagree with itself.
+  "auth.sign_in": "Sign in",
+  "auth.sign_out": "Sign out",
+  "auth.email_label": "Your email",
+  "auth.send_code": "Send code",
+  "auth.check_mail": "Go check your mail",
+  "auth.sent_to": "We send am go {email}",
+  // "6-digit code": every Pidgin rendering of "digit" I can construct is either
+  // a calque or reads as mockery. English is the honest answer, not a placeholder.
+  "auth.code_label": UNTRANSLATED,
+  "auth.resend": "Send code again",
+  // A live countdown. The register for it is not something I can vouch for, and
+  // "Resend in 43s" is legible to a Pidgin speaker as it stands.
+  "auth.resend_in": UNTRANSLATED,
+  "auth.different_email": "Use another email",
+  "auth.retry": "Try again", // verbatim from `confirm.retry` in this table.
+  "auth.err_send": "E no send. Try again.", // `confirm.failed`'s voice, unchanged.
+  "auth.err_send_network": "E no send. Check your network.",
+  "auth.err_email_invalid": "This email no correct.",
+  // Both of these hinge on saying "you have tried too many times" without it
+  // landing as a scolding. That is exactly the register the header warns about.
+  "auth.err_rate_limited": UNTRANSLATED,
+  "auth.err_code_attempts": UNTRANSLATED,
+  "auth.err_code_wrong": "That code no correct.",
+  "auth.err_code_expired": "That code don expire. Get new one.",
+  "auth.err_code_network": "We no fit check that code. Check your network.",
+  "auth.err_code": "That code no work.",
+  "auth.err_sign_out": "E no work. Try again.",
 
   "geo.err_insecure_title": "Location need secure connection",
   "geo.err_unsupported_title": "This browser no fit share location",
@@ -542,15 +613,38 @@ export const yoruba: LocaleTable = {
   "profile.title_signed_in": UNTRANSLATED,
   "profile.title_signed_out": UNTRANSLATED,
   "profile.signed_out_name": UNTRANSLATED,
-  "profile.signed_out_sub": UNTRANSLATED,
-  "profile.reports_one": UNTRANSLATED,
-  "profile.reports_other": UNTRANSLATED,
   "profile.my_reports": UNTRANSLATED,
   "profile.saved_markets": UNTRANSLATED,
   "profile.change_area": UNTRANSLATED,
   "profile.settings": UNTRANSLATED,
   "profile.report_problem": UNTRANSLATED,
   "profile.about": UNTRANSLATED,
+
+  /* Sign in. Every key, without exception — the header's rule for NEW keys, and
+     this is the worst possible place to break it. A user who cannot tell
+     invented Yorùbá from careless Yorùbá is being asked, in that moment, to hand
+     over their email address. English showing through is the honest answer. */
+  "auth.sign_in": UNTRANSLATED,
+  "auth.sign_out": UNTRANSLATED,
+  "auth.email_label": UNTRANSLATED,
+  "auth.send_code": UNTRANSLATED,
+  "auth.check_mail": UNTRANSLATED,
+  "auth.sent_to": UNTRANSLATED,
+  "auth.code_label": UNTRANSLATED,
+  "auth.resend": UNTRANSLATED,
+  "auth.resend_in": UNTRANSLATED,
+  "auth.different_email": UNTRANSLATED,
+  "auth.retry": UNTRANSLATED,
+  "auth.err_send": UNTRANSLATED,
+  "auth.err_send_network": UNTRANSLATED,
+  "auth.err_email_invalid": UNTRANSLATED,
+  "auth.err_rate_limited": UNTRANSLATED,
+  "auth.err_code_wrong": UNTRANSLATED,
+  "auth.err_code_expired": UNTRANSLATED,
+  "auth.err_code_attempts": UNTRANSLATED,
+  "auth.err_code_network": UNTRANSLATED,
+  "auth.err_code": UNTRANSLATED,
+  "auth.err_sign_out": UNTRANSLATED,
 
   "geo.err_insecure_title": UNTRANSLATED,
   "geo.err_unsupported_title": UNTRANSLATED,
@@ -691,6 +785,13 @@ export const NEEDS_NATIVE_REVIEW: Readonly<
    * confidence words: "Small small" for medium confidence is idiomatic but may
    * read as hedging about the FOOD rather than about the DATA, which would
    * invert the meaning of the whole trust model.
+   *
+   * The `auth.*` entries are the sign-in flow. They were written by mirroring
+   * constructions this table already uses ("E no send." is `confirm.failed`
+   * verbatim), which makes them consistent but does not make them vouched for —
+   * a Lagos speaker has still never read them. `auth.sent_to` is the one to look
+   * at hardest: "We send am go {email}" has to carry a bare email address on the
+   * end without the sentence collapsing.
    */
   pidgin: [
     "settings",
@@ -699,6 +800,13 @@ export const NEEDS_NATIVE_REVIEW: Readonly<
     "share",
     "light_mode",
     "dark_mode",
+    "auth.send_code",
+    "auth.check_mail",
+    "auth.sent_to",
+    "auth.resend",
+    "auth.different_email",
+    "auth.err_email_invalid",
+    "auth.err_code_expired",
     "item.confidence_high",
     "item.confidence_medium",
     "item.confidence_low",
