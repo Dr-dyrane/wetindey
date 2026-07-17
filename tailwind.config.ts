@@ -88,17 +88,29 @@ const config: Config = {
        * https://developer.apple.com/design/human-interface-guidelines/typography
        */
       fontSize: {
-        "large-title": ["2.125rem", { lineHeight: "2.5625rem", letterSpacing: "0.023em" }],   /* 34 / 41 */
-        "title-1": ["1.75rem", { lineHeight: "2.125rem", letterSpacing: "0.013em" }],         /* 28 / 34 */
-        "title-2": ["1.375rem", { lineHeight: "1.75rem", letterSpacing: "0.016em" }],         /* 22 / 28 */
-        "title-3": ["1.25rem", { lineHeight: "1.5625rem", letterSpacing: "0.019em" }],        /* 20 / 25 */
-        headline: ["1.0625rem", { lineHeight: "1.375rem", letterSpacing: "-0.024em", fontWeight: "600" }], /* 17 / 22 */
-        body: ["1.0625rem", { lineHeight: "1.375rem", letterSpacing: "-0.024em" }],           /* 17 / 22 */
-        callout: ["1rem", { lineHeight: "1.3125rem", letterSpacing: "-0.02em" }],             /* 16 / 21 */
-        subhead: ["0.9375rem", { lineHeight: "1.25rem", letterSpacing: "-0.016em" }],         /* 15 / 20 */
-        footnote: ["0.8125rem", { lineHeight: "1.125rem", letterSpacing: "-0.006em" }],       /* 13 / 18 */
-        "caption-1": ["0.75rem", { lineHeight: "1rem", letterSpacing: "0em" }],               /* 12 / 16 */
-        "caption-2": ["0.6875rem", { lineHeight: "0.8125rem", letterSpacing: "0.006em" }],    /* 11 / 13 */
+        "large-title": [
+          "2.125rem",
+          { lineHeight: "2.5625rem", letterSpacing: "0.023em" },
+        ] /* 34 / 41 */,
+        "title-1": ["1.75rem", { lineHeight: "2.125rem", letterSpacing: "0.013em" }] /* 28 / 34 */,
+        "title-2": ["1.375rem", { lineHeight: "1.75rem", letterSpacing: "0.016em" }] /* 22 / 28 */,
+        "title-3": ["1.25rem", { lineHeight: "1.5625rem", letterSpacing: "0.019em" }] /* 20 / 25 */,
+        headline: [
+          "1.0625rem",
+          { lineHeight: "1.375rem", letterSpacing: "-0.024em", fontWeight: "600" },
+        ] /* 17 / 22 */,
+        body: ["1.0625rem", { lineHeight: "1.375rem", letterSpacing: "-0.024em" }] /* 17 / 22 */,
+        callout: ["1rem", { lineHeight: "1.3125rem", letterSpacing: "-0.02em" }] /* 16 / 21 */,
+        subhead: ["0.9375rem", { lineHeight: "1.25rem", letterSpacing: "-0.016em" }] /* 15 / 20 */,
+        footnote: [
+          "0.8125rem",
+          { lineHeight: "1.125rem", letterSpacing: "-0.006em" },
+        ] /* 13 / 18 */,
+        "caption-1": ["0.75rem", { lineHeight: "1rem", letterSpacing: "0em" }] /* 12 / 16 */,
+        "caption-2": [
+          "0.6875rem",
+          { lineHeight: "0.8125rem", letterSpacing: "0.006em" },
+        ] /* 11 / 13 */,
       },
 
       spacing: {
@@ -116,15 +128,23 @@ const config: Config = {
       },
 
       transitionDuration: {
-        instant: "100ms",
-        micro: "160ms",
-        standard: "230ms",
-        sheet: "330ms",
-        map: "400ms",
+        /* Legacy aliases stay until their callers migrate; all resolve through
+           the shared CSS token surface rather than private literal values. */
+        instant: "var(--motion-duration-instant)",
+        micro: "var(--motion-duration-fast)",
+        standard: "var(--motion-duration-standard)",
+        sheet: "var(--motion-duration-slow)",
+        map: "var(--motion-duration-deliberate)",
+        "ultra-fast": "var(--motion-duration-ultra-fast)",
+        fast: "var(--motion-duration-fast)",
+        slow: "var(--motion-duration-slow)",
+        deliberate: "var(--motion-duration-deliberate)",
+        continuous: "var(--motion-duration-continuous)",
       },
       transitionTimingFunction: {
-        decelerate: "cubic-bezier(0, 0, 0.2, 1)",
-        accelerate: "cubic-bezier(0.4, 0, 1, 1)",
+        decelerate: "var(--motion-ease-decelerate)",
+        accelerate: "var(--motion-ease-accelerate)",
+        standard: "var(--motion-ease-standard)",
         /**
          * Apple's sheet curve. It does NOT overshoot, despite the name: both y
          * control points (0.72, 1.0) sit inside [0,1], so it is monotonic and
@@ -135,7 +155,7 @@ const config: Config = {
          * border-radius on this curve, and a y > 1 control point drives the
          * interpolated value past its endpoint mid-settle.
          */
-        spring: "cubic-bezier(0.32, 0.72, 0, 1)",
+        spring: "var(--motion-ease-emphasized)",
       },
       fontFamily: {
         sans: [

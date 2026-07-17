@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { ChevronLeft } from "lucide-react";
+import { motion, transition } from "@/design-system/motion";
 
 interface NavigationStackProps {
   /**
@@ -34,7 +35,7 @@ interface NavigationStackProps {
  * (tailwind.config.ts) — it is how long the outgoing level needs to exist in
  * order to have something to animate out.
  */
-const POP_HOLD_MS = 330;
+const POP_HOLD_MS = motion.duration.slow;
 
 /**
  * A two-level navigation stack on one surface.
@@ -107,7 +108,7 @@ export function NavigationStack({
       <div
         inert={isOpen}
         aria-hidden={isOpen || undefined}
-        className="absolute inset-0 transition-transform duration-sheet ease-spring"
+        className={`absolute inset-0 ${transition.push}`}
         style={{ transform: isOpen ? "translate3d(-25%, 0, 0)" : "translate3d(0, 0, 0)" }}
       >
         {listNode}
@@ -141,11 +142,11 @@ export function NavigationStack({
         aria-label={detailLabel}
         inert={!isOpen}
         aria-hidden={!isOpen || undefined}
-        className="stack-surface absolute inset-0 flex flex-col overflow-hidden transition-transform duration-sheet ease-spring"
+        className={`stack-surface absolute inset-0 flex flex-col overflow-hidden ${transition.push}`}
         style={{ transform: isOpen ? "translate3d(0, 0, 0)" : "translate3d(100%, 0, 0)" }}
       >
         {onDetailBack && content ? (
-          <div className="shrink-0 px-3 pt-3 pb-1">
+          <div className="shrink-0 px-3 pb-1 pt-3">
             {/* 44pt target; the chevron lands at 24px, flush with the leading
                 edge of the detail content below it. No divider under the row:
                 it is the same surface as the content it sits above, so there is
@@ -153,7 +154,7 @@ export function NavigationStack({
             <button
               type="button"
               onClick={onDetailBack}
-              className="squircle inline-flex h-tap items-center gap-1 px-3 text-body text-accent transition-opacity duration-micro ease-decelerate active:opacity-60"
+              className={`squircle inline-flex h-tap items-center gap-1 px-3 text-body text-accent active:opacity-60 ${transition.press}`}
             >
               {/* strokeWidth matches the disclosure chevrons (ListRow,
                   SheetPicker); at the default weight this reads lighter than

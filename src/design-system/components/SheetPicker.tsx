@@ -1,15 +1,13 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import { Check, ChevronDown } from "lucide-react";
-import { ModalSheet } from "./ModalSheet";
+import { ModalSheet, useModalSheetNavigation } from "./ModalSheet";
+import { transition } from "@/design-system/motion";
 
-/* Not exported: every caller passes options as an object literal and never names
-   the type. Kept as a named interface because SheetPickerProps reads better. */
 interface PickerOption {
   id: string;
   label: string;
-  /** Secondary line — a price, a distance, an address. */
   detail?: string;
   disabled?: boolean;
 }
@@ -24,21 +22,55 @@ interface SheetPickerProps {
   disabled?: boolean;
 }
 
+function PickerOptions({
+  options,
+  value,
+  onSelect,
+}: {
+  options: PickerOption[];
+  value?: string | null;
+  onSelect: (id: string) => void;
+}) {
+  return (
+    <div className="px-4 py-2">
+      <div className="squircle-card overflow-hidden bg-surface dark:bg-surface-elevated">
+        {options.length === 0 && (
+          <p className="px-4 py-3 text-body text-text-tertiary">Nothing available</p>
+        )}
+        {options.map((option) => {
+          const selected = option.id === value;
+          return (
+            <button
+              key={option.id}
+              type="button"
+              disabled={option.disabled}
+              onClick={() => onSelect(option.id)}
+              aria-current={selected}
+              className={`flex min-h-tap w-full items-center gap-3 px-4 py-2.5 text-left active:bg-fillTertiary disabled:opacity-40 ${transition.feedback}`}
+            >
+              <span className="min-w-0 flex-1">
+                <span className="block truncate text-body text-text-primary">{option.label}</span>
+                {option.detail && (
+                  <span className="mt-0.5 block truncate text-footnote text-text-secondary">
+                    {option.detail}
+                  </span>
+                )}
+              </span>
+              {selected && (
+                <Check className="h-5 w-5 shrink-0 text-status-info" strokeWidth={2.5} />
+              )}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 /**
- * A choice control that presents a SHEET, not a dropdown.
- *
- * This is what the HIG actually asks for, twice over:
- *
- *   · "Avoid displaying popovers in compact views" — a dropdown anchored to its
- *     trigger is a popover, and every phone is a compact view. Apple's remedy
- *     is explicit: present a sheet instead.
- *   · "Use an action sheet — not a menu — to provide choices related to an
- *     action." Picking the market you are reporting a price for is part of that
- *     action, not an elective browse.
- *
- * A dropdown also cannot do what this needs: 30 markets do not fit under a
- * trigger, and each row carries a second line of context. A sheet gets the full
- * height, the scroll, and the two-line rows.
+ * A choice control that uses the existing modal's contextual navigation when
+ * one is present. This removes the historical ModalSheet-inside-ModalSheet
+ * behavior without downgrading a compact choice to a dropdown.
  */
 export function SheetPicker({
   options,
@@ -49,70 +81,77 @@ export function SheetPicker({
   placeholder = "Choose",
   disabled,
 }: SheetPickerProps) {
-  const [open, setOpen] = useState(false);
-  const selected = options.find((o) => o.id === value) ?? null;
+  const navigation = useModalSheetNavigation();
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const [fallbackOpen, setFallbackOpen] = useState(false);
+  const [childId, setChildId] = useState<string | null>(null);
+  const selected = options.find((option) => option.id === value) ?? null;
   const labelId = React.useId();
+  const isOpen = navigation ? navigation.childOpen && navigation.childId === childId : fallbackOpen;
 
   const commit = (id: string) => {
     onSelect(id);
-    setOpen(false);
+    if (navigation) {
+      setChildId(null);
+      navigation.popChild();
+    } else {
+      setFallbackOpen(false);
+    }
+  };
+
+  const openPicker = () => {
+    if (!navigation) {
+      setFallbackOpen(true);
+      return;
+    }
+
+    const nextChildId = navigation.pushChild({
+      title,
+      returnFocus: triggerRef.current,
+      content: <PickerOptions options={options} value={value} onSelect={commit} />,
+    });
+    setChildId(nextChildId);
   };
 
   return (
     <div>
       {label && (
-        <label id={labelId} className="mb-1.5 block text-footnote text-text-secondary">{label}</label>
+        <label id={labelId} className="mb-1.5 block text-footnote text-text-secondary">
+          {label}
+        </label>
       )}
 
       <button
+        ref={triggerRef}
         type="button"
         disabled={disabled}
-        onClick={() => setOpen(true)}
+        onClick={openPicker}
         aria-haspopup="dialog"
-        aria-expanded={open}
+        aria-expanded={isOpen}
         aria-labelledby={label ? labelId : undefined}
-        className="flex min-h-tap w-full items-center justify-between gap-2 bg-fillTertiary px-4 text-left
-                   squircle text-text-primary
-                   disabled:opacity-40 active:scale-[0.99] transition-transform duration-instant"
+        aria-label={label ? undefined : title}
+        className={`squircle flex min-h-tap w-full items-center justify-between gap-2 bg-fillTertiary px-4 text-left text-text-primary disabled:opacity-40 ${transition.press}`}
       >
-        <span className={`truncate text-body ${selected ? "text-text-primary" : "text-text-tertiary"}`}>
+        <span
+          className={`truncate text-body ${selected ? "text-text-primary" : "text-text-tertiary"}`}
+        >
           {selected?.label ?? placeholder}
         </span>
         <ChevronDown className="h-4 w-4 shrink-0 text-text-tertiary" strokeWidth={2.5} />
       </button>
 
-      <ModalSheet open={open} onClose={() => setOpen(false)} title={title} size="form">
-        <div className="px-4 py-2">
-          <div className="overflow-hidden bg-surface dark:bg-surface-elevated squircle-card">
-            {options.length === 0 && (
-              <p className="px-4 py-3 text-body text-text-tertiary">Nothing available</p>
-            )}
-            {options.map((o) => {
-              const isSel = o.id === value;
-              return (
-                <button
-                  key={o.id}
-                  type="button"
-                  disabled={o.disabled}
-                  onClick={() => commit(o.id)}
-                  aria-current={isSel}
-                  /* Rows separate by fill on press, never by a rule. */
-                  className="flex min-h-tap w-full items-center gap-3 px-4 py-2.5 text-left
-                             disabled:opacity-40 active:bg-fillTertiary transition-colors duration-instant"
-                >
-                  <span className="min-w-0 flex-1">
-                    <span className="block truncate text-body text-text-primary">{o.label}</span>
-                    {o.detail && (
-                      <span className="mt-0.5 block truncate text-footnote text-text-secondary">{o.detail}</span>
-                    )}
-                  </span>
-                  {isSel && <Check className="h-5 w-5 shrink-0 text-status-info" strokeWidth={2.5} />}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      </ModalSheet>
+      {/* Standalone use remains supported. All live call sites are inside a
+          ModalSheet and therefore take the contextual-push path above. */}
+      {!navigation && (
+        <ModalSheet
+          open={fallbackOpen}
+          onClose={() => setFallbackOpen(false)}
+          title={title}
+          size="form"
+        >
+          <PickerOptions options={options} value={value} onSelect={commit} />
+        </ModalSheet>
+      )}
     </div>
   );
 }

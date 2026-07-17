@@ -31,16 +31,16 @@
 
 :root {
   /* ── Surfaces ── */
-  --color-background: #F2F2F7;          /* systemGroupedBackground */
-  --color-surface: #FFFFFF;             /* secondarySystemGroupedBackground */
-  --color-surface-elevated: #FFFFFF;
-  --color-surface-sunken: #E9E9EF;
+  --color-background: #f2f2f7; /* systemGroupedBackground */
+  --color-surface: #ffffff; /* secondarySystemGroupedBackground */
+  --color-surface-elevated: #ffffff;
+  --color-surface-sunken: #e9e9ef;
 
   /* ── Materials ──
      Apple names five thicknesses and describes what they do, but publishes no
      blur radius for any of them. These are calibrated by eye against iOS, not
      transcribed from a spec. Treat as art direction. */
-  --material-ultrathin: rgba(255, 255, 255, 0.30);
+  --material-ultrathin: rgba(255, 255, 255, 0.3);
   --material-thin: rgba(255, 255, 255, 0.44);
   --material-regular: rgba(255, 255, 255, 0.58);
   --material-thick: rgba(255, 255, 255, 0.72);
@@ -54,12 +54,12 @@
 
   /* ── Labels ── */
   --color-text-primary: #000000;
-  --color-text-secondary: rgba(60, 60, 67, 0.60);
-  --color-text-tertiary: rgba(60, 60, 67, 0.30);
+  --color-text-secondary: rgba(60, 60, 67, 0.6);
+  --color-text-tertiary: rgba(60, 60, 67, 0.3);
   --color-text-quaternary: rgba(60, 60, 67, 0.18);
 
   /* ── Fills — controls resting ON a surface. Carry separation instead of strokes. ── */
-  --color-fill-primary: rgba(120, 120, 128, 0.20);
+  --color-fill-primary: rgba(120, 120, 128, 0.2);
   --color-fill-secondary: rgba(120, 120, 128, 0.16);
   --color-fill-tertiary: rgba(118, 118, 128, 0.12);
   --color-fill-quaternary: rgba(116, 116, 128, 0.08);
@@ -70,11 +70,11 @@
      an accent fill turns invisible in dark mode. Always pair the two. */
   --color-accent: #000000;
   --color-accent-pressed: #333333;
-  --color-accent-contrast: #FFFFFF;
+  --color-accent-contrast: #ffffff;
 
   /* Ink on a saturated status fill. Stays white in both themes because the
      status hues are saturated mid-tones in both — unlike accent, which flips. */
-  --color-on-status: #FFFFFF;
+  --color-on-status: #ffffff;
 
   /* Scrim behind a presented surface. Black in both themes: it dims what is
      behind, and dimming is subtraction of light regardless of theme.
@@ -88,10 +88,10 @@
   --color-monogram-ink: rgba(0, 0, 0, 0.42);
 
   /* ── Signal — Apple system colours, light values ── */
-  --color-status-confirmed: #34C759;   /* systemGreen */
-  --color-status-caution: #FF9500;     /* systemOrange */
-  --color-status-unavailable: #FF3B30; /* systemRed */
-  --color-status-info: #007AFF;        /* systemBlue */
+  --color-status-confirmed: #34c759; /* systemGreen */
+  --color-status-caution: #ff9500; /* systemOrange */
+  --color-status-unavailable: #ff3b30; /* systemRed */
+  --color-status-info: #007aff; /* systemBlue */
 
   --color-status-confirmed-bg: rgba(52, 199, 89, 0.14);
   --color-status-caution-bg: rgba(255, 149, 0, 0.14);
@@ -125,16 +125,16 @@
    *
    * docs/ACCESSIBILITY.md P0-6.
    */
-  --color-status-confirmed-fg: #1E7634;
-  --color-status-caution-fg: #A94C00;
-  --color-status-unavailable-fg: #BE261B;
-  --color-status-info-fg: #0058D0;
+  --color-status-confirmed-fg: #1e7634;
+  --color-status-caution-fg: #a94c00;
+  --color-status-unavailable-fg: #be261b;
+  --color-status-info-fg: #0058d0;
 
-  --color-focus-ring: #007AFF;
+  --color-focus-ring: #007aff;
 
   /* ── Elevation — the only separation mechanism besides material and fill ── */
   --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
-  --shadow-raised: 0 4px 16px rgba(0, 0, 0, 0.10), 0 1px 3px rgba(0, 0, 0, 0.06);
+  --shadow-raised: 0 4px 16px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.06);
   --shadow-sheet: 0 -2px 32px rgba(0, 0, 0, 0.14);
   --shadow-island: 0 10px 40px rgba(0, 0, 0, 0.18), 0 2px 8px rgba(0, 0, 0, 0.08);
 
@@ -142,23 +142,66 @@
   --safe-area-right: env(safe-area-inset-right, 0px);
   --safe-area-bottom: env(safe-area-inset-bottom, 0px);
   --safe-area-left: env(safe-area-inset-left, 0px);
+
+  /* ── Motion & interaction ──
+     Semantic values live in src/design-system/motion.ts. CSS is the visual
+     source of truth so plain Tailwind and non-React surfaces consume the same
+     vocabulary. A component selects a named recipe; it never invents a duration. */
+  --motion-duration-instant: 80ms;
+  --motion-duration-ultra-fast: 120ms;
+  --motion-duration-fast: 160ms;
+  --motion-duration-standard: 230ms;
+  --motion-duration-slow: 320ms;
+  --motion-duration-deliberate: 420ms;
+  --motion-duration-continuous: 0ms;
+
+  --motion-ease-decelerate: cubic-bezier(0, 0, 0.2, 1);
+  --motion-ease-accelerate: cubic-bezier(0.4, 0, 1, 1);
+  --motion-ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --motion-ease-emphasized: cubic-bezier(0.32, 0.72, 0, 1);
+  --motion-ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+
+  --motion-press-scale: 0.985;
+  --motion-modal-start-scale: 0.98;
+  --motion-scrim-opacity: 0.28;
+  --motion-sheet-radius: 28px;
+  --motion-scale-press: var(--motion-press-scale);
+  --motion-scale-modal-start: var(--motion-modal-start-scale);
+  --motion-opacity-scrim: var(--motion-scrim-opacity);
+  --motion-opacity-disabled: 0.4;
+  --motion-radius-sheet: var(--motion-sheet-radius);
+  --motion-radius-control-minimum: 14px;
+  --motion-radius-control-maximum: 16px;
+  --motion-elevation-card: var(--shadow-card);
+  --motion-elevation-raised: var(--shadow-raised);
+  --motion-elevation-sheet: var(--shadow-sheet);
+  --motion-elevation-island: var(--shadow-island);
+  --motion-border-transition: none;
+  --motion-origin-sheet: 50% 100%;
+  --motion-origin-modal: 50% 50%;
+  --motion-sheet-resistance: 0.35;
+  --motion-sheet-min-fraction: 0.12;
+  --motion-sheet-flick-velocity: 900px;
+  --motion-sheet-max-velocity: 2400px;
+  --motion-blur-backdrop: var(--material-blur);
+  --motion-blur-reduced: 0px;
 }
 
 .dark {
   --color-background: #000000;
-  --color-surface: #1C1C1E;
-  --color-surface-elevated: #2C2C2E;
+  --color-surface: #1c1c1e;
+  --color-surface-elevated: #2c2c2e;
   --color-surface-sunken: #121214;
 
   --material-brightness: 0.86;
   --material-ultrathin: rgba(28, 28, 30, 0.36);
-  --material-thin: rgba(28, 28, 30, 0.50);
+  --material-thin: rgba(28, 28, 30, 0.5);
   --material-regular: rgba(28, 28, 30, 0.64);
   --material-thick: rgba(28, 28, 30, 0.76);
 
-  --color-text-primary: #FFFFFF;
-  --color-text-secondary: rgba(235, 235, 245, 0.60);
-  --color-text-tertiary: rgba(235, 235, 245, 0.30);
+  --color-text-primary: #ffffff;
+  --color-text-secondary: rgba(235, 235, 245, 0.6);
+  --color-text-tertiary: rgba(235, 235, 245, 0.3);
   --color-text-quaternary: rgba(235, 235, 245, 0.16);
 
   --color-fill-primary: rgba(120, 120, 128, 0.36);
@@ -166,12 +209,12 @@
   --color-fill-tertiary: rgba(118, 118, 128, 0.24);
   --color-fill-quaternary: rgba(118, 118, 128, 0.18);
 
-  --color-accent: #FFFFFF;
-  --color-accent-pressed: #D1D1D6;
+  --color-accent: #ffffff;
+  --color-accent-pressed: #d1d1d6;
   --color-accent-contrast: #000000;
 
   /* Unchanged from light: status hues stay saturated, so their ink stays white. */
-  --color-on-status: #FFFFFF;
+  --color-on-status: #ffffff;
   /* Heavier in dark — a 35% dim reads as almost nothing over a dark map. */
   --color-scrim: rgba(0, 0, 0, 0.55);
   --color-dim: #000000;
@@ -179,15 +222,15 @@
   --color-monogram-ink: rgba(0, 0, 0, 0.42);
 
   /* Apple's dark variants: brighter, less saturated, to hold against black. */
-  --color-status-confirmed: #30D158;
-  --color-status-caution: #FF9F0A;
-  --color-status-unavailable: #FF453A;
-  --color-status-info: #0A84FF;
+  --color-status-confirmed: #30d158;
+  --color-status-caution: #ff9f0a;
+  --color-status-unavailable: #ff453a;
+  --color-status-info: #0a84ff;
 
   --color-status-confirmed-bg: rgba(48, 209, 88, 0.18);
   --color-status-caution-bg: rgba(255, 159, 10, 0.18);
   --color-status-unavailable-bg: rgba(255, 69, 58, 0.18);
-  --color-status-info-bg: rgba(10, 132, 255, 0.20);
+  --color-status-info-bg: rgba(10, 132, 255, 0.2);
 
   /* Dark ink, and it is NOT simply the pure hue — two of the four never passed.
    *
@@ -214,12 +257,12 @@
    * at this file asserted "dark mode passes comfortably; this is light-only",
    * which is false and contradicted the very document it cited.
    */
-  --color-status-confirmed-fg: #30D158;
-  --color-status-caution-fg: #FF9F0A;
-  --color-status-unavailable-fg: #FF6961;
-  --color-status-info-fg: #409CFF;
+  --color-status-confirmed-fg: #30d158;
+  --color-status-caution-fg: #ff9f0a;
+  --color-status-unavailable-fg: #ff6961;
+  --color-status-info-fg: #409cff;
 
-  --color-focus-ring: #0A84FF;
+  --color-focus-ring: #0a84ff;
 
   --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.5);
   --shadow-raised: 0 4px 16px rgba(0, 0, 0, 0.55), 0 1px 3px rgba(0, 0, 0, 0.4);
@@ -230,8 +273,9 @@
 @layer base {
   html {
     /* SF on Apple platforms; the system stack elsewhere. */
-    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display",
-                 "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    font-family:
+      -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Segoe UI", Roboto,
+      "Helvetica Neue", Arial, sans-serif;
   }
 
   body {
@@ -263,13 +307,13 @@
    * the platform does it.
    */
   * {
-    scrollbar-width: none;              /* Firefox */
-    -ms-overflow-style: none;           /* legacy Edge */
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* legacy Edge */
   }
   *::-webkit-scrollbar {
     width: 0;
     height: 0;
-    display: none;                      /* WebKit / Blink */
+    display: none; /* WebKit / Blink */
   }
 }
 
@@ -328,10 +372,18 @@
     }
     /* Squircle corners read tighter than a circular arc at the same radius, so
        the radius is opened up to keep the optical weight. Tuned by eye. */
-    .squircle { border-radius: 20px; }
-    .squircle-card { border-radius: 26px; }
-    .squircle-lg { border-radius: 28px; }
-    .squircle-xl { border-radius: 36px; }
+    .squircle {
+      border-radius: 20px;
+    }
+    .squircle-card {
+      border-radius: 26px;
+    }
+    .squircle-lg {
+      border-radius: 28px;
+    }
+    .squircle-xl {
+      border-radius: 36px;
+    }
   }
 
   /**
@@ -347,10 +399,18 @@
     backdrop-filter: blur(var(--material-blur)) saturate(var(--material-saturate))
       brightness(var(--material-brightness));
   }
-  .material-ultrathin { background-color: var(--material-ultrathin); }
-  .material-thin { background-color: var(--material-thin); }
-  .material-regular { background-color: var(--material-regular); }
-  .material-thick { background-color: var(--material-thick); }
+  .material-ultrathin {
+    background-color: var(--material-ultrathin);
+  }
+  .material-thin {
+    background-color: var(--material-thin);
+  }
+  .material-regular {
+    background-color: var(--material-regular);
+  }
+  .material-thick {
+    background-color: var(--material-thick);
+  }
 
   /**
    * The presented-sheet panel (ModalSheet), and the surface a NavigationStack
@@ -398,6 +458,103 @@
   .stack-surface {
     background-color: var(--stack-surface, var(--color-background));
   }
+
+  /* Semantic transition recipes. Components import the corresponding names
+     from src/design-system/motion.ts rather than reproducing a property list. */
+  .motion-press {
+    transition-property: transform, opacity;
+    transition-duration: var(--motion-duration-fast);
+    transition-timing-function: var(--motion-ease-standard);
+  }
+  .motion-press:active {
+    transform: scale(var(--motion-scale-press));
+  }
+  .motion-focus {
+    transition-property: background-color, color, opacity;
+    transition-duration: var(--motion-duration-fast);
+    transition-timing-function: var(--motion-ease-standard);
+  }
+  .motion-reveal {
+    transition-property: opacity, transform;
+    transition-duration: var(--motion-duration-standard);
+    transition-timing-function: var(--motion-ease-decelerate);
+  }
+  .motion-present-sheet {
+    transition-property: transform, opacity;
+    transition-duration: var(--motion-duration-slow);
+    transition-timing-function: var(--motion-ease-emphasized);
+  }
+  .motion-dismiss-sheet {
+    transition-property: transform, opacity;
+    transition-duration: var(--motion-duration-fast);
+    transition-timing-function: var(--motion-ease-accelerate);
+  }
+  .motion-feedback {
+    transition-property: background-color, color, opacity, transform;
+    transition-duration: var(--motion-duration-fast);
+    transition-timing-function: var(--motion-ease-standard);
+  }
+  .motion-snap-sheet {
+    transition-property: transform, border-radius;
+    transition-duration: var(--motion-duration-slow);
+    transition-timing-function: var(--motion-ease-emphasized);
+  }
+  .motion-direct-manipulation {
+    transition-property: none;
+  }
+  .motion-push {
+    transition-property: transform, opacity;
+    transition-duration: var(--motion-duration-slow);
+    transition-timing-function: var(--motion-ease-emphasized);
+  }
+  .motion-replace {
+    transition-property: opacity, background-color, color;
+    transition-duration: var(--motion-duration-ultra-fast);
+    transition-timing-function: var(--motion-ease-standard);
+  }
+
+  /* One presentation shell owns both panel and backdrop. The panel remains in
+     the tree through exit, so focus restoration and the visual dismissal have
+     one lifecycle. */
+  .motion-modal-backdrop {
+    background-color: var(--color-dim);
+    transition: opacity var(--motion-duration-standard) var(--motion-ease-decelerate);
+  }
+  .motion-modal-backdrop[data-motion-state="hidden"] {
+    opacity: 0;
+    pointer-events: none;
+  }
+  .motion-modal-backdrop[data-motion-state="visible"] {
+    opacity: var(--motion-opacity-scrim);
+  }
+  .motion-modal-panel {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+    transition-property: transform, opacity;
+    transition-duration: var(--motion-duration-slow);
+    transition-timing-function: var(--motion-ease-emphasized);
+    transform-origin: var(--motion-origin-sheet);
+  }
+  .motion-modal-panel[data-motion-state="hidden"] {
+    opacity: 0;
+    transform: translate3d(0, 16px, 0);
+  }
+  .motion-modal-panel.motion-present-sheet {
+    transition-duration: var(--motion-duration-slow);
+    transition-timing-function: var(--motion-ease-emphasized);
+  }
+  .motion-modal-panel.motion-dismiss-sheet {
+    transition-duration: var(--motion-duration-fast);
+    transition-timing-function: var(--motion-ease-accelerate);
+  }
+  @media (min-width: 768px) {
+    .motion-modal-panel {
+      transform-origin: var(--motion-origin-modal);
+    }
+    .motion-modal-panel[data-motion-state="hidden"] {
+      transform: translate3d(0, 8px, 0) scale(var(--motion-scale-modal-start));
+    }
+  }
 }
 
 @media (display-mode: standalone) {
@@ -416,6 +573,16 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  :root {
+    --motion-duration-instant: 1ms;
+    --motion-duration-ultra-fast: 1ms;
+    --motion-duration-fast: 1ms;
+    --motion-duration-standard: 1ms;
+    --motion-duration-slow: 1ms;
+    --motion-duration-deliberate: 1ms;
+    --motion-press-scale: 1;
+  }
+
   *,
   *::before,
   *::after {
@@ -424,10 +591,19 @@
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
+
+  .motion-modal-panel,
+  .motion-modal-panel[data-motion-state="hidden"] {
+    transform: none !important;
+  }
 }
 
 /* Reduce Transparency: Apple's materials collapse to opaque. Ours must too. */
 @media (prefers-reduced-transparency: reduce) {
+  :root {
+    --motion-blur-backdrop: var(--motion-blur-reduced);
+  }
+
   .material-ultrathin,
   .material-thin,
   .material-regular,

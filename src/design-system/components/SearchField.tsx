@@ -2,6 +2,7 @@
 
 import React from "react";
 import { Search, X } from "lucide-react";
+import { transition } from "@/design-system/motion";
 
 interface SearchFieldProps {
   value: string;
@@ -59,11 +60,13 @@ export function SearchField({
   // input would be drawn exactly where this box clips it — present in the CSS,
   // invisible on screen. `focus-within` puts it on the clipping box, which has room.
   return (
-    <div className="relative flex h-9 w-full items-center overflow-hidden bg-fillTertiary squircle-full
-                    transition-colors duration-micro focus-within:bg-surface
-                    focus-within:outline focus-within:outline-2 focus-within:outline-offset-2
-                    focus-within:outline-focusRing">
-      <Search className="pointer-events-none absolute left-2.5 h-4 w-4 text-text-tertiary" strokeWidth={2.5} />
+    <div
+      className={`squircle-full relative flex h-9 w-full items-center overflow-hidden bg-fillTertiary ${transition.focus} focus-within:bg-surface focus-within:outline focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-focusRing`}
+    >
+      <Search
+        className="pointer-events-none absolute left-2.5 h-4 w-4 text-text-tertiary"
+        strokeWidth={2.5}
+      />
       <input
         value={value}
         onChange={onChange}
@@ -72,16 +75,14 @@ export function SearchField({
         placeholder={placeholder}
         aria-label={placeholder}
         enterKeyHint="search"
-        className="h-full w-full bg-transparent pl-8 pr-9 text-body text-text-primary
-                   placeholder:text-text-tertiary"
+        className="h-full w-full bg-transparent pl-8 pr-9 text-body text-text-primary placeholder:text-text-tertiary"
       />
       {value && (
         <button
           onClick={onClear}
           aria-label="Clear search"
           /* 44px target, 17px glyph — hit area centred on the visual mark. */
-          className="absolute right-0 grid h-tap w-tap place-items-center text-text-tertiary
-                     active:opacity-50 transition-opacity duration-instant"
+          className={`absolute right-0 grid h-tap w-tap place-items-center text-text-tertiary active:opacity-50 ${transition.press}`}
         >
           <span className="grid h-[17px] w-[17px] place-items-center rounded-full bg-text-tertiary">
             <X className="h-[11px] w-[11px] text-surface" strokeWidth={3.5} />

@@ -2,6 +2,7 @@ import React from "react";
 import { clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 import { haptics } from "@/lib/haptics";
+import { transition } from "@/design-system/motion";
 
 export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: "primary" | "secondary" | "danger" | "ghost";
@@ -10,7 +11,10 @@ export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElemen
 }
 
 export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant = "primary", size = "md", isLoading, children, ...props }, ref) => {
+  (
+    { className, variant = "primary", size = "md", isLoading, children, onPointerDown, ...props },
+    ref
+  ) => {
     return (
       <button
         ref={ref}
@@ -36,7 +40,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
              * WCAG 2.1 SC 2.4.7, and `AGENTS.md`'s Definition of Done — "focus
              * outlines are complete". `docs/ACCESSIBILITY.md` carries it as P0-1.
              *
-             * AND `transition`, NOT `transition-all`.
+             * AND the shared `transition.press` recipe, NOT `transition-all`.
              *
              * `transition-all` transitions `outline-color`, `-width` and `-offset`,
              * so the ring FADES IN over `duration-micro` rather than appearing. For
@@ -46,9 +50,9 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
              * simply animated, and an animated focus indicator is not one; it also
              * ignores `prefers-reduced-motion`.
              *
-             * Plain `transition` names an explicit property list that excludes
-             * `outline`, so the ring lands instantly. `transform` is in that list, so
-             * `active:scale-[0.97]` still animates.
+             * The shared recipe names only transform and opacity, so the ring lands
+             * instantly while press feedback remains responsive and honors reduced
+             * motion through its CSS variable.
              *
              * RULE: never `transition-all`, nor a bare `duration-*`, on a focusable
              * element — `transition-duration` with no `transition-property` defaults
@@ -66,7 +70,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
              * If a hover or active style ever needs to suppress the ring, scope it to
              * that state. Never to the base.
              */
-            "inline-flex items-center justify-center font-semibold transition duration-micro ease-decelerate disabled:opacity-50 disabled:pointer-events-none active:scale-[0.97]",
+            `inline-flex items-center justify-center font-semibold ${transition.press} disabled:pointer-events-none disabled:opacity-50`,
             {
               /**
                * Press is an opacity utility. The old `bg-opacity` / slash-tint
@@ -93,19 +97,20 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
               "bg-accent text-accent-contrast active:opacity-80": variant === "primary",
               "bg-fillSecondary text-accent active:opacity-60": variant === "secondary",
               "bg-status-unavailable text-onStatus active:opacity-80": variant === "danger",
-              "bg-transparent text-accent hover:bg-fillSecondary active:opacity-60": variant === "ghost",
+              "bg-transparent text-accent hover:bg-fillSecondary active:opacity-60":
+                variant === "ghost",
 
               // Sizes
-              "h-10 px-4 text-sm squircle": size === "sm",
-              "h-12 px-5 text-base squircle": size === "md",
-              "h-14 px-6 text-lg squircle": size === "lg",
+              "squircle h-10 px-4 text-sm": size === "sm",
+              "squircle h-12 px-5 text-base": size === "md",
+              "squircle h-14 px-6 text-lg": size === "lg",
             },
             className
           )
         )}
         onPointerDown={(e) => {
-          if (props.onPointerDown) props.onPointerDown(e);
-          if (e.pointerType === "touch") {
+          onPointerDown?.(e);
+          if (!e.defaultPrevented && e.pointerType === "touch") {
             haptics.impact();
           }
         }}
@@ -120,7 +125,8 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
                up the affordance. */
             style={{
               background: "conic-gradient(from 0deg, transparent 0turn, currentColor 1turn)",
-              WebkitMask: "radial-gradient(farthest-side, transparent calc(100% - 2px), #000 calc(100% - 2px))",
+              WebkitMask:
+                "radial-gradient(farthest-side, transparent calc(100% - 2px), #000 calc(100% - 2px))",
               mask: "radial-gradient(farthest-side, transparent calc(100% - 2px), #000 calc(100% - 2px))",
             }}
           />

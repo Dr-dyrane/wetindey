@@ -5,6 +5,7 @@ import Image from "next/image";
 import { StatusBadge, type StatusKind } from "./StatusBadge";
 import { formatNaira } from "@/lib/money";
 import { useT } from "@/core/i18n";
+import { transition } from "@/design-system/motion";
 
 export interface ItemCardData {
   id: string;
@@ -80,11 +81,15 @@ function Monogram({ name, slug }: { name: string; slug: string }) {
   for (let i = 0; i < slug.length; i++) h = (h * 31 + slug.charCodeAt(i)) % 360;
   return (
     <div
-      className="h-full w-full grid place-items-center"
-      style={{ background: `linear-gradient(145deg, hsl(${h} 20% 80%), hsl(${(h + 40) % 360} 18% 68%))` }}
+      className="grid h-full w-full place-items-center"
+      style={{
+        background: `linear-gradient(145deg, hsl(${h} 20% 80%), hsl(${(h + 40) % 360} 18% 68%))`,
+      }}
       aria-hidden
     >
-      <span className="text-title-2 font-semibold text-monogramInk">{name.slice(0, 1).toUpperCase()}</span>
+      <span className="text-title-2 font-semibold text-monogramInk">
+        {name.slice(0, 1).toUpperCase()}
+      </span>
     </div>
   );
 }
@@ -101,7 +106,13 @@ function Monogram({ name, slug }: { name: string; slug: string }) {
  *
  * Nothing in this component has a border. Separation is surface + elevation.
  */
-export function ItemCard({ item, onSelect }: { item: ItemCardData; onSelect: (item: ItemCardData) => void }) {
+export function ItemCard({
+  item,
+  onSelect,
+}: {
+  item: ItemCardData;
+  onSelect: (item: ItemCardData) => void;
+}) {
   const statusLabel = useStatusLabel();
   const [broken, setBroken] = useState(false);
   const status = toStatus(item.freshest);
@@ -117,9 +128,7 @@ export function ItemCard({ item, onSelect }: { item: ItemCardData; onSelect: (it
   return (
     <button
       onClick={() => onSelect(item)}
-      className="group relative flex w-full items-stretch gap-3 overflow-hidden bg-surface text-left
-                 shadow-card squircle
-                 active:scale-[0.985] transition-transform duration-instant"
+      className={`squircle group relative flex w-full items-stretch gap-3 overflow-hidden bg-surface text-left shadow-card ${transition.press}`}
     >
       {/* Bleeds: no padding, no inset, clipped by the card's own squircle. */}
       <div className="relative w-[88px] shrink-0 self-stretch bg-surface-sunken">
@@ -162,7 +171,9 @@ export function ItemCard({ item, onSelect }: { item: ItemCardData; onSelect: (it
        */}
       <div className="min-w-0 flex-1 py-2 pr-3">
         <div className="flex items-baseline justify-between gap-2">
-          <span className="min-w-0 truncate text-subhead font-semibold text-text-primary">{item.name}</span>
+          <span className="min-w-0 truncate text-subhead font-semibold text-text-primary">
+            {item.name}
+          </span>
         </div>
         <p className="truncate text-subhead font-semibold tabular-nums text-text-primary">
           {priceLabel}
@@ -174,7 +185,10 @@ export function ItemCard({ item, onSelect }: { item: ItemCardData; onSelect: (it
                peer — but it keeps SECONDARY ink. Tertiary is 30% alpha, under
                3:1 against this card, and a fact the price depends on cannot be
                the one thing in the row you can't read. */
-            <span className="ml-1 text-footnote font-normal text-text-secondary"> / {item.unitLabel}</span>
+            <span className="ml-1 text-footnote font-normal text-text-secondary">
+              {" "}
+              / {item.unitLabel}
+            </span>
           )}
         </p>
         <div className="mt-1 flex items-center gap-1.5">
