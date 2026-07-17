@@ -39,16 +39,17 @@ They authorize documentation review only.
 | **R1 reputation calibration** | deferred V1.5, owns no paths | Sol | Append-only reputation events and scoped projections from real outcomes | No seed-derived reputation, paid status, public leaderboard, or rewards |
 | **Q1 release refutation** | read-only | Luna | Attempt to disprove migration, provenance, trust, category, filter, map/sheet, accessibility, and legal claims | Defaults to refuted when evidence is thin |
 
-**Existing auth/UI, map, brand, trust hot-file, and dirty migration claims remain
-untouched.** Future lanes do not own a path until an explicit transfer names it.
+**The former auth/UI claim is retired. Existing map, brand, trust hot-file, and migration
+claims remain untouched.** Future lanes do not own a path until an explicit transfer names
+it.
 
 ### Product/legal handoff
 
-The current auth/UI owner controls `ProfileSheet.tsx`, `page.tsx`, and `strings.ts`.
-After the freeze, that owner and human counsel must correct the About, How WetinDey works,
-Terms, Privacy, and support flow. Current copy calls WetinDey a price map and says every
-price came from a person, which contradicts both the platform mission and synthetic seed
-state. No other lane may edit those files to make this correction.
+There is no current auth/UI owner. A new narrow product/legal UI lane must explicitly claim
+`ProfileSheet.tsx`, `page.tsx`, and `strings.ts` before editing them. That lane and human
+counsel must correct the About, How WetinDey works, Terms, Privacy, and support flow.
+Current copy calls WetinDey a price map and says every price came from a person, which
+contradicts both the platform mission and synthetic seed state.
 
 ### Contextual filtering constraints
 
