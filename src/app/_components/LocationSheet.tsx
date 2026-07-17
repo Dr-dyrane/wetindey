@@ -416,7 +416,7 @@ export function LocationSheet({ open, onClose, radiusKm, onCommit }: LocationShe
     <div className="h-full overflow-y-auto overscroll-contain space-y-6 py-3">
       {/* ── 1. Real location ────────────────────────────────────────── */}
 
-      <ListGroup footer="Your location never leaves your device.">
+      <ListGroup footer="Coordinates are sent to WetinDey to calculate nearby coverage and results. Your selected location is saved on this device; directions may be handed to a maps app.">
         <button
           type="button"
           onClick={handleUseMyLocation}
