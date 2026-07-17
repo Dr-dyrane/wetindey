@@ -28,6 +28,18 @@ export interface LocationSheetProps {
 }
 
 /**
+ * WEIGHT DISCIPLINE — owner's directive, 2026-07-17. The action links in the
+ * cards below are NOT semibold, deliberately.
+ *
+ * Each card is heading + body + link. The heading and the link were both
+ * `text-subhead` at the same weight, differing only in hue — two peaks in a
+ * four-line card, which is no peak. Blue already says "tappable"; iOS action
+ * links are regular weight for exactly that reason, and only a default action
+ * earns the extra weight. The headings keep theirs. This sheet held 7 of the
+ * app's semibolds; a weight repeated that often is texture, not hierarchy.
+ */
+
+/**
  * Geolocation outcomes, kept apart on purpose.
  *
  * A denied permission, a device that cannot get a fix, a request that timed out
@@ -438,7 +450,7 @@ export function LocationSheet({ open, onClose, radiusKm, onCommit }: LocationShe
             <button
               type="button"
               onClick={handleUseMyLocation}
-              className="min-h-tap text-subhead font-semibold text-status-info active:opacity-60"
+              className="min-h-tap text-subhead text-status-info active:opacity-60"
             >
               Try again
             </button>
@@ -467,7 +479,7 @@ export function LocationSheet({ open, onClose, radiusKm, onCommit }: LocationShe
             <button
               type="button"
               onClick={() => handlePickArea(locate.nearest!)}
-              className="min-h-tap text-subhead font-semibold text-status-info active:opacity-60"
+              className="min-h-tap text-subhead text-status-info active:opacity-60"
             >
               Use {locate.nearest.name} instead
             </button>
@@ -483,7 +495,7 @@ export function LocationSheet({ open, onClose, radiusKm, onCommit }: LocationShe
           <button
             type="button"
             onClick={() => void loadTree()}
-            className="min-h-tap text-subhead font-semibold text-status-info active:opacity-60"
+            className="min-h-tap text-subhead text-status-info active:opacity-60"
           >
             Try again
           </button>
