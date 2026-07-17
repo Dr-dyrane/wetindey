@@ -88,7 +88,7 @@ export function RegularShell({
       {/* Always chrome over the map, never the content layer — so unlike the
           sheet, which goes solid as it docks, this stays material at every
           width. Elevation and material do the separating; nothing has a stroke. */}
-      <div
+      <main
         className="pointer-events-auto absolute z-10 overflow-hidden material-thick squircle-xl shadow-island"
         style={{
           top: `calc(${PANEL_INSET} + var(--safe-area-top))`,
@@ -97,6 +97,7 @@ export function RegularShell({
           width: PANEL_WIDTH,
         }}
       >
+        <h1 className="sr-only">WetinDey</h1>
         <NavigationStack
           listNode={listNode}
           detailNode={detailNode}
@@ -104,7 +105,7 @@ export function RegularShell({
           onDetailBack={onDetailBack}
           backLabel={backLabel}
         />
-      </div>
+      </main>
     </div>
   );
 }

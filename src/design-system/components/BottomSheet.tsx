@@ -467,9 +467,8 @@ export function BottomSheet({ children, detent, onDetentChange }: BottomSheetPro
         style={{ opacity: backdropOpacity, pointerEvents: backdropOpacity > 0.2 ? "auto" : "none" }}
       />
 
-      <div
+      <main
         ref={sheetRef}
-        role="dialog"
         aria-label="Results"
         style={{
           height: `${DETENT_FRACTION.large * 100}vh`,
@@ -545,6 +544,7 @@ export function BottomSheet({ children, detent, onDetentChange }: BottomSheetPro
         onPointerUp={endDrag}
         onPointerCancel={cancelDrag}
       >
+        <h1 className="sr-only">WetinDey</h1>
         <button
           type="button"
           onClick={cycleDetent}
@@ -562,7 +562,7 @@ export function BottomSheet({ children, detent, onDetentChange }: BottomSheetPro
         <div className="flex-1 overflow-y-auto overscroll-contain">
           {children}
         </div>
-      </div>
+      </main>
     </>
   );
 }
