@@ -102,12 +102,34 @@ const PRECISION_FOR: Record<LocationProvenance, UserPositionPrecision> = {
 
 /**
  * The map chrome — location pill and theme toggle — floats at
- * `safe-area-top + 12` and is 36px tall, so this much of the top of the canvas
- * is spoken for. Kept as a constant rather than measured: it is only load-
- * bearing at the large detent (below), where it is clamped away anyway, and a
- * measurement here would couple the camera to page.tsx's DOM.
+ * `safe-area-top + 12` and stands 44px tall, so this much of the top of the
+ * canvas is spoken for.
+ *
+ * 44, not the 36 an earlier version of this comment claimed: the theme toggle is
+ * 36px (`h-9`), but the location pill beside it carries `min-h-tap` — 44px, from
+ * tailwind.config.ts:106 — and the row is `items-start`, so the taller of the two
+ * sets the height (page.tsx:998-1018). 12 + 44 = 56; the extra 4px here is slack.
+ *
+ * Kept as a constant rather than measured: measuring here would couple the camera
+ * to page.tsx's DOM, and the number is stable enough that the coupling costs more
+ * than it buys.
+ *
+ * An earlier version of this comment claimed the opposite of what the code does —
+ * that the constant "is only load-bearing at the large detent, where it is clamped
+ * away anyway", which manages to be backwards twice and self-contradictory once.
+ * Traced through `sheetMapPadding`'s clamp below, at an 876px viewport: peek and
+ * medium both leave far more headroom than 60, so `top` comes out at 60 — the
+ * constant applies VERBATIM, and those are precisely the detents where a top band
+ * still exists to protect. At large the sheet covers 94%, the clamp's ceiling
+ * collapses to single digits, and `top` lands near 9: MIN_VISIBLE_BAND wins and
+ * this constant is the thing that yields. It is load-bearing everywhere EXCEPT
+ * large — the exact inverse of what was written here.
+ *
+ * (Recompute rather than trust these figures if a detent is retuned. The first
+ * draft of this correction quoted a peek bound derived from DETENT_FRACTION.peek
+ * = 0.12; the real value is 0.20. The conclusion held, the arithmetic did not.)
  */
-export const MAP_TOP_CHROME = 60;
+const MAP_TOP_CHROME = 60;
 
 /**
  * The visible box is never allowed to collapse. At the large detent the sheet
@@ -133,7 +155,7 @@ const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v
  * a marker's radius. Reproducing BottomSheet's private island/dock geometry to
  * recover those 5px would create the very duplication this file avoids.
  */
-export function sheetMapPadding(
+function sheetMapPadding(
   detent: Detent | null | undefined,
   viewportHeight: number,
   overrides: Partial<MapPadding> = {}

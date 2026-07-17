@@ -80,7 +80,7 @@ export interface ScreenPoint {
   y: number;
 }
 
-export interface MapProviderAdapter {
+interface MapProviderAdapter {
   initialize(
     container: HTMLDivElement,
     center: { lat: number; lng: number },

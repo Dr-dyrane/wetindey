@@ -88,7 +88,7 @@ export const FRESHNESS_POLICY: FreshnessPolicy = {
  *
  * There is deliberately no default. See `methodWeight()`.
  */
-export const COLLECTION_METHOD_WEIGHTS: Readonly<Record<string, number>> = {
+const COLLECTION_METHOD_WEIGHTS: Readonly<Record<string, number>> = {
   visit_confirmation: 1.0,
   app_entry: 0.8,
   sms: 0.7,
@@ -228,7 +228,7 @@ function ageHoursOf(observedAt: Date | string, now: number = Date.now()): number
  * would pile up into high confidence forever. Evidence has to be able to reach
  * zero, or age stops meaning anything.
  */
-export function ageDecay(
+function ageDecay(
   ageHours: number,
   policy: FreshnessPolicy = FRESHNESS_POLICY
 ): number {

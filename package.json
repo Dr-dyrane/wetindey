@@ -11,6 +11,7 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:seed": "tsx --env-file=.env.local src/db/seed.ts",
+    "db:recompute-bands": "node --env-file=.env.local scripts/recompute-bands.mjs",
     "audit:tokens": "node scripts/audit-tokens.mjs",
     "typecheck": "tsc --noEmit",
     "knip": "knip"
