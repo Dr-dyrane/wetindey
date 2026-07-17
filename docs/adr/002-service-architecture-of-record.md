@@ -124,6 +124,38 @@ in the roadmap.
    fails the build.
 2. **Phase 1 is done when trust is derived, not asserted.** `grep -rn '"high"' src/app/actions.ts`
    returns nothing, and `assessTrust` has live callers reaching the UI.
+
+   > **Say this out loud, because the roadmap understated it.** There are **zero tests in
+   > this repo** — no `npm run test`, no runner, no config, no `*.test.*`. So Phase 1's exit
+   > criterion, "a vitest file over `assessTrust` passes", is not *adding a test*. **It is
+   > adding testing.** That is a larger and more valuable act than the line implies, and it
+   > should be sequenced and resourced as one.
+   >
+   > `assessTrust` is the right first test and possibly the cheapest one available: a pure
+   > function over plain objects, no database, no network, no React. It also carries the
+   > product's only claim — *this price is true, and this is how old that claim is*. **The
+   > single most important thing in the codebase is the single least verified.**
+
+3. **What checks this repo today, and what each is blind to.** Recorded because an agent
+   reading a green build will otherwise believe it means something:
+
+   | Check | Sees | Blind to |
+   |---|---|---|
+   | `tsc` | Types | A comment that lies. This repo's comments have lied at scale. |
+   | `audit:tokens` | Palette names, border utils | Semantically wrong but correctly tokenised. `bg-background` contains no palette word — which is how `ModalSheet` shipped a black panel on a black scrim with a black shadow in dark mode, invisible, for weeks. |
+   | `knip` | Unused exports | Code that **is** imported and **is** wrong. |
+   | `LANES.md` | Nothing. It is advisory. | Everything. A markdown file is not a lock. |
+   | Tests | — | **There are none.** |
+
+   Nothing here checks a write path, a rendered string, or whether a number is *right*.
+
+4. **Adversarial verification is standing practice, not a flourish.** On 16 July 2026 the
+   bugs that were caught were caught by: the owner (~7), adversarial subagent verifiers (~5,
+   including two blockers that would otherwise have shipped), `knip` (1, on its first run),
+   and cross-session review (1). The session doing the work, unaided, caught about one — and
+   only because a number looked wrong. **A session cannot review itself.** Any substantive
+   change should be verified by an agent whose job is to refute it, and the verifier must be
+   told to default to "refuted" when the evidence is thin.
 3. **This ADR is reviewed when Phases 0-4 land** — at which point commitment 3 expires and
    the decomposition is re-argued against what was learned, not against this snapshot.
 4. **The architecture of record is re-verified at every merge that moves a cited line.**

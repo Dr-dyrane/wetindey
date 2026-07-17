@@ -51,6 +51,18 @@ Roadmap Phases 0-4 — deleting the orphans, and making trust derived rather tha
 hardcoded string `"high"` — come first. Reorganising code whose answers are wrong just
 produces well-structured wrong answers.
 
+**A green build means very little here. There are ZERO tests.** No `npm run test`, no
+runner, no config, no `*.test.*`. `tsc` cannot see a comment that lies. `audit:tokens` is
+blind to semantically-wrong-but-tokenised — that is how a black-on-black modal shipped
+invisible for weeks. `knip` is blind to code that is imported and wrong. Nothing checks a
+write path, a rendered string, or whether a number is *right*. **Never report "the build
+passes" as evidence that something works** — drive it, or say you did not.
+
+**You cannot review yourself.** The bugs caught here are caught by the owner, by
+adversarial verifiers, and by cross-session review — almost never by the session that wrote
+the code. For any substantive change, have a subagent try to *refute* your work, and tell it
+to default to "refuted" when evidence is thin. This is standing practice, not a flourish.
+
 ---
 
 ## 1. Core Founding Documents

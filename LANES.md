@@ -80,6 +80,47 @@ in either one will conflict. **Never edit these without holding the lane that ow
 
 **Status key:** 🟢 active, healthy · 🟡 active, unrelated · 🔴 active, conflicted · ⚪ unclaimed/blocked · 🚫 gated by an ADR
 
+### Unowned paths — where the next orphan lands
+
+Listed because an unowned path is invisible, and invisible is how this repo grew five
+generations of dead code. **Nobody is watching these.** Claim one before you touch it; if
+you find a bug in one, it has no owner to route it to — say so loudly rather than assuming
+someone knows.
+
+| Path | Why it matters | knip red |
+|---|---:|---|
+| `src/lib/validation.ts` | The parsers that guard both public write paths. Written, then largely unwired — the auth→trust lane is wiring them now. | shrinking |
+| `src/app/_components/**` | Every sheet. Contains hardcoded English that bypasses i18n entirely — see below. | 2 |
+| `src/design-system/components/**` | `Skeleton`, `AsyncList`, `SheetPicker`. Partly the i18n lane; the rest unwatched. | ~7 |
+| `public/sw.js` | The service worker. Roadmap Phase 4 — the app never reads its cached-at header, so offline shows green badges from stale cache. | — |
+| `src/core/state/**`, `src/core/offline/**` | Store and queue. Phase 3 territory. | 2 |
+
+### Known, routed, unfixed
+
+**The badges honour no locale at all.** `ItemCard.tsx`'s `STATUS_LABEL` (`:52`) is a
+hardcoded `Record`, and `ItemDetailSheet.tsx:147` does the same. Found by the map lane,
+2026-07-16 — and verified here to be **worse than reported**: the labels are a hardcoded
+*mixture*. `confirmed: "Confirmed"` and `caution: "Check again"` are English;
+`unavailable: "E no dey"` is Pidgin. Every user sees the same mixture, so a **Pidgin user
+reads English**, a **Yorùbá user reads English and Pidgin**, and an **English user reads
+Pidgin**. Nobody is served, including the default.
+
+The tell is exact: `strings.ts:511` has carried the correct Pidgin `item.a11y_not_available`
+= "E no dey" all along, **unused**, while components hardcoded "Not dey" — which the owner
+corrected as not Pidgin at all ("e no dey" needs the subject; "not dey" is a foreigner's
+guess). **The right words were in the file nobody read.** That is the doc/code drift thesis,
+in copy, and it is the strongest argument in the repo for adopting the dictionary rather than
+removing the picker.
+
+**And it proves the gating question is real, not theoretical:** `strings.ts:716` shows
+Yorùbá's `item.a11y_not_available` is `UNTRANSLATED`. Wiring the dictionary naively would
+swap a wrong-language label for a missing one. The i18n lane must decide what an
+`UNTRANSLATED` key renders **before** wiring anything — falling back to English is honest;
+rendering a placeholder to a Yorùbá speaker is not.
+
+Belongs to the **i18n** lane; blocked only on `ItemCard.tsx` / `ItemDetailSheet.tsx` having
+no owner.
+
 ---
 
 ## Resolved 2026-07-16 — the auth lane
