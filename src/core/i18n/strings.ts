@@ -286,27 +286,38 @@ export const en = {
 
   /*
    * The status badge — the highest-frequency copy in the product, on every card
-   * and every offer row. It lived as a hardcoded `Record` in ItemCard.tsx and
-   * ItemDetailSheet.tsx, which is why no locale ever reached it: three languages
-   * shipped and the most-seen string in the app answered to none of them.
+   * and every offer row. Three words that are the whole product:
    *
-   * These are NOT `item.a11y_*`. Those describe availability for a screen
-   * reader ("Available" / "Not available"). These are the visible verdict, and
-   * the verdict is freshness AND availability at once — "Check again" is not a
-   * claim about stock, it is an instruction about age.
+   *   E sure    — we stand behind this evidence.
+   *   Check am  — we do not; verify first.
+   *   E no dey  — we have evidence it is gone.
    *
-   * The English is taken verbatim from the card, not from this file's older
-   * `freshness`/`data_confidence` wording, because the code is the truth and the
-   * card is better: "Confirmed" beats "Confirmed Available", and "Check again"
-   * tells a shopper what to DO where "Likely Available" only hedges.
+   * Set by the owner, a native speaker, on 2026-07-16. They are Nigerian English
+   * and they live in the ENGLISH table on purpose: this app's English IS Nigerian
+   * English — the search field asks "Wetin you dey find?" — so this is the brand,
+   * not a leak. ONE STATUS, ONE NAME, EVERYWHERE.
    *
-   * `status_unavailable` keeps "E no dey" in ENGLISH deliberately. This app's
-   * English is Nigerian English — the search field asks "Wetin you dey find?" —
-   * so Pidgin here is the brand, not a leak. See ItemCard.tsx, which carries the
-   * native speaker's correction of "Not dey" and the reasoning for it.
+   * These are NOT `item.a11y_*`. Those describe availability for a screen reader
+   * ("Available" / "Not available"). These are the visible verdict, and the
+   * verdict is freshness AND availability at once.
+   *
+   * WHY THESE AND NOT THE OBVIOUS ONES — the rejections carry the reasoning, so
+   * they are recorded rather than left to be re-litigated:
+   *   · "Na true"     — agrees with a statement; this validates EVIDENCE.
+   *   · "Correct"     — grades an answer.
+   *   · "Don verify"  — backend/process voice, not a shopper's.
+   *   · "Fit dey" / "E fit dey" — probability claims. They weaken the trust
+   *                     model by hedging where it must either stand behind the
+   *                     evidence or tell you to go and check.
+   *   · "Needs checking" — passive; does not tell the user what to DO.
+   *
+   * `Check am` is an IMPERATIVE and that is load-bearing. It is not a claim that
+   * the price is wrong — it is an instruction: verify before you travel. That is
+   * the product's promise in two words. If a future edit turns it into a hedge,
+   * it has broken the thing that makes the badge useful.
    */
-  "item.status_confirmed": "Confirmed",
-  "item.status_caution": "Check again",
+  "item.status_confirmed": "E sure",
+  "item.status_caution": "Check am",
   "item.status_unavailable": "E no dey",
 
   /* Get it — GetItSheet.tsx:99-504, hardcoded English today. */
@@ -536,20 +547,18 @@ const pidgin: LocaleTable = {
   "item.a11y_not_available": "E no dey",
 
   /*
-   * UNTRANSLATED, and that is the honest answer rather than a gap to fill in
-   * passing. The English these fall back to is already Nigerian English and
-   * `status_unavailable` is already Pidgin ("E no dey"), so nothing reads as an
-   * outsider's app today.
+   * UNTRANSLATED on purpose, and this is the one place where that means
+   * "already correct" rather than "not done".
    *
-   * What is missing is Pidgin for "Confirmed" and "Check again", and no agent
-   * should invent it. This file's own history is the argument: three components
-   * shipped "Not dey" — neither Pidgin nor English, a foreigner's guess — and it
-   * read worse to a Lagos shopper than plain English would, precisely because it
-   * is visibly an outsider imitating them. A guess here would repeat that on the
-   * most-seen string in the product.
+   * The English these fall back to IS the Pidgin — "E sure" / "Check am" /
+   * "E no dey", set by a native speaker. Repeating them here would create a
+   * second copy of three identical strings, and a duplicate that can drift is
+   * exactly what this module keeps deleting: `LOCALE_NAMES` was removed for
+   * being "a fourth copy of the picker's labels, waiting to disagree with them".
    *
-   * The point of moving these out of TSX is that a native speaker can now fill
-   * them without touching a component.
+   * So the fallback is not a shortfall here — it is the single source of truth
+   * doing its job. If Pidgin ever needs to diverge from the default voice on
+   * these three, that is the moment to write them, and not before.
    */
   "item.status_confirmed": UNTRANSLATED,
   "item.status_caution": UNTRANSLATED,

@@ -31,7 +31,10 @@ import { ItemCardListSkeleton } from "./Skeleton";
  * us with `subject` — see below.
  */
 
-export interface AsyncListEmpty {
+/* `AsyncListEmpty` and `AsyncListError` are not exported: every caller passes an
+   object literal to the props below and infers them, so nobody has ever needed
+   the name. They stay named types because `AsyncListProps` reads better for it. */
+interface AsyncListEmpty {
   title: string;
   description?: string;
   /** Optional glyph. Wrapped in a neutral chip here so every empty state matches. */
@@ -40,7 +43,7 @@ export interface AsyncListEmpty {
   action?: React.ReactNode;
 }
 
-export interface AsyncListError {
+interface AsyncListError {
   title?: string;
   description?: string;
   retryLabel?: string;

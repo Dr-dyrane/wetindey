@@ -132,6 +132,30 @@ function formatAge(ms: number): string {
  * offer, and the user would have no way to know which one was lying. One
  * derivation, two renderers.
  */
+/**
+ * ONE STATUS, ONE NAME. The three verdicts are the card's, verbatim:
+ * "E sure" / "Check am" / "E no dey" — owner's call, 2026-07-16.
+ *
+ * This function used to word the same three states differently: "Confirmed" /
+ * "Needs checking" / "Likely". Two surfaces describing one underlying state in
+ * two vocabularies is cognitive friction the user pays for and we don't.
+ *
+ * The stale/expired split is deliberately GONE. `kind` was already `caution` for
+ * both, so only the word differed — and the two words disagreed about what to
+ * do: "Needs checking" is passive, "Likely" is a probability claim that hedges
+ * where the product must either stand behind the evidence or say go and check.
+ * `label` still appends the age, so the nuance a shopper can act on ("Check am ·
+ * 3 days ago") survives in the part that carries information.
+ *
+ * THESE THREE STRINGS ARE A KNOWN DUPLICATE of `item.status_*` in the
+ * dictionary, and they should not be. This is a plain function, not a hook, so
+ * it cannot call `useT()`; and its callers include `page.tsx` (:672, :831),
+ * which belongs to another lane today, so the labels cannot be lifted to a
+ * parameter without editing it. Phase 1 deletes this function outright as a
+ * competing trust model — at which point the labels come from the dictionary and
+ * this note goes with it. Until then: if you change a word, change it in BOTH
+ * places, or the disagreement this comment removed comes straight back.
+ */
 export function offerSignal(offer: NarrowedOffer, now: number) {
   const observedAt = parseAt(offer.lastObservedAt, "lastObservedAt");
   const expiresAt = parseAt(offer.expiresAt, "expiresAt");
@@ -147,10 +171,10 @@ export function offerSignal(offer: NarrowedOffer, now: number) {
     short = "E no dey";
   } else if (offer.freshnessState === "confirmed" && !expired) {
     kind = "confirmed";
-    short = "Confirmed";
+    short = "E sure";
   } else {
     kind = "caution";
-    short = expired ? "Needs checking" : "Likely";
+    short = "Check am";
   }
 
   /**

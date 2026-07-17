@@ -39,8 +39,10 @@ export function Skeleton({
   );
 }
 
-// Custom Hi-fi Card Skeleton representing a resolved location/offer
-export function OfferCardSkeleton() {
+// Custom Hi-fi Card Skeleton representing a resolved location/offer.
+// Not exported: `CardListSkeleton` below is the only caller, and a lone card is
+// not a state any list wants — the list is what a caller needs.
+function OfferCardSkeleton() {
   return (
     <div className="p-4 squircle-lg bg-fillSecondary/40 space-y-4">
       <div className="flex items-start justify-between">
@@ -98,8 +100,11 @@ export function CardListSkeleton({ count = 3 }: { count?: number }) {
  *
  * The ink bars are deliberately shorter than their line boxes — real glyphs do
  * not fill a line box either, and a bar that does reads as a filled input.
+ *
+ * Not exported, for the same reason as OfferCardSkeleton: `ItemCardListSkeleton`
+ * is the only caller.
  */
-export function ItemCardSkeleton() {
+function ItemCardSkeleton() {
   return (
     <div
       aria-hidden
@@ -144,16 +149,10 @@ export function ItemCardListSkeleton({ count = 4 }: { count?: number }) {
   );
 }
 
-/**
- * Placeholder for a ListRow-height row (search suggestions, area pickers).
- * A tap target's worth of surface, nothing more — these rows carry one line.
- */
-export function ListRowSkeleton({ count = 3 }: { count?: number }) {
-  return (
-    <div aria-hidden className="space-y-2">
-      {Array.from({ length: count }).map((_, i) => (
-        <Skeleton key={i} className="h-tap w-full" />
-      ))}
-    </div>
-  );
-}
+/* `ListRowSkeleton` lived here — "a placeholder for a ListRow-height row (search
+   suggestions, area pickers)". It had no caller anywhere, and its docstring says
+   why: the area picker it was built for is AreaPickerSheet, which was deleted in
+   a84efa7. LocationSheet.tsx:493-495 hand-rolls the same three `h-tap w-full`
+   bars rather than importing this, so it was not even the only copy of itself.
+   Deleted. If LocationSheet ever wants to stop hand-rolling them, this is four
+   lines and it comes back with the import. */
