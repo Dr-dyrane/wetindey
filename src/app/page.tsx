@@ -1162,12 +1162,6 @@ export default function HomePage() {
               className="flex items-center gap-1 px-2.5 py-1 rounded-[14px] bg-fillSecondary text-text-primary active:scale-98 transition-all duration-instant text-[14px] font-medium"
             >
               <span>
-                {activeCategory === "food" && "🛒"}
-                {activeCategory === "home" && "🏠"}
-                {activeCategory === "health" && "💊"}
-                {activeCategory === "money" && "💱"}
-                {activeCategory === "transport" && "🚗"}
-                {activeCategory === "community" && "📍"}{" "}
                 {activeCategory === "food" && ((t as Record<string, string>).category_food || "Food")}
                 {activeCategory === "home" && ((t as Record<string, string>).category_home || "Home")}
                 {activeCategory === "health" && ((t as Record<string, string>).category_health || "Health")}

@@ -9,7 +9,9 @@ interface ListRowProps {
   /** Tint behind the icon — pass a status token, never a raw colour. */
   iconTint?: string;
   label: string;
-  detail?: string;
+  detail?: React.ReactNode;
+  /** Exposes the selected state when this row is an interactive picker option. */
+  pressed?: boolean;
   onClick?: () => void;
   /** Renders the row as informational rather than navigational. */
   chevron?: boolean;
@@ -26,12 +28,13 @@ interface ListRowProps {
  * content is shorter, which also means the row grows gracefully rather than
  * clipping when Dynamic Type scales the label.
  */
-export function ListRow({ icon, iconTint, label, detail, onClick, chevron = true, disabled }: ListRowProps) {
+export function ListRow({ icon, iconTint, label, detail, pressed, onClick, chevron = true, disabled }: ListRowProps) {
   const Tag = onClick ? "button" : "div";
   return (
     <Tag
       onClick={onClick}
       disabled={disabled}
+      aria-pressed={onClick ? pressed : undefined}
       onPointerDown={(e) => {
         if (onClick && !disabled && e.pointerType === "touch") {
           haptics.selection();
