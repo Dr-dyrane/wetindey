@@ -96,46 +96,83 @@ export function Skeleton({
  * until the offers arrived — indistinguishable from "nothing near you", which
  * is a real state this app has and renders three lines below.
  *
- * The card now wears what the real row wears — same surface and its elevated
- * dark pair, same card radius, same shadow — because a placeholder's whole job
- * is to be the shape that arrives. Matching it is also what picks the colour:
- * a skeleton has no palette of its own to invent.
+ * The card wears what the real row wears — same surface and its elevated dark
+ * pair, same card radius, same shadow — because a placeholder's whole job is to
+ * be the shape that arrives. Matching it is also what picks the colour: a
+ * skeleton has no palette of its own to invent.
  *
- * The internals are still an approximation of that row rather than a trace of
- * it: the real one is a horizontal flex with a leading icon, this is a vertical
- * stack. It is the right height, so nothing shoves on arrival, but it is not
- * the same box. `ItemCardSkeleton` below does trace its counterpart properly —
- * that is the standard this should meet. LANES H33.
+ * And now it TRACES that row rather than approximating it, the way
+ * `ItemCardSkeleton` below traces its own. The real row (`ItemDetailSheet.tsx`,
+ * the offer list) is a three-column horizontal flex, not a vertical stack:
+ *
+ *   [dot]  [ name / freshness / distance · confidence ]      [ price / per-unit ]
+ *   ↑ leading    ↑ min-w-0 flex-1 text column              ↑ shrink-0, right-aligned
+ *
+ * This used to be a `space-y-4` stack with the price in the middle, so every
+ * element slid to a new position when the three offers landed. The old card was
+ * 186px with its price bar on the left at center-x ~68px; this one is 98px with
+ * the price bar right-aligned, its right edge landing on the real price's right
+ * edge to the pixel. That ~223px sideways and ~88px vertical jump is gone.
+ *
+ * Heights are the type ramp's own line-heights in rem, never px, for the reason
+ * `ItemCardSkeleton` gives: when a reader scales their browser font the
+ * placeholder grows exactly as much as the text that replaces it. The line
+ * boxes below are `headline` 1.375rem (name), `footnote` 1.125rem (freshness,
+ * distance), `caption-1` 1rem (per-unit), `title-3` 1.5625rem (price). The
+ * middle column is the tallest, so it sets the card height, and it matches the
+ * real row to the pixel (98px both) at a typical phone width and the default
+ * font. The ink bars are shorter than their line boxes because real glyphs do
+ * not fill a line box either.
+ *
+ * WHAT IT DOES NOT DO, because I claimed it did and a refuter disproved it: the
+ * height is NOT fixed against every input. The real row's third middle line is
+ * distance plus `confidence.label` ("12 reports · 4 sources"), and unlike the
+ * name and freshness above it, that line is NOT truncated
+ * (`ItemDetailSheet.tsx`, the offer row). So under a narrow viewport (card
+ * below ~320px) or large-text / browser zoom it wraps, the real row grows to
+ * ~116px and beyond, and this fixed skeleton undershoots and the row shoves down
+ * on arrival. The residual is far smaller than the old skeleton's, and its cause
+ * is the un-truncated line in the real row, not here; a fixed-height skeleton
+ * cannot predict a wrap. Truncating that line at the source removes it and is
+ * filed for the auth lane. Matching the wrapped height instead would overshoot
+ * the common case, which is the wrong trade.
  *
  * Not exported: `CardListSkeleton` below is the only caller, and a lone card is
  * not a state any list wants — the list is what a caller needs.
  */
 function OfferCardSkeleton() {
   return (
-    <div className="p-4 squircle-card bg-surface dark:bg-surface-elevated shadow-card space-y-4">
-      <div className="flex items-start justify-between">
-        <div className="space-y-2 flex-1">
-          {/* Place title skeleton */}
-          <Skeleton variant="text" textVariant="title2" className="w-1/2" />
-          {/* Distance metadata skeleton */}
-          <Skeleton variant="text" textVariant="caption" className="w-1/4" />
+    <div className="flex w-full items-start gap-3 bg-surface dark:bg-surface-elevated p-4 shadow-card squircle-card">
+      {/* Leading status dot — StatusDot is h-2 w-2 at the same mt-[7px] offset. */}
+      <span className="mt-[7px] h-2 w-2 shrink-0 animate-pulse rounded-full bg-fillTertiary" />
+
+      {/* Text column — name, freshness, then distance + confidence. */}
+      <div className="min-w-0 flex-1">
+        {/* Name — headline line box */}
+        <div className="flex h-[1.375rem] items-center">
+          <Skeleton className="h-[0.875rem] w-1/2" />
         </div>
-        {/* Freshness status pill skeleton */}
-        <Skeleton variant="rectangular" className="h-6 w-20 rounded-full" />
+        {/* Freshness label — footnote line box */}
+        <div className="mt-0.5 flex h-[1.125rem] items-center">
+          <Skeleton className="h-[0.6875rem] w-1/3" />
+        </div>
+        {/* Distance + confidence — footnote line box, two marks as in the row */}
+        <div className="mt-1.5 flex h-[1.125rem] items-center gap-2">
+          <Skeleton className="h-[0.6875rem] w-12" />
+          <Skeleton className="h-[0.6875rem] w-14" />
+        </div>
       </div>
 
-      <div className="flex items-baseline justify-between pt-1">
-        {/* Price display skeleton */}
-        <Skeleton variant="text" textVariant="display" className="w-1/3 h-8" />
-        {/* Price type tag skeleton */}
-        <Skeleton variant="text" textVariant="caption" className="w-16" />
-      </div>
-
-      <div className="pt-2 flex items-center justify-between">
-        {/* Confidence scale skeleton */}
-        <Skeleton variant="text" textVariant="footnote" className="w-1/4 mb-0" />
-        {/* Source tag skeleton */}
-        <Skeleton variant="rectangular" className="h-5 w-12" />
+      {/* Price column — right-aligned, price over per-unit. */}
+      <div className="flex shrink-0 flex-col items-end">
+        {/* Price — title-3 line box, the loudest mark, so the widest bar */}
+        <div className="flex h-[1.5625rem] items-center">
+          <Skeleton className="h-[1.125rem] w-16" />
+        </div>
+        {/* per unit — caption-1 line box */}
+        <div className="mt-0.5 flex h-[1rem] items-center">
+          <Skeleton className="h-[0.625rem] w-10" />
+        </div>
       </div>
     </div>
   );
