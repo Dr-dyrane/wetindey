@@ -68,14 +68,14 @@ type "geography" does not exist
 ```
 
 The `CREATE EXTENSION IF NOT EXISTS postgis` lives in the seed instead
-(`src/db/seed.ts:67`), which then calls `migrate()` itself (`:72`). So the seed
+(`src/db/seed.ts`), which then calls `migrate()` itself. So the seed
 is the only path that bootstraps a database correctly:
 
 ```
 npm run db:seed
-  └─ 1. CREATE EXTENSION IF NOT EXISTS postgis   seed.ts:67
-     2. migrate()                                seed.ts:72
-     3. TRUNCATE every table (idempotent)        seed.ts:76-85
+  └─ 1. CREATE EXTENSION IF NOT EXISTS postgis   seed.ts
+     2. migrate()                                seed.ts
+     3. TRUNCATE every table (idempotent)        seed.ts
      4. insert units → items → … → observations → offers
 ```
 
@@ -87,7 +87,7 @@ Two consequences worth internalising:
 - **The seed writes observations first and derives every offer field from
   them.** Offers are not independent rows you may hand-edit; freshness,
   `expiresAt` and `supportingObservationCount` are all computed from the
-  observations that back them (`src/db/seed.ts:227-336`). Do not undo this. It
+  observations that back them (`src/db/seed.ts`). Do not undo this. It
   is the difference between real trust signals and fabricated ones.
 
 ### A second, quieter trap
@@ -95,7 +95,7 @@ Two consequences worth internalising:
 `drizzle-kit` loads **`.env`**, not `.env.local`. `npm run db:seed` passes
 `--env-file=.env.local` explicitly and is fine; `next dev` reads `.env.local`
 automatically and is fine. But `db:generate` and `db:migrate` see neither — and
-`drizzle.config.ts:8` reads `process.env.DATABASE_URL || ""`, so an unset URL
+`drizzle.config.ts` reads `process.env.DATABASE_URL || ""`, so an unset URL
 becomes an empty string rather than an error. If those commands behave as though
 you have no database, this is why. Pass the variable explicitly:
 
@@ -133,32 +133,52 @@ After `npm run db:seed`: 20 units · 38 items · 87 aliases · 79 variants ·
 
 ## Read these before you write code
 
-**`docs/APP-MAP.md` first, and it is not optional.** It is a verified map of what
-this application *is* rather than what it intends to be — eight subsystem
-surveys, six flow traces, 143 claims of which 112 survived adversarial
-refutation and 31 were killed. Every claim carries a `file:line`. Section 6 is
-the confirmed defects; section 7 is the dead code, and it is a longer list than
-you expect.
+**`DECISIONS.md` first, and it is not optional.** It indexes the ADRs, and an ADR
+beats every other document here. Then
+`docs/architecture/SERVICE-ARCHITECTURE.md` — the architecture of record — starting
+with its *Read this first* section.
+
+**Precedence, when documents disagree:** an ADR beats every other document; the
+architecture of record beats the Bible and `docs/`; **the code beats all of them.**
+If the code contradicts a document, the document is the bug — fix it, or say so.
 
 | Document | What it's for |
 |---|---|
-| `docs/APP-MAP.md` | What actually exists, with citations. **Start here.** |
+| `DECISIONS.md` | The ADR index. **Start here.** An ADR overrides every other doc. |
+| `docs/architecture/SERVICE-ARCHITECTURE.md` | The architecture of record — what actually exists, with citations. |
+| `LANES.md` | Who is editing what right now. **Read before your first edit.** |
 | `docs/CONTRIBUTING.md` | The house rules, and — more usefully — why each one exists. |
 | `docs/USER-FLOW.md` | The core loop, and what's built versus what isn't. |
 | `docs/APPLE-HIG-MAPPING.md` | Where the visual language comes from, and where we chose. |
 | `WETINDEY_BIBLE.md` | The product constitution. Long. |
-| `DECISIONS.md`, `docs/adr/` | Architecture decisions. `docs/adr/000-template.md` is the template. |
+| `docs/APP-MAP.md` | **Emptied 16 July 2026** — it was substantially false. A tombstone, kept only so links do not dangle. |
+
+> This section told you to read `APP-MAP.md` first, and called it "a verified map
+> …143 claims of which 112 survived adversarial refutation". It was emptied on
+> 16 July 2026 for being confidently wrong, including about its own headline
+> finding. A document that is trusted and false is the most expensive kind here —
+> which is the whole reason precedence is written down above.
 
 ### One thing to know before you read any code
 
 This repo contains two versions of itself: a thoughtful one that is **dead**,
 and a crude one that **runs**.
 
-`FoodModule.ts` holds the only real trust model — age-decayed confidence, a
-`{staleHours: 24, expirationHours: 72}` policy — and has **zero importers**,
-while `actions.ts:135` fakes it with `supportingObservationCount * 10`.
-`reportingMachine.ts` is a complete xstate machine with **zero importers** while
-`page.tsx` hand-rolls the same states in six booleans.
+`src/lib/trust.ts` holds the only real trust model — age-decayed confidence, a
+`{staleHours: 24, expirationHours: 72}` policy, per-source caps — and **nothing
+renders it**. Its two server actions, `getOfferTrust` and `getOfferTrustBatch`,
+have no callers. Meanwhile `getFoodItemCandidates` fakes confidence with
+`supportingObservationCount * 10`, every write stamps the literal string
+`trustLevel: "high"`, and the badge you actually see is computed by `offerSignal`
+inside `ItemDetailSheet.tsx` — which `page.tsx` imports back out of a sheet to
+colour the map pins. Four derivations, and the good one is dead.
+
+> This paragraph named `FoodModule.ts` and an xstate `reportingMachine.ts` until
+> 16 July 2026. Both were deleted in `add5fd3`, along with xstate and jotai —
+> and `trust.ts` was written to rescue `FoodModule` and orphaned identically.
+> The disease survived the cure. `knip` now blocks in CI so the next one cannot
+> reach `main`; see [ADR-002](docs/adr/002-service-architecture-of-record.md).
+> Roadmap Phase 1 makes `trust.ts` the sole model — [ADR-006](docs/adr/006-freshness-windows.md).
 
 When you need one of these behaviours, wire up what exists. Do not write a third
 copy. `docs/APP-MAP.md` §7 has the full inventory.
@@ -179,7 +199,8 @@ folder. Don't go looking in the folder for it.
 - Availability plus price, not price alone.
 - Every price has a unit and semantic type.
 - Every current claim has freshness and provenance.
-- Anonymous browsing.
+- Anonymous browsing, optional recognition. Reading never needs an account; signing
+  in is how a contributor earns a reputation. Auth is recognition, never a gate.
 - Progressive disclosure.
 - No fake certainty.
 - No paid organic ranking.
@@ -189,5 +210,5 @@ folder. Don't go looking in the folder for it.
 ## Stack
 
 Next.js 15 App Router · React 19 · TypeScript · Tailwind · Drizzle ORM +
-Neon Postgres + PostGIS · Mapbox GL (loaded from CDN) · Zustand + Jotai ·
-xstate · Zod · PWA. Deployed on Vercel.
+Neon Postgres + PostGIS · Mapbox GL (loaded from CDN) · Zustand · Zod ·
+Neon Auth (email OTP) · PWA. Deployed on Vercel.
