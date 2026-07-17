@@ -381,9 +381,31 @@ export const MapboxCanvas = forwardRef<MapCameraHandle, MapboxCanvasProps>(funct
     });
   }, [userPosition, locationLabel, ready]);
 
-  // The route is geometry the caller owns; this only hands it to the layer.
+  /**
+   * The route is geometry the caller owns; this hands it to the layer AND
+   * frames it.
+   *
+   * The framing is the owner's ask: when the user and the seller are joined by
+   * a line, both ends have to stay on the map the user can actually see. Until
+   * now the camera ignored the route entirely — it drew and nothing moved, so a
+   * seller across Lagos ran the line off the viewport with neither end framed.
+   *
+   * It lives HERE rather than in page.tsx because this is where the route
+   * arrives and where the padding is already known, so the fit needs nothing
+   * from the caller. That also keeps the rule the file already states: the
+   * camera follows the position, the position never follows the camera. This is
+   * the camera reacting to geometry, not a caller driving it.
+   *
+   * Keyed on `route` identity, deliberately: `mapPadding` is NOT in the deps.
+   * Re-fitting every time the sheet moves would fight the user's own drag, and
+   * `setPadding` already slides the same centre into the new band. We frame
+   * once, when the line changes, and then leave the camera alone.
+   */
   useEffect(() => {
-    adapterRef.current?.setRoute(route, routeTint ? { tint: routeTint } : undefined);
+    const adapter = adapterRef.current;
+    if (!adapter) return;
+    adapter.setRoute(route, routeTint ? { tint: routeTint } : undefined);
+    if (route && route.length >= 2) adapter.fitRoute(route);
   }, [route, routeTint, ready]);
 
   useImperativeHandle(

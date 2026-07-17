@@ -117,6 +117,13 @@ const FLY_DURATION_MS = 800;
 const PADDING_DURATION_MS = 300;
 
 /**
+ * How close `fitRoute` is allowed to pull in. 16.5 is a street, not a doorway.
+ * Without a cap, a seller 40m away frames at maximum zoom and the map reads as
+ * a bug rather than as good news.
+ */
+const FIT_MAX_ZOOM = 16.5;
+
+/**
  * Honour the OS "reduce motion" setting by collapsing camera animations to a
  * cut. Read per call rather than cached — the setting can change mid-session.
  *
@@ -552,9 +559,26 @@ interface MapboxLineLayer {
   paint: { "line-color": string; "line-width": number };
 }
 
+/** `[[west, south], [east, north]]` — Mapbox's own LngLatBounds tuple form. */
+type BoundsTuple = [[number, number], [number, number]];
+
+interface FitBoundsOptions {
+  padding?: MapPadding;
+  maxZoom?: number;
+  essential?: boolean;
+  duration?: number;
+}
+
 interface MapboxMap {
   flyTo(options: MapboxCameraOptions): void;
   easeTo(options: MapboxCameraOptions): void;
+  /**
+   * Frame a box. Mapbox solves the zoom for us, honouring `padding`, which is
+   * the entire reason this is the right primitive and a zoom derived from a
+   * haversine distance is not: the visible band is not the viewport here, and
+   * only the camera knows the projection at this latitude.
+   */
+  fitBounds(bounds: BoundsTuple, options?: FitBoundsOptions): void;
   project(lnglat: [number, number]): ScreenPoint;
   setStyle(style: string): void;
   /** Only 'style.load' is used; narrow on purpose, like the rest of these. */
@@ -877,6 +901,59 @@ export class MapboxAdapter implements MapProviderAdapter {
       essential: true,
       duration: duration(FLY_DURATION_MS)
     });
+  }
+
+  /**
+   * FIT — frame a whole route so both ends stay on the visible map.
+   *
+   * The camera used to ignore the route completely: `setRoute` drew the line
+   * and nothing moved, so a seller far from the user ran the line straight off
+   * the viewport and neither end was guaranteed to be visible.
+   *
+   * Three things make this correct rather than merely close:
+   *
+   *   · IT FITS THE GEOMETRY, NOT THE TWO ENDPOINTS. A real road route detours
+   *     — around a creek, around Festac's grid — and a box drawn from origin
+   *     and destination alone leaves that corridor hanging outside the frame.
+   *     Every coordinate is bounded.
+   *   · IT IS PADDING-AWARE, which is the whole point of the ask. "Keep both in
+   *     view above the sheet" means the pair must fit in the ~48% of the screen
+   *     the sheet is not covering at the medium detent, not in the full canvas.
+   *     `this.padding` already models exactly that, so fitBounds solves the zoom
+   *     against the visible band and both ends land where they can be seen.
+   *   · IT CAPS THE ZOOM. Two points a few metres apart would otherwise fit at
+   *     z22, i.e. the camera slamming into the pavement because the seller is
+   *     next door. The cap keeps "very close" reading as a map.
+   *
+   * Deliberately NOT `fitBounds` on a bare pair: see above. Deliberately not a
+   * zoom computed from a distance either — the projection is Mapbox's business.
+   */
+  public fitRoute(coords: RouteGeometry, options?: { maxZoom?: number }): void {
+    if (!this.mapInstance || coords.length < 2) return;
+
+    let west = coords[0][0];
+    let east = coords[0][0];
+    let south = coords[0][1];
+    let north = coords[0][1];
+    for (const [lng, lat] of coords) {
+      if (lng < west) west = lng;
+      if (lng > east) east = lng;
+      if (lat < south) south = lat;
+      if (lat > north) north = lat;
+    }
+
+    this.mapInstance.fitBounds(
+      [
+        [west, south],
+        [east, north]
+      ],
+      {
+        padding: this.padding,
+        maxZoom: options?.maxZoom ?? FIT_MAX_ZOOM,
+        essential: true,
+        duration: duration(FLY_DURATION_MS)
+      }
+    );
   }
 
   /**
