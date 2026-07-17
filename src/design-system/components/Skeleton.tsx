@@ -277,7 +277,7 @@ export function ItemCardListSkeleton({ count = 4 }: { count?: number }) {
 /* `ListRowSkeleton` lived here — "a placeholder for a ListRow-height row (search
    suggestions, area pickers)". It had no caller anywhere, and its docstring says
    why: the area picker it was built for is AreaPickerSheet, which was deleted in
-   a84efa7. LocationSheet.tsx:493-495 hand-rolls the same three `h-tap w-full`
-   bars rather than importing this, so it was not even the only copy of itself.
-   Deleted. If LocationSheet ever wants to stop hand-rolling them, this is four
-   lines and it comes back with the import. */
+   a84efa7. `LocationSheet` composes three `<Skeleton className="h-tap w-full">`
+   bars of its own rather than importing this, so it was not even the only copy
+   of itself. Deleted. If LocationSheet ever wants to drop its own copy, this is
+   four lines and it comes back with the import. */

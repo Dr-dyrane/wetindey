@@ -90,7 +90,7 @@ export function MyReportsSheet({
       // dismissal is what makes every request still in flight compare unequal
       // and drop its result. Copying it to a variable, as the rule suggests,
       // would increment a stale number and silently disable the cancellation.
-      // Same call, same reasoning, as LocationSheet.tsx:145.
+      // Same call, same reasoning, as `LocationSheet`'s open-effect cleanup.
       // eslint-disable-next-line react-hooks/exhaustive-deps
       generation.current++;
     };
@@ -191,9 +191,9 @@ function ReportRow({ report }: { report: MyReport }) {
    * file most needed to avoid. `price_amount` is NOT NULL on all 47 of today's
    * 'unavailable' observations — a live one reads Salt / Bag of Salt / Satellite
    * Town Market, availability 'unavailable', price ₦22,712. The price band
-   * already drops sold-out reports (actions.ts:613 filters availability_state =
-   * 'available'), so the app itself refuses to price them; printing ₦22,712
-   * beside "E no dey" would say the shop both has it and does not.
+   * already drops sold-out reports (its `actions.ts` query filters to
+   * `availabilityState = 'available'`), so the app itself refuses to price them;
+   * printing ₦22,712 beside "E no dey" would say the shop both has it and does not.
    *
    * AVAILABLE, WITH A PRICE → the price. The 902 rows of today.
    *
@@ -231,7 +231,7 @@ function ReportRow({ report }: { report: MyReport }) {
             filed, so the date is the fact; "2 days ago" is a derived staleness
             claim about the OFFER, which is a different subject and not this
             row's to make. It also does not duplicate `formatAge`
-            (ItemDetailSheet.tsx:107), which is not exported. */}
+            (in `ItemDetailSheet`), which is not exported. */}
         <p className="text-caption-1 tabular-nums text-text-tertiary">
           {formatReportDate(report.observedAt)}
         </p>

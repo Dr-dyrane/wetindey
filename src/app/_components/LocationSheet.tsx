@@ -554,7 +554,7 @@ export function LocationSheet({ open, onClose, radiusKm, onCommit }: LocationShe
         }
         detailLabel={openGroup?.lgaName}
         onDetailBack={() => setLgaSlug(null)}
-        /* English on purpose, with the rest of this sheet (page.tsx:126) —
+        /* English on purpose, with the rest of this sheet's strings —
            the one string here that already has the plumbing to be translated
            and is waiting on the sheet's own i18n pass. */
         backLabel="Back"
