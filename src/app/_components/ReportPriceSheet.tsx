@@ -147,7 +147,7 @@ export function ReportPriceSheet(p: ReportPriceSheetProps) {
                     type="button"
                     aria-pressed={active}
                     onClick={() => p.onAvailable(o.id)}
-                    className={`flex items-center justify-center gap-1.5 squircle py-2 text-[13px] font-medium transition-all duration-micro
+                    className={`flex items-center justify-center gap-1.5 squircle py-2 text-[13px] font-medium transition duration-micro
                       ${active ? "bg-surface shadow-card" : "text-text-secondary"}`}
                   >
                     <span

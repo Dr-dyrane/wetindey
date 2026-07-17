@@ -577,7 +577,7 @@ export function ItemDetailSheet({
                 type="button"
                 aria-pressed={active}
                 onClick={() => setSort(s.id)}
-                className={`min-h-tap squircle text-footnote font-medium transition-all duration-micro
+                className={`min-h-tap squircle text-footnote font-medium transition duration-micro
                   ${active ? "bg-surface text-text-primary shadow-card" : "text-text-secondary"}`}
               >
                 {s.label}

@@ -434,7 +434,7 @@ function Choice<T extends string>({
               aria-pressed={active}
               onClick={() => onSelect(o.id)}
               className={`flex min-h-tap items-center justify-center gap-2 squircle px-2 text-subhead font-medium
-                          transition-all duration-micro active:scale-[0.97]
+                          transition duration-micro active:scale-[0.97]
                           ${active ? "bg-surface shadow-card text-text-primary" : "text-text-secondary"}`}
             >
               <span

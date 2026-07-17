@@ -35,29 +35,37 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
              * WCAG 2.1 SC 2.4.7, and `AGENTS.md`'s Definition of Done — "focus
              * outlines are complete". `docs/ACCESSIBILITY.md` carries it as P0-1.
              *
-             * WHAT IS PROVEN, and what is not — stated precisely, because the first
-             * draft of this comment cited a measurement that was worthless.
-             *   PROVEN: the utility compiles to `outline: 2px solid transparent` and
-             *   its selector is (0,2,0) against the base rule's (0,1,0), so it won.
-             *   PROVEN: a plain `<button>` in `:focus-visible` gets the real ring —
-             *   `rgb(0,122,255) solid 2px`, offset 2px. The base rule works.
-             *   PROVEN: this component no longer carries the class.
-             *   NOT PROVEN: that a keyboard-focused Button now paints THAT ring.
-             *   Measured after the fix, `Submit Report` under a real Tab shows
-             *   `white solid 1.5px, offset 0` — a ring, but the UA's, not ours. Why
-             *   the base rule reaches a bare button and not this one is unresolved.
-             *   See LANES H18. A visible ring where there was none is still the
-             *   right direction; it is not yet the designed one.
+             * AND `transition`, NOT `transition-all`.
              *
-             * The discarded measurement, recorded so nobody repeats it: `.focus()`
-             * does NOT put a button in `:focus-visible` — only a real keyboard
-             * interaction does. Every "before" reading taken that way showed no ring
-             * whether the bug was present or not, and proved nothing at all.
+             * `transition-all` transitions `outline-color`, `-width` and `-offset`,
+             * so the ring FADES IN over `duration-micro` rather than appearing. For
+             * those 160ms it sits at its from-value — a 1.5px `currentColor` hairline
+             * at offset 0, which on `bg-accent` is white on blue and invisible —
+             * before reaching `#007AFF 2px` at 2px offset. It DOES arrive. It is
+             * simply animated, and an animated focus indicator is not one; it also
+             * ignores `prefers-reduced-motion`.
+             *
+             * Plain `transition` names an explicit property list that excludes
+             * `outline`, so the ring lands instantly. `transform` is in that list, so
+             * `active:scale-[0.97]` still animates.
+             *
+             * RULE: never `transition-all`, nor a bare `duration-*`, on a focusable
+             * element — `transition-duration` with no `transition-property` defaults
+             * to `all`.
+             *
+             * Two corrections, kept because the errors are the useful part. An
+             * earlier version of this comment said the ring "never arrives"; that was
+             * the FIRST FRAME of a 160ms animation, read as a resting state, and a
+             * refuter disproved it by forcing the transition to `.finish()` and
+             * watching it land on the target. It also resolves the old LANES H18.
+             * And before that: `.focus()` does NOT put a button in `:focus-visible` —
+             * only a real keyboard interaction does — so every reading taken that way
+             * showed no ring whether the bug was present or not.
              *
              * If a hover or active style ever needs to suppress the ring, scope it to
              * that state. Never to the base.
              */
-            "inline-flex items-center justify-center font-semibold transition-all duration-micro ease-decelerate disabled:opacity-50 disabled:pointer-events-none active:scale-[0.97]",
+            "inline-flex items-center justify-center font-semibold transition duration-micro ease-decelerate disabled:opacity-50 disabled:pointer-events-none active:scale-[0.97]",
             {
               // Variants
               "bg-accent text-accent-contrast hover:bg-opacity-90 active:bg-accent/80": variant === "primary",

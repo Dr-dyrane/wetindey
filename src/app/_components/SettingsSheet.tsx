@@ -49,7 +49,7 @@ function Segmented<T extends string>({
             aria-selected={active}
             type="button"
             onClick={() => onChange(o.id)}
-            className={`flex items-center justify-center gap-1.5 squircle py-1.5 text-[13px] font-medium transition-all duration-micro
+            className={`flex items-center justify-center gap-1.5 squircle py-1.5 text-[13px] font-medium transition duration-micro
               ${active ? "bg-surface text-text-primary shadow-card" : "text-text-secondary active:opacity-60"}`}
           >
             {o.label}
