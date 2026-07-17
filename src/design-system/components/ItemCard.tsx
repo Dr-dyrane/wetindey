@@ -213,7 +213,7 @@ export function PhotoCredits({ items }: { items: ItemCardData[] }) {
           {c.imageAttribution} ({c.imageLicense})
         </span>
       ))}
-      {" — via Wikimedia Commons"}
+      {", via Wikimedia Commons"}
     </p>
   );
 }
