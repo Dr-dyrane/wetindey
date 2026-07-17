@@ -99,11 +99,22 @@ someone knows.
 
 **The badges honour no locale at all.** `ItemCard.tsx`'s `STATUS_LABEL` (`:52`) is a
 hardcoded `Record`, and `ItemDetailSheet.tsx:147` does the same. Found by the map lane,
-2026-07-16 — and verified here to be **worse than reported**: the labels are a hardcoded
-*mixture*. `confirmed: "Confirmed"` and `caution: "Check again"` are English;
-`unavailable: "E no dey"` is Pidgin. Every user sees the same mixture, so a **Pidgin user
-reads English**, a **Yorùbá user reads English and Pidgin**, and an **English user reads
-Pidgin**. Nobody is served, including the default.
+2026-07-16.
+
+> **CORRECTION, and it is the governance lane's error.** I first wrote this up as "the
+> labels are a hardcoded *mixture* — an English user reads Pidgin — nobody is served".
+> **That framing is wrong and the map lane was right to refuse it.** The mixture is
+> deliberate: this app's English locale already reads *"Wetin you dey find?"* in its search
+> field. **The default locale's voice is Nigerian English, not Received Standard.** To a
+> Lagos shopper, "E no dey" beside "Confirmed" is not two languages colliding — it is how
+> the market speaks. A monolingual "Not available" would read as an outsider's app, and
+> "fixing" the register would make the copy worse and more correct at the same time. That
+> trap is the whole point.
+>
+> **The defect, stated narrowly:** all three locales render the *same* strings, because the
+> dictionary is not wired. `pcm` and `yo` users get `en`'s copy. **Wire the dictionary; do
+> not launder the voice.** If this change ends with an English-locale badge reading "Not
+> available", it has failed.
 
 The tell is exact: `strings.ts:511` has carried the correct Pidgin `item.a11y_not_available`
 = "E no dey" all along, **unused**, while components hardcoded "Not dey" — which the owner
@@ -112,11 +123,12 @@ guess). **The right words were in the file nobody read.** That is the doc/code d
 in copy, and it is the strongest argument in the repo for adopting the dictionary rather than
 removing the picker.
 
-**And it proves the gating question is real, not theoretical:** `strings.ts:716` shows
-Yorùbá's `item.a11y_not_available` is `UNTRANSLATED`. Wiring the dictionary naively would
-swap a wrong-language label for a missing one. The i18n lane must decide what an
-`UNTRANSLATED` key renders **before** wiring anything — falling back to English is honest;
-rendering a placeholder to a Yorùbá speaker is not.
+**The gating question is settled, and `strings.ts` settled it, not me.** Yorùbá's
+`item.a11y_not_available` is `UNTRANSLATED`, so naive wiring swaps a wrong-language label
+for a *missing* one. `strings.ts`'s own doctrine already answers it: fabricated fluent
+Yorùbá is worse than English showing through, because **a user cannot tell invented copy
+from careless copy**. So an `UNTRANSLATED` key falls back to English. Moot for now —
+Yorùbá is withheld entirely (`caef105`) — but it is the rule when Yorùbá returns.
 
 Belongs to the **i18n** lane; blocked only on `ItemCard.tsx` / `ItemDetailSheet.tsx` having
 no owner.

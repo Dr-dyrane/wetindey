@@ -19,10 +19,24 @@ that claim unbacked, and traced it to a single root cause: **nobody knows who wr
   Contributor row, not the schema's default of 70 — an earlier draft of this ADR said 70,
   which was wrong. The number is irrelevant; that it never varies is the point.) It is a
   constant wearing the costume of a signal.
-- **`distinct_source_count` is structurally 1** for every contributor-sourced offer, because
-  there is only one contributor source to be distinct from. `src/lib/trust.ts:405` renders
-  "N different people" from it. Corroboration is being counted against a table that cannot
-  express more than one contributor.
+- **`distinct_source_count` counts CATEGORIES and the app called them PEOPLE.** Against the
+  live database it exceeds 1 in **319 of 474 offer groups** — 163 count two sources, 156
+  count three — because the seed spreads observations across `Contributor`, `Public data`
+  and `Vendor`. `src/lib/trust.ts` rendered that as "N different people". A dataset is not
+  a person; a shop is not a person; and the shared anonymous row is an unknown number of
+  people collapsed into one. Corrected to "N different sources" by the auth→trust lane.
+
+  > **An earlier draft of this ADR said this count was "structurally 1", and that was
+  > wrong.** It was reasoned from `seed.ts` seeding three rows, not measured. A subagent
+  > refused the premise, counted, and the premise died. The correction is left visible
+  > because the error is more instructive than the fact: **this document policed
+  > reasoning-instead-of-measuring while doing it.**
+
+  **Why it survived, and this is the general form of every trust bug here:** a constant `1`
+  would have looked broken and been caught in a week. A plausible 1–3 spread *looks like
+  corroboration and reads like evidence*. **It is camouflaged by being believable.** Same
+  family as the offers that once claimed more supporting reports than existed. Measure the
+  number; do not reason about it.
 - `trustLevel` is the string literal `"high"`, hardcoded on every write
   (`src/app/actions.ts:398`, `:416`, `:622`).
 - The code says so itself, twice: *"there is no auth in this app"* (`:296`), and *"A
@@ -106,10 +120,16 @@ throughout — they simply weigh less.
 **Note what that wiring changes.** `sources` stops being a three-row *category* table and
 becomes an *identity* table with a category column. That is a real change of meaning and it
 should be made deliberately, not as a side effect: `source_type` stays the category
-(`Contributor` / `Public data` / `Vendor`), while the row becomes one-per-author. It also
-makes `distinct_source_count` mean what it has always claimed to mean — the number that
-`src/lib/trust.ts:405` already renders as "N different people", and which is structurally 1
-today.
+(`Contributor` / `Public data` / `Vendor`), while the row becomes one-per-author.
+
+**This wiring does NOT fix `distinct_source_count`, and an earlier draft implied it would.**
+It makes it worse. Once per-user rows exist, the count *mixes* people and categories: "3
+different sources" may be two humans and a vendor feed. Identity is necessary and not
+sufficient — the third time that has been the answer in this ADR, which is itself the
+finding. The count must either **count what it says, or say what it counts**; the auth→trust
+lane took the second option for now ("N different sources"), and the first — a count admitting
+only attributed rows — is not available until attributed rows exist and is a separate change.
+Do not let this section be read as "user_id closes it".
 
 **Sign-in currently buys the contributor nothing** — not a reputation, not saved markets,
 not tracked reports; it buys an avatar initial. Any UI that promises otherwise is lying
