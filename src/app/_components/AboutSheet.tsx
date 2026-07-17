@@ -135,7 +135,6 @@ function AboutHub({ onSelect }: { onSelect: (page: AboutPage) => void }) {
   return (
     <div className="h-full space-y-6 overflow-y-auto overscroll-contain py-3">
       <div className="space-y-3 px-4">
-        <h2 className="text-title-3 font-semibold text-text-primary">{t("about.title")}</h2>
         <p className="text-body text-text-primary">{t("about.lede")}</p>
         <p className="text-subhead leading-relaxed text-text-secondary">{t("about.body_what")}</p>
         <p className="text-subhead leading-relaxed text-text-secondary">{t("about.body_prices")}</p>

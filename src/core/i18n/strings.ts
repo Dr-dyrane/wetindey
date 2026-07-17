@@ -283,7 +283,7 @@ export const en = {
    * Human legal review must complete those details before this becomes a notice. */
   "about.title": "About WetinDey",
   "about.lede":
-    "WetinDey helps you understand nearby local information before you leave. Food price and availability are our first live capability in south-west Lagos.",
+    "WetinDey helps you understand nearby local information before you leave. Food price and availability are WetinDey’s current V1 capability in south-west Lagos.",
   "about.body_what":
     "Coverage and freshness vary. Information may be incomplete, stale, synthetic, demonstration-only or uncertain.",
   "about.body_prices":
