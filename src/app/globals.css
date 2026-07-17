@@ -385,11 +385,15 @@
    * but a black shadow. Strokes are banned, so the rung IS the edge.
    */
   .sheet-panel {
-    --stack-surface: var(--color-background);
+    --stack-surface: var(--material-thick);
     background-color: var(--stack-surface);
+    -webkit-backdrop-filter: blur(var(--material-blur)) saturate(var(--material-saturate))
+      brightness(var(--material-brightness));
+    backdrop-filter: blur(var(--material-blur)) saturate(var(--material-saturate))
+      brightness(var(--material-brightness));
   }
   .dark .sheet-panel {
-    --stack-surface: var(--color-surface);
+    --stack-surface: var(--material-thick);
   }
   .stack-surface {
     background-color: var(--stack-surface, var(--color-background));
@@ -427,7 +431,8 @@
   .material-ultrathin,
   .material-thin,
   .material-regular,
-  .material-thick {
+  .material-thick,
+  .sheet-panel {
     -webkit-backdrop-filter: none;
     backdrop-filter: none;
     background-color: var(--color-surface);
