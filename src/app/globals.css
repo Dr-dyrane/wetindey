@@ -249,12 +249,26 @@
   .squircle-xl {
     border-radius: 28px;
   }
+  /* Card radius, split from .squircle by ROLE. .squircle is also the CONTROL
+     radius — buttons, inputs, icon tiles, segments — and those do not want a
+     friendlier corner, so cards cannot simply ride it upward.
+     Ceiling is SHEET_RADIUS (BottomSheet.tsx:24, 28px). Every card sits at mx-4
+     inside one of those sheets, and a card that matches its sheet's radius
+     fuses with it, so both values below must stay under 28.
+     NOT for a card that bleeds an image to its edge: the card clips the photo,
+     so radius here comes straight out of the image. ItemCard keeps .squircle
+     for that reason — including its no-photo state, where the Monogram tile
+     bleeds identically. */
+  .squircle-card {
+    border-radius: 20px;
+  }
   .squircle-full {
     border-radius: 9999px;
   }
 
   @supports (corner-shape: squircle) {
     .squircle,
+    .squircle-card,
     .squircle-lg,
     .squircle-xl {
       corner-shape: squircle;
@@ -262,6 +276,7 @@
     /* Squircle corners read tighter than a circular arc at the same radius, so
        the radius is opened up to keep the optical weight. Tuned by eye. */
     .squircle { border-radius: 20px; }
+    .squircle-card { border-radius: 26px; }
     .squircle-lg { border-radius: 28px; }
     .squircle-xl { border-radius: 36px; }
   }

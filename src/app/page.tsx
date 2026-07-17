@@ -24,7 +24,6 @@ import { DETENT_FRACTION } from "@/design-system/components/BottomSheet";
 import { AsyncList } from "@/design-system/components/AsyncList";
 import { NigeriaLogo } from "@/design-system/components/NigeriaLogo";
 import { ItemCard, PhotoCredits, type ItemCardData } from "@/design-system/components/ItemCard";
-import { StatusDot, StatusBadge } from "@/design-system/components/StatusBadge";
 import { SettingsSheet } from "@/app/_components/SettingsSheet";
 import { ReportPriceSheet } from "@/app/_components/ReportPriceSheet";
 import { ProfileSheet, Avatar } from "@/app/_components/ProfileSheet";
@@ -784,27 +783,22 @@ export default function HomePage() {
         }}
       >
         <div className="flex items-start justify-between gap-2">
-          {/* A control, not a label. It was a `div` printing the literal
-              "Festac" — a string nothing could change, next to a green dot that
-              claimed a confirmed position we had never asked for. */}
+          {/* A control, not a label — hence `pointer-events-auto` against the
+              stack's `pointer-events-none`, and the tap floors. `min-w-tap` is
+              load-bearing now the label stands alone: the shortest area name in
+              the db is "Ojo", which would otherwise collapse the width under
+              44pt. The caveat for a manually picked area survives on the selected
+              row in LocationSheet, at the point where it is actionable. */}
           <button
             type="button"
             onClick={() => setIsLocationOpen(true)}
             aria-label="Change location"
-            className="pointer-events-auto flex min-h-tap items-center gap-2 squircle-full material-thick
-                       px-3 py-1.5 shadow-raised active:opacity-60 transition-opacity duration-instant"
+            className="pointer-events-auto flex min-h-tap min-w-tap items-center justify-center squircle-full
+                       material-thick px-3 py-1.5 shadow-raised active:opacity-60 transition-opacity duration-instant"
           >
-            <StatusDot
-              kind={location.isSimulated ? "caution" : "confirmed"}
-              pulse={!location.isSimulated}
-            />
             <span className="text-footnote font-medium text-text-primary">
-              Showing {location.label}
+              {location.label}
             </span>
-            {/* The honesty guard: "Simulated" / "Manual pin" / "Default area",
-                and null only for a real device fix. Every distance on this map is
-                measured from that position. */}
-            {location.tag && <StatusBadge kind={location.tag.kind}>{location.tag.label}</StatusBadge>}
           </button>
 
           <button
@@ -887,8 +881,16 @@ export default function HomePage() {
         />
       </div>
 
-      {/* Scrollable contents */}
-      <div className="flex-1 overflow-y-auto px-3 pb-5">
+      {/* The app's level-0 scroller. Its bottom padding composes the strip of
+          sheet hanging below the viewport at the resting detent — BottomSheet
+          publishes `--sheet-hidden` because only it knows that number, and no
+          constant covers it, since the shortfall is a function of the detent.
+          The `0px` fallback is load-bearing: the regular shell mounts no
+          BottomSheet, so the variable is undefined there and this falls back to
+          the padding it has always had, with no branch on size class.
+          `overscroll-contain` keeps an overscroll at the end of the list from
+          chaining into BottomSheet's capture-phase scroll listener. */}
+      <div className="flex-1 overflow-y-auto overscroll-contain px-3 pb-[calc(var(--sheet-hidden,0px)+var(--safe-area-bottom)+20px)]">
         <div className="space-y-4">
           {/* A. Popular items */}
           {!searchQuery && (

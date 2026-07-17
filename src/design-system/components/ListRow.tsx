@@ -65,7 +65,7 @@ export function ListGroup({
   return (
     <section className="space-y-1.5">
       {header && <h3 className="px-4 text-footnote text-text-secondary">{header}</h3>}
-      <div className="mx-4 overflow-hidden bg-surface squircle">{children}</div>
+      <div className="mx-4 overflow-hidden bg-surface squircle-card">{children}</div>
       {footer && <p className="px-4 text-caption-1 text-text-secondary">{footer}</p>}
     </section>
   );

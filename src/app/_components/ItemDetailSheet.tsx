@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import Image from "next/image";
 import { AlertTriangle, MapPin } from "lucide-react";
 import { ModalSheet } from "@/design-system/components/ModalSheet";
 import { SheetPicker } from "@/design-system/components/SheetPicker";
@@ -38,6 +39,19 @@ import {
 export interface ItemDetailSheetItem {
   id: string;
   name: string;
+  /**
+   * The item's photo, and the two facts a CC BY / CC BY-SA licence obliges us to
+   * print wherever it appears. They travel together or not at all: a URL without
+   * its attribution is not a licence we hold.
+   *
+   * Optional because the column is nullable and nothing enforces coverage —
+   * `assertItemImages` only catches image keys with no item, never the inverse,
+   * and `withImage` (seed.ts:37) returns {} on a miss. Every item has a photo
+   * today by hand, not by construction.
+   */
+  imageUrl?: string | null;
+  imageAttribution?: string | null;
+  imageLicense?: string | null;
 }
 
 interface ItemDetailSheetProps {
@@ -279,6 +293,8 @@ export function ItemDetailSheet({
   const [offers, setOffers] = useState<NarrowedOffer[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  /** Null is not the only empty path — the CDN 404s and 429s at request time. */
+  const [imageBroken, setImageBroken] = useState(false);
 
   /**
    * The origin is frozen at open.
@@ -297,12 +313,18 @@ export function ItemDetailSheet({
 
   // A new item is a new question: drop the old narrowing rather than carry a
   // "50kg bag" filter from rice over onto tomatoes.
+  //
+  // `imageBroken` resets here for a different reason. ItemCard can hold it for
+  // the component's lifetime because a card is mounted per item; this sheet is
+  // one instance that every item passes through, so a single failed photo would
+  // strip the hero from every item opened afterwards.
   useEffect(() => {
     setVariantId(ANY);
     setUnitId(ANY);
     setSort("nearest");
     setOffers([]);
     setError(null);
+    setImageBroken(false);
   }, [itemId]);
 
   const optionsReq = useRef(0);
@@ -431,8 +453,71 @@ export function ItemDetailSheet({
 
   const countLabel = `${offers.length} ${t?.locations_found ?? (offers.length === 1 ? "place" : "places")}`;
 
+  /**
+   * The Maps place-card order: photo bleeding to the panel's top edge, then the
+   * name centred beneath it. Apple publishes no rule for the bleed — the Images
+   * and Collections pages cover resolution, format and colour only — so this is
+   * precedent, not law. What is law is below: the panel keeps its dismissal
+   * affordances, which ModalSheet floats over this block.
+   *
+   * No corner radius here. The panel is overflow-hidden and already carries
+   * SHEET_RADIUS; a second declaration would drift the moment that constant does.
+   *
+   * With no photo there is no hero, and ModalSheet renders its ordinary header.
+   * A monogram blown up to hero scale is a worse header than a real header.
+   */
+  const hero =
+    item && item.imageUrl && !imageBroken ? (
+      <div>
+        {/* Height tracks the viewport, not the width: the panel is sized as a
+            fraction of the screen's height in both size classes, so a hero in vh
+            holds one proportion of it at compact and regular alike. */}
+        <div className="relative h-[clamp(140px,22vh,200px)] w-full bg-surface-sunken">
+          <Image
+            src={item.imageUrl}
+            alt=""
+            fill
+            sizes="(min-width: 768px) 440px, 100vw"
+            className="object-cover"
+            /**
+             * Straight from Wikimedia's CDN, not /_next/image. The optimizer
+             * fetches every photo server-side from one IP, which
+             * upload.wikimedia.org answers with 429 and no image renders. This
+             * failure reaches production without ever showing up locally.
+             */
+            unoptimized
+            onError={() => setImageBroken(true)}
+          />
+
+          {/* The licence obligation, not a caption — CC BY / CC BY-SA hold only
+              while the author and licence appear with the image.
+
+              On material for the reason the close control above it is: the photo
+              has unknown luminance and no ink token is light in both themes, so
+              nothing here can be legible against the image itself. Bottom-
+              trailing keeps it clear of the centred name's column. */}
+          {item.imageAttribution && (
+            <span
+              className="absolute bottom-1.5 right-1.5 squircle-full material-thick
+                         px-2 py-[2px] text-caption-2 text-text-secondary"
+            >
+              {item.imageAttribution}
+              {item.imageLicense ? ` · ${item.imageLicense}` : ""}
+            </span>
+          )}
+        </div>
+
+        {/* Restores the heading ModalSheet's hero path drops. `title` still
+            carries the dialog's accessible name, so this is the outline, not
+            the label. */}
+        <h2 className="text-balance px-10 pt-3 pb-1 text-center text-title-2 text-text-primary">
+          {item.name}
+        </h2>
+      </div>
+    ) : undefined;
+
   return (
-    <ModalSheet open={open} onClose={onClose} title={item?.name ?? "Prices"} size="page">
+    <ModalSheet open={open} onClose={onClose} title={item?.name ?? "Prices"} hero={hero} size="page">
       <div className="space-y-4 py-3">
         {/* The narrowing path: item → type → size. */}
         <div className="mx-4 grid grid-cols-2 gap-3">

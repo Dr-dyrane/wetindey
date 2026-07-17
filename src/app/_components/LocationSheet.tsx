@@ -1,14 +1,15 @@
 "use client";
 
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { Check, LocateFixed, MapPin, TriangleAlert } from "lucide-react";
+import { Check, ChevronRight, LocateFixed, Map as MapIcon, MapPin, TriangleAlert } from "lucide-react";
 
 import { ModalSheet } from "@/design-system/components/ModalSheet";
+import { NavigationStack } from "@/design-system/components/NavigationStack";
 import { ListGroup } from "@/design-system/components/ListRow";
 import { Skeleton } from "@/design-system/components/Skeleton";
 import { StatusBadge } from "@/design-system/components/StatusBadge";
 import { getAreaTree, getCoverageForPoint } from "@/app/actions";
-import type { AreaSummary, AreaTree } from "@/app/actions";
+import type { AreaGroup, AreaSummary, AreaTree } from "@/app/actions";
 import { getHaversineDistance, formatDistance } from "@/lib/geospatial";
 import { useLocationStore } from "@/core/state/locationStore";
 
@@ -63,10 +64,22 @@ type LocateState =
  * and a select with a single option is a lie about the freedom you have. They
  * appear as a settled line of context above the choices.
  *
- * The LGA is a HEADER, not a step. You cannot stand in "an LGA" — it contains
- * the place you are actually in. Six headers over nine neighbourhoods is one
- * screen, and it conveys that Festac is in Amuwo Odofin without charging a tap
- * to learn it. A drill-down here would be hierarchy for its own sake.
+ * The LGA is a step ONLY where it has more than one child. Dumping every
+ * neighbourhood under every LGA reads as one screen at nine neighbourhoods and
+ * as a wall at ninety, so the LGAs are a pushed level (NavigationStack, the
+ * same push both size classes already use for place detail) rather than a set
+ * of headers.
+ *
+ * An LGA holding exactly ONE neighbourhood is not a step, and is not drawn as
+ * one: the row IS that neighbourhood, and the LGA name moves into its detail
+ * line. A drill onto a single row you cannot deselect is a control that lies
+ * about having an outcome — the same rule ItemDetailSheet's NarrowStep applies
+ * to its pickers. Four of the six LGAs are that case today, which is the whole
+ * difference between this being a saving and a tax.
+ *
+ * You still cannot stand in "an LGA", so an LGA row never commits a position
+ * and never claims a distance: getAreaTree returns no LGA centre, and inventing
+ * one to fill the line would be fabricating the one thing this sheet sells.
  *
  * What comes out is `provenance: "manual"` — self-declared, area-centre
  * precision. The old code called this "simulate" and dressed it in a caution
@@ -87,6 +100,11 @@ export function LocationSheet({ open, onClose, radiusKm, onCommit }: LocationShe
   const [treeError, setTreeError] = useState<string | null>(null);
   const [locate, setLocate] = useState<LocateState>({ kind: "idle" });
   const [deviceCoords, setDeviceCoords] = useState<{ lat: number; lng: number } | null>(null);
+
+  /** The pushed LGA, by slug. Resolved against the tree at render rather than
+   *  held as a group object, so a reloaded tree cannot strand level 1 on rows
+   *  that no longer exist. */
+  const [lgaSlug, setLgaSlug] = useState<string | null>(null);
 
   /**
    * Geolocation and coverage callbacks fire long after the sheet may have been
@@ -128,6 +146,7 @@ export function LocationSheet({ open, onClose, radiusKm, onCommit }: LocationShe
       // eslint-disable-next-line react-hooks/exhaustive-deps
       generation.current++;
       setLocate({ kind: "idle" });
+      setLgaSlug(null);
     };
   }, [open, loadTree]);
 
@@ -287,11 +306,16 @@ export function LocationSheet({ open, onClose, radiusKm, onCommit }: LocationShe
 
   /** One neighbourhood row. The count is data, not decoration: an area with
    *  nothing in it says so, so picking it is an informed choice rather than a
-   *  blank map. */
-  const areaRow = (area: AreaSummary, autofocus: boolean) => {
+   *  blank map.
+   *
+   *  `lgaName` is passed only where the row stands in for its whole LGA at
+   *  level 0 — inside the pushed level the LGA is already the title, and
+   *  repeating it on every row would say nothing. */
+  const areaRow = (area: AreaSummary, lgaName?: string) => {
     const isSelected = area.slug === position.areaSlug;
     const distanceKm = getHaversineDistance(measureFrom.lat, measureFrom.lng, area.lat, area.lng);
     const detail = [
+      lgaName,
       area.placeCount === 0
         ? "No places yet"
         : `${area.placeCount} place${area.placeCount === 1 ? "" : "s"}`,
@@ -304,7 +328,6 @@ export function LocationSheet({ open, onClose, radiusKm, onCommit }: LocationShe
       <button
         key={area.id}
         type="button"
-        data-autofocus={autofocus ? "" : undefined}
         onClick={() => handlePickArea(area)}
         aria-current={isSelected}
         className="flex min-h-tap w-full items-center gap-3 px-4 py-2.5 text-left
@@ -327,124 +350,186 @@ export function LocationSheet({ open, onClose, radiusKm, onCommit }: LocationShe
     );
   };
 
-  return (
-    <ModalSheet open={open} onClose={onClose} title="Where are you?" size="page">
-      <div className="space-y-6 py-3">
-        {/* ── 1. Real location ────────────────────────────────────────── */}
+  /** One LGA row — the pushed case only; a single-child LGA is drawn by
+   *  `areaRow` instead. It carries no distance because no LGA centre exists to
+   *  measure from, and it names the area you are standing in so the current
+   *  location stays legible without opening the level. */
+  const lgaRow = (group: AreaGroup) => {
+    const selected = group.areas.find((a) => a.slug === position.areaSlug);
+    const places = group.areas.reduce((n, a) => n + a.placeCount, 0);
+    const detail = [
+      selected?.name,
+      `${group.areas.length} areas`,
+      places === 0 ? "No places yet" : `${places} place${places === 1 ? "" : "s"}`,
+    ]
+      .filter(Boolean)
+      .join(" · ");
 
-        <ListGroup footer="Your location never leaves your device.">
-          <button
-            type="button"
-            onClick={handleUseMyLocation}
-            disabled={locating}
-            aria-busy={locating}
-            className="flex min-h-tap w-full items-center gap-3 px-4 py-2 text-left
-                       disabled:opacity-40 active:bg-fillTertiary transition-colors duration-instant"
-          >
-            <span className="grid h-7 w-7 shrink-0 place-items-center squircle bg-status-info-bg">
-              <LocateFixed className={`h-4 w-4 text-status-info-fg ${locating ? "animate-pulse" : ""}`} />
+    return (
+      <button
+        key={group.lgaSlug}
+        type="button"
+        onClick={() => setLgaSlug(group.lgaSlug)}
+        aria-current={selected !== undefined}
+        className="flex min-h-tap w-full items-center gap-3 px-4 py-2.5 text-left
+                   active:bg-fillTertiary transition-colors duration-instant"
+      >
+        <span className="grid h-7 w-7 shrink-0 place-items-center squircle bg-fillTertiary">
+          <MapIcon className="h-4 w-4 text-text-secondary" />
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="block truncate text-body text-text-primary">{group.lgaName}</span>
+          <span className="mt-0.5 block truncate text-footnote text-text-secondary tabular-nums">
+            {detail}
+          </span>
+        </span>
+        {selected && <Check className="h-5 w-5 shrink-0 text-status-info" strokeWidth={2.5} />}
+        <ChevronRight className="h-4 w-4 shrink-0 text-text-tertiary" strokeWidth={2.5} />
+      </button>
+    );
+  };
+
+  const openGroup = tree?.groups.find((g) => g.lgaSlug === lgaSlug);
+
+  const listNode = (
+    /* Level 0 brings its own scroller: NavigationStack's root is a fixed-size
+       `overflow-hidden` host, and only level 1 is given one for free. */
+    <div className="h-full overflow-y-auto overscroll-contain space-y-6 py-3">
+      {/* ── 1. Real location ────────────────────────────────────────── */}
+
+      <ListGroup footer="Your location never leaves your device.">
+        <button
+          type="button"
+          onClick={handleUseMyLocation}
+          disabled={locating}
+          aria-busy={locating}
+          className="flex min-h-tap w-full items-center gap-3 px-4 py-2 text-left
+                     disabled:opacity-40 active:bg-fillTertiary transition-colors duration-instant"
+        >
+          <span className="grid h-7 w-7 shrink-0 place-items-center squircle bg-status-info-bg">
+            <LocateFixed className={`h-4 w-4 text-status-info-fg ${locating ? "animate-pulse" : ""}`} />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block truncate text-body text-text-primary">
+              {locating ? "Finding you…" : "Use my location"}
             </span>
-            <span className="min-w-0 flex-1">
-              <span className="block truncate text-body text-text-primary">
-                {locating ? "Finding you…" : "Use my location"}
-              </span>
-            </span>
-            {position.provenance === "device" && (
-              <Check className="h-5 w-5 shrink-0 text-status-info" strokeWidth={2.5} />
-            )}
-          </button>
-        </ListGroup>
+          </span>
+          {position.provenance === "device" && (
+            <Check className="h-5 w-5 shrink-0 text-status-info" strokeWidth={2.5} />
+          )}
+        </button>
+      </ListGroup>
 
-        {locate.kind === "problem" && (
-          <div className="mx-4 squircle bg-status-caution-bg p-4 space-y-1.5">
-            <div className="flex items-center gap-2">
-              <TriangleAlert className="h-4 w-4 shrink-0 text-status-caution-fg" />
-              <p className="text-subhead font-semibold text-status-caution-fg">{locate.title}</p>
-            </div>
-            <p className="text-footnote text-text-secondary">{locate.body}</p>
-            {locate.canRetry && (
-              <button
-                type="button"
-                onClick={handleUseMyLocation}
-                className="min-h-tap text-subhead font-semibold text-status-info active:opacity-60"
-              >
-                Try again
-              </button>
-            )}
+      {locate.kind === "problem" && (
+        <div className="mx-4 squircle bg-status-caution-bg p-4 space-y-1.5">
+          <div className="flex items-center gap-2">
+            <TriangleAlert className="h-4 w-4 shrink-0 text-status-caution-fg" />
+            <p className="text-subhead font-semibold text-status-caution-fg">{locate.title}</p>
           </div>
-        )}
-
-        {locate.kind === "outside" && (
-          <div className="mx-4 squircle bg-status-caution-bg p-4 space-y-1.5">
-            <div className="flex items-center gap-2">
-              <MapPin className="h-4 w-4 shrink-0 text-status-caution-fg" />
-              <p className="text-subhead font-semibold text-status-caution-fg">
-                We found you, but you&rsquo;re outside our areas
-              </p>
-            </div>
-            <p className="text-footnote text-text-secondary">
-              {locate.nearest
-                ? `Nothing within ${radiusKm} km of you. The nearest we cover is ${locate.nearest.name}${
-                    locate.distanceKm !== null
-                      ? `, about ${formatDistance(locate.distanceKm).replace(" away", "")} off`
-                      : ""
-                  }.`
-                : `Nothing within ${radiusKm} km of you.`}
-            </p>
-            {locate.nearest && (
-              <button
-                type="button"
-                onClick={() => handlePickArea(locate.nearest!)}
-                className="min-h-tap text-subhead font-semibold text-status-info active:opacity-60"
-              >
-                Use {locate.nearest.name} instead
-              </button>
-            )}
-          </div>
-        )}
-
-        {/* ── 2. The hierarchy ────────────────────────────────────────── */}
-
-        {treeError ? (
-          <div className="mx-4 squircle bg-surface shadow-card p-5 text-center space-y-2">
-            <p className="text-subhead font-semibold text-text-primary">{treeError}</p>
+          <p className="text-footnote text-text-secondary">{locate.body}</p>
+          {locate.canRetry && (
             <button
               type="button"
-              onClick={() => void loadTree()}
+              onClick={handleUseMyLocation}
               className="min-h-tap text-subhead font-semibold text-status-info active:opacity-60"
             >
               Try again
             </button>
-          </div>
-        ) : tree === null ? (
-          <div className="mx-4 space-y-2">
-            <Skeleton className="h-tap w-full squircle" />
-            <Skeleton className="h-tap w-full squircle" />
-            <Skeleton className="h-tap w-full squircle" />
-          </div>
-        ) : tree.groups.length === 0 ? (
-          <div className="mx-4 squircle bg-surface shadow-card p-5 text-center">
-            <p className="text-subhead font-semibold text-text-primary">No areas are set up yet</p>
-          </div>
-        ) : (
-          <div className="space-y-6">
-            {/*
-              Country and state, settled. Two words carry both levels of the
-              hierarchy the pilot has locked — shown so the user knows where the
-              choices below sit, not offered as a decision they don't have.
-            */}
-            <p className="px-4 text-footnote text-text-secondary">
-              {tree.countryName} · {tree.stateName}
-            </p>
+          )}
+        </div>
+      )}
 
-            {tree.groups.map((group, gi) => (
-              <ListGroup key={group.lgaSlug} header={group.lgaName}>
-                {group.areas.map((area, ai) => areaRow(area, gi === 0 && ai === 0))}
-              </ListGroup>
-            ))}
+      {locate.kind === "outside" && (
+        <div className="mx-4 squircle bg-status-caution-bg p-4 space-y-1.5">
+          <div className="flex items-center gap-2">
+            <MapPin className="h-4 w-4 shrink-0 text-status-caution-fg" />
+            <p className="text-subhead font-semibold text-status-caution-fg">
+              We found you, but you&rsquo;re outside our areas
+            </p>
           </div>
-        )}
-      </div>
+          <p className="text-footnote text-text-secondary">
+            {locate.nearest
+              ? `Nothing within ${radiusKm} km of you. The nearest we cover is ${locate.nearest.name}${
+                  locate.distanceKm !== null
+                    ? `, about ${formatDistance(locate.distanceKm).replace(" away", "")} off`
+                    : ""
+                }.`
+              : `Nothing within ${radiusKm} km of you.`}
+          </p>
+          {locate.nearest && (
+            <button
+              type="button"
+              onClick={() => handlePickArea(locate.nearest!)}
+              className="min-h-tap text-subhead font-semibold text-status-info active:opacity-60"
+            >
+              Use {locate.nearest.name} instead
+            </button>
+          )}
+        </div>
+      )}
+
+      {/* ── 2. The hierarchy ────────────────────────────────────────── */}
+
+      {treeError ? (
+        <div className="mx-4 squircle bg-surface shadow-card p-5 text-center space-y-2">
+          <p className="text-subhead font-semibold text-text-primary">{treeError}</p>
+          <button
+            type="button"
+            onClick={() => void loadTree()}
+            className="min-h-tap text-subhead font-semibold text-status-info active:opacity-60"
+          >
+            Try again
+          </button>
+        </div>
+      ) : tree === null ? (
+        <div className="mx-4 space-y-2">
+          <Skeleton className="h-tap w-full squircle" />
+          <Skeleton className="h-tap w-full squircle" />
+          <Skeleton className="h-tap w-full squircle" />
+        </div>
+      ) : tree.groups.length === 0 ? (
+        <div className="mx-4 squircle bg-surface shadow-card p-5 text-center">
+          <p className="text-subhead font-semibold text-text-primary">No areas are set up yet</p>
+        </div>
+      ) : (
+        <div className="space-y-6">
+          {/*
+            Country and state, settled. Two words carry both levels of the
+            hierarchy the pilot has locked — shown so the user knows where the
+            choices below sit, not offered as a decision they don't have.
+          */}
+          <p className="px-4 text-footnote text-text-secondary">
+            {tree.countryName} · {tree.stateName}
+          </p>
+
+          <ListGroup>
+            {tree.groups.map((group) =>
+              group.areas.length > 1
+                ? lgaRow(group)
+                : areaRow(group.areas[0], group.lgaName)
+            )}
+          </ListGroup>
+        </div>
+      )}
+    </div>
+  );
+
+  return (
+    <ModalSheet open={open} onClose={onClose} title="Where are you?" size="page">
+      <NavigationStack
+        listNode={listNode}
+        detailNode={
+          openGroup && (
+            /* No padding of its own — the stack owns level 1's inset, which is
+               why the same node is correct in every container it is handed to. */
+            <div className="overflow-hidden bg-surface squircle">
+              {openGroup.areas.map((area) => areaRow(area))}
+            </div>
+          )
+        }
+        detailLabel={openGroup?.lgaName}
+        onDetailBack={() => setLgaSlug(null)}
+      />
     </ModalSheet>
   );
 }

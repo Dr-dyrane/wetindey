@@ -124,9 +124,16 @@ export function ItemCard({ item, onSelect }: { item: ItemCardData; onSelect: (it
        * price was rendered a step LARGER than the name, which inverted the
        * hierarchy: the thing you scan for last shouted loudest.
        *
-       * Everything else is one tier down and secondary. Weight and colour carry
-       * the hierarchy here rather than size, so the row stays compact when
-       * Dynamic Type scales it up.
+       * Everything else is one tier down and secondary on all three axes —
+       * size, weight, colour. The unit was the lone holdout: it sat at the
+       * price's own 15pt and leaned on weight and ink alone, so it read as the
+       * price's peer rather than as its qualifier. ItemDetailSheet already
+       * steps the same pair down; keep the card and the sheet it opens into in
+       * agreement.
+       *
+       * No tier-two element has a taller line box than the tier it serves —
+       * the ramp is rem-based, so that holds at every Dynamic Type size. Row
+       * height is the price's alone and never gains a step from this.
        */}
       <div className="min-w-0 flex-1 py-2 pr-3">
         <div className="flex items-baseline justify-between gap-2">
@@ -138,7 +145,7 @@ export function ItemCard({ item, onSelect }: { item: ItemCardData; onSelect: (it
             /* The unit is not decoration. A range spanning a 1L bottle and a 25L
                keg is arithmetically fine and factually nonsense; naming the unit
                is what makes the number mean something. */
-            <span className="ml-1 font-normal text-text-secondary"> / {item.unitLabel}</span>
+            <span className="ml-1 text-footnote font-normal text-text-secondary"> / {item.unitLabel}</span>
           )}
         </p>
         <div className="mt-1 flex items-center gap-1.5">

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { ArrowLeft } from "lucide-react";
+import { ChevronLeft } from "lucide-react";
 
 interface NavigationStackProps {
   /**
@@ -20,8 +20,9 @@ interface NavigationStackProps {
   /**
    * Pops the stack. OPTIONAL on purpose: `detailNode` already ships its own
    * close control, which clears the selection and therefore already pops. Pass
-   * this to add the HIG-correct back row above the detail; omit it and the push
-   * still works, just without a back affordance of its own.
+   * this to add the HIG-correct back row — chevron.left plus a label — above the
+   * detail; omit it and the push still works, just without a back affordance of
+   * its own.
    */
   onDetailBack?: () => void;
   /** Back row label. A prop, not a literal — the app speaks three languages. */
@@ -137,15 +138,18 @@ export function NavigationStack({
       >
         {onDetailBack && content ? (
           <div className="shrink-0 px-3 pt-3 pb-1">
-            {/* 44pt target; the arrow lands at 24px, flush with the leading edge
-                of the detail content below it. No divider under the row — the
-                level's own material and elevation already separate it. */}
+            {/* 44pt target; the chevron lands at 24px, flush with the leading
+                edge of the detail content below it. No divider under the row —
+                the level's own material and elevation already separate it. */}
             <button
               type="button"
               onClick={onDetailBack}
               className="squircle inline-flex h-tap items-center gap-1 px-3 text-body text-accent transition-opacity duration-micro ease-decelerate active:opacity-60"
             >
-              <ArrowLeft aria-hidden className="h-4 w-4" />
+              {/* strokeWidth matches the disclosure chevrons (ListRow,
+                  SheetPicker); at the default weight this reads lighter than
+                  the carets it sits beside. */}
+              <ChevronLeft aria-hidden strokeWidth={2.5} className="h-4 w-4" />
               {backLabel}
             </button>
           </div>
@@ -160,9 +164,18 @@ export function NavigationStack({
 
           Level 1 needs a scroller; level 0 does not, because `listNode` brings
           its own. That asymmetry is dictated by what the nodes arrive with.
+
+          The bottom padding composes three terms: `--sheet-hidden` is the strip
+          of the sheet hanging below the viewport at the current detent, which
+          BottomSheet publishes because only it knows the number; the safe area
+          clears the home indicator at `large`, where the sheet is docked and
+          `--sheet-hidden` is 0; 24px is the breathing room. The `0px` fallback is
+          load-bearing — the regular shell mounts this stack with no BottomSheet
+          above it, so the variable is simply undefined there and this falls back
+          to the padding it has always had, with no branch on size class.
         */}
         <div
-          className={`flex-1 overflow-y-auto overscroll-contain px-6 pb-6 ${
+          className={`flex-1 overflow-y-auto overscroll-contain px-6 pb-[calc(var(--sheet-hidden,0px)+var(--safe-area-bottom)+24px)] ${
             onDetailBack && content ? "pt-2" : "pt-6"
           }`}
         >

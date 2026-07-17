@@ -11,6 +11,17 @@ interface ModalSheetProps {
   title: string;
   /** Optional right-hand action, e.g. a Done button. */
   action?: React.ReactNode;
+  /**
+   * Full-bleed content for the panel's top edge, replacing the visible header.
+   * `title` stays required and stays the dialog's accessible name, so the <h2>
+   * is redundant here rather than lost.
+   *
+   * Two constraints the type cannot express. The hero must NOT declare a corner
+   * radius: the panel clips it, and a second declaration drifts the moment
+   * SHEET_RADIUS moves. And its top-trailing corner is overlaid by the floating
+   * close control, so nothing interactive may sit there.
+   */
+  hero?: React.ReactNode;
   children: React.ReactNode;
   /** "page" fills the screen; "form" is the shorter card used for short tasks. */
   size?: "page" | "form";
@@ -30,7 +41,7 @@ interface ModalSheetProps {
  * Dismissal follows the platform's three paths: the close control, the
  * backdrop, and Escape.
  */
-export function ModalSheet({ open, onClose, title, action, children, size = "page" }: ModalSheetProps) {
+export function ModalSheet({ open, onClose, title, action, hero, children, size = "page" }: ModalSheetProps) {
   const panelRef = useRef<HTMLDivElement>(null);
   const lastFocused = useRef<Element | null>(null);
   /** Regular width presents a floating card, so all four corners round. */
@@ -106,35 +117,92 @@ export function ModalSheet({ open, onClose, title, action, children, size = "pag
           borderBottomLeftRadius: isRegular ? SHEET_RADIUS : 0,
           borderBottomRightRadius: isRegular ? SHEET_RADIUS : 0,
         }}
-        className={`relative flex flex-col bg-background shadow-sheet overflow-hidden
+        /**
+         * The surface is theme-split, and deliberately so.
+         *
+         * Light stays on background: #F2F2F7 under #FFFFFF cards is the
+         * inset-grouped ladder, and it reads.
+         *
+         * Dark cannot. background is #000000 there, and the panel's only
+         * separation is shadow-sheet — a black shadow, over a 55% black scrim,
+         * over a dark map. With strokes banned, material and elevation are the
+         * only separation mechanisms and neither can act: the sheet has no edge.
+         * surface-elevated is the one rung free to take it. bg-surface is not:
+         * #1C1C1E is already the cards INSIDE these sheets, and its #FFFFFF in
+         * light is why this cannot be applied to both themes at once — the panel
+         * would swallow the very cards it carries.
+         */
+        className={`relative flex flex-col bg-background dark:bg-surface-elevated shadow-sheet overflow-hidden
           animate-in duration-sheet ease-spring
           slide-in-from-bottom md:slide-in-from-bottom-4 md:zoom-in-95
           md:w-full md:max-w-[440px] md:shadow-island
           ${size === "page" ? "h-[94%] md:h-[min(92%,720px)]" : "max-h-[88%] md:max-h-[min(88%,640px)]"}`}
       >
-        {/* Grabber — signals "dismisses downward". Compact width only: a
-            floating card at regular width does not dismiss by dragging down,
-            so the affordance would be a lie. */}
-        {!isRegular && (
-          <div className="flex w-full shrink-0 justify-center pt-2.5 pb-1">
-            <span className="h-[5px] w-9 rounded-full bg-text-tertiary" />
-          </div>
-        )}
+        {hero ? (
+          /* The affordances precede {hero} in document order so the focus move
+             above still lands on action-or-close exactly as it does in the
+             header path — visual order comes from positioning, not the DOM.
+             They float, so nothing pads the hero away from the top edge, and
+             the panel's own overflow-hidden clips both to SHEET_RADIUS. */
+          <div className="relative shrink-0">
+            {/* A hero is a photograph of unknown luminance in both themes, so
+                neither affordance below can rely on contrast against it. */}
+            <div className="pointer-events-none absolute inset-x-0 top-0 z-10 h-16 bg-gradient-to-b from-scrim to-transparent" />
 
-        <header className="flex items-center justify-between gap-3 px-4 py-2.5 shrink-0">
-          <h2 className="truncate text-headline text-text-primary">{title}</h2>
-          <div className="flex items-center gap-1.5 shrink-0">
-            {action}
-            <button
-              onClick={onClose}
-              aria-label="Close"
-              className="grid place-items-center h-7 w-7 rounded-full bg-fillSecondary text-text-secondary
-                         hover:text-text-primary active:scale-90 transition-transform duration-instant"
-            >
-              <X className="h-4 w-4" strokeWidth={2.5} />
-            </button>
+            {!isRegular && (
+              <div className="pointer-events-none absolute inset-x-0 top-0 z-10 flex justify-center pt-2.5">
+                <span className="h-[5px] w-9 rounded-full bg-text-tertiary" />
+              </div>
+            )}
+
+            <div className="absolute right-0 top-0 z-10 flex items-center gap-1.5 p-1.5">
+              {action}
+              <button
+                onClick={onClose}
+                aria-label="Close"
+                className="grid h-11 w-11 place-items-center text-text-secondary
+                           hover:text-text-primary active:scale-90 transition-transform duration-instant"
+              >
+                {/* Material, not the header's bg-fillSecondary: a 16% grey fill
+                    disappears over an arbitrary photo. Under Reduce Transparency
+                    this collapses to an opaque surface, which still reads.
+                    The 44px hit area is HIG's minimum; the chip stays 28px to
+                    match the header's. */}
+                <span className="grid h-7 w-7 place-items-center rounded-full material-thick">
+                  <X className="h-4 w-4" strokeWidth={2.5} />
+                </span>
+              </button>
+            </div>
+
+            {hero}
           </div>
-        </header>
+        ) : (
+          <>
+            {/* Grabber — signals "dismisses downward". Compact width only: a
+                floating card at regular width does not dismiss by dragging down,
+                so the affordance would be a lie. */}
+            {!isRegular && (
+              <div className="flex w-full shrink-0 justify-center pt-2.5 pb-1">
+                <span className="h-[5px] w-9 rounded-full bg-text-tertiary" />
+              </div>
+            )}
+
+            <header className="flex items-center justify-between gap-3 px-4 py-2.5 shrink-0">
+              <h2 className="truncate text-headline text-text-primary">{title}</h2>
+              <div className="flex items-center gap-1.5 shrink-0">
+                {action}
+                <button
+                  onClick={onClose}
+                  aria-label="Close"
+                  className="grid place-items-center h-7 w-7 rounded-full bg-fillSecondary text-text-secondary
+                             hover:text-text-primary active:scale-90 transition-transform duration-instant"
+                >
+                  <X className="h-4 w-4" strokeWidth={2.5} />
+                </button>
+              </div>
+            </header>
+          </>
+        )}
 
         <div
           className="flex-1 overflow-y-auto overscroll-contain"
