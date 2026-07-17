@@ -7,6 +7,7 @@ import { ListGroup, ListRow } from "@/design-system/components/ListRow";
 import { haptics } from "@/lib/haptics";
 
 export type CategoryPillar = "food" | "home" | "health" | "money" | "transport" | "community";
+type SelectorCategory = CategoryPillar | "fuel";
 
 interface CategorySelectorSheetProps {
   open: boolean;
@@ -25,8 +26,9 @@ export function CategorySelectorSheet({
 }: CategorySelectorSheetProps) {
   // Labels stay text-first until a category has a complete, typed vertical that
   // can justify an unambiguous domain glyph across map, search, and reporting.
-  const categories: { id: CategoryPillar; label: string; detail: string }[] = [
+  const categories: { id: SelectorCategory; label: string; detail: string }[] = [
     { id: "food", label: t.category_food || "Food", detail: t.category_food_desc || "Prices, availability, markets" },
+    { id: "fuel", label: "Fuel prices", detail: "Fuel stations and pump prices" },
     { id: "home", label: t.category_home || "Home & Living", detail: t.category_home_desc || "Building materials, charcoal" },
     { id: "health", label: t.category_health || "Health & Beauty", detail: t.category_health_desc || "Medicine, pharmacy, beauty" },
     { id: "money", label: t.category_money || "Money & Exchange", detail: t.category_money_desc || "Parallel USD/GBP rates" },
