@@ -1278,18 +1278,43 @@ export class MapboxAdapter implements MapProviderAdapter {
   }
 
   /**
-   * The lowest symbol layer in the live style, if it has one.
+   * The layer to slot the route BENEATH: the first text LABEL, not the first
+   * symbol of any kind. This is the anchor, and getting it wrong is what made
+   * the light route read as a hollow outline.
    *
-   * addLayer appends to the TOP of the stack, which would draw the route over
-   * every street name and place label on the basemap. Slotting it beneath the
-   * first symbol layer keeps those readable and makes the line read as part of
-   * the map rather than scribbled on the glass above it.
+   * The route has to sit ABOVE the roads (or the roads paint over it) and BELOW
+   * the labels (or it scribbles over every street name). "First symbol layer"
+   * looked like it meant "below the labels", and in dark-v11 it happens to —
+   * its first symbol IS `road-label-simple`, above every road. But streets-v12
+   * is a full reference map, and ITS first symbol is `tunnel-oneway-arrow-blue`,
+   * a road-network glyph sitting BELOW 52 more road line layers. Anchoring there
+   * dropped the route beneath the whole road stack, so the opaque light roads
+   * painted over the 4px line and left only the slivers between them showing —
+   * a solid line rendered as a broken outline, in light only, because dark never
+   * had roads above the anchor to occlude it.
+   *
+   * The honest anchor is the first LABEL. Verified against both live styles:
+   * the first symbol whose id contains "label" (streets-v12 `building-number-
+   * label`, dark-v11 `road-label-simple`) has ZERO road line layers above it in
+   * either, so the route lands on top of every road, and every real label still
+   * draws over the route. Road-network symbols — arrows, shields — never carry
+   * "label" in their id, so they do not falsely match.
+   *
+   * Falls back to the first symbol of any kind, then to undefined (top of stack)
+   * — a style with no label layer has nothing for the route to hide beneath, so
+   * drawing on top is harmless.
    *
    * Re-read on every apply, never cached: the layer stack belongs to the style,
    * and setTheme replaces the style with a different one.
    */
   private firstSymbolLayerId(map: MapboxMap): string | undefined {
-    return map.getStyle()?.layers?.find((layer) => layer.type === "symbol")?.id;
+    const layers = map.getStyle()?.layers;
+    if (!layers) return undefined;
+    const firstLabel = layers.find(
+      (layer) => layer.type === "symbol" && layer.id.includes("label")
+    );
+    if (firstLabel) return firstLabel.id;
+    return layers.find((layer) => layer.type === "symbol")?.id;
   }
 
   public resize(): void {
