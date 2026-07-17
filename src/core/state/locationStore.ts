@@ -3,7 +3,6 @@ import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 
 import { PRIMARY_LOCATION } from "@/db/lagosSouthWest";
-import type { StatusKind } from "@/design-system/components/StatusBadge";
 
 /**
  * The single owner of "where am I".
@@ -24,14 +23,28 @@ import type { StatusKind } from "@/design-system/components/StatusBadge";
  * simulated position as a real one is a lie, and distances measured from a
  * default the user never chose are worse than no distances at all.
  *
- * So provenance is not metadata here. It is a required field of the position,
- * it survives reloads with the coordinate, and `useLocationChrome()` exists to
- * make it impossible to render the position without it.
+ * So provenance is not metadata here. It is a required field of the position and
+ * it survives reloads with the coordinate. The caveat it earns is rendered at the
+ * point of choice: LocationSheet marks the selected row "Area centre" when the
+ * provenance is `manual`, so the qualifier sits next to the area the user is
+ * picking rather than travelling with the label everywhere the label goes.
  */
 export type LocationProvenance =
-  /** The user picked a named area off the list to stand in. Not a real fix. */
+  /**
+   * Legacy. No setter produces this: `simulate()` was the only writer and its
+   * one caller went away with coordinate entry. It stays in the union because
+   * the persist key and version did not change when that happened, so a browser
+   * that ran the earlier build rehydrates a `simulated` position into this store
+   * today. Narrowing the union would not delete those; it would only stop the
+   * type describing them.
+   */
   | "simulated"
-  /** The user typed a coordinate. Also not a real fix. */
+  /**
+   * The user picked their area off the administrative tree. Self-declared, and
+   * precise only to the area's centre — so it is not a fix, but picking the area
+   * you are standing in is an answer, not a pretence. The caveat it earns is
+   * about precision ("we measure from the middle of your area"), not honesty.
+   */
   | "manual"
   /** `navigator.geolocation` answered. The only provenance that is the truth. */
   | "device"
@@ -44,9 +57,9 @@ export interface UserPosition {
   provenance: LocationProvenance;
   /**
    * Name of the area this position sits in, when we know one. Null is a real
-   * and expected state: a manual coordinate in the middle of nowhere has no
-   * area, and inventing one to fill the label would be the same lie in a
-   * smaller font. `useLocationChrome()` falls back to the coordinate itself.
+   * and expected state: a device fix outside every area we cover has no name to
+   * give, and inventing one to fill the label would be the same lie in a smaller
+   * font. `useLocationChrome()` falls back to the coordinate itself.
    */
   areaName: string | null;
   /** Slug of the chosen area, so a list can mark the current row. */
@@ -79,9 +92,7 @@ interface LocationState {
    */
   hydrated: boolean;
 
-  /** Drop onto a named area from the list. Simulated, and labelled as such. */
-  simulate: (area: { name: string; slug: string; lat: number; lng: number }) => void;
-  /** Commit a typed coordinate. `areaName` is null when no area contains it. */
+  /** Commit a chosen area's centre. `areaName` is null when no area contains it. */
   setManualPoint: (input: { lat: number; lng: number; areaName: string | null; areaSlug: string | null }) => void;
   /** Commit a real `navigator.geolocation` fix. The only honest "you are here". */
   setDevicePoint: (input: { lat: number; lng: number; areaName: string | null; areaSlug: string | null }) => void;
@@ -97,18 +108,6 @@ export const useLocationStore = create<LocationState>()(
     (set) => ({
       position: DEFAULT_POSITION,
       hydrated: false,
-
-      simulate: (area) =>
-        set({
-          position: {
-            lat: area.lat,
-            lng: area.lng,
-            provenance: "simulated",
-            areaName: area.name,
-            areaSlug: area.slug,
-            setAt: Date.now(),
-          },
-        }),
 
       setManualPoint: (input) =>
         set({
@@ -179,57 +178,25 @@ export function useLocationHydration(): boolean {
 let rehydrateStarted = false;
 
 export interface LocationChrome {
-  /** What the pill says after "Showing ". Never empty. */
+  /** The area's name, or its coordinate when no area contains it. Never empty. */
   label: string;
-  provenance: LocationProvenance;
-  /** The one boolean the map chrome must not be able to forget to check. */
-  isSimulated: boolean;
-  /**
-   * A short honest tag to sit beside the label, or null when the position is
-   * a real device fix and needs no qualifier. Colour is never the only signal —
-   * the tag always carries words.
-   */
-  tag: { kind: StatusKind; label: string } | null;
-  position: UserPosition;
 }
 
 /**
- * A tag earns its place only when the position CLAIMS TO BE YOU and isn't a
- * device fix. That claim is what every printed distance rests on, so a false one
- * needs a caveat travelling beside it.
+ * The position's name, resolved for display.
  *
- * `default` makes no such claim. It says "Showing Festac", and Festac is what is
- * on screen — true, unqualified, and already legible from the map itself. The
- * old "Default area" chip restated the label in different words and cost a
- * glance to learn nothing. The pill is tappable; that is the affordance to
- * change it. No chip.
+ * This is a label, not a claim: it says which area is on screen, and nothing
+ * about whether the position is really yours. Callers that need to qualify the
+ * position — to say a distance is measured from an area's centre rather than
+ * from the user — must read `provenance` off `useLocationStore` and say so
+ * themselves. LocationSheet is where that happens today, on the selected row.
  *
- * `manual` is now an area chosen from the administrative picker, not a dropped
- * pin, and the caveat is specific: distances measure from the area's centre, not
- * from you. The tag says that instead of naming the input method, which was only
- * ever interesting to whoever wrote the form.
- */
-const TAGS: Record<LocationProvenance, { kind: StatusKind; label: string } | null> = {
-  simulated: { kind: "caution", label: "Simulated" },
-  manual: { kind: "caution", label: "Area centre" },
-  device: null,
-  default: null,
-};
-
-/**
- * Everything the "Showing X" chrome needs, and nothing it can render without.
- *
- * The chrome reads this rather than `position` directly, so the qualifier
- * travels with the label by construction and cannot be dropped by a caller who
- * only wanted the name.
+ * Read `useLocationStore((s) => s.position)` directly for the coordinate; a
+ * label deriver has no business handing out the whole position.
  */
 export function useLocationChrome(): LocationChrome {
   const position = useLocationStore((s) => s.position);
   return {
     label: position.areaName ?? formatCoordinate(position.lat, position.lng),
-    provenance: position.provenance,
-    isSimulated: position.provenance === "simulated",
-    tag: TAGS[position.provenance],
-    position,
   };
 }

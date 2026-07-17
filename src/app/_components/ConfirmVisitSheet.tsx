@@ -598,7 +598,7 @@ export function ConfirmVisitSheet({ open, visit, onClose, onConfirmed, lang = "e
 
         {/* What is being asked about. Stated once, plainly, so the questions
             below can stay short enough to answer without reading. */}
-        <div className="squircle bg-fillQuaternary px-4 py-3">
+        <div className="squircle-card bg-surface dark:bg-surface-elevated px-4 py-3">
           <p className="text-body font-semibold text-text-primary">
             {visit.itemName}
             <span className="font-normal text-text-secondary"> · {visit.variantName}</span>

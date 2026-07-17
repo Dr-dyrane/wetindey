@@ -3,6 +3,7 @@
 import React from "react";
 import { Sun, Moon } from "lucide-react";
 import { ModalSheet } from "@/design-system/components/ModalSheet";
+import { ListGroup } from "@/design-system/components/ListRow";
 
 export type LangType = "en" | "pidgin" | "yoruba";
 
@@ -16,18 +17,6 @@ interface SettingsSheetProps {
   radiusKm: number;
   onRadiusChange: (km: number) => void;
   t: Record<string, string>;
-}
-
-/** iOS inset-grouped list section. */
-function Group({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <section className="space-y-2">
-      <h3 className="px-4 text-footnote text-text-secondary">{title}</h3>
-      <div className="mx-4 squircle bg-surface shadow-card overflow-hidden">
-        {children}
-      </div>
-    </section>
-  );
 }
 
 /** Segmented control, matching the platform's own. */
@@ -76,7 +65,7 @@ export function SettingsSheet({
   return (
     <ModalSheet open={open} onClose={onClose} title={t.settings} size="form">
       <div className="space-y-6 py-4">
-        <Group title={t.language}>
+        <ListGroup header={t.language}>
           <Segmented<LangType>
             value={lang}
             onChange={onLangChange}
@@ -86,9 +75,9 @@ export function SettingsSheet({
               { id: "yoruba", label: "Yorùbá" },
             ]}
           />
-        </Group>
+        </ListGroup>
 
-        <Group title={t.theme}>
+        <ListGroup header={t.theme}>
           <Segmented
             value={theme === "dark" ? "dark" : "light"}
             onChange={(v) => {
@@ -99,9 +88,9 @@ export function SettingsSheet({
               { id: "dark", label: (<><Moon className="h-3.5 w-3.5" /> {t.dark_mode}</>) },
             ]}
           />
-        </Group>
+        </ListGroup>
 
-        <Group title={t.radius}>
+        <ListGroup header={t.radius}>
           <div className="px-4 py-3.5 space-y-2">
             <div className="flex items-baseline justify-between">
               <span className="text-[15px] text-text-primary">Search radius</span>
@@ -121,7 +110,7 @@ export function SettingsSheet({
               <span>20 km</span>
             </div>
           </div>
-        </Group>
+        </ListGroup>
       </div>
     </ModalSheet>
   );

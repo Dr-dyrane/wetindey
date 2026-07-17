@@ -87,7 +87,7 @@ export interface AsyncListProps<T> {
 
 /** Shared geometry for the empty and error panels. Surface + elevation, no stroke. */
 function Panel({ children }: { children: React.ReactNode }) {
-  return <div className="squircle bg-surface p-5 text-center shadow-card">{children}</div>;
+  return <div className="squircle-card bg-surface p-5 text-center shadow-card">{children}</div>;
 }
 
 export function AsyncList<T>({

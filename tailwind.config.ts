@@ -111,7 +111,16 @@ const config: Config = {
       transitionTimingFunction: {
         decelerate: "cubic-bezier(0, 0, 0.2, 1)",
         accelerate: "cubic-bezier(0.4, 0, 1, 1)",
-        /** iOS sheets settle rather than ease — slight overshoot on the tail. */
+        /**
+         * Apple's sheet curve. It does NOT overshoot, despite the name: both y
+         * control points (0.72, 1.0) sit inside [0,1], so it is monotonic and
+         * settles from below. It reads as a spring because it leaves fast and
+         * arrives slowly, not because it bounces.
+         *
+         * Do not "fix" it to actually overshoot. BottomSheet transitions
+         * border-radius on this curve, and a y > 1 control point drives the
+         * interpolated value past its endpoint mid-settle.
+         */
         spring: "cubic-bezier(0.32, 0.72, 0, 1)",
       },
       fontFamily: {

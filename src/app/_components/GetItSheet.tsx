@@ -456,7 +456,7 @@ export function GetItSheet({ open, onClose, target, origin, onGoThere }: GetItSh
         {/* What you are about to act on. Restated because the sheet covers the
             detail view it was opened from, and a handoff to another app should
             never be a leap of faith about which market it is. */}
-        <div className="mx-4 squircle bg-surface px-4 py-3">
+        <div className="mx-4 squircle-card bg-surface dark:bg-surface-elevated px-4 py-3">
           <p className="truncate text-headline text-text-primary">{target.placeName}</p>
           {where && <p className="mt-0.5 truncate text-footnote text-text-secondary">{where}</p>}
 

@@ -52,7 +52,11 @@ export function ListRow({ icon, iconTint, label, detail, onClick, chevron = true
 }
 
 /** Inset-grouped section. The header is sentence case — Apple retired the
- *  tracked-out uppercase headers of iOS 6, and nothing here shouts. */
+ *  tracked-out uppercase headers of iOS 6, and nothing here shouts.
+ *
+ *  Every call site presents inside a ModalSheet, so the group is pinned to the
+ *  elevated rung — dark #2C2C2E over the panel's #1C1C1E. In the base ladder
+ *  (docked BottomSheet, #000000) it would sit one rung high. */
 export function ListGroup({
   header,
   footer,
@@ -65,7 +69,9 @@ export function ListGroup({
   return (
     <section className="space-y-1.5">
       {header && <h3 className="px-4 text-footnote text-text-secondary">{header}</h3>}
-      <div className="mx-4 overflow-hidden bg-surface squircle-card">{children}</div>
+      <div className="mx-4 overflow-hidden bg-surface dark:bg-surface-elevated shadow-card squircle-card">
+        {children}
+      </div>
       {footer && <p className="px-4 text-caption-1 text-text-secondary">{footer}</p>}
     </section>
   );

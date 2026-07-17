@@ -120,16 +120,13 @@ export function ItemCard({ item, onSelect }: { item: ItemCardData; onSelect: (it
        * Two tiers, not four.
        *
        * Name and price sit at the SAME level — subhead, semibold — because they
-       * answer one question together ("what, and how much"). Previously the
-       * price was rendered a step LARGER than the name, which inverted the
-       * hierarchy: the thing you scan for last shouted loudest.
+       * answer one question together ("what, and how much"). Setting the price
+       * a step larger inverts the hierarchy: the thing you scan for last would
+       * shout loudest.
        *
-       * Everything else is one tier down and secondary on all three axes —
-       * size, weight, colour. The unit was the lone holdout: it sat at the
-       * price's own 15pt and leaned on weight and ink alone, so it read as the
-       * price's peer rather than as its qualifier. ItemDetailSheet already
-       * steps the same pair down; keep the card and the sheet it opens into in
-       * agreement.
+       * Everything under them steps down on all three axes — size, weight and
+       * colour — and stops at SECONDARY. No text in this card is tertiary: that
+       * tier means "you may ignore this", and nothing left in the row qualifies.
        *
        * No tier-two element has a taller line box than the tier it serves —
        * the ramp is rem-based, so that holds at every Dynamic Type size. Row
@@ -144,7 +141,11 @@ export function ItemCard({ item, onSelect }: { item: ItemCardData; onSelect: (it
           {item.unitLabel && item.priceFrom != null && (
             /* The unit is not decoration. A range spanning a 1L bottle and a 25L
                keg is arithmetically fine and factually nonsense; naming the unit
-               is what makes the number mean something. */
+               is what makes the number mean something. So it drops a size and a
+               weight off the price to read as its qualifier rather than its
+               peer — but it keeps SECONDARY ink. Tertiary is 30% alpha, under
+               3:1 against this card, and a fact the price depends on cannot be
+               the one thing in the row you can't read. */
             <span className="ml-1 text-footnote font-normal text-text-secondary"> / {item.unitLabel}</span>
           )}
         </p>

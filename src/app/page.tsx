@@ -881,16 +881,27 @@ export default function HomePage() {
         />
       </div>
 
-      {/* The app's level-0 scroller. Its bottom padding composes the strip of
-          sheet hanging below the viewport at the resting detent — BottomSheet
-          publishes `--sheet-hidden` because only it knows that number, and no
-          constant covers it, since the shortfall is a function of the detent.
-          The `0px` fallback is load-bearing: the regular shell mounts no
-          BottomSheet, so the variable is undefined there and this falls back to
-          the padding it has always had, with no branch on size class.
-          `overscroll-contain` keeps an overscroll at the end of the list from
-          chaining into BottomSheet's capture-phase scroll listener. */}
-      <div className="flex-1 overflow-y-auto overscroll-contain px-3 pb-[calc(var(--sheet-hidden,0px)+var(--safe-area-bottom)+20px)]">
+      {/* The app's level-0 scroller, sibling to NavigationStack's level-1
+          scroller inside the same sheet; the two reserve their bottom strip the
+          same way, and must keep agreeing.
+
+          That reservation is the LARGER of two strips, never their sum.
+          `--sheet-hidden` is the part of the sheet hanging below the viewport at
+          the current detent, which BottomSheet publishes because only it knows
+          the number. It starts at the viewport's bottom edge, so it already
+          spans the home indicator, and adding the safe area to it would pad the
+          same 34px twice. At `large` the sheet is docked, `--sheet-hidden` is 0,
+          and the safe area is the whole reservation. 20px is the breathing room.
+          The `0px` fallback is load-bearing — the regular shell mounts no
+          BottomSheet, so the variable is undefined there and `max()` yields the
+          safe area alone, the padding it has always had, with no branch on size
+          class.
+
+          `overscroll-contain` keeps an overscroll at either end of this list
+          from chaining out to the document behind the sheet. It has no bearing
+          on BottomSheet's wrapper box, which cannot scroll in the first place:
+          that box's only child is `h-full`. */}
+      <div className="flex-1 overflow-y-auto overscroll-contain px-3 pb-[calc(max(var(--sheet-hidden,0px),var(--safe-area-bottom))+20px)]">
         <div className="space-y-4">
           {/* A. Popular items */}
           {!searchQuery && (

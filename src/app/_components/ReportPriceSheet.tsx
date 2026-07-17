@@ -51,7 +51,7 @@ function Banner({ kind, icon, children }: { kind: "confirmed" | "caution" | "una
     unavailable: "bg-status-unavailable-bg text-status-unavailable-fg",
   } as const;
   return (
-    <div role="status" className={`mx-4 flex items-center gap-2.5 squircle px-4 py-3 text-[13px] font-medium ${map[kind]} animate-in fade-in slide-in-from-top-1 duration-standard`}>
+    <div role="status" className={`mx-4 flex items-center gap-2.5 squircle-card px-4 py-3 text-[13px] font-medium ${map[kind]} animate-in fade-in slide-in-from-top-1 duration-standard`}>
       <span className="shrink-0">{icon}</span>
       <span>{children}</span>
     </div>

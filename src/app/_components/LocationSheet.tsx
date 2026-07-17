@@ -71,11 +71,15 @@ type LocateState =
  * of headers.
  *
  * An LGA holding exactly ONE neighbourhood is not a step, and is not drawn as
- * one: the row IS that neighbourhood, and the LGA name moves into its detail
- * line. A drill onto a single row you cannot deselect is a control that lies
- * about having an outcome — the same rule ItemDetailSheet's NarrowStep applies
- * to its pickers. Four of the six LGAs are that case today, which is the whole
- * difference between this being a saving and a tax.
+ * one: the row IS that neighbourhood. A drill onto a single row you cannot
+ * deselect is a control that lies about having an outcome — the same rule
+ * ItemDetailSheet's NarrowStep applies to its pickers. Four of the six LGAs are
+ * that case today, which is the whole difference between this being a saving
+ * and a tax.
+ *
+ * The LGA name joins the collapsed row's detail line only where it differs from
+ * the neighbourhood's. Bariga is in Somolu, and that is worth a line; Ojo is in
+ * Ojo, and that is a row echoing its own title back.
  *
  * You still cannot stand in "an LGA", so an LGA row never commits a position
  * and never claims a distance: getAreaTree returns no LGA centre, and inventing
@@ -85,8 +89,8 @@ type LocateState =
  * precision. The old code called this "simulate" and dressed it in a caution
  * banner about pretending. For a shopper standing in Festac, picking Festac is
  * not a pretence; it is the answer. The honest caveat is not "this is fake", it
- * is "we measure from the middle of your area", and the chrome's "Area centre"
- * tag says exactly that.
+ * is "we measure from the middle of your area", which is what the "Area centre"
+ * badge on the chosen row says.
  *
  * It is a presented sheet, not a dropdown or a popover — HIG: "Avoid displaying
  * popovers in compact views".
@@ -310,12 +314,15 @@ export function LocationSheet({ open, onClose, radiusKm, onCommit }: LocationShe
    *
    *  `lgaName` is passed only where the row stands in for its whole LGA at
    *  level 0 — inside the pushed level the LGA is already the title, and
-   *  repeating it on every row would say nothing. */
+   *  repeating it on every row would say nothing. It is dropped again where it
+   *  matches the area's own name: three of the four collapsed LGAs are named
+   *  after their only neighbourhood (lagosAdmin.ts NEIGHBOURHOOD_LGA — ojo,
+   *  surulere, mushin), so keeping it would print "Ojo" under "Ojo". */
   const areaRow = (area: AreaSummary, lgaName?: string) => {
     const isSelected = area.slug === position.areaSlug;
     const distanceKm = getHaversineDistance(measureFrom.lat, measureFrom.lng, area.lat, area.lng);
     const detail = [
-      lgaName,
+      lgaName === area.name ? null : lgaName,
       area.placeCount === 0
         ? "No places yet"
         : `${area.placeCount} place${area.placeCount === 1 ? "" : "s"}`,
@@ -421,7 +428,7 @@ export function LocationSheet({ open, onClose, radiusKm, onCommit }: LocationShe
       </ListGroup>
 
       {locate.kind === "problem" && (
-        <div className="mx-4 squircle bg-status-caution-bg p-4 space-y-1.5">
+        <div className="mx-4 squircle-card bg-status-caution-bg p-4 space-y-1.5">
           <div className="flex items-center gap-2">
             <TriangleAlert className="h-4 w-4 shrink-0 text-status-caution-fg" />
             <p className="text-subhead font-semibold text-status-caution-fg">{locate.title}</p>
@@ -440,7 +447,7 @@ export function LocationSheet({ open, onClose, radiusKm, onCommit }: LocationShe
       )}
 
       {locate.kind === "outside" && (
-        <div className="mx-4 squircle bg-status-caution-bg p-4 space-y-1.5">
+        <div className="mx-4 squircle-card bg-status-caution-bg p-4 space-y-1.5">
           <div className="flex items-center gap-2">
             <MapPin className="h-4 w-4 shrink-0 text-status-caution-fg" />
             <p className="text-subhead font-semibold text-status-caution-fg">
@@ -471,7 +478,7 @@ export function LocationSheet({ open, onClose, radiusKm, onCommit }: LocationShe
       {/* ── 2. The hierarchy ────────────────────────────────────────── */}
 
       {treeError ? (
-        <div className="mx-4 squircle bg-surface shadow-card p-5 text-center space-y-2">
+        <div className="mx-4 squircle-card bg-surface dark:bg-surface-elevated shadow-card p-5 text-center space-y-2">
           <p className="text-subhead font-semibold text-text-primary">{treeError}</p>
           <button
             type="button"
@@ -488,7 +495,7 @@ export function LocationSheet({ open, onClose, radiusKm, onCommit }: LocationShe
           <Skeleton className="h-tap w-full squircle" />
         </div>
       ) : tree.groups.length === 0 ? (
-        <div className="mx-4 squircle bg-surface shadow-card p-5 text-center">
+        <div className="mx-4 squircle-card bg-surface dark:bg-surface-elevated shadow-card p-5 text-center">
           <p className="text-subhead font-semibold text-text-primary">No areas are set up yet</p>
         </div>
       ) : (
@@ -520,15 +527,25 @@ export function LocationSheet({ open, onClose, radiusKm, onCommit }: LocationShe
         listNode={listNode}
         detailNode={
           openGroup && (
-            /* No padding of its own — the stack owns level 1's inset, which is
-               why the same node is correct in every container it is handed to. */
-            <div className="overflow-hidden bg-surface squircle">
-              {openGroup.areas.map((area) => areaRow(area))}
+            /* The same ListGroup level 0 uses: one stack of neighbourhood rows,
+               one radius, one surface, whichever level drew it.
+
+               `-mx-6` cancels the stack's own `px-6` so ListGroup's `mx-4`
+               lands the group at 16px, the inset level 0 has. The stack pads
+               level 1 and not level 0, so without this the identical rows step
+               24px inward on push. It is tied to NavigationStack's px-6 by
+               hand — the two numbers have to move together. */
+            <div className="-mx-6">
+              <ListGroup>{openGroup.areas.map((area) => areaRow(area))}</ListGroup>
             </div>
           )
         }
         detailLabel={openGroup?.lgaName}
         onDetailBack={() => setLgaSlug(null)}
+        /* English on purpose, with the rest of this sheet (page.tsx:126) —
+           the one string here that already has the plumbing to be translated
+           and is waiting on the sheet's own i18n pass. */
+        backLabel="Back"
       />
     </ModalSheet>
   );

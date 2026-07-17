@@ -4,7 +4,8 @@ import { PRIMARY_LOCATION } from "@/db/lagosSouthWest";
 /**
  * What is left of the global store after the location work landed.
  *
- * Four members were removed here, each confirmed dead by grep before deletion:
+ * Three field/setter pairs were removed here, each confirmed dead by grep
+ * before deletion:
  *
  *   · `userLocation` / `setUserLocation` — the setter also wrote `mapCenter`,
  *     and the field itself was read by nothing, ever. Superseded wholesale by
@@ -15,7 +16,8 @@ import { PRIMARY_LOCATION } from "@/db/lagosSouthWest";
  *   · `selectedAreaName` / `setSelectedAreaName` — the field was pinned to the
  *     literal "Festac" at creation and the setter was never called from
  *     anywhere, which is why the location pill was a label rather than a claim.
- *     `useLocationChrome()` now owns the label, qualifier included.
+ *     `useLocationChrome()` owns the label now, and only the label — qualifying
+ *     the position is the caller's own job, off `locationStore.provenance`.
  *   · `selectedItemId` / `setSelectedItemId` — write-only. page.tsx set it in
  *     three places; no file ever read it. The item the user picked is local to
  *     the surface asking about it (ItemDetailSheet), not global.

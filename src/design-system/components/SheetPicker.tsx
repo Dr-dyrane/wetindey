@@ -79,7 +79,7 @@ export function SheetPicker({
 
       <ModalSheet open={open} onClose={() => setOpen(false)} title={title} size="form">
         <div className="px-4 py-2">
-          <div className="overflow-hidden bg-surface squircle">
+          <div className="overflow-hidden bg-surface dark:bg-surface-elevated squircle-card">
             {options.length === 0 && (
               <p className="px-4 py-3 text-body text-text-tertiary">Nothing available</p>
             )}

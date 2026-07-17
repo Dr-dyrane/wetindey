@@ -22,12 +22,9 @@ const STYLES: Record<StatusKind, { dot: string; bg: string; fg: string }> = {
   info: { dot: "bg-status-info", bg: "bg-status-info-bg", fg: "text-status-info-fg" },
 };
 
-export function StatusDot({ kind, pulse = false }: { kind: StatusKind; pulse?: boolean }) {
+export function StatusDot({ kind }: { kind: StatusKind }) {
   return (
     <span className="relative flex h-2 w-2 shrink-0">
-      {pulse && (
-        <span className={`absolute inline-flex h-full w-full animate-ping rounded-full opacity-60 ${STYLES[kind].dot}`} />
-      )}
       <span className={`relative inline-flex h-2 w-2 rounded-full ${STYLES[kind].dot}`} />
     </span>
   );

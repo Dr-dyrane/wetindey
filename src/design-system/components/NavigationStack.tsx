@@ -127,20 +127,29 @@ export function NavigationStack({
         Opaque, not glass: it is the content layer once it arrives, and glass
         does not belong in the content layer. Nested material would sample its
         blurred parent rather than the map anyway.
+
+        WHICH opaque is the host's to say, not this component's — the stack has
+        more than one host and they are not the same surface. `.stack-surface`
+        reads `--stack-surface` and falls back to the base background, so the
+        bottom sheet and the sidebar card declare nothing and get what they have
+        always had, while a presented ModalSheet panel — a rung up in dark —
+        hands down its own. A colour hardcoded here would flip the sheet's whole
+        background on push inside any host that is not the base.
       */}
       <div
         role="group"
         aria-label={detailLabel}
         inert={!isOpen}
         aria-hidden={!isOpen || undefined}
-        className="absolute inset-0 flex flex-col overflow-hidden bg-background transition-transform duration-sheet ease-spring"
+        className="stack-surface absolute inset-0 flex flex-col overflow-hidden transition-transform duration-sheet ease-spring"
         style={{ transform: isOpen ? "translate3d(0, 0, 0)" : "translate3d(100%, 0, 0)" }}
       >
         {onDetailBack && content ? (
           <div className="shrink-0 px-3 pt-3 pb-1">
             {/* 44pt target; the chevron lands at 24px, flush with the leading
-                edge of the detail content below it. No divider under the row —
-                the level's own material and elevation already separate it. */}
+                edge of the detail content below it. No divider under the row:
+                it is the same surface as the content it sits above, so there is
+                nothing to separate. */}
             <button
               type="button"
               onClick={onDetailBack}
@@ -165,17 +174,20 @@ export function NavigationStack({
           Level 1 needs a scroller; level 0 does not, because `listNode` brings
           its own. That asymmetry is dictated by what the nodes arrive with.
 
-          The bottom padding composes three terms: `--sheet-hidden` is the strip
-          of the sheet hanging below the viewport at the current detent, which
-          BottomSheet publishes because only it knows the number; the safe area
-          clears the home indicator at `large`, where the sheet is docked and
-          `--sheet-hidden` is 0; 24px is the breathing room. The `0px` fallback is
-          load-bearing — the regular shell mounts this stack with no BottomSheet
-          above it, so the variable is simply undefined there and this falls back
-          to the padding it has always had, with no branch on size class.
+          The bottom padding reserves the LARGER of two strips, never their sum.
+          `--sheet-hidden` is the part of the sheet hanging below the viewport at
+          the current detent, which BottomSheet publishes because only it knows
+          the number; it starts at the viewport's bottom edge, so it already
+          spans the home indicator and adding the safe area to it would pad the
+          same 34px twice. At `large` the sheet is docked, `--sheet-hidden` is 0,
+          and the safe area is the whole reservation. 24px is the breathing room.
+          The `0px` fallback is load-bearing — the regular shell mounts this stack
+          with no BottomSheet above it, so the variable is undefined there and
+          `max()` yields the safe area alone, the padding it has always had, with
+          no branch on size class.
         */}
         <div
-          className={`flex-1 overflow-y-auto overscroll-contain px-6 pb-[calc(var(--sheet-hidden,0px)+var(--safe-area-bottom)+24px)] ${
+          className={`flex-1 overflow-y-auto overscroll-contain px-6 pb-[calc(max(var(--sheet-hidden,0px),var(--safe-area-bottom))+24px)] ${
             onDetailBack && content ? "pt-2" : "pt-6"
           }`}
         >

@@ -101,9 +101,12 @@ export function ModalSheet({ open, onClose, title, action, hero, children, size 
         aria-label={title}
         /**
          * Corner radius comes from SHEET_RADIUS, the same constant the bottom
-         * sheet uses. These are the same kind of object — a presented surface —
-         * so a modal at 20px next to a sheet at 28px read as two different
-         * systems. One constant, one language.
+         * sheet uses: a modal at 20px beside a sheet at 28px read as two
+         * different systems. One constant, one shape language.
+         *
+         * SHAPE is what the two share, not surface. The bottom sheet docks
+         * full-screen and IS the content layer; this floats over it, and in dark
+         * that is one rung apart — see the panel's own note below.
          *
          * At compact width only the top corners are rounded (it meets the
          * bottom edge); at regular width all four are, because it floats.
@@ -118,21 +121,20 @@ export function ModalSheet({ open, onClose, title, action, hero, children, size 
           borderBottomRightRadius: isRegular ? SHEET_RADIUS : 0,
         }}
         /**
-         * The surface is theme-split, and deliberately so.
+         * `.sheet-panel` (globals.css) paints this surface AND publishes it to
+         * the subtree as `--stack-surface`, in one declaration, so a
+         * NavigationStack pushed inside a sheet lands on the sheet's own colour
+         * instead of a colour it guessed. It resolves to #F2F2F7 in light and
+         * #1C1C1E in dark.
          *
-         * Light stays on background: #F2F2F7 under #FFFFFF cards is the
-         * inset-grouped ladder, and it reads.
-         *
-         * Dark cannot. background is #000000 there, and the panel's only
-         * separation is shadow-sheet — a black shadow, over a 55% black scrim,
-         * over a dark map. With strokes banned, material and elevation are the
-         * only separation mechanisms and neither can act: the sheet has no edge.
-         * surface-elevated is the one rung free to take it. bg-surface is not:
-         * #1C1C1E is already the cards INSIDE these sheets, and its #FFFFFF in
-         * light is why this cannot be applied to both themes at once — the panel
-         * would swallow the very cards it carries.
+         * A card in here must ask for the rung above itself, by pairing
+         * `bg-surface` with `dark:bg-surface-elevated`. The panel cannot hand it
+         * over: bare `bg-surface` IS #1C1C1E in dark — this panel's own colour —
+         * so a card that omits the dark half sinks into its background instead
+         * of sitting on it. Light forgives the omission (#FFFFFF either way),
+         * which is why dark is the only place the mistake shows.
          */
-        className={`relative flex flex-col bg-background dark:bg-surface-elevated shadow-sheet overflow-hidden
+        className={`relative flex flex-col sheet-panel shadow-sheet overflow-hidden
           animate-in duration-sheet ease-spring
           slide-in-from-bottom md:slide-in-from-bottom-4 md:zoom-in-95
           md:w-full md:max-w-[440px] md:shadow-island

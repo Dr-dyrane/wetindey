@@ -563,7 +563,7 @@ export function ItemDetailSheet({
         </div>
 
         {error ? (
-          <div className="mx-4 space-y-2 squircle bg-surface p-5 text-center shadow-card">
+          <div className="mx-4 space-y-2 squircle-card bg-surface dark:bg-surface-elevated p-5 text-center shadow-card">
             <span className="inline-flex squircle-full bg-status-unavailable-bg p-3 text-status-unavailable-fg">
               <AlertTriangle className="h-5 w-5" />
             </span>
@@ -575,7 +575,7 @@ export function ItemDetailSheet({
             <CardListSkeleton count={3} />
           </div>
         ) : rows.length === 0 ? (
-          <div className="mx-4 space-y-2 squircle bg-surface p-6 text-center shadow-card">
+          <div className="mx-4 space-y-2 squircle-card bg-surface dark:bg-surface-elevated p-6 text-center shadow-card">
             <MapPin className="mx-auto h-6 w-6 text-text-tertiary" />
             <p className="text-headline text-text-primary">Nothing within {radiusKm} km</p>
             <p className="text-footnote text-text-secondary">
@@ -598,8 +598,11 @@ export function ItemDetailSheet({
                   `${formatDistance(offer.distanceM / 1000)}. ` +
                   `${confidence.word} confidence, ${confidence.label}.`
                 }
-                className="flex w-full items-start gap-3 bg-surface p-4 text-left shadow-card squircle
-                           transition-colors duration-instant active:bg-fillTertiary"
+                /* `dark:active:` is not redundant: `dark:bg-surface-elevated` and
+                   `active:bg-fillTertiary` both weigh (0,2,0), and Tailwind emits
+                   the dark rule second, so it would win the press state on a tie. */
+                className="flex w-full items-start gap-3 bg-surface dark:bg-surface-elevated p-4 text-left shadow-card squircle-card
+                           transition-colors duration-instant active:bg-fillTertiary dark:active:bg-fillTertiary"
               >
                 <span className="mt-[7px]">
                   <StatusDot kind={signal.kind} />

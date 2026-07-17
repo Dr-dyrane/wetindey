@@ -1016,11 +1016,15 @@ export interface AreaTree {
  *
  * Country and state come back as NAMES, not as lists, because the pilot has
  * exactly one of each and a select with one option is a lie about the freedom
- * you have. They are context to display, not a choice to make. The LGA is
- * likewise not a destination — you cannot stand in "an LGA" — so it groups the
- * rows instead of gating them behind a drill. Nine neighbourhoods under six
- * headers is one screen; making the user tap an LGA first to reveal one or two
- * children would charge two taps for information a section header gives free.
+ * you have. They are context to display, not a choice to make.
+ *
+ * Neighbourhoods come back GROUPED under their LGA — every group carries its
+ * full set of children, in one round trip. The LGA is not a destination (you
+ * cannot stand in "an LGA"), so no group is selectable; it exists to say which
+ * neighbourhoods belong together. How that grouping reaches the screen is the
+ * SHEET's call, not this function's: LocationSheet drills into a group and
+ * collapses a single-child one. Returning the whole tree is what lets it decide
+ * without a second query.
  *
  * Ordering is alphabetical by LGA, then by neighbourhood, because a stable place
  * on the list is worth more than ranking by a count that changes under you.

@@ -252,9 +252,11 @@
   /* Card radius, split from .squircle by ROLE. .squircle is also the CONTROL
      radius — buttons, inputs, icon tiles, segments — and those do not want a
      friendlier corner, so cards cannot simply ride it upward.
-     Ceiling is SHEET_RADIUS (BottomSheet.tsx:24, 28px). Every card sits at mx-4
-     inside one of those sheets, and a card that matches its sheet's radius
-     fuses with it, so both values below must stay under 28.
+     Ceiling is SHEET_RADIUS (BottomSheet.tsx:24, 28px): a card inset inside a
+     sheet fuses with it once the two radii match, so both values below must
+     stay under 28. The inset itself arrives either way — the card's own mx-4,
+     or a parent that already pads (SheetPicker's px-4) — and neither route
+     changes the ceiling.
      NOT for a card that bleeds an image to its edge: the card clips the photo,
      so radius here comes straight out of the image. ItemCard keeps .squircle
      for that reason — including its no-photo state, where the Monogram tile
@@ -298,6 +300,49 @@
   .material-thin { background-color: var(--material-thin); }
   .material-regular { background-color: var(--material-regular); }
   .material-thick { background-color: var(--material-thick); }
+
+  /**
+   * The presented-sheet panel (ModalSheet), and the surface a NavigationStack
+   * pushes onto (.stack-surface). One pair, because the two must never disagree:
+   * a stack mounted inside a sheet has to land on the colour of the sheet it
+   * slid over, and the only way it can know that colour is to be told.
+   *
+   * THE RUNGS are Apple's two grouped ladders. A cell is meant to be lighter
+   * than its background in both:
+   *
+   *   BASE      background #000000 → cells #1C1C1E
+   *   ELEVATED  background #1C1C1E → cells #2C2C2E
+   *
+   * The docked bottom sheet and the regular shell's sidebar card are the content
+   * layer — base — so they declare nothing and the fallback carries them. A
+   * presented panel is elevated by definition, so .sheet-panel takes the rung up.
+   *
+   * Its cards must then climb the last rung THEMSELVES, pairing `bg-surface`
+   * with `dark:bg-surface-elevated`. Nothing here can do it for them, and the
+   * default is the trap: `bg-surface` is #1C1C1E, which is exactly what
+   * .sheet-panel resolves to in dark, so a card that omits the dark half is
+   * painted its own background.
+   *
+   * LIGHT HAS ONE LADDER. Apple's elevated variants differ from their base in
+   * dark alone, which is why --color-surface-elevated is #FFFFFF up top,
+   * identical to --color-surface: light resolves to #F2F2F7 under #FFFFFF cards
+   * either way. That is also why the omission above survives review — it is
+   * invisible until you switch themes.
+   *
+   * Dark is also where the panel earns the rung twice over. On `background` it
+   * would be #000000, separated from the scrim and the map behind it by nothing
+   * but a black shadow. Strokes are banned, so the rung IS the edge.
+   */
+  .sheet-panel {
+    --stack-surface: var(--color-background);
+    background-color: var(--stack-surface);
+  }
+  .dark .sheet-panel {
+    --stack-surface: var(--color-surface);
+  }
+  .stack-surface {
+    background-color: var(--stack-surface, var(--color-background));
+  }
 }
 
 @media (display-mode: standalone) {

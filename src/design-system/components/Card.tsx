@@ -14,10 +14,14 @@ export const Card = React.forwardRef<HTMLDivElement, CardProps>(
         ref={ref}
         className={twMerge(
           clsx(
-            "bg-surface text-text-primary squircle-lg transition-all duration-standard overflow-hidden",
+            "text-text-primary squircle-card transition-all duration-standard overflow-hidden",
             {
+              // Each variant states its own background. twMerge resolves a conflict only
+              // within one modifier, so a `dark:bg-*` hoisted to the base would survive
+              // `flat`'s unprefixed fill and repaint it in dark.
               "shadow-none bg-fillSecondary/65": variant === "flat",
-              "shadow-card hover:shadow-raised bg-surface": variant === "elevated" || hoverable,
+              "shadow-card hover:shadow-raised bg-surface dark:bg-surface-elevated":
+                variant === "elevated" || hoverable,
               "cursor-pointer hover:scale-[1.01] active:scale-[0.99]": hoverable,
             }
           ),
