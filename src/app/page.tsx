@@ -311,7 +311,6 @@ export default function HomePage() {
   const [placeOffers, setPlaceOffers] = useState<PlaceOffer[] | undefined>(undefined);
   const [placeOffersError, setPlaceOffersError] = useState<string | null>(null);
   const [isSearching, setIsSearching] = useState(false);
-  const [searchError, setSearchError] = useState<string | null>(null);
   const [isPlaceOffersLoading, setIsPlaceOffersLoading] = useState(false);
   const [locateError, setLocateError] = useState<string | null>(null);
   /** Stable: MapNotice keys its auto-dismiss timer on this, and a fresh identity

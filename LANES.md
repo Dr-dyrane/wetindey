@@ -180,6 +180,12 @@ someone knows.
 
 ### Known, routed, unfixed
 
+**P0-2 — ModalSheet focus thrash (SC 2.1.1 / 2.4.3)**: Focus is stolen on every parent re-render inside `ModalSheet.tsx` because `onKeyDown` changes, triggering the focus effect's 60ms timer and interrupting user typing. Suggested fix: drop `onKeyDown` from the dependency array or read `onClose` through a ref. Belongs to the **map/sheet-choreography** lane.
+
+**P1-2 — Unnamed close buttons on desktop (SC 4.1.2)**: Close buttons in `page.tsx` (`:807-812` and `:898-903`) have no accessible names or `aria-label` tags. Belongs to the **auth / map** lanes.
+
+**P0-4 — Unfocusable / unnamed map markers (SC 2.1.1)**: Markers generated inside `MapboxAdapter.ts` are flat `<div>`s with no tabindex, role, or accessible names. Belongs to the **map** lane.
+
 **The badges honour no locale at all.** `ItemCard.tsx`'s `STATUS_LABEL` (`:52`) is a
 hardcoded `Record`, and `ItemDetailSheet.tsx:147` does the same. Found by the map lane,
 2026-07-16.
