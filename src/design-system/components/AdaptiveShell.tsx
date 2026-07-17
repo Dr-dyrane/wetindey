@@ -4,7 +4,7 @@ import React from "react";
 import { CompactShell } from "./CompactShell";
 import { RegularShell, PANEL_LEADING_OCCLUSION } from "./RegularShell";
 import { useMediaQuery } from "@/core/hooks/useMediaQuery";
-import type { Detent } from "./BottomSheet";
+import { DETENT_FRACTION, type Detent } from "./BottomSheet";
 
 interface AdaptiveShellProps {
   mapNode: React.ReactNode;
@@ -79,14 +79,40 @@ export function AdaptiveShell({
     <div
       className="relative w-full h-full min-h-screen overflow-hidden bg-background"
       /**
-       * The leading edge the shell occludes, published for the map layer:
-       * camera padding so a selected pin never lands under the panel, and an
-       * offset for the location pill, which sits at `left-4` inside the z-0 map
-       * layer and is therefore covered by the panel at every regular width
-       * today. Both consumers live in files owned elsewhere; this is the number
-       * they need, made available rather than described.
+       * The edges the shell occludes, published for the map layer.
+       *
+       * LEADING — camera padding so a selected pin never lands under the panel,
+       * and an offset for the location pill, which sits at `left-4` inside the
+       * z-0 map layer and is therefore covered by the panel at every regular
+       * width today.
+       *
+       * BOTTOM — how much of the viewport the sheet covers, so anything the map
+       * layer must keep REACHABLE can sit above it. The map's "Try again" was
+       * centred in the full viewport and therefore landed under the sheet at the
+       * default detent — a recovery control you cannot reach is not a recovery.
+       *
+       * This root is the only common ancestor of the z-0 map layer and the z-10
+       * sheet, which is why the number has to be published from here.
+       * `--sheet-hidden` cannot serve: it is an inline style on the sheet
+       * ELEMENT, so it inherits down its own subtree and resolves to nothing on
+       * the map layer — they are siblings, and custom properties do not travel
+       * sideways. It is also the wrong quantity (the part hanging BELOW the
+       * viewport, not the part covering it).
+       *
+       * Bound to the DETENT, not the live drag fraction — same rule BottomSheet
+       * states for its own dock geometry, so this cannot reflow every frame.
+       * Publishing `fraction` rather than `fraction + ISLAND_INSET` keeps the
+       * sheet's island geometry private and matches the ~5px approximation
+       * `sheetMapPadding` already documents and accepts.
+       *
+       * Both consumers live in files owned elsewhere; these are the numbers they
+       * need, made available rather than described.
        */
-      style={{ "--shell-leading-inset": isRegular ? PANEL_LEADING_OCCLUSION : "0px" } as React.CSSProperties}
+      style={{
+        "--shell-leading-inset": isRegular ? PANEL_LEADING_OCCLUSION : "0px",
+        // RegularShell mounts no sheet, so it occludes nothing at the bottom.
+        "--shell-bottom-inset": isRegular ? "0px" : `${(DETENT_FRACTION[activeDetent] * 100).toFixed(3)}vh`,
+      } as React.CSSProperties}
     >
       {/*
         Persistent Global Map Layer:

@@ -145,7 +145,16 @@ export function MapFailed({ onRetry }: { onRetry?: () => void }) {
       {/* The old failure path logged "Falling back to static map canvas" and
           rendered nothing at all — a blank rectangle with no explanation and no
           way out. */}
-      <div className="absolute inset-0 grid place-items-center p-6">
+      {/* Centred in the band the sheet LEAVES, not in the viewport. Centred in
+          the viewport, this card landed under the sheet at `medium` — the
+          default — so the only way out of a failed map was to first drag away
+          the sheet that was hiding it. AdaptiveShell publishes the occlusion;
+          the `0px` fallback keeps RegularShell (which mounts no sheet) centred
+          in the full viewport, which is correct there. */}
+      <div
+        className="absolute inset-x-0 top-0 grid place-items-center p-6"
+        style={{ bottom: "var(--shell-bottom-inset, 0px)" }}
+      >
         <div className="flex max-w-[280px] flex-col items-center gap-3 squircle material-thick px-5 py-4 text-center shadow-raised">
           <span className="grid h-9 w-9 place-items-center squircle-full bg-status-caution-bg text-status-caution-fg">
             <WifiOff className="h-[18px] w-[18px]" />
