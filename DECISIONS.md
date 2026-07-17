@@ -17,6 +17,7 @@ document, memo, or research note that disagrees with it.
 | [006](docs/adr/006-freshness-windows.md) | The freshness windows are 24h and 72h | Accepted | Ratifies 24h stale / 72h expired, and names `src/lib/trust.ts` the single authoritative expression. **Ratified, not yet true** — competing models still ship. Phase 1 makes it sole. |
 | [007](docs/adr/007-contact-belongs-to-a-seller-not-a-place.md) | Contact belongs to a seller, not a place | **Rejected** | **Decides nothing — kept so the argument is not rebuilt.** "`places` conflates venue with vendor" is false: `place_type` is a venue *kind*, and 19 of 38 `open_market` rows are already a single stall. The Bible already settles it — *a stall is a `place`*. **Bible 40.2 stands: consent capture is the blocker, not the schema.** |
 | [008](docs/adr/008-category-filtering-and-pillars.md) | Multi-Category Expansion and Core Pillars | Accepted | **Expands scope from Food to 6 core pillars of daily uncertainty (Food, Home, Health, Money, Transport, Community).** Filters re-contextualize title/description SEO tags on selection. |
+| [009](docs/adr/009-polymorphic-ratings-and-reviews.md) | Polymorphic Ratings & Reviews System | Accepted | **Lays foundation for generic reviews system (places, items, sellers, services) using text-based polymorphic reference.** Tracks user reviews, helpful votes, and cached aggregates. |
 
 **Retroactive ADRs 004-006** record decisions that shipped in code and were never written
 down, while the Bible still listed them *open* — an invitation for an agent to re-decide a
