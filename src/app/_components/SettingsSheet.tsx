@@ -4,7 +4,16 @@ import React from "react";
 import { Sun, Moon } from "lucide-react";
 import { ModalSheet } from "@/design-system/components/ModalSheet";
 import { ListGroup } from "@/design-system/components/ListRow";
+import { shippableLocales } from "@/core/i18n";
 
+/**
+ * A second declaration of `Locale`, kept only because `page.tsx` passes `lang`
+ * and `onLangChange` typed against it and `page.tsx` belongs to another lane
+ * today. It is structurally identical to `Locale` in `@/core/i18n`, so the two
+ * cannot silently disagree — but a fourth copy of a locale list is exactly the
+ * drift this change removes from the options array, so it should collapse into
+ * `Locale` the moment the same hand holds both files.
+ */
 export type LangType = "en" | "pidgin" | "yoruba";
 
 interface SettingsSheetProps {
@@ -66,14 +75,15 @@ export function SettingsSheet({
     <ModalSheet open={open} onClose={onClose} title={t.settings} size="form">
       <div className="space-y-6 py-4">
         <ListGroup header={t.language}>
+          {/* Options come from the module that owns the gate, never from a list
+              here. `setLocale` silently refuses a locale it will not honour, so
+              a hardcoded "Yorùbá" renders a button that does nothing — and this
+              codebase does not ship dead controls. Yorùbá returns to this picker
+              the day a native speaker clears it, with nothing to change here. */}
           <Segmented<LangType>
             value={lang}
             onChange={onLangChange}
-            options={[
-              { id: "en", label: "English" },
-              { id: "pidgin", label: "Pidgin" },
-              { id: "yoruba", label: "Yorùbá" },
-            ]}
+            options={[...shippableLocales()]}
           />
         </ListGroup>
 

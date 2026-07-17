@@ -35,6 +35,20 @@
  * and is the honest answer to "we do not have this in Yorùbá yet".
  *
  * There is no fallback for a missing key, because there cannot be one.
+ *
+ * WHAT THIS MODULE EXPORTS, AND WHY IT IS THREE THINGS
+ * ----------------------------------------------------
+ * `useT`, `useStrings`, `useLocaleControl`. That is the whole surface, and it is
+ * every export with a live caller today.
+ *
+ * It used to be twenty-two, and knip was right to call the other nineteen dead.
+ * They were not dead in the useful sense — `translate` and `coverage` and the
+ * rest do real work and are called from inside this file — they were dead in the
+ * sense that mattered: a module that publishes machinery nobody has asked for is
+ * how this repo produced five generations of code with no call site. The
+ * machinery stayed; the `export` in front of it went. Anything below that a sheet
+ * genuinely needs comes back in the change that needs it, with the caller in the
+ * same diff.
  */
 
 import { useCallback, useSyncExternalStore } from "react";
@@ -48,19 +62,6 @@ import {
   isLocale,
   type Locale,
   type StringKey,
-} from "./strings";
-
-export {
-  DEFAULT_LOCALE,
-  LOCALES,
-  LOCALE_NAMES,
-  NEEDS_NATIVE_REVIEW,
-  UNTRANSLATED,
-  isLocale,
-  type Locale,
-  type LocaleTable,
-  type StringKey,
-  type Untranslated,
 } from "./strings";
 
 /* ── Typed interpolation ──────────────────────────────────────────────────── */
@@ -78,7 +79,7 @@ type PlaceholdersOf<S extends string> = S extends `${string}{${infer V}}${infer 
   : never;
 
 /** The named holes in a key's copy. `never` when the copy is a plain sentence. */
-export type Vars<K extends StringKey> = PlaceholdersOf<(typeof en)[K]>;
+type Vars<K extends StringKey> = PlaceholdersOf<(typeof en)[K]>;
 
 /**
  * No holes → no second argument, and passing one is an error.
@@ -107,7 +108,7 @@ function interpolate(text: string, vars: Record<string, string | number>): strin
  * `UNTRANSLATED` resolves to English. That is the only substitution this
  * function makes, and strings.ts had to ask for it by name.
  */
-export function translate<K extends StringKey>(
+function translate<K extends StringKey>(
   locale: Locale,
   key: K,
   ...args: TArgs<K>
@@ -131,7 +132,7 @@ export function translate<K extends StringKey>(
  */
 const resolved = new Map<Locale, Readonly<Record<StringKey, string>>>();
 
-export function strings(locale: Locale): Readonly<Record<StringKey, string>> {
+function strings(locale: Locale): Readonly<Record<StringKey, string>> {
   const hit = resolved.get(locale);
   if (hit) return hit;
 
@@ -155,7 +156,7 @@ export function strings(locale: Locale): Readonly<Record<StringKey, string>> {
  * request for nothing. The read is guarded because this module is imported by
  * server components too.
  */
-export const LOCALE_STORAGE_KEY = "wetindey.locale";
+const LOCALE_STORAGE_KEY = "wetindey.locale";
 
 let current: Locale = DEFAULT_LOCALE;
 let hydrated = false;
@@ -164,7 +165,11 @@ const listeners = new Set<() => void>();
 function readStored(): Locale {
   try {
     const raw = window.localStorage.getItem(LOCALE_STORAGE_KEY);
-    return isLocale(raw) ? raw : DEFAULT_LOCALE;
+    // `isShippable` as well as `isLocale`: "yoruba" is a real locale and may well
+    // be sitting in a user's storage from before it was withheld. Hiding a button
+    // does not un-choose it for the person who already chose it, which is why the
+    // gate lives on the read and not on the picker.
+    return isLocale(raw) && isShippable(raw) ? raw : DEFAULT_LOCALE;
   } catch {
     // Private mode, disabled storage, a sandboxed iframe. A missing preference
     // is not an error worth surfacing — English is a real answer, not a guess.
@@ -193,7 +198,7 @@ function subscribe(onChange: () => void): () => void {
   // A second tab is the same person with the same preference.
   const onStorage = (e: StorageEvent) => {
     if (e.key !== LOCALE_STORAGE_KEY) return;
-    const next = isLocale(e.newValue) ? e.newValue : DEFAULT_LOCALE;
+    const next = isLocale(e.newValue) && isShippable(e.newValue) ? e.newValue : DEFAULT_LOCALE;
     if (next === current) return;
     current = next;
     emit();
@@ -220,8 +225,13 @@ const getSnapshot = (): Locale => current;
  */
 const getServerSnapshot = (): Locale => DEFAULT_LOCALE;
 
-export function setLocale(next: Locale): void {
-  if (next === current) return;
+function setLocale(next: Locale): void {
+  // The other door. A picker that still offers a withheld locale — SettingsSheet
+  // hardcodes its three options and does not read this module — gets a no-op
+  // rather than unreviewed copy. That is a visibly dead button until the picker
+  // is fixed, and a dead button is the smaller harm by a wide margin: the thing
+  // it used to do was rename the app in its own header.
+  if (!isShippable(next) || next === current) return;
   current = next;
   try {
     window.localStorage.setItem(LOCALE_STORAGE_KEY, next);
@@ -232,21 +242,56 @@ export function setLocale(next: Locale): void {
   emit();
 }
 
-/** The current locale, for non-React callers. */
-export function getLocale(): Locale {
-  return current;
-}
+/* `getLocale()` lived here — "the current locale, for non-React callers", for the
+   offline queue and event handlers this module's header anticipates. Nothing ever
+   called it, in this file or out of it, and unlike the rest of what knip flagged
+   there was no half-built consumer to finish. Deleted rather than kept: `current`
+   is one line above, and the day a non-React caller exists it can have this back
+   in the same change. */
 
 /* ── Hooks ────────────────────────────────────────────────────────────────── */
 
 /** The selected locale. Re-renders on change, from anywhere, with no provider. */
-export function useLocale(): Locale {
+function useLocale(): Locale {
   return useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
 }
 
 /** `[locale, setLocale]`, for the picker in SettingsSheet. */
 export function useLocaleControl(): readonly [Locale, (next: Locale) => void] {
   return [useLocale(), setLocale] as const;
+}
+
+/**
+ * The locales a picker may offer, with the endonyms to label them.
+ *
+ * This exists because `setLocale` refuses a withheld locale (:234). A picker
+ * that lists Yorùbá anyway renders a button that does nothing when tapped — and
+ * a dead control is the one thing this codebase is least willing to ship:
+ * `GetItSheet` says it outright, "a control that looks alive and does nothing is
+ * worse than no control". The gate and the picker have to agree, and the gate
+ * is the one that knows.
+ *
+ * So the picker reads its options from here rather than hardcoding them. It is
+ * derived, not declared: open Yorùbá by getting it reviewed and the button
+ * appears, with no second file to remember. Withholding a locale hides it —
+ * never greys it out. A disabled option implies it might light up; this one
+ * will not until a Yorùbá speaker reads 107 strings, which is not something the
+ * user can do anything about, so we do not advertise the wait to them.
+ *
+ * The endonyms live here, next to the gate that decides whether they render.
+ * They used to live in strings.ts with no caller — a fourth copy of the
+ * picker's labels waiting to disagree with them. That comment said they come
+ * back "in the change that makes SettingsSheet read it — with the caller, not
+ * before it". This is that change.
+ */
+const LOCALE_ENDONYMS: Readonly<Record<Locale, string>> = {
+  en: "English",
+  pidgin: "Pidgin",
+  yoruba: "Yorùbá",
+};
+
+export function shippableLocales(): ReadonlyArray<{ id: Locale; label: string }> {
+  return LOCALES.filter(isShippable).map((id) => ({ id, label: LOCALE_ENDONYMS[id] }));
 }
 
 /**
@@ -281,7 +326,7 @@ export function useStrings(): Readonly<Record<StringKey, string>> {
 
 /* ── What is actually outstanding ─────────────────────────────────────────── */
 
-export interface Coverage {
+interface Coverage {
   locale: Locale;
   total: number;
   /** Keys with a vouched-for string in this locale. */
@@ -297,12 +342,20 @@ export interface Coverage {
 /**
  * The honest number, computed rather than claimed.
  *
- * Use it in a script or a test before anyone describes the language picker as
- * done. A locale can be 100% "complete" and still be entirely unreviewed —
- * which is exactly the state Yorùbá's inherited keys are in — so the two
- * figures are reported separately and neither one alone means shipped.
+ * This asked, in its own docstring, to be used "in a script or a test before
+ * anyone describes the language picker as done". It never was: there is no test
+ * script and no test runner in package.json, so the harness it wanted did not
+ * exist and the function sat with no caller for its whole life — the one piece of
+ * machinery that would have made "Yorùbá is 35% translated and 0% reviewed"
+ * impossible to miss, pointed at nothing.
+ *
+ * It is now the input to `isShippable` below, which is a better home than a test
+ * anyway: a test tells a developer the picker is dishonest, and this stops the
+ * picker being dishonest. A locale can be 100% "complete" and still entirely
+ * unreviewed — exactly the state Yorùbá's inherited keys are in — so the two
+ * figures stay separate here and neither one alone means shipped.
  */
-export function coverage(locale: Locale): Coverage {
+function coverage(locale: Locale): Coverage {
   const keys = Object.keys(en) as StringKey[];
   const table = TABLES[locale];
   const untranslated = keys.filter((k) => table[k] === UNTRANSLATED);
@@ -320,6 +373,42 @@ export function coverage(locale: Locale): Coverage {
 }
 
 /**
+ * May this app offer this language to a Lagos user?
+ *
+ * `NEEDS_NATIVE_REVIEW` records that a string RENDERS and that nobody who speaks
+ * the language has read it. Until now that record did nothing but describe a
+ * problem. strings.ts asked, in a comment, for a native speaker to pass over the
+ * file "before the language picker is presented as a finished feature"; the
+ * picker was presented anyway, and Yorùbá reached users with 54 of its 58
+ * rendering strings unread — renaming the app to "Kilo n ṣẹlẹ" in its own header
+ * and labelling a Done button "O ti tan", which is what this app says when food
+ * is SOLD OUT. A comment asking people to be careful is worth what it costs.
+ *
+ * So: a locale is offered when a native speaker has cleared MORE of its rendering
+ * copy than they have left flagged. Nothing else gates it — no boolean to flip,
+ * no threshold in a doc, no reviewer's promise. The only way to open a language
+ * is to review the language, and the day someone does, it opens on its own with
+ * no code change. That is the property worth having; a flag would just be the
+ * comment again, typed.
+ *
+ * A majority is a floor, not a certificate. It says most of what a user reads has
+ * been vouched for, which is the least this app can say about a language it names
+ * in a picker. Today: English passes (nothing flagged), Pidgin passes (138 of 161
+ * cleared — written by someone who speaks it), Yorùbá is withheld (4 of 58, and
+ * those four are "{km} km" and three map brand names, so not one Yorùbá SENTENCE
+ * in this product has ever been read by a Yorùbá speaker).
+ *
+ * Withheld is not deleted. The table stays, `coverage()` still counts it, and the
+ * work to open it is a review — not a rewrite, and not a machine translation,
+ * which would fabricate a Yorùbá-shaped app that no Yorùbá speaker trusts and
+ * would satisfy this gate while doing it.
+ */
+function isShippable(locale: Locale): boolean {
+  const { translated, needsNativeReview } = coverage(locale);
+  return translated - needsNativeReview.length > needsNativeReview.length;
+}
+
+/**
  * Does every translation carry the same `{holes}` as the English it replaces?
  *
  * The type system guarantees the CALLER passes the right variables, because it
@@ -334,7 +423,7 @@ export function coverage(locale: Locale): Coverage {
  * broken placeholder should cost a developer a stack trace on day one, not cost
  * a Lagos user their entire app on day ninety.
  */
-export function checkPlaceholderParity(): string[] {
+function checkPlaceholderParity(): string[] {
   const holes = (s: string): string[] => (s.match(PLACEHOLDER) ?? []).slice().sort();
   const problems: string[] = [];
 
@@ -363,6 +452,18 @@ if (process.env.NODE_ENV !== "production") {
     throw new Error(
       `i18n: translations disagree with English about their placeholders. ` +
         `A user would see the literal brace text.\n  ${problems.join("\n  ")}`,
+    );
+  }
+
+  // The gate coerces anything it withholds to DEFAULT_LOCALE, so a DEFAULT_LOCALE
+  // that is itself withheld would coerce to itself and hand every user in Lagos
+  // the exact copy this file refuses to show them. Unreachable today — English is
+  // the source of truth and has nothing to review — and it stays that way only as
+  // long as someone checks.
+  if (!isShippable(DEFAULT_LOCALE)) {
+    throw new Error(
+      `i18n: DEFAULT_LOCALE "${DEFAULT_LOCALE}" is withheld by isShippable(), so ` +
+        `there is no locale left to fall back to. Review its copy or change it.`,
     );
   }
 }
