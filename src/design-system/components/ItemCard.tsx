@@ -128,7 +128,7 @@ export function ItemCard({
   return (
     <button
       onClick={() => onSelect(item)}
-      className={`squircle group relative flex w-full items-stretch gap-3 overflow-hidden bg-surface text-left shadow-card ${transition.press}`}
+      className={`squircle group relative flex w-full items-stretch gap-3 overflow-hidden bg-surface-card text-left shadow-card ${transition.press}`}
     >
       {/* Bleeds: no padding, no inset, clipped by the card's own squircle. */}
       <div className="relative w-[88px] shrink-0 self-stretch bg-surface-sunken">

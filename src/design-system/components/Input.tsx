@@ -13,9 +13,7 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
       <div className="w-full">
         <div className="relative flex items-center">
           {icon && (
-            <div className="absolute left-4 text-text-tertiary pointer-events-none">
-              {icon}
-            </div>
+            <div className="pointer-events-none absolute left-4 text-text-tertiary">{icon}</div>
           )}
           <input
             type={type}
@@ -23,10 +21,9 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
             className={twMerge(
               clsx(
                 /**
-                 * NO focus outline-none HERE. `focus:bg-surface` is the fill lift
-                 * and it stays — but it cannot be the only cue: `fillTertiary` is
-                 * `rgba(118,118,128,0.12)`, which over `#FFFFFF` composites to
-                 * `(239,239,240)`, so the lift to solid white is **1.15:1**. SC
+                 * NO focus outline-none HERE. `focus:bg-surface-card` is the fill lift
+                 * and it stays — but it cannot be the only cue: control fill is
+                 * deliberately close to a surface, so the lift alone is below SC
                  * 1.4.11 asks 3:1 of a focus indicator. iOS ships the same lift and
                  * gets away with it by pairing it with a blinking caret and a
                  * keyboard sliding up the screen; the web has neither.
@@ -41,7 +38,7 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
                  *
                  * `docs/ACCESSIBILITY.md` P1-1.
                  */
-                "w-full h-12 bg-fillTertiary text-text-primary squircle text-body transition-colors duration-micro placeholder:text-text-tertiary focus:bg-surface disabled:opacity-50",
+                "squircle h-12 w-full bg-controlFill text-body text-text-primary transition-colors duration-micro placeholder:text-text-tertiary focus:bg-surface-card disabled:opacity-50",
                 {
                   "pl-12 pr-4": icon,
                   "px-4": !icon,
@@ -53,9 +50,7 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
             {...props}
           />
         </div>
-        {error && (
-          <p className="mt-1 text-xs text-status-unavailable font-medium">{error}</p>
-        )}
+        {error && <p className="mt-1 text-xs font-medium text-status-unavailable">{error}</p>}
       </div>
     );
   }

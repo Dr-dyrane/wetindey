@@ -24,13 +24,12 @@ interface SearchFieldProps {
  * The clear button keeps a 44px hit area (the documented default control size)
  * while drawing at 17px, so the target is honest even though the glyph is small.
  *
- * Focus is signalled by the fill lifting from tertiary to a solid surface, which
+ * Focus is signalled by the control fill lifting to a solid card surface, which
  * is how iOS does it — AND by the focus ring, which this used to suppress.
  *
  * That sentence used to open "No stroke in any state", and the lift was the only
- * cue. It does not carry that alone: `fillTertiary` is `rgba(118,118,128,0.12)`,
- * which over `#FFFFFF` composites to `(239,239,240)`, so the lift to solid white
- * is **1.15:1**. SC 1.4.11 asks 3:1 of a focus indicator. That is not a state
+ * cue. It does not carry that alone: the control and card fills are intentionally
+ * close, while SC 1.4.11 asks 3:1 of a focus indicator. That is not a state
  * change a sighted user will notice; it is barely one a monitor renders. iOS gets
  * away with the identical lift because it pairs it with a blinking caret and a
  * keyboard sliding up the screen. On the web there is no rising keyboard, and a
@@ -61,7 +60,7 @@ export function SearchField({
   // invisible on screen. `focus-within` puts it on the clipping box, which has room.
   return (
     <div
-      className={`squircle-full relative flex h-9 w-full items-center overflow-hidden bg-fillTertiary ${transition.focus} focus-within:bg-surface focus-within:outline focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-focusRing`}
+      className={`squircle-full relative flex h-9 w-full items-center overflow-hidden bg-controlFill ${transition.focus} focus-within:bg-surface-card focus-within:outline focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-focusRing`}
     >
       <Search
         className="pointer-events-none absolute left-2.5 h-4 w-4 text-text-tertiary"

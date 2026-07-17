@@ -400,7 +400,7 @@ export function BottomSheet({ children, detent, onDetentChange }: BottomSheetPro
           } as React.CSSProperties
         }
         className={`pointer-events-auto absolute z-20 flex flex-col overflow-hidden ${
-          isExpandedPresentation ? "bg-background" : "material-regular"
+          isExpandedPresentation ? "bg-surface-persistent" : "material-regular"
         } ${isDragging ? transition.directManipulation : transition.snapSheet}`}
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}

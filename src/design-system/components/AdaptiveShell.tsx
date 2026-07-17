@@ -48,7 +48,7 @@ export function AdaptiveShell({
   onDetailBack,
   backLabel,
   activeDetent,
-  setActiveDetent
+  setActiveDetent,
 }: AdaptiveShellProps) {
   /**
    * Exactly ONE shell is mounted.
@@ -72,12 +72,12 @@ export function AdaptiveShell({
     detailNode,
     detailLabel,
     onDetailBack,
-    backLabel
+    backLabel,
   };
 
   return (
     <div
-      className="relative w-full h-full min-h-screen overflow-hidden bg-background"
+      className="relative h-full min-h-screen w-full overflow-hidden bg-page"
       /**
        * The edges the shell occludes, published for the map layer.
        *
@@ -108,11 +108,15 @@ export function AdaptiveShell({
        * Both consumers live in files owned elsewhere; these are the numbers they
        * need, made available rather than described.
        */
-      style={{
-        "--shell-leading-inset": isRegular ? PANEL_LEADING_OCCLUSION : "0px",
-        // RegularShell mounts no sheet, so it occludes nothing at the bottom.
-        "--shell-bottom-inset": isRegular ? "0px" : `${(DETENT_FRACTION[activeDetent] * 100).toFixed(3)}vh`,
-      } as React.CSSProperties}
+      style={
+        {
+          "--shell-leading-inset": isRegular ? PANEL_LEADING_OCCLUSION : "0px",
+          // RegularShell mounts no sheet, so it occludes nothing at the bottom.
+          "--shell-bottom-inset": isRegular
+            ? "0px"
+            : `${(DETENT_FRACTION[activeDetent] * 100).toFixed(3)}vh`,
+        } as React.CSSProperties
+      }
     >
       {/*
         Persistent Global Map Layer:
@@ -120,14 +124,12 @@ export function AdaptiveShell({
         context survives crossing 768 — which an iPad Split View drag does live,
         mid-gesture.
       */}
-      <div className="absolute inset-0 z-0">
-        {mapNode}
-      </div>
+      <div className="absolute inset-0 z-0">{mapNode}</div>
 
       {isRegular === null ? null : (
         /* Pointer-transparent down to the panel itself — a full-size
            pointer-events-auto layer here would swallow every map gesture. */
-        <div className="absolute inset-0 z-10 pointer-events-none">
+        <div className="pointer-events-none absolute inset-0 z-10">
           {isRegular ? (
             <RegularShell {...stack} />
           ) : (

@@ -90,7 +90,9 @@ export interface AsyncListProps<T> {
 
 /** Shared geometry for the empty and error panels. Surface + elevation, no stroke. */
 function Panel({ children }: { children: React.ReactNode }) {
-  return <div className="squircle-card bg-surface p-5 text-center shadow-card">{children}</div>;
+  return (
+    <div className="squircle-card bg-surface-card p-5 text-center shadow-card">{children}</div>
+  );
 }
 
 export function AsyncList<T>({
@@ -206,9 +208,7 @@ export function AsyncList<T>({
             <p className="text-subhead font-semibold text-text-primary">
               {errorState?.title ?? "Could not load"}
             </p>
-            <p className="text-caption-1 text-text-secondary">
-              {errorState?.description ?? error}
-            </p>
+            <p className="text-caption-1 text-text-secondary">{errorState?.description ?? error}</p>
             {onRetry && (
               <Button variant="secondary" size="sm" onClick={onRetry} className="mt-1 min-h-tap">
                 {errorState?.retryLabel ?? "Try again"}
@@ -237,7 +237,7 @@ export function AsyncList<T>({
         <Panel>
           <div className="flex flex-col items-center gap-2">
             {empty.icon && (
-              <span className="inline-flex squircle-full bg-fillSecondary p-3 text-text-secondary">
+              <span className="squircle-full inline-flex bg-controlFill p-3 text-text-secondary">
                 {empty.icon}
               </span>
             )}

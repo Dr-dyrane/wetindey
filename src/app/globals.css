@@ -30,8 +30,21 @@
    ──────────────────────────────────────────────────────────────────────────── */
 
 :root {
-  /* ── Surfaces ── */
-  --color-background: #f2f2f7; /* systemGroupedBackground */
+  /* ── Semantic surface ladder ──
+     Map remains beneath this system. Page and persistent-sheet canvas are the
+     quiet grouped layer; cards, controls, and islands each receive a distinct
+     material or fill above it. Presented and pushed reading surfaces are
+     opaque by contract: their context comes from the scrim, not map bleed. */
+  --color-page: #f2f2f7; /* systemGroupedBackground */
+  --color-background: var(--color-page); /* compatibility alias */
+  --color-surface-persistent: #f2f2f7;
+  --color-surface-modal: #ffffff;
+  --color-surface-pushed: #f2f2f7;
+  --color-surface-card: #ffffff;
+  --color-control-fill: #e5e5ea;
+  --color-island: #ffffff;
+
+  /* Existing generic roles remain for consumers outside this lane. */
   --color-surface: #ffffff; /* secondarySystemGroupedBackground */
   --color-surface-elevated: #ffffff;
   --color-surface-sunken: #e9e9ef;
@@ -44,6 +57,11 @@
   --material-thin: rgba(255, 255, 255, 0.44);
   --material-regular: rgba(255, 255, 255, 0.58);
   --material-thick: rgba(255, 255, 255, 0.72);
+  /* Reduced-transparency fallbacks keep the same hierarchy without blur. */
+  --material-opaque-ultrathin: var(--color-island);
+  --material-opaque-thin: var(--color-island);
+  --material-opaque-regular: var(--color-island);
+  --material-opaque-thick: var(--color-island);
   /* Liquid Glass refracts its surroundings -- you are meant to still read
      shapes through it. 32px was fog: it destroyed the map instead of bending
      it. The liquid quality comes from saturation and a slight lift, not from
@@ -188,7 +206,15 @@
 }
 
 .dark {
-  --color-background: #000000;
+  --color-page: #000000;
+  --color-background: var(--color-page);
+  --color-surface-persistent: #1c1c1e;
+  --color-surface-modal: #2c2c2e;
+  --color-surface-pushed: #1c1c1e;
+  --color-surface-card: #3a3a3c;
+  --color-control-fill: #48484a;
+  --color-island: #2c2c2e;
+
   --color-surface: #1c1c1e;
   --color-surface-elevated: #2c2c2e;
   --color-surface-sunken: #121214;
@@ -413,47 +439,14 @@
   }
 
   /**
-   * The presented-sheet panel (ModalSheet), and the surface a NavigationStack
-   * pushes onto (.stack-surface). One pair, because the two must never disagree:
-   * a stack mounted inside a sheet has to land on the colour of the sheet it
-   * slid over, and the only way it can know that colour is to be told.
-   *
-   * THE RUNGS are Apple's two grouped ladders. A cell is meant to be lighter
-   * than its background in both:
-   *
-   *   BASE      background #000000 → cells #1C1C1E
-   *   ELEVATED  background #1C1C1E → cells #2C2C2E
-   *
-   * The docked bottom sheet and the regular shell's sidebar card are the content
-   * layer — base — so they declare nothing and the fallback carries them. A
-   * presented panel is elevated by definition, so .sheet-panel takes the rung up.
-   *
-   * Its cards must then climb the last rung THEMSELVES, pairing `bg-surface`
-   * with `dark:bg-surface-elevated`. Nothing here can do it for them, and the
-   * default is the trap: `bg-surface` is #1C1C1E, which is exactly what
-   * .sheet-panel resolves to in dark, so a card that omits the dark half is
-   * painted its own background.
-   *
-   * LIGHT HAS ONE LADDER. Apple's elevated variants differ from their base in
-   * dark alone, which is why --color-surface-elevated is #FFFFFF up top,
-   * identical to --color-surface: light resolves to #F2F2F7 under #FFFFFF cards
-   * either way. That is also why the omission above survives review — it is
-   * invisible until you switch themes.
-   *
-   * Dark is also where the panel earns the rung twice over. On `background` it
-   * would be #000000, separated from the scrim and the map behind it by nothing
-   * but a black shadow. Strokes are banned, so the rung IS the edge.
+   * A presented task is opaque. The parent panel is the modal rung; a pushed
+   * reading level is the quieter page rung inside it. `--stack-surface` remains
+   * the handoff contract for NavigationStack, so each host can still define its
+   * own pushed backing without the stack knowing which shell owns it.
    */
   .sheet-panel {
-    --stack-surface: var(--material-thick);
-    background-color: var(--stack-surface);
-    -webkit-backdrop-filter: blur(var(--material-blur)) saturate(var(--material-saturate))
-      brightness(var(--material-brightness));
-    backdrop-filter: blur(var(--material-blur)) saturate(var(--material-saturate))
-      brightness(var(--material-brightness));
-  }
-  .dark .sheet-panel {
-    --stack-surface: var(--material-thick);
+    --stack-surface: var(--color-surface-pushed);
+    background-color: var(--color-surface-modal);
   }
   .stack-surface {
     background-color: var(--stack-surface, var(--color-background));
@@ -607,10 +600,20 @@
   .material-ultrathin,
   .material-thin,
   .material-regular,
-  .material-thick,
-  .sheet-panel {
+  .material-thick {
     -webkit-backdrop-filter: none;
     backdrop-filter: none;
-    background-color: var(--color-surface);
+  }
+  .material-ultrathin {
+    background-color: var(--material-opaque-ultrathin);
+  }
+  .material-thin {
+    background-color: var(--material-opaque-thin);
+  }
+  .material-regular {
+    background-color: var(--material-opaque-regular);
+  }
+  .material-thick {
+    background-color: var(--material-opaque-thick);
   }
 }

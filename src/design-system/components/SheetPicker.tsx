@@ -33,7 +33,7 @@ function PickerOptions({
 }) {
   return (
     <div className="px-4 py-2">
-      <div className="squircle-card overflow-hidden bg-surface dark:bg-surface-elevated">
+      <div className="squircle-card overflow-hidden bg-surface-card">
         {options.length === 0 && (
           <p className="px-4 py-3 text-body text-text-tertiary">Nothing available</p>
         )}
@@ -130,7 +130,7 @@ export function SheetPicker({
         aria-expanded={isOpen}
         aria-labelledby={label ? labelId : undefined}
         aria-label={label ? undefined : title}
-        className={`squircle flex min-h-tap w-full items-center justify-between gap-2 bg-fillTertiary px-4 text-left text-text-primary disabled:opacity-40 ${transition.press}`}
+        className={`squircle flex min-h-tap w-full items-center justify-between gap-2 bg-controlFill px-4 text-left text-text-primary disabled:opacity-40 ${transition.press}`}
       >
         <span
           className={`truncate text-body ${selected ? "text-text-primary" : "text-text-tertiary"}`}

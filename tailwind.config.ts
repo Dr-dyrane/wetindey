@@ -26,12 +26,19 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
+        page: "var(--color-page)",
         background: "var(--color-background)",
         surface: {
           DEFAULT: "var(--color-surface)",
+          persistent: "var(--color-surface-persistent)",
+          modal: "var(--color-surface-modal)",
+          pushed: "var(--color-surface-pushed)",
+          card: "var(--color-surface-card)",
           elevated: "var(--color-surface-elevated)",
           sunken: "var(--color-surface-sunken)",
         },
+        controlFill: "var(--color-control-fill)",
+        island: "var(--color-island)",
         text: {
           primary: "var(--color-text-primary)",
           secondary: "var(--color-text-secondary)",

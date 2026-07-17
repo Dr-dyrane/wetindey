@@ -352,7 +352,7 @@ export function ModalSheet({
                   aria-label="Close"
                   className={`grid h-11 w-11 place-items-center text-text-secondary hover:text-text-primary ${transition.press}`}
                 >
-                  <span className="material-thick grid h-7 w-7 place-items-center rounded-full">
+                  <span className="grid h-7 w-7 place-items-center rounded-full bg-controlFill">
                     <X className="h-4 w-4" strokeWidth={2.5} />
                   </span>
                 </button>
@@ -376,7 +376,7 @@ export function ModalSheet({
                     aria-label="Close"
                     className={`grid h-11 w-11 place-items-center text-text-secondary ${transition.press}`}
                   >
-                    <span className="grid h-7 w-7 place-items-center rounded-full bg-fillSecondary">
+                    <span className="grid h-7 w-7 place-items-center rounded-full bg-controlFill">
                       <X className="h-4 w-4" strokeWidth={2.5} />
                     </span>
                   </button>
@@ -417,7 +417,7 @@ export function ModalSheet({
                 aria-label="Close"
                 className={`grid h-11 w-11 shrink-0 place-items-center text-text-secondary ${transition.press}`}
               >
-                <span className="grid h-7 w-7 place-items-center rounded-full bg-fillSecondary">
+                <span className="grid h-7 w-7 place-items-center rounded-full bg-controlFill">
                   <X className="h-4 w-4" strokeWidth={2.5} />
                 </span>
               </button>

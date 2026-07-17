@@ -63,18 +63,18 @@ export function Skeleton({
            * Class names are described, not spelled: Tailwind's scanner reads
            * comments, and a comment naming a class emits it.
            */
-          "bg-fillTertiary animate-pulse",
+          "animate-pulse bg-fillTertiary",
           {
             "rounded-full": variant === "circular",
             squircle: variant === "rectangular" || variant === "text",
 
             // Map text variant sizes to match typographic system (Section 17.4)
-            "h-8 w-3/4 mb-4": variant === "text" && textVariant === "display",
-            "h-7 w-2/3 mb-3": variant === "text" && textVariant === "title1",
-            "h-6 w-1/2 mb-2": variant === "text" && textVariant === "title2",
-            "h-5 w-1/3 mb-2": variant === "text" && textVariant === "title3",
-            "h-4 w-full mb-1.5": variant === "text" && textVariant === "body",
-            "h-3 w-1/4 mb-1": variant === "text" && textVariant === "footnote",
+            "mb-4 h-8 w-3/4": variant === "text" && textVariant === "display",
+            "mb-3 h-7 w-2/3": variant === "text" && textVariant === "title1",
+            "mb-2 h-6 w-1/2": variant === "text" && textVariant === "title2",
+            "mb-2 h-5 w-1/3": variant === "text" && textVariant === "title3",
+            "mb-1.5 h-4 w-full": variant === "text" && textVariant === "body",
+            "mb-1 h-3 w-1/4": variant === "text" && textVariant === "footnote",
             "h-2.5 w-16": variant === "text" && textVariant === "caption",
           }
         ),
@@ -142,7 +142,7 @@ export function Skeleton({
  */
 function OfferCardSkeleton() {
   return (
-    <div className="flex w-full items-start gap-3 bg-surface dark:bg-surface-elevated p-4 shadow-card squircle-card">
+    <div className="squircle-card flex w-full items-start gap-3 bg-surface-card p-4 shadow-card">
       {/* Leading status dot — StatusDot is h-2 w-2 at the same mt-[7px] offset. */}
       <span className="mt-[7px] h-2 w-2 shrink-0 animate-pulse rounded-full bg-fillTertiary" />
 
@@ -230,11 +230,11 @@ function ItemCardSkeleton() {
   return (
     <div
       aria-hidden
-      className="flex w-full items-stretch gap-3 overflow-hidden bg-surface shadow-card squircle"
+      className="squircle flex w-full items-stretch gap-3 overflow-hidden bg-surface-card shadow-card"
     >
       {/* Image well. Bleeds to three edges exactly as ItemCard's does, so it is
           the card that clips it — no inset, no gap, nothing to draw an edge with. */}
-      <div className="w-[88px] shrink-0 self-stretch animate-pulse bg-surface-sunken" />
+      <div className="w-[88px] shrink-0 animate-pulse self-stretch bg-surface-sunken" />
 
       <div className="min-w-0 flex-1 py-2 pr-3">
         {/* Name — subhead line box */}
