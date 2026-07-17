@@ -51,7 +51,7 @@ export function websiteJsonLd() {
     url: absoluteUrl("/"),
     inLanguage: "en-NG",
     description:
-      "Street-food prices around south-west Lagos, reported by the people who saw them.",
+      "Nearby live local information before you leave. Food price and availability in south-west Lagos; coverage and freshness vary, and price and availability may change before arrival.",
   };
 }
 

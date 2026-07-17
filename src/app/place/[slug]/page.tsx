@@ -48,7 +48,7 @@ export async function generateMetadata({
     offers.length > 0
       ? `Current food prices at ${place.name} in ${where}: ${offers.length} ${
           offers.length === 1 ? "item" : "items"
-        } reported by people who shopped there. Know before you go.`
+        }. Coverage and freshness vary; price and availability may change before arrival.`
       : `${place.name} is a ${placeTypeLabel(place.placeType).toLowerCase()} in ${where} on WetinDey. No prices reported here yet.`;
 
   const canonical = `/place/${place.slug}`;
