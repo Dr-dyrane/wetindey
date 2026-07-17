@@ -10,6 +10,18 @@ export interface RoutePoint {
   lng: number;
 }
 
+/** A route with a non-geographic endpoint is not a route request. */
+function isRoutePoint(value: RoutePoint): boolean {
+  return (
+    Number.isFinite(value.lat) &&
+    Number.isFinite(value.lng) &&
+    value.lat >= -90 &&
+    value.lat <= 90 &&
+    value.lng >= -180 &&
+    value.lng <= 180
+  );
+}
+
 const DIRECTIONS_API = "https://api.mapbox.com/directions/v5/mapbox";
 
 /**
@@ -42,6 +54,11 @@ export async function fetchRoute(
   destination: RoutePoint,
   signal?: AbortSignal
 ): Promise<RouteGeometry | null> {
+  // Coordinates can cross this boundary from persisted location state as well
+  // as from a selected place. Never put NaN into a provider URL, and never let
+  // a bad endpoint become a map-rendering failure.
+  if (!isRoutePoint(origin) || !isRoutePoint(destination)) return null;
+
   const token = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN;
   // The same token that fetches the tiles under this line. It is public by
   // construction, so this call is client-side and needs no proxy.
@@ -94,7 +111,13 @@ function isCoordinatePair(value: unknown): value is [number, number] {
     Array.isArray(value) &&
     value.length === 2 &&
     typeof value[0] === "number" &&
-    typeof value[1] === "number"
+    typeof value[1] === "number" &&
+    Number.isFinite(value[0]) &&
+    Number.isFinite(value[1]) &&
+    value[0] >= -180 &&
+    value[0] <= 180 &&
+    value[1] >= -90 &&
+    value[1] <= 90
   );
 }
 

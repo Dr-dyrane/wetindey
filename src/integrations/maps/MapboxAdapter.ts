@@ -43,6 +43,31 @@ export interface UserPositionOptions {
 export type RouteGeometry = [number, number][];
 
 /**
+ * The adapter accepts geometry from callers, not only `fetchRoute`. Keep this
+ * boundary defensive: Mapbox throws for NaN bounds, taking down the whole React
+ * tree, whereas an unusable route should simply be absent.
+ */
+function isRenderableRoute(coords: unknown): coords is RouteGeometry {
+  return (
+    Array.isArray(coords) &&
+    coords.length >= 2 &&
+    coords.every(
+      (point) =>
+        Array.isArray(point) &&
+        point.length === 2 &&
+        typeof point[0] === "number" &&
+        typeof point[1] === "number" &&
+        Number.isFinite(point[0]) &&
+        Number.isFinite(point[1]) &&
+        point[0] >= -180 &&
+        point[0] <= 180 &&
+        point[1] >= -90 &&
+        point[1] <= 90
+    )
+  );
+}
+
+/**
  * Which token colours the route.
  *
  * A colour selector, NOT a status model — no route status model exists, and
@@ -989,7 +1014,7 @@ export class MapboxAdapter implements MapProviderAdapter {
    * zoom computed from a distance either — the projection is Mapbox's business.
    */
   public fitRoute(coords: RouteGeometry, options?: { maxZoom?: number }): void {
-    if (!this.mapInstance || coords.length < 2) return;
+    if (!this.mapInstance || !isRenderableRoute(coords)) return;
 
     let west = coords[0][0];
     let east = coords[0][0];
@@ -1193,8 +1218,9 @@ export class MapboxAdapter implements MapProviderAdapter {
   public setRoute(coords: RouteGeometry | null, options?: { tint?: RouteTint }): void {
     // Copied, not held: the caller's array is theirs to mutate, and this one has
     // to survive until the next style rebuild replays it.
-    this.routeCoords =
-      coords && coords.length >= 2 ? coords.map(([lng, lat]): [number, number] => [lng, lat]) : null;
+    this.routeCoords = isRenderableRoute(coords)
+      ? coords.map(([lng, lat]): [number, number] => [lng, lat])
+      : null;
     this.routeTint = options?.tint ?? "accent";
     this.applyRoute();
   }
