@@ -289,8 +289,7 @@ type ContactState =
 /**
  * What the contact row is allowed to say.
  *
- * Two separate facts, and the copy keeps them separate because they have
- * different fixes:
+ * Two separate facts, kept apart because they have different fixes:
  *
  *   1. `contactVisibility` is the seller's own answer and defaults to
  *      'private'. Private means private. There is no "reveal anyway".
@@ -298,31 +297,26 @@ type ContactState =
  *      column exists — no phone, no handle. Inventing a placeholder field to
  *      fill this row would be inventing a person's phone number.
  *
- * So the row never becomes an action today. It is informational, and says why.
+ * THE DETAIL CARRIES THE FACT; THE FOOTER IS ALMOST ALWAYS NOISE. Each of these
+ * rows used to ship a sentence or two underneath explaining the app's reasoning
+ * to itself — "Rather than guess, WetinDey shows nothing at all", "nothing is
+ * being withheld". That is a developer defending a design decision to someone
+ * who only wanted a phone number. "Not shared" already says everything a
+ * shopper can act on, which is nothing, so the row stops talking.
+ *
+ * The one surviving footer is the error case, because "Unavailable" alone reads
+ * as the seller's choice when it is actually our failure — a distinction the
+ * user cannot make and would be misled by.
  */
-function contactCopy(state: ContactState): { detail: string; footer: string } {
-  if (state.status === "loading") {
-    return { detail: "Checking", footer: "Reading this seller's contact setting." };
-  }
+function contactCopy(state: ContactState): { detail: string; footer: string | null } {
+  if (state.status === "loading") return { detail: "Checking", footer: null };
   if (state.status === "error") {
-    return {
-      detail: "Unavailable",
-      footer:
-        "This seller's contact setting could not be read, so nothing is shown. Rather than guess, WetinDey shows nothing at all.",
-    };
+    return { detail: "Unavailable", footer: "We couldn't read this seller's setting." };
   }
   if (state.policy.contactVisibility === "private") {
-    return {
-      detail: "Not shared",
-      footer:
-        "This seller keeps their contact details private. You can still go there — every price here comes from someone who did.",
-    };
+    return { detail: "Not shared", footer: null };
   }
-  return {
-    detail: "None on file",
-    footer:
-      "This seller allows contact, but WetinDey holds no phone number or handle for them yet. There is nothing to dial, and nothing is being withheld.",
-  };
+  return { detail: "None on file", footer: null };
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -527,7 +521,7 @@ export function GetItSheet({ open, onClose, target, origin, onGoThere }: GetItSh
         {/* Informational, not disabled: a greyed-out button implies it might
             light up. It will not — the seller said no, or there is nothing to
             dial. The row states the fact and the footer gives the reason. */}
-        <ListGroup footer={contactText.footer}>
+        <ListGroup footer={contactText.footer ?? undefined}>
           <ListRow
             icon={<Phone className="h-4 w-4 text-text-secondary" />}
             label="Contact seller"

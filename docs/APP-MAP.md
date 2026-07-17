@@ -140,7 +140,7 @@ columns are write-only.
 
 | Table | Read by the live path | Written, never read | Never even written |
 |---|---|---|---|
-| `areas` | **nothing** — `actions.ts:4` imports it, but only the island's `getAreasWithPlaceCounts:861` selects it | `coverageStatus` | `parentAreaId` |
+| `areas` | `getAreaTree` — slug, name, type, center, coverageStatus, **`parentAreaId`** (self-joined 3 deep for country→state→LGA→neighbourhood) | — | — |
 | `places` | id, name, placeType, location, address (`actions.ts:143-148`) | `verificationStatus` | `openingInformation`, `contactVisibility` |
 | `items` | id, slug, canonicalName, image\* (`actions.ts:8-17`); `active` honoured at `:35`, `:76` | `description`, `imageSourceUrl` — shipped over the wire, no consumer | — |
 | `item_aliases` | `alias` (`actions.ts:39`) | `normalizedAlias`, `weight` | — |
@@ -323,17 +323,24 @@ passed to `SettingsSheet` (`page.tsx:978`). No live action takes a radius or a c
 control lies about being a filter. Compounding: no GIST index exists, so the `ST_DWithin`
 this needs would seq-scan today.
 
-**D9 — "Popular items around Festac" is neither around Festac nor area-aware.**
-`src/app/page.tsx:636`, `:559` · `src/app/actions.ts:59-79`
-*Evidence:* `getPopularItems` filters on `eq(items.active, true)` and nothing else — no
-geographic predicate at all. `selectedAreaName` is the literal `"Festac"`
-(`globalStore.ts:33`); its setter (`:23`, `:39`) is never invoked. The seeded name for that
-slug is "Festac Town" (`lagosSouthWest.ts:48`), confirming the string is not DB-derived.
-The DB holds places across nine areas.
-*Consequence:* A global top-8 is labelled Festac-local, beside a pulsing confirmed dot
-(`page.tsx:558`), and the label stays "Festac" wherever the user pans. `USER-FLOW.md:87-88`
-already states the pill problem verbatim; the *mislabelled aggregate* is not documented
-anywhere, and the fix (`AreaPickerSheet.tsx`) is written and unwired (D1).
+**D9 — "Popular items around Festac" is neither around Festac nor area-aware. — FIXED**
+`src/app/page.tsx` · `src/app/actions.ts`
+*Evidence:* `getPopularItems` filtered on `eq(items.active, true)` and nothing else — no
+geographic predicate at all. It took a `limit` and no location, so a global top-8 was
+labelled with whatever area the user had just picked.
+*Consequence:* Measured before the fix — 168 offers sat within 5 km of Festac and 260
+within 5 km of Yaba, but the list ranked all 492 and returned byte-identical rows for
+both, under a header naming the area. The app is a map of what food costs near you, and
+its primary list was the one surface that ignored where you were.
+*Fix:* `getPopularItems({lat, lng, radiusKm, limit})` now filters through a `nearby` CTE
+(`ST_DWithin` on the geography column, using the GIST index added with the tree). The
+radius is applied inside the modal-unit CTE as well as the outer query — filtering only
+outside would pick an item's unit from national data and then show zero local prices for
+it. Verified: Festac now returns 54 prices led by White Garri (14), Yaba 77 led by Rice
+(17); the lists are no longer identical. `page.tsx` splits the location-dependent load
+from the location-independent one, so switching area refetches the list but not the 60
+map pins, and `AsyncList` gets `subject={label·radius}` so the change shows skeletons
+instead of silently swapping rows under a header that already moved.
 
 **D10 — `submitObservation`'s "recent prices" query has no time window.**
 `src/app/actions.ts:239-250`

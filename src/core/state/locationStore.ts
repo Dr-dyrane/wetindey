@@ -55,22 +55,6 @@ export interface UserPosition {
   setAt: number;
 }
 
-/**
- * Nigeria's bounding box, in degrees.
- *
- * Used to reject typed coordinates, never to clamp them. Clamping a typo into
- * the box would silently move the user somewhere they did not ask to be, which
- * is exactly the class of bug `geographyPoint.fromDriver` used to have when it
- * answered {0,0} and parked the whole country in the Gulf of Guinea. Say no.
- */
-export const NIGERIA_BBOX = {
-  minLat: 4.2407,
-  maxLat: 13.8659,
-  minLng: 2.6769,
-  maxLng: 14.6776,
-} as const;
-
-/** The pilot's opening position: D Close, 6th Avenue, Festac. */
 const DEFAULT_POSITION: UserPosition = {
   lat: PRIMARY_LOCATION.lat,
   lng: PRIMARY_LOCATION.lng,
@@ -85,67 +69,6 @@ export function formatCoordinate(lat: number, lng: number): string {
   return `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
 }
 
-export type CoordinateParse =
-  | { ok: true; lat: number; lng: number }
-  | { ok: false; field: "lat" | "lng" | "both"; message: string };
-
-/**
- * Parse and bounds-check a typed coordinate.
- *
- * Every rejection names the offending number and the range it missed, because
- * "Invalid coordinate" tells a tester nothing about which of the two fields
- * they fat-fingered or by how much.
- */
-export function parseCoordinateInput(latRaw: string, lngRaw: string): CoordinateParse {
-  const latText = latRaw.trim();
-  const lngText = lngRaw.trim();
-
-  if (!latText && !lngText) {
-    return { ok: false, field: "both", message: "Enter a latitude and a longitude. Example: 6.4641, 3.2753." };
-  }
-  if (!latText) return { ok: false, field: "lat", message: "Latitude is empty." };
-  if (!lngText) return { ok: false, field: "lng", message: "Longitude is empty." };
-
-  const lat = Number(latText);
-  const lng = Number(lngText);
-
-  if (!Number.isFinite(lat)) {
-    return { ok: false, field: "lat", message: `“${latText}” isn’t a number. Use decimal degrees, like 6.4641.` };
-  }
-  if (!Number.isFinite(lng)) {
-    return { ok: false, field: "lng", message: `“${lngText}” isn’t a number. Use decimal degrees, like 3.2753.` };
-  }
-
-  const latOut = lat < NIGERIA_BBOX.minLat || lat > NIGERIA_BBOX.maxLat;
-  const lngOut = lng < NIGERIA_BBOX.minLng || lng > NIGERIA_BBOX.maxLng;
-
-  // A swapped pair is the commonest typo in Lagos coordinates — lat ~6, lng ~3,
-  // both small, both plausible-looking. Naming it saves the tester the guess.
-  if ((latOut || lngOut) && !(lng < NIGERIA_BBOX.minLat || lng > NIGERIA_BBOX.maxLat) && !(lat < NIGERIA_BBOX.minLng || lat > NIGERIA_BBOX.maxLng)) {
-    return {
-      ok: false,
-      field: "both",
-      message: `${formatCoordinate(lat, lng)} is outside Nigeria, but ${formatCoordinate(lng, lat)} is inside it. Are the two swapped?`,
-    };
-  }
-
-  if (latOut) {
-    return {
-      ok: false,
-      field: "lat",
-      message: `Latitude ${lat} is outside Nigeria. It has to be between ${NIGERIA_BBOX.minLat} and ${NIGERIA_BBOX.maxLat}.`,
-    };
-  }
-  if (lngOut) {
-    return {
-      ok: false,
-      field: "lng",
-      message: `Longitude ${lng} is outside Nigeria. It has to be between ${NIGERIA_BBOX.minLng} and ${NIGERIA_BBOX.maxLng}.`,
-    };
-  }
-
-  return { ok: true, lat, lng };
-}
 
 interface LocationState {
   position: UserPosition;
@@ -270,13 +193,27 @@ export interface LocationChrome {
   position: UserPosition;
 }
 
+/**
+ * A tag earns its place only when the position CLAIMS TO BE YOU and isn't a
+ * device fix. That claim is what every printed distance rests on, so a false one
+ * needs a caveat travelling beside it.
+ *
+ * `default` makes no such claim. It says "Showing Festac", and Festac is what is
+ * on screen — true, unqualified, and already legible from the map itself. The
+ * old "Default area" chip restated the label in different words and cost a
+ * glance to learn nothing. The pill is tappable; that is the affordance to
+ * change it. No chip.
+ *
+ * `manual` is now an area chosen from the administrative picker, not a dropped
+ * pin, and the caveat is specific: distances measure from the area's centre, not
+ * from you. The tag says that instead of naming the input method, which was only
+ * ever interesting to whoever wrote the form.
+ */
 const TAGS: Record<LocationProvenance, { kind: StatusKind; label: string } | null> = {
-  // Caution, not info: a position you invented is a caveat on every distance
-  // the map prints from it.
   simulated: { kind: "caution", label: "Simulated" },
-  manual: { kind: "caution", label: "Manual pin" },
+  manual: { kind: "caution", label: "Area centre" },
   device: null,
-  default: { kind: "info", label: "Default area" },
+  default: null,
 };
 
 /**

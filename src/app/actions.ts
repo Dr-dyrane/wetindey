@@ -2,7 +2,8 @@
 
 import { db } from "@/db";
 import { areas, items, itemAliases, itemVariants, places, offersCurrent, units, observations, sources } from "@/db/schema";
-import { eq, ilike, or, and, sql, count, min, max } from "drizzle-orm";
+import { eq, ilike, or, and, sql } from "drizzle-orm";
+import { alias } from "drizzle-orm/pg-core";
 import {
   assertValid,
   submitObservationInput,
@@ -51,17 +52,40 @@ export async function searchFoodItems(query: string) {
 }
 
 /**
- * Items to show on the landing surface before the user has searched anything.
+ * Items to show on the landing surface before the user has searched anything —
+ * RANKED BY WHAT IS ACTUALLY NEAR THE USER.
  *
- * Ranked by how much live pricing we actually hold for each item, so the first
- * thing a shopper sees is the part of the map with real answers behind it.
+ * The location arguments are the whole point. This function used to take only a
+ * `limit`: it ranked every offer in the database and returned the same eight
+ * items no matter where you stood, while the header above it read "Popular items
+ * around Yaba". The app is a map of what food costs NEAR YOU, and its primary
+ * list was the one surface that ignored where you were. Standing in Festac (168
+ * offers within 5 km) and standing in Yaba (260) produced byte-identical rows
+ * drawn from all 492, each labelled with the area you had just picked.
  *
- * This replaces an earlier `searchFoodItems(" ")` call, which could never
- * return anything: the search guard trims its argument and bails on empty, so
- * a single space always produced [] and the landing grid rendered blank no
- * matter how well seeded the database was.
+ * That is not a ranking bug, it is the app telling the user something untrue on
+ * the first screen they see. A price for a stall 13 km away is not an answer to
+ * "what does rice cost around here".
+ *
+ * ST_DWithin on the geography column is metres on the spheroid and uses the
+ * GIST index on places.location, so the filter is both correct and cheap.
  */
-export async function getPopularItems(limit = 8) {
+export async function getPopularItems(input: {
+  lat: number;
+  lng: number;
+  radiusKm: number;
+  limit?: number;
+}) {
+  const { lat, lng, radiusKm } = input;
+  const limit = input.limit ?? 8;
+
+  if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
+    throw new Error(`getPopularItems: invalid centre lat=${lat}, lng=${lng}`);
+  }
+  if (!Number.isFinite(radiusKm) || radiusKm <= 0) {
+    throw new Error(`getPopularItems: invalid radius ${radiusKm} km`);
+  }
+  const radiusM = radiusKm * 1000;
   /**
    * The price range is computed WITHIN A SINGLE UNIT — the one the item is most
    * commonly sold in — and the unit is returned so the card can name it.
@@ -83,20 +107,36 @@ export async function getPopularItems(limit = 8) {
    * honest answer; normalisation is a product decision.
    */
   const rows = await db.execute(sql`
-    WITH offer_units AS (
+    WITH nearby AS (
+      -- Every offer whose PLACE is within the radius. Everything below draws
+      -- only from here, so "near you" is established once and cannot be
+      -- forgotten by a later join.
+      SELECT o.*
+      FROM ${offersCurrent} o
+      JOIN ${places} pl ON pl.id = o.place_id
+      WHERE ST_DWithin(
+        pl.location,
+        ST_SetSRID(ST_MakePoint(${lng}, ${lat}), 4326)::geography,
+        ${radiusM}
+      )
+    ),
+    offer_units AS (
       SELECT
-        ${items.id}                      AS item_id,
-        ${offersCurrent.unitId}          AS unit_id,
-        COUNT(${offersCurrent.id})       AS offers_in_unit
+        ${items.id}         AS item_id,
+        n.unit_id           AS unit_id,
+        COUNT(n.id)         AS offers_in_unit
       FROM ${items}
-      JOIN ${itemVariants}  ON ${itemVariants.itemId} = ${items.id}
-      JOIN ${offersCurrent} ON ${offersCurrent.itemVariantId} = ${itemVariants.id}
+      JOIN ${itemVariants} ON ${itemVariants.itemId} = ${items.id}
+      JOIN nearby n        ON n.item_variant_id = ${itemVariants.id}
       WHERE ${items.active} = true
-      GROUP BY ${items.id}, ${offersCurrent.unitId}
+      GROUP BY ${items.id}, n.unit_id
     ),
     modal_unit AS (
-      -- The unit this item is most often sold in. Ties break on unit_id so the
-      -- choice is stable between calls rather than flapping.
+      -- The unit this item is most often sold in NEARBY. The radius has to be
+      -- inside this CTE, not only in the outer query: picking the modal unit
+      -- from the whole country and then filtering to the radius can leave an
+      -- item whose local stalls all sell a different unit showing zero prices.
+      -- Ties break on unit_id so the choice is stable between calls.
       SELECT DISTINCT ON (item_id) item_id, unit_id
       FROM offer_units
       ORDER BY item_id, offers_in_unit DESC, unit_id
@@ -114,7 +154,7 @@ export async function getPopularItems(limit = 8) {
     FROM ${items} i
     JOIN modal_unit  mu ON mu.item_id = i.id
     JOIN ${itemVariants}  v ON v.item_id = i.id
-    JOIN ${offersCurrent} o ON o.item_variant_id = v.id AND o.unit_id = mu.unit_id
+    JOIN nearby           o ON o.item_variant_id = v.id AND o.unit_id = mu.unit_id
     JOIN ${units}         u ON u.id = mu.unit_id
     WHERE i.active = true
     GROUP BY i.id, u.display_name
@@ -953,14 +993,43 @@ export interface AreaSummary {
   coverageStatus: string;
 }
 
+
+/** One LGA and the neighbourhoods inside it. */
+export interface AreaGroup {
+  lgaSlug: string;
+  lgaName: string;
+  areas: AreaSummary[];
+}
+
+/** What the location picker needs: the settled context, and the real choices. */
+export interface AreaTree {
+  countryName: string;
+  stateName: string;
+  groups: AreaGroup[];
+}
+
 /**
- * Every area we cover, with the number of places we actually hold in each.
+ * The administrative tree, as the picker needs it.
  *
- * The count is the honest part: an area with 0 places is still listed, because
- * hiding it would misrepresent coverage, and the picker can then say "no places
- * yet" rather than switching the user to an empty map without explanation.
+ * Nigeria → Lagos → LGA → neighbourhood is how a person says where they are.
+ * Nobody thinks "6.4641, 3.2753"; they think Lagos → Amuwo Odofin → Festac.
+ *
+ * Country and state come back as NAMES, not as lists, because the pilot has
+ * exactly one of each and a select with one option is a lie about the freedom
+ * you have. They are context to display, not a choice to make. The LGA is
+ * likewise not a destination — you cannot stand in "an LGA" — so it groups the
+ * rows instead of gating them behind a drill. Nine neighbourhoods under six
+ * headers is one screen; making the user tap an LGA first to reveal one or two
+ * children would charge two taps for information a section header gives free.
+ *
+ * Ordering is alphabetical by LGA, then by neighbourhood, because a stable place
+ * on the list is worth more than ranking by a count that changes under you.
  */
-export async function getAreasWithPlaceCounts(): Promise<AreaSummary[]> {
+export async function getAreaTree(): Promise<AreaTree> {
+  const lga = alias(areas, "lga");
+  const state = alias(areas, "state");
+  const country = alias(areas, "country");
+
   const rows = await db
     .select({
       id: areas.id,
@@ -969,21 +1038,45 @@ export async function getAreasWithPlaceCounts(): Promise<AreaSummary[]> {
       center: areas.center,
       coverageStatus: areas.coverageStatus,
       placeCount: sql<number>`count(${places.id})::int`,
+      lgaSlug: lga.slug,
+      lgaName: lga.name,
+      stateName: state.name,
+      countryName: country.name,
     })
     .from(areas)
     .leftJoin(places, eq(places.areaId, areas.id))
-    .groupBy(areas.id)
-    .orderBy(sql`count(${places.id}) desc, ${areas.name} asc`);
+    // Inner joins on purpose: a neighbourhood whose ancestry does not reach a
+    // country is a seeding fault, and it should vanish from the picker rather
+    // than appear under a header reading "undefined". assertAdminTree() in the
+    // seed is what stops that reaching here in the first place.
+    .innerJoin(lga, eq(areas.parentAreaId, lga.id))
+    .innerJoin(state, eq(lga.parentAreaId, state.id))
+    .innerJoin(country, eq(state.parentAreaId, country.id))
+    .where(eq(areas.type, "neighborhood"))
+    .groupBy(areas.id, lga.slug, lga.name, state.name, country.name)
+    .orderBy(sql`${lga.name} asc, ${areas.name} asc`);
 
-  return rows.map((r) => ({
-    id: r.id,
-    slug: r.slug,
-    name: r.name,
-    lat: r.center.lat,
-    lng: r.center.lng,
-    placeCount: r.placeCount,
-    coverageStatus: r.coverageStatus,
-  }));
+  const groups: AreaGroup[] = [];
+  for (const r of rows) {
+    const area: AreaSummary = {
+      id: r.id,
+      slug: r.slug,
+      name: r.name,
+      lat: r.center.lat,
+      lng: r.center.lng,
+      placeCount: r.placeCount,
+      coverageStatus: r.coverageStatus,
+    };
+    const last = groups[groups.length - 1];
+    if (last && last.lgaSlug === r.lgaSlug) last.areas.push(area);
+    else groups.push({ lgaSlug: r.lgaSlug, lgaName: r.lgaName, areas: [area] });
+  }
+
+  return {
+    countryName: rows[0]?.countryName ?? "Nigeria",
+    stateName: rows[0]?.stateName ?? "Lagos",
+    groups,
+  };
 }
 
 /**

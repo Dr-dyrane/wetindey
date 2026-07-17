@@ -1,23 +1,16 @@
 "use client";
 
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { Check, Crosshair, FlaskConical, LocateFixed, MapPin, TriangleAlert } from "lucide-react";
+import { Check, LocateFixed, MapPin, TriangleAlert } from "lucide-react";
 
 import { ModalSheet } from "@/design-system/components/ModalSheet";
 import { ListGroup } from "@/design-system/components/ListRow";
 import { Skeleton } from "@/design-system/components/Skeleton";
-import { Input } from "@/design-system/components/Input";
-import { Button } from "@/design-system/components/Button";
 import { StatusBadge } from "@/design-system/components/StatusBadge";
-import { getAreasWithPlaceCounts, getCoverageForPoint } from "@/app/actions";
-import type { AreaSummary } from "@/app/actions";
+import { getAreaTree, getCoverageForPoint } from "@/app/actions";
+import type { AreaSummary, AreaTree } from "@/app/actions";
 import { getHaversineDistance, formatDistance } from "@/lib/geospatial";
-import {
-  formatCoordinate,
-  parseCoordinateInput,
-  useLocationStore,
-  NIGERIA_BBOX,
-} from "@/core/state/locationStore";
+import { useLocationStore } from "@/core/state/locationStore";
 
 export interface LocationSheetProps {
   open: boolean;
@@ -40,7 +33,7 @@ export interface LocationSheetProps {
  * and an insecure origin are four different problems with four different
  * remedies, and collapsing them into "Couldn't get your location" tells the
  * user nothing they can act on. Each one below names what happened and what to
- * do next. Inherited wholesale from AreaPickerSheet, which got this right.
+ * do next.
  */
 type LocateState =
   | { kind: "idle" }
@@ -53,52 +46,46 @@ type LocateState =
       nearest: AreaSummary | null;
     };
 
-/** Manual entry outcomes. `checking` covers the coverage round-trip. */
-type ManualState =
-  | { kind: "idle" }
-  | { kind: "checking" }
-  | { kind: "rejected"; field: "lat" | "lng" | "both"; message: string }
-  | { kind: "failed"; message: string }
-  | {
-      /** Inside Nigeria, but we hold no prices near it. Their call. */
-      kind: "uncovered";
-      lat: number;
-      lng: number;
-      nearest: (AreaSummary & { distanceKm: number }) | null;
-    };
-
 /**
  * Location sheet — the control behind the location pill.
  *
- * Supersedes AreaPickerSheet. That sheet offered one real path (`Use my
- * location`) and one list, which is the wrong shape for this product right
- * now: the pilot covers south-west Lagos and nobody testing it is standing in
- * Festac, so a real fix lands outside coverage every single time and the
- * honest-but-useless answer is the only answer the app can give. This sheet
- * makes SIMULATION the primary path and keeps the real fix as a peer.
+ * THE PICKER IS AN ADMINISTRATIVE HIERARCHY, NOT A COORDINATE.
  *
- * The load-bearing decision here is that a simulated position is never dressed
- * up as a real one. It is introduced as a simulation, each area row states its
- * real place count so a dead area is obvious BEFORE you pick it, and the
- * position that comes out carries `provenance: "simulated"` so the map chrome
- * has to say so too. A simulated position presented as real is a lie on a
- * wayfinding surface — every distance the map prints is measured from it.
+ * This sheet used to ask for a latitude and a longitude in two text fields, with
+ * a bounding-box check and a paragraph explaining decimal degrees. That is an
+ * engineer's idea of manual entry — it is how the DATA is stored, offered
+ * unchanged to a person as if that were a courtesy. Nobody in Lagos thinks
+ * "6.4641, 3.2753". They think Lagos → Amuwo Odofin → Festac, and that is now
+ * what the sheet asks for. The position is derived from the choice, at the end,
+ * where it belongs.
+ *
+ * Country and state are STATED, not offered. The pilot has exactly one of each,
+ * and a select with a single option is a lie about the freedom you have. They
+ * appear as a settled line of context above the choices.
+ *
+ * The LGA is a HEADER, not a step. You cannot stand in "an LGA" — it contains
+ * the place you are actually in. Six headers over nine neighbourhoods is one
+ * screen, and it conveys that Festac is in Amuwo Odofin without charging a tap
+ * to learn it. A drill-down here would be hierarchy for its own sake.
+ *
+ * What comes out is `provenance: "manual"` — self-declared, area-centre
+ * precision. The old code called this "simulate" and dressed it in a caution
+ * banner about pretending. For a shopper standing in Festac, picking Festac is
+ * not a pretence; it is the answer. The honest caveat is not "this is fake", it
+ * is "we measure from the middle of your area", and the chrome's "Area centre"
+ * tag says exactly that.
  *
  * It is a presented sheet, not a dropdown or a popover — HIG: "Avoid displaying
  * popovers in compact views".
  */
 export function LocationSheet({ open, onClose, radiusKm, onCommit }: LocationSheetProps) {
   const position = useLocationStore((s) => s.position);
-  const simulate = useLocationStore((s) => s.simulate);
   const setManualPoint = useLocationStore((s) => s.setManualPoint);
   const setDevicePoint = useLocationStore((s) => s.setDevicePoint);
 
-  const [areas, setAreas] = useState<AreaSummary[] | null>(null);
-  const [areasError, setAreasError] = useState<string | null>(null);
+  const [tree, setTree] = useState<AreaTree | null>(null);
+  const [treeError, setTreeError] = useState<string | null>(null);
   const [locate, setLocate] = useState<LocateState>({ kind: "idle" });
-  const [manual, setManual] = useState<ManualState>({ kind: "idle" });
-  const [latText, setLatText] = useState("");
-  const [lngText, setLngText] = useState("");
   const [deviceCoords, setDeviceCoords] = useState<{ lat: number; lng: number } | null>(null);
 
   /**
@@ -109,33 +96,40 @@ export function LocationSheet({ open, onClose, radiusKm, onCommit }: LocationShe
    */
   const generation = useRef(0);
 
-  const loadAreas = useCallback(async () => {
+  const loadTree = useCallback(async () => {
     const g = ++generation.current;
-    setAreasError(null);
+    setTreeError(null);
     try {
-      const rows = await getAreasWithPlaceCounts();
+      const rows = await getAreaTree();
       if (g !== generation.current) return;
-      setAreas(rows);
+      setTree(rows);
     } catch (err) {
-      console.error("LocationSheet: failed to load areas", err);
+      console.error("LocationSheet: failed to load the area tree", err);
       if (g !== generation.current) return;
-      setAreas(null);
-      setAreasError("We no fit load the areas right now.");
+      setTree(null);
+      setTreeError("We no fit load the areas right now.");
     }
   }, []);
 
   useEffect(() => {
     if (!open) return;
-    void loadAreas();
+    void loadTree();
     return () => {
       // Dismissal cancels anything still in flight and resets the transient
       // state, so reopening starts clean rather than showing a stale error
       // from a previous attempt.
+      //
+      // react-hooks/exhaustive-deps warns here because a ref read in cleanup may
+      // differ from its render-time value. That difference is the mechanism, not
+      // a bug: bumping the LIVE counter at dismissal is what makes every request
+      // still in flight compare unequal and drop its result. Copying the value
+      // into a variable, as the rule suggests, would increment a stale number and
+      // silently disable the cancellation.
+      // eslint-disable-next-line react-hooks/exhaustive-deps
       generation.current++;
       setLocate({ kind: "idle" });
-      setManual({ kind: "idle" });
     };
-  }, [open, loadAreas]);
+  }, [open, loadTree]);
 
   const commit = useCallback(
     (coords: { lat: number; lng: number }) => {
@@ -145,68 +139,24 @@ export function LocationSheet({ open, onClose, radiusKm, onCommit }: LocationShe
     [onCommit, onClose]
   );
 
-  // ── 1. Simulate ───────────────────────────────────────────────────────────
+  // ── 1. Pick your area ─────────────────────────────────────────────────────
 
-  const handleSimulate = useCallback(
+  const handlePickArea = useCallback(
     (area: AreaSummary) => {
-      simulate({ name: area.name, slug: area.slug, lat: area.lat, lng: area.lng });
-      commit({ lat: area.lat, lng: area.lng });
-    },
-    [simulate, commit]
-  );
-
-  // ── 2. Manual ─────────────────────────────────────────────────────────────
-
-  /** Commit a coordinate we have already validated and looked up. */
-  const commitManual = useCallback(
-    (lat: number, lng: number, area: AreaSummary | null) => {
+      // The area's centre IS the derived position. The user named a place; we
+      // resolve it to a point, rather than making them do that arithmetic.
       setManualPoint({
-        lat,
-        lng,
-        // Null when nothing contains it. The chrome then shows the coordinate
-        // itself rather than borrowing a nearby area's name for a point that
-        // isn't in it.
-        areaName: area?.name ?? null,
-        areaSlug: area?.slug ?? null,
+        lat: area.lat,
+        lng: area.lng,
+        areaName: area.name,
+        areaSlug: area.slug,
       });
-      commit({ lat, lng });
+      commit({ lat: area.lat, lng: area.lng });
     },
     [setManualPoint, commit]
   );
 
-  const handleManualSubmit = useCallback(async () => {
-    const parsed = parseCoordinateInput(latText, lngText);
-    if (!parsed.ok) {
-      // Rejected, never clamped. Dragging a typo into the bbox would move the
-      // user somewhere they did not ask to be and never tell them.
-      setManual({ kind: "rejected", field: parsed.field, message: parsed.message });
-      return;
-    }
-
-    const g = ++generation.current;
-    setManual({ kind: "checking" });
-
-    try {
-      const coverage = await getCoverageForPoint({ lat: parsed.lat, lng: parsed.lng, radiusKm });
-      if (g !== generation.current) return;
-
-      if (coverage.placesInRadius > 0) {
-        commitManual(parsed.lat, parsed.lng, coverage.nearestArea);
-        return;
-      }
-
-      setManual({ kind: "uncovered", lat: parsed.lat, lng: parsed.lng, nearest: coverage.nearestArea });
-    } catch (err) {
-      console.error("LocationSheet: coverage lookup failed for manual point", err);
-      if (g !== generation.current) return;
-      setManual({
-        kind: "failed",
-        message: "That coordinate is fine, but we couldn't reach the price data to check it. Check your network and try again.",
-      });
-    }
-  }, [latText, lngText, radiusKm, commitManual]);
-
-  // ── 3. Real location ──────────────────────────────────────────────────────
+  // ── 2. Real location ──────────────────────────────────────────────────────
 
   const handleUseMyLocation = useCallback(() => {
     if (typeof window === "undefined") return;
@@ -219,7 +169,7 @@ export function LocationSheet({ open, onClose, radiusKm, onCommit }: LocationShe
       setLocate({
         kind: "problem",
         title: "Location needs a secure connection",
-        body: "Your browser only shares location over https. Open WetinDey on the secure address, or simulate a position above.",
+        body: "Your browser only shares location over https. Open WetinDey on the secure address, or pick your area below.",
         canRetry: false,
       });
       return;
@@ -229,7 +179,7 @@ export function LocationSheet({ open, onClose, radiusKm, onCommit }: LocationShe
       setLocate({
         kind: "problem",
         title: "This browser can't share location",
-        body: "It doesn't support location at all. Simulate a position or type a coordinate instead.",
+        body: "It doesn't support location at all. Pick your area below instead.",
         canRetry: false,
       });
       return;
@@ -284,7 +234,7 @@ export function LocationSheet({ open, onClose, radiusKm, onCommit }: LocationShe
           setLocate({
             kind: "problem",
             title: "Location is blocked",
-            body: "WetinDey doesn't have permission to see where you are. Allow location for this site in your browser settings, or simulate a position above.",
+            body: "WetinDey doesn't have permission to see where you are. Allow location for this site in your browser settings, or pick your area below.",
             canRetry: false,
           });
           return;
@@ -294,7 +244,7 @@ export function LocationSheet({ open, onClose, radiusKm, onCommit }: LocationShe
           setLocate({
             kind: "problem",
             title: "Your device couldn't get a fix",
-            body: "Location is allowed, but no position came back — this is common indoors. Try again near a window or outside, or simulate a position above.",
+            body: "Location is allowed, but no position came back — this is common indoors. Try again near a window, or pick your area below.",
             canRetry: true,
           });
           return;
@@ -304,7 +254,7 @@ export function LocationSheet({ open, onClose, radiusKm, onCommit }: LocationShe
           setLocate({
             kind: "problem",
             title: "Finding you took too long",
-            body: "The location request timed out before your device answered. Try again, or simulate a position above.",
+            body: "The request timed out before your device answered. Try again, or pick your area below.",
             canRetry: true,
           });
           return;
@@ -314,7 +264,7 @@ export function LocationSheet({ open, onClose, radiusKm, onCommit }: LocationShe
         setLocate({
           kind: "problem",
           title: "Location didn't work",
-          body: "Your browser refused the request without saying why. Simulate a position above instead.",
+          body: "Your browser refused the request without saying why. Pick your area below instead.",
           canRetry: true,
         });
       },
@@ -330,235 +280,59 @@ export function LocationSheet({ open, onClose, radiusKm, onCommit }: LocationShe
   }, [radiusKm, setDevicePoint, commit]);
 
   const locating = locate.kind === "locating";
-  const checking = manual.kind === "checking";
 
   /** Distances are measured from a real fix if we have one, otherwise from
-   *  wherever the user currently stands — including a simulated position. */
+   *  wherever the user currently stands. */
   const measureFrom = deviceCoords ?? { lat: position.lat, lng: position.lng };
+
+  /** One neighbourhood row. The count is data, not decoration: an area with
+   *  nothing in it says so, so picking it is an informed choice rather than a
+   *  blank map. */
+  const areaRow = (area: AreaSummary, autofocus: boolean) => {
+    const isSelected = area.slug === position.areaSlug;
+    const distanceKm = getHaversineDistance(measureFrom.lat, measureFrom.lng, area.lat, area.lng);
+    const detail = [
+      area.placeCount === 0
+        ? "No places yet"
+        : `${area.placeCount} place${area.placeCount === 1 ? "" : "s"}`,
+      distanceKm >= 0.05 ? formatDistance(distanceKm) : null,
+    ]
+      .filter(Boolean)
+      .join(" · ");
+
+    return (
+      <button
+        key={area.id}
+        type="button"
+        data-autofocus={autofocus ? "" : undefined}
+        onClick={() => handlePickArea(area)}
+        aria-current={isSelected}
+        className="flex min-h-tap w-full items-center gap-3 px-4 py-2.5 text-left
+                   active:bg-fillTertiary transition-colors duration-instant"
+      >
+        <span className="grid h-7 w-7 shrink-0 place-items-center squircle bg-fillTertiary">
+          <MapPin className="h-4 w-4 text-text-secondary" />
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="block truncate text-body text-text-primary">{area.name}</span>
+          <span className="mt-0.5 block truncate text-footnote text-text-secondary tabular-nums">
+            {detail}
+          </span>
+        </span>
+        {isSelected && position.provenance === "manual" && (
+          <StatusBadge kind="caution">Area centre</StatusBadge>
+        )}
+        {isSelected && <Check className="h-5 w-5 shrink-0 text-status-info" strokeWidth={2.5} />}
+      </button>
+    );
+  };
 
   return (
     <ModalSheet open={open} onClose={onClose} title="Where are you?" size="page">
       <div className="space-y-6 py-3">
-        {/*
-          The simulation is announced before it is offered. This block is the
-          reason the rest of the sheet is allowed to exist: it tells the user,
-          in the first thing they read, that the primary path puts them
-          somewhere they are not.
-        */}
-        <div className="mx-4 squircle bg-status-caution-bg p-4 space-y-1.5">
-          <div className="flex items-center gap-2">
-            <FlaskConical className="h-4 w-4 shrink-0 text-status-caution-fg" />
-            <p className="text-subhead font-semibold text-status-caution-fg">You&rsquo;re placing yourself</p>
-          </div>
-          <p className="text-footnote text-text-secondary">
-            WetinDey is piloting in south-west Lagos, so the usual way to test it is to stand somewhere on purpose.
-            Pick an area and the map treats you as if you were there. Distances and &ldquo;nearest&rdquo; are measured
-            from that pretend spot, and the map says <span className="font-semibold">Simulated</span> for as long as it lasts.
-          </p>
-        </div>
+        {/* ── 1. Real location ────────────────────────────────────────── */}
 
-        {/* ── 1. Simulate ─────────────────────────────────────────────── */}
-
-        {areasError ? (
-          <div className="mx-4 squircle bg-surface shadow-card p-5 text-center space-y-2">
-            <p className="text-subhead font-semibold text-text-primary">{areasError}</p>
-            <button
-              type="button"
-              onClick={() => void loadAreas()}
-              className="min-h-tap text-subhead font-semibold text-status-info active:opacity-60"
-            >
-              Try again
-            </button>
-          </div>
-        ) : areas === null ? (
-          <div className="mx-4 space-y-2">
-            <Skeleton className="h-tap w-full squircle" />
-            <Skeleton className="h-tap w-full squircle" />
-            <Skeleton className="h-tap w-full squircle" />
-          </div>
-        ) : areas.length === 0 ? (
-          <div className="mx-4 squircle bg-surface shadow-card p-5 text-center">
-            <p className="text-subhead font-semibold text-text-primary">No areas are set up yet</p>
-            <p className="mt-1 text-footnote text-text-secondary">
-              There is nothing to simulate into. Type a coordinate below instead.
-            </p>
-          </div>
-        ) : (
-          <ListGroup
-            header="Simulate a position"
-            footer="The count is the number of places we hold in that area. An area with none will open an empty map — that's the data, not a bug."
-          >
-            {areas.map((area, i) => {
-              const isSelected = area.slug === position.areaSlug;
-              const distanceKm = getHaversineDistance(
-                measureFrom.lat,
-                measureFrom.lng,
-                area.lat,
-                area.lng
-              );
-
-              // The count is stated, never dressed up. An area with nothing in
-              // it says so, so switching to it is an informed choice rather
-              // than a blank map.
-              const detail = [
-                area.placeCount === 0
-                  ? "No places yet"
-                  : `${area.placeCount} place${area.placeCount === 1 ? "" : "s"}`,
-                distanceKm >= 0.05 ? formatDistance(distanceKm) : null,
-              ]
-                .filter(Boolean)
-                .join(" · ");
-
-              return (
-                <button
-                  key={area.id}
-                  type="button"
-                  /* Focus lands on the first area, not on "Use my real
-                     location" — simulation is the primary path here. */
-                  data-autofocus={i === 0 ? "" : undefined}
-                  onClick={() => handleSimulate(area)}
-                  aria-current={isSelected}
-                  className="flex min-h-tap w-full items-center gap-3 px-4 py-2.5 text-left
-                             active:bg-fillTertiary transition-colors duration-instant"
-                >
-                  <span className="grid h-7 w-7 shrink-0 place-items-center squircle bg-fillTertiary">
-                    <MapPin className="h-4 w-4 text-text-secondary" />
-                  </span>
-                  <span className="min-w-0 flex-1">
-                    <span className="block truncate text-body text-text-primary">{area.name}</span>
-                    <span className="mt-0.5 block truncate text-footnote text-text-secondary tabular-nums">
-                      {detail}
-                    </span>
-                  </span>
-                  {isSelected && position.provenance === "simulated" && (
-                    <StatusBadge kind="caution">Simulated</StatusBadge>
-                  )}
-                  {isSelected && (
-                    <Check className="h-5 w-5 shrink-0 text-status-info" strokeWidth={2.5} />
-                  )}
-                </button>
-              );
-            })}
-          </ListGroup>
-        )}
-
-        {/* ── 2. Manual ───────────────────────────────────────────────── */}
-
-        <section className="space-y-1.5">
-          <h3 className="px-4 text-footnote text-text-secondary">Or type a coordinate</h3>
-          <div className="mx-4 squircle bg-surface p-4 space-y-3">
-            <div className="flex gap-3">
-              <Input
-                type="text"
-                inputMode="decimal"
-                value={latText}
-                onChange={(e) => {
-                  setLatText(e.target.value);
-                  if (manual.kind !== "idle" && manual.kind !== "checking") setManual({ kind: "idle" });
-                }}
-                placeholder="Latitude"
-                aria-label="Latitude"
-                aria-invalid={manual.kind === "rejected" && manual.field !== "lng"}
-                disabled={checking}
-                /* Tinted through className rather than Input's `error` prop:
-                   the prop prints its own message per field, and a swapped
-                   pair is ONE fault about BOTH fields, which would then say it
-                   twice. The message lives below, once. */
-                className={`tabular-nums ${
-                  manual.kind === "rejected" && manual.field !== "lng"
-                    ? "bg-status-unavailable-bg text-status-unavailable-fg"
-                    : ""
-                }`}
-              />
-              <Input
-                type="text"
-                inputMode="decimal"
-                value={lngText}
-                onChange={(e) => {
-                  setLngText(e.target.value);
-                  if (manual.kind !== "idle" && manual.kind !== "checking") setManual({ kind: "idle" });
-                }}
-                placeholder="Longitude"
-                aria-label="Longitude"
-                aria-invalid={manual.kind === "rejected" && manual.field !== "lat"}
-                disabled={checking}
-                className={`tabular-nums ${
-                  manual.kind === "rejected" && manual.field !== "lat"
-                    ? "bg-status-unavailable-bg text-status-unavailable-fg"
-                    : ""
-                }`}
-              />
-            </div>
-
-            {manual.kind === "rejected" && (
-              <p role="alert" className="text-footnote text-status-unavailable-fg">
-                {manual.message}
-              </p>
-            )}
-            {manual.kind === "failed" && (
-              <p role="alert" className="text-footnote text-status-caution-fg">
-                {manual.message}
-              </p>
-            )}
-
-            <Button
-              variant="secondary"
-              size="md"
-              className="w-full"
-              onClick={() => void handleManualSubmit()}
-              isLoading={checking}
-              disabled={checking}
-            >
-              {checking ? "Checking…" : "Drop me here"}
-            </Button>
-
-            <p className="text-caption-1 text-text-secondary">
-              Decimal degrees, inside Nigeria — latitude {NIGERIA_BBOX.minLat} to {NIGERIA_BBOX.maxLat}, longitude{" "}
-              {NIGERIA_BBOX.minLng} to {NIGERIA_BBOX.maxLng}. Festac is {formatCoordinate(6.4641, 3.2753)}.
-            </p>
-          </div>
-        </section>
-
-        {manual.kind === "uncovered" && (
-          <div className="mx-4 squircle bg-status-caution-bg p-4 space-y-1.5">
-            <div className="flex items-center gap-2">
-              <Crosshair className="h-4 w-4 shrink-0 text-status-caution-fg" />
-              <p className="text-subhead font-semibold text-status-caution-fg">
-                Nothing within {radiusKm} km of there
-              </p>
-            </div>
-            <p className="text-footnote text-text-secondary">
-              {formatCoordinate(manual.lat, manual.lng)} is inside Nigeria, so we&rsquo;ll take it — but we hold no
-              prices near it
-              {manual.nearest
-                ? `. The nearest area we cover is ${manual.nearest.name}, about ${formatDistance(manual.nearest.distanceKm).replace(" away", "")} off`
-                : ""}
-              . The map will be empty.
-            </p>
-            <div className="flex flex-wrap gap-4 pt-1">
-              <button
-                type="button"
-                onClick={() => commitManual(manual.lat, manual.lng, manual.nearest)}
-                className="min-h-tap text-subhead font-semibold text-status-info active:opacity-60"
-              >
-                Drop me there anyway
-              </button>
-              {manual.nearest && (
-                <button
-                  type="button"
-                  onClick={() => handleSimulate(manual.nearest!)}
-                  className="min-h-tap text-subhead font-semibold text-status-info active:opacity-60"
-                >
-                  Simulate {manual.nearest.name} instead
-                </button>
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* ── 3. Real location ────────────────────────────────────────── */}
-
-        <ListGroup footer="We only use your location to pick the nearest area. It never leaves your device.">
+        <ListGroup footer="Your location never leaves your device.">
           <button
             type="button"
             onClick={handleUseMyLocation}
@@ -568,16 +342,11 @@ export function LocationSheet({ open, onClose, radiusKm, onCommit }: LocationShe
                        disabled:opacity-40 active:bg-fillTertiary transition-colors duration-instant"
           >
             <span className="grid h-7 w-7 shrink-0 place-items-center squircle bg-status-info-bg">
-              <LocateFixed
-                className={`h-4 w-4 text-status-info-fg ${locating ? "animate-pulse" : ""}`}
-              />
+              <LocateFixed className={`h-4 w-4 text-status-info-fg ${locating ? "animate-pulse" : ""}`} />
             </span>
             <span className="min-w-0 flex-1">
               <span className="block truncate text-body text-text-primary">
-                {locating ? "Finding you…" : "Use my real location"}
-              </span>
-              <span className="mt-0.5 block truncate text-footnote text-text-secondary">
-                Only works if you&rsquo;re actually in south-west Lagos
+                {locating ? "Finding you…" : "Use my location"}
               </span>
             </span>
             {position.provenance === "device" && (
@@ -610,27 +379,69 @@ export function LocationSheet({ open, onClose, radiusKm, onCommit }: LocationShe
             <div className="flex items-center gap-2">
               <MapPin className="h-4 w-4 shrink-0 text-status-caution-fg" />
               <p className="text-subhead font-semibold text-status-caution-fg">
-                You&rsquo;re outside the areas we cover
+                We found you, but you&rsquo;re outside our areas
               </p>
             </div>
             <p className="text-footnote text-text-secondary">
               {locate.nearest
-                ? `We found you, but we hold no prices within ${radiusKm} km of where you are. The nearest place we cover is ${locate.nearest.name}${
+                ? `Nothing within ${radiusKm} km of you. The nearest we cover is ${locate.nearest.name}${
                     locate.distanceKm !== null
                       ? `, about ${formatDistance(locate.distanceKm).replace(" away", "")} off`
                       : ""
-                  }. WetinDey is piloting in south-west Lagos for now.`
-                : `We found you, but we hold no prices within ${radiusKm} km of where you are.`}
+                  }.`
+                : `Nothing within ${radiusKm} km of you.`}
             </p>
             {locate.nearest && (
               <button
                 type="button"
-                onClick={() => handleSimulate(locate.nearest!)}
+                onClick={() => handlePickArea(locate.nearest!)}
                 className="min-h-tap text-subhead font-semibold text-status-info active:opacity-60"
               >
-                Simulate {locate.nearest.name} instead
+                Use {locate.nearest.name} instead
               </button>
             )}
+          </div>
+        )}
+
+        {/* ── 2. The hierarchy ────────────────────────────────────────── */}
+
+        {treeError ? (
+          <div className="mx-4 squircle bg-surface shadow-card p-5 text-center space-y-2">
+            <p className="text-subhead font-semibold text-text-primary">{treeError}</p>
+            <button
+              type="button"
+              onClick={() => void loadTree()}
+              className="min-h-tap text-subhead font-semibold text-status-info active:opacity-60"
+            >
+              Try again
+            </button>
+          </div>
+        ) : tree === null ? (
+          <div className="mx-4 space-y-2">
+            <Skeleton className="h-tap w-full squircle" />
+            <Skeleton className="h-tap w-full squircle" />
+            <Skeleton className="h-tap w-full squircle" />
+          </div>
+        ) : tree.groups.length === 0 ? (
+          <div className="mx-4 squircle bg-surface shadow-card p-5 text-center">
+            <p className="text-subhead font-semibold text-text-primary">No areas are set up yet</p>
+          </div>
+        ) : (
+          <div className="space-y-6">
+            {/*
+              Country and state, settled. Two words carry both levels of the
+              hierarchy the pilot has locked — shown so the user knows where the
+              choices below sit, not offered as a decision they don't have.
+            */}
+            <p className="px-4 text-footnote text-text-secondary">
+              {tree.countryName} · {tree.stateName}
+            </p>
+
+            {tree.groups.map((group, gi) => (
+              <ListGroup key={group.lgaSlug} header={group.lgaName}>
+                {group.areas.map((area, ai) => areaRow(area, gi === 0 && ai === 0))}
+              </ListGroup>
+            ))}
           </div>
         )}
       </div>

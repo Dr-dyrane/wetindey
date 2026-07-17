@@ -190,17 +190,7 @@ export const en = {
 
   /* Location sheet — LocationSheet.tsx:204-512. Remedy is "simulate above". */
   "location.title": "Where are you?",
-  "location.simulating_title": "You’re placing yourself",
-  "location.simulated_badge": "Simulated",
   "location.no_areas": "No areas are set up yet",
-  "location.simulate_header": "Simulate a position",
-  "location.simulate_footer":
-    "The count is the number of places we hold in that area. An area with none will open an empty map — that's the data, not a bug.",
-  "location.or_type_coordinate": "Or type a coordinate",
-  "location.latitude": "Latitude",
-  "location.longitude": "Longitude",
-  "location.checking": "Checking…",
-  "location.drop_me_here": "Drop me here",
   "location.coverage_unreachable":
     "That coordinate is fine, but we couldn't reach the price data to check it. Check your network and try again.",
   "location.err_insecure_body":
@@ -395,17 +385,7 @@ export const pidgin: LocaleTable = {
     "Your browser refuse the request and e no talk why. Pick area for down instead.",
 
   "location.title": "Where you dey?",
-  "location.simulating_title": "Na you dey place yourself",
-  "location.simulated_badge": "Na play-play",
   "location.no_areas": "We never set any area",
-  "location.simulate_header": "Put yourself for one place",
-  "location.simulate_footer":
-    "The number na how many places we hold for that area. Area wey no get any go open empty map — na the data be that, no be bug.",
-  "location.or_type_coordinate": "Abi type coordinate",
-  "location.latitude": "Latitude",
-  "location.longitude": "Longitude",
-  "location.checking": "We dey check…",
-  "location.drop_me_here": "Put me here",
   "location.coverage_unreachable":
     "That coordinate correct, but we no fit reach the price data to check am. Check your network, try again.",
   "location.err_insecure_body":
@@ -595,16 +575,7 @@ export const yoruba: LocaleTable = {
   "area.err_unknown_body": UNTRANSLATED,
 
   "location.title": UNTRANSLATED,
-  "location.simulating_title": UNTRANSLATED,
-  "location.simulated_badge": UNTRANSLATED,
   "location.no_areas": UNTRANSLATED,
-  "location.simulate_header": UNTRANSLATED,
-  "location.simulate_footer": UNTRANSLATED,
-  "location.or_type_coordinate": UNTRANSLATED,
-  "location.latitude": UNTRANSLATED,
-  "location.longitude": UNTRANSLATED,
-  "location.checking": UNTRANSLATED,
-  "location.drop_me_here": UNTRANSLATED,
   "location.coverage_unreachable": UNTRANSLATED,
   "location.err_insecure_body": UNTRANSLATED,
   "location.err_unsupported_body": UNTRANSLATED,
@@ -735,8 +706,6 @@ export const NEEDS_NATIVE_REVIEW: Readonly<
     "item.sort_freshest",
     "item.chip_cheapest",
     "item.chip_closest",
-    "location.simulated_badge",
-    "location.simulating_title",
     "get.title",
     "get.contact_seller",
     "profile.report_problem",

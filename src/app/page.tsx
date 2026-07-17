@@ -211,6 +211,9 @@ export default function HomePage() {
   const [popularItems, setPopularItems] = useState<ItemCardData[] | undefined>(undefined);
   const [searchResults, setSearchResults] = useState<ItemCardData[]>([]);
   const [loadError, setLoadError] = useState<string | null>(null);
+  /** Kept apart from `loadError`: the two loads fail independently, and a dead
+   *  places query must not blank the list with the list's own error text. */
+  const [popularError, setPopularError] = useState<string | null>(null);
   /** The narrowed set ItemDetailSheet is showing. The map pins ARE this list. */
   const [itemOffers, setItemOffers] = useState<NarrowedOffer[]>([]);
   const [allPlaces, setAllPlaces] = useState<PlaceData[]>([]);
@@ -270,21 +273,26 @@ export default function HomePage() {
     [locPosition.lat, locPosition.lng]
   );
 
-  /** A callback, not an effect body: the error state needs a retry handle. */
+  /**
+   * The location-INDEPENDENT half: every place on the map, and the form's
+   * vocabulary. Neither changes when the user moves, so neither is refetched
+   * when they do — the map draws all pins regardless of the radius, and the
+   * report form must be able to name a stall anywhere.
+   *
+   * A callback, not an effect body: the error state needs a retry handle.
+   */
   const loadBaseline = useCallback(() => {
     startTransition(async () => {
       try {
         setLoadError(null);
 
-        // In parallel — these three don't depend on each other, and doing them
-        // in series stacked three round-trips before anything rendered.
-        const [items, placesList, metadata] = await Promise.all([
-          getPopularItems(8),
+        // In parallel — these don't depend on each other, and doing them in
+        // series stacked round-trips before anything rendered.
+        const [placesList, metadata] = await Promise.all([
           getPlaces(),
           getInitialSubmissionData()
         ]);
 
-        setPopularItems(items);
         setAllPlaces(placesList);
 
         setSubmitPlaces(metadata.places);
@@ -300,17 +308,64 @@ export default function HomePage() {
         // Previously this effect had no catch, so a database that was down
         // produced an empty map and an empty sheet with no explanation.
         console.error("Failed to load initial data:", err);
-        // Settled, and we know nothing — NOT "never fetched". Without this the
-        // list stays undefined and skeletons spin forever behind the error.
-        setPopularItems([]);
         setLoadError("We no fit reach the price data right now.");
       }
     });
   }, []);
 
+  /**
+   * The location-DEPENDENT half, and the reason the split exists.
+   *
+   * The landing list is the answer to "what does food cost around here", so it
+   * refetches when "here" changes — the position or the radius. It used to be
+   * fetched once, with no location at all, which is why the header could say
+   * "Popular items around Yaba" over rows ranked from every offer in the
+   * country. Moving to Festac changed the header and nothing else.
+   */
+  const loadPopular = useCallback(() => {
+    startTransition(async () => {
+      try {
+        setPopularError(null);
+        const items = await getPopularItems({
+          lat: locPosition.lat,
+          lng: locPosition.lng,
+          radiusKm: activeRadiusKm,
+          limit: 8
+        });
+        setPopularItems(items);
+      } catch (err) {
+        console.error("Failed to load popular items:", err);
+        // Settled, and we know nothing — NOT "never fetched". Without this the
+        // list stays undefined and skeletons spin forever behind the error.
+        setPopularItems([]);
+        setPopularError("We no fit reach the price data right now.");
+      }
+    });
+  }, [locPosition.lat, locPosition.lng, activeRadiusKm]);
+
   useEffect(() => {
     loadBaseline();
   }, [loadBaseline]);
+
+  useEffect(() => {
+    loadPopular();
+  }, [loadPopular]);
+
+  /**
+   * Retry only what actually broke.
+   *
+   * The sheet's list is the app's one error affordance — the map layer has no
+   * retry chrome — so it reports either failure. Splitting the loads without
+   * this left `loadError` written and read by nothing: a dead `getPlaces()`
+   * emptied the map of all 60 pins and said nothing anywhere, because the list
+   * had stopped watching that flag. The compiler flagged it as an unused
+   * variable, which is the polite name for a silent failure.
+   */
+  const anyLoadError = popularError ?? loadError;
+  const retryFailed = useCallback(() => {
+    if (popularError) loadPopular();
+    if (loadError) loadBaseline();
+  }, [popularError, loadError, loadPopular, loadBaseline]);
 
   /**
    * Drain both offline queues once a connection is back.
@@ -849,28 +904,28 @@ export default function HomePage() {
                 )}
               </div>
 
-              {/* NO `subject`, deliberately — AsyncList: "omit it only for a list
-                  whose subject never changes". This one's never does, because
-                  `getPopularItems` takes no location and no radius: it ranks every
-                  item in the database. Passing `location.label` would flash
-                  skeletons on every area change for a refetch that returns byte-
-                  identical rows. The header above says "around {area}" and is the
-                  thing that is wrong here; see the handover — the fix is a
-                  center/radiusKm argument on the action, which I do not own. */}
+              {/* `subject` is the location, because the list IS about the
+                  location now. AsyncList remounts its skeletons when the subject
+                  changes, so switching area shows the list loading rather than
+                  silently swapping Festac's prices for Yaba's under a header
+                  that already says Yaba. This was previously omitted — correctly,
+                  at the time — because the query ignored location and a refetch
+                  returned byte-identical rows. It no longer does. */}
               <AsyncList
+                subject={`${location.label}·${activeRadiusKm}`}
                 items={popularItems}
                 isLoading={isPending}
-                error={loadError}
-                onRetry={loadBaseline}
+                error={anyLoadError}
+                onRetry={retryFailed}
                 keyExtractor={(item) => item.id}
                 renderItem={(item) => <ItemCard item={item} onSelect={handleSelectItem} />}
                 skeletonCount={4}
                 empty={{
-                  title: "No prices yet",
+                  title: `No prices within ${activeRadiusKm} km`,
                   description: "Be the first to report one."
                 }}
                 errorState={{
-                  title: loadError ?? "Could not load",
+                  title: anyLoadError ?? "Could not load",
                   description: "Check your network and try again.",
                   retryLabel: "Try again"
                 }}

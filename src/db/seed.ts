@@ -1,9 +1,11 @@
 import { drizzle } from "drizzle-orm/node-postgres";
 import { migrate } from "drizzle-orm/node-postgres/migrator";
 import { Pool } from "pg";
+import { eq } from "drizzle-orm";
 import * as schema from "./schema";
-import { ITEM_IMAGES } from "./itemImages";
+import { ITEM_IMAGES, assertItemImages } from "./itemImages";
 import { SW_LAGOS_AREAS, SW_LAGOS_PLACES } from "./lagosSouthWest";
+import { NIGERIA_ADMIN, NEIGHBOURHOOD_LGA, assertAdminTree } from "./lagosAdmin";
 import {
   SEED_UNITS,
   SEED_ITEMS,
@@ -53,6 +55,10 @@ const run = async () => {
   // Fail before writing anything, naming the offender. A variant pointing at a
   // missing unit code would otherwise surface as a null far from its cause.
   assertSeedContent();
+
+  // A photo keyed to a slug no item has is a silent monogram on the landing
+  // list. Four shipped that way before this check existed.
+  assertItemImages(SEED_ITEMS.map((i) => i.slug));
 
   console.log("Connecting to Neon Postgres...");
   const pool = new Pool({
@@ -137,20 +143,69 @@ const run = async () => {
   const variantBySlug = new Map(variantRows.map((v) => [v.slug, v]));
   console.log(`✓ ${variantRows.length} variants (${(variantRows.length / itemRows.length).toFixed(1)} per item — narrowing needs > 1).`);
 
-  // 6. Areas
-  console.log("Seeding areas...");
-  const insertedAreas = await db.insert(schema.areas).values([
-    ...SW_LAGOS_AREAS.map((a) => ({
-      slug: a.slug, name: a.name, type: "neighborhood",
-      center: { lng: a.center.lng, lat: a.center.lat }, coverageStatus: "active"
-    })),
-    { slug: "yaba", name: "Yaba", type: "neighborhood", center: { lng: 3.3798, lat: 6.5178 }, coverageStatus: "active" },
-    { slug: "ebute-metta", name: "Ebute Metta", type: "neighborhood", center: { lng: 3.3814, lat: 6.4944 }, coverageStatus: "active" },
-    { slug: "bariga", name: "Bariga", type: "neighborhood", center: { lng: 3.3934, lat: 6.5332 }, coverageStatus: "active" },
-    { slug: "surulere", name: "Surulere", type: "neighborhood", center: { lng: 3.3592, lat: 6.5028 }, coverageStatus: "active" },
-    { slug: "mushin", name: "Mushin", type: "neighborhood", center: { lng: 3.3533, lat: 6.5262 }, coverageStatus: "active" }
-  ]).returning();
+  /**
+   * 6. Areas, as a TREE.
+   *
+   * `areas.parentAreaId` and `areas.type` have been in the schema since the
+   * first migration. `type` was written as the literal "neighborhood" for every
+   * row and `parentAreaId` was never written at all, so all nine areas sat flat
+   * with a NULL parent — a hierarchy column with no hierarchy in it.
+   *
+   * It is filled now because it is how a person says where they are: Lagos →
+   * Amuwo Odofin → Festac. Asking for a latitude is an engineer's idea of manual
+   * entry.
+   *
+   * Inserted parents-first so a child can resolve its parent's id in the same
+   * pass. The country and state rows are single-child on purpose — the picker
+   * shows them as settled facts, not choices.
+   */
+  const neighbourhoods = [
+    ...SW_LAGOS_AREAS.map((a) => ({ slug: a.slug, name: a.name, center: a.center })),
+    { slug: "yaba", name: "Yaba", center: { lat: 6.5178, lng: 3.3798 } },
+    { slug: "ebute-metta", name: "Ebute Metta", center: { lat: 6.4944, lng: 3.3814 } },
+    { slug: "bariga", name: "Bariga", center: { lat: 6.5332, lng: 3.3934 } },
+    { slug: "surulere", name: "Surulere", center: { lat: 6.5028, lng: 3.3592 } },
+    { slug: "mushin", name: "Mushin", center: { lat: 6.5262, lng: 3.3533 } }
+  ];
+
+  // Throws on an area with no LGA rather than orphaning it in the picker.
+  assertAdminTree(neighbourhoods.map((n) => n.slug));
+
+  console.log("Seeding the administrative tree...");
+  const ancestorRows = await db.insert(schema.areas).values(
+    NIGERIA_ADMIN.map((n) => ({
+      slug: n.slug,
+      name: n.name,
+      type: n.level,
+      center: { lng: n.center.lng, lat: n.center.lat },
+      // Only what the pilot serves is marked active, so the picker cannot offer
+      // a branch with nothing behind it.
+      coverageStatus: n.level === "lga" ? "active" : "active"
+    }))
+  ).returning();
+  const ancestorBySlug = new Map(ancestorRows.map((a) => [a.slug, a]));
+
+  // Parents resolved in a second pass: NIGERIA_ADMIN is ordered root-first, but
+  // relying on insertion order for id resolution is a trap the next edit springs.
+  for (const n of NIGERIA_ADMIN) {
+    if (!n.parent) continue;
+    await db.update(schema.areas)
+      .set({ parentAreaId: ancestorBySlug.get(n.parent)!.id })
+      .where(eq(schema.areas.slug, n.slug));
+  }
+
+  const insertedAreas = await db.insert(schema.areas).values(
+    neighbourhoods.map((a) => ({
+      slug: a.slug,
+      name: a.name,
+      type: "neighborhood",
+      center: { lng: a.center.lng, lat: a.center.lat },
+      parentAreaId: ancestorBySlug.get(NEIGHBOURHOOD_LGA[a.slug])!.id,
+      coverageStatus: "active"
+    }))
+  ).returning();
   const areaBySlug = new Map(insertedAreas.map((a) => [a.slug, a]));
+  console.log(`✓ ${NIGERIA_ADMIN.length} ancestors + ${insertedAreas.length} neighbourhoods, parented.`);
 
   // 7. Places
   const legacyPlaces = [

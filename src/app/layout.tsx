@@ -41,7 +41,21 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="h-full">
+    /**
+     * `suppressHydrationWarning` is required by the theme script below, not a
+     * papering-over of a real mismatch.
+     *
+     * The script deliberately mutates `<html>` before React hydrates: the server
+     * cannot know the visitor's theme, so it renders `class="h-full"`, and the
+     * script adds `dark` and `color-scheme` from localStorage. React then
+     * compares the two, finds attributes it did not write, and logs a hydration
+     * error on EVERY page load — one per render pass.
+     *
+     * Suppression is scoped to this element and does not cascade past its own
+     * attributes, so a genuine mismatch inside the tree still reports. This is
+     * the same approach next-themes takes, for the same reason.
+     */
+    <html lang="en" className="h-full" suppressHydrationWarning>
       <head>
         {/**
          * Resolve the theme BEFORE first paint.
@@ -82,16 +96,49 @@ export default function RootLayout({
             needs no consent banner. Only reports once deployed to Vercel; it
             no-ops locally. */}
         <Analytics />
+        {/**
+         * The service worker is registered in PRODUCTION ONLY, and unregistered
+         * in development.
+         *
+         * `sw.js` caches `/_next/static/` with `immutableFirst`, on the premise
+         * that Next fingerprints those filenames with a content hash so a given
+         * URL's bytes never change. That premise is true of `next build` and
+         * FALSE of `next dev`, which serves chunks at stable paths that change
+         * content on every edit. The result is a service worker that pins the
+         * developer to a stale bundle indefinitely: this cost real debugging time
+         * when the landing list threw `getPopularItems: invalid centre
+         * lat=undefined` — cached JS still calling a signature the server had
+         * already replaced. The app looked broken; only the cache was.
+         *
+         * Registering in dev buys nothing — offline behaviour is a production
+         * concern, testable against `next build && next start`, where the hashes
+         * are real. The unregister branch matters as much as the guard: without
+         * it, a worker installed by a previous dev session survives this change
+         * and keeps serving stale chunks to a developer who no longer registers
+         * one.
+         */}
         <script
           dangerouslySetInnerHTML={{
-            __html: `
+            __html:
+              process.env.NODE_ENV === "production"
+                ? `
               if ('serviceWorker' in navigator) {
                 window.addEventListener('load', function() {
-                  navigator.serviceWorker.register('/sw.js').then(function(reg) {
-                    console.log('SW registered on scope:', reg.scope);
-                  }).catch(function(err) {
-                    console.log('SW registration failed:', err);
+                  navigator.serviceWorker.register('/sw.js').catch(function(err) {
+                    console.error('SW registration failed:', err);
                   });
+                });
+              }
+            `
+                : `
+              if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.getRegistrations().then(function(rs) {
+                  rs.forEach(function(r) { r.unregister(); });
+                  if (rs.length) {
+                    caches.keys().then(function(ks) {
+                      return Promise.all(ks.map(function(k) { return caches.delete(k); }));
+                    }).then(function() { location.reload(); });
+                  }
                 });
               }
             `
