@@ -51,6 +51,7 @@ export function SheetPicker({
 }: SheetPickerProps) {
   const [open, setOpen] = useState(false);
   const selected = options.find((o) => o.id === value) ?? null;
+  const labelId = React.useId();
 
   const commit = (id: string) => {
     onSelect(id);
@@ -60,7 +61,7 @@ export function SheetPicker({
   return (
     <div>
       {label && (
-        <label className="mb-1.5 block text-footnote text-text-secondary">{label}</label>
+        <label id={labelId} className="mb-1.5 block text-footnote text-text-secondary">{label}</label>
       )}
 
       <button
@@ -69,6 +70,7 @@ export function SheetPicker({
         onClick={() => setOpen(true)}
         aria-haspopup="dialog"
         aria-expanded={open}
+        aria-labelledby={label ? labelId : undefined}
         className="flex min-h-tap w-full items-center justify-between gap-2 bg-fillTertiary px-4 text-left
                    squircle text-text-primary
                    disabled:opacity-40 active:scale-[0.99] transition-transform duration-instant"

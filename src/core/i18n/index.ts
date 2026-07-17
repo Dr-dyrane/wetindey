@@ -51,7 +51,7 @@
  * same diff.
  */
 
-import { useCallback, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useSyncExternalStore } from "react";
 import {
   DEFAULT_LOCALE,
   LOCALES,
@@ -253,7 +253,18 @@ function setLocale(next: Locale): void {
 
 /** The selected locale. Re-renders on change, from anywhere, with no provider. */
 function useLocale(): Locale {
-  return useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
+  const locale = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
+
+  useEffect(() => {
+    const codeMap: Record<Locale, string> = {
+      en: "en",
+      pidgin: "pcm",
+      yoruba: "yo",
+    };
+    document.documentElement.lang = codeMap[locale] || "en";
+  }, [locale]);
+
+  return locale;
 }
 
 /** `[locale, setLocale]`, for the picker in SettingsSheet. */
