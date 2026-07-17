@@ -210,15 +210,77 @@ export const units = pgTable("units", {
   notes: text("notes")
 });
 
-// 7. Sources Table (Users, public databases, or vendors)
+/**
+ * 7. Sources Table — an IDENTITY table with a category column.
+ *
+ * What a row means, as of this migration: one contributor of observations —
+ * an account, or the anonymous shared row for a category.
+ *
+ * What a row meant before it: a category, and nothing else. The table held
+ * exactly three rows (seed.ts:253-256 — 'Contributor', 'Public data',
+ * 'Vendor'; verified against the live database), and every app contribution
+ * resolved to the single shared 'Contributor' row (actions.ts:313-322). The
+ * table was fixed-size; it now grows with the contributor base.
+ *
+ * `sourceType` is unchanged and stays non-null — it remains the category of
+ * the row. `userId` is the column that makes a row an identity rather than a
+ * category.
+ *
+ * The column ships ahead of its writer. This migration only opens the column;
+ * the write path that resolves a session to a per-user row is a separate
+ * change against actions.ts. Until that lands, every row carries NULL here and
+ * the table answers exactly as it does today — which is what makes the
+ * migration safe to apply on its own, not what makes it finished.
+ *
+ * This is the row `distinct_source_count` counts (actions.ts:785) and the key
+ * `assessTrust` groups observation weights by (trust.ts:482-492). While every
+ * row was a category, that count was a count of CATEGORIES presented as a
+ * count of people: trust.ts:405 renders it as "N different people", and
+ * against the live database it reads 2 for 163 offer groups and 3 for 156,
+ * because the seed spread observations across all three category rows. No
+ * number of real contributors moved it, and no single contributor could push
+ * it above 1 through the app.
+ */
 export const sources = pgTable("sources", {
   id: uuid("id").defaultRandom().primaryKey(),
   sourceType: varchar("source_type", { length: 100 }).notNull(), // 'Contributor', 'Public data', 'Vendor'
+  /**
+   * The account this source belongs to, when it belongs to one.
+   *
+   * `uuid`, because that is the type of `neon_auth.user.id`.
+   *
+   * NULL is meaningful and permanent: "no account behind this source". It is
+   * what the anonymous shared row per category carries, and what a
+   * contribution arriving without a session resolves to. Anonymous
+   * contribution is the product's default and ADR-003 keeps it working — an
+   * unattributed row weighs less, it is never refused.
+   *
+   * There is deliberately NO foreign key to `neon_auth.user`. Neon manages
+   * that schema and may rewrite it, and a hard FK into a managed table is a
+   * liability. NDPR erasure also wants SET NULL semantics, which a loose
+   * column gives without a constraint to fight: an id left dangling by a
+   * deleted account degrades to "unrecognised" — the same answer this app
+   * gives every contributor today — rather than blocking the delete.
+   */
+  userId: uuid("user_id"),
   status: varchar("status", { length: 50 }).default("active").notNull(),
   reliabilityScoreInternal: integer("reliability_score_internal").default(70).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull()
-});
+}, (t) => [
+  /**
+   * For the lookup the write path will do: resolve a session to a source row
+   * by `user_id` before it has a `source_id` to write onto the observation.
+   * That lands on the hot path of every attributed submission. The index ships
+   * with the column so the writer never has to add one under load.
+   *
+   * Not unique: the column is nullable, and the anonymous rows all hold NULL.
+   * A UNIQUE index would permit those (Postgres treats NULLs as distinct), but
+   * it would encode "one source row per user" — an invariant the write path
+   * owns, and one this lane cannot verify from the schema alone.
+   */
+  index("sources_user_id_idx").on(t.userId)
+]);
 
 // 8. Observations Table (Raw, immutable price reports)
 export const observations = pgTable("observations", {

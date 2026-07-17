@@ -16,9 +16,15 @@
  *     · confidence-ranked sorting                                  (:238-240)
  *
  * The seed already derives freshness from that same policy (src/db/seed.ts:29-30,
- * :309-315). The app does not: src/app/actions.ts:194 computes
- * `supportingObservationCount * 10` — uncapped, and blind to who reported. Ten
- * reports from one person on a sofa read as 100%.
+ * :309-315). The app's WRITE path now does too — `submitObservation` derives
+ * `trust_level` and `freshness_state` through `assessTrust` and windows its price
+ * band on `FRESHNESS_POLICY`, so this module has live call sites rather than
+ * aspirational ones.
+ *
+ * One caller still holds the old arithmetic: `getFoodItemCandidates`
+ * (src/app/actions.ts:194) computes `supportingObservationCount * 10` — uncapped,
+ * and blind to who reported. Ten reports from one person on a sofa read as 100%.
+ * Its consumer is owned by another lane and it is flagged, not silently moved.
  *
  * What this module keeps from FoodModule, verbatim in spirit:
  *   · the 24h/72h policy                          (FoodModule.ts:139-142)
@@ -401,10 +407,38 @@ function describe(
         ? `${Math.round(ageHours)}h ago`
         : `${Math.round(ageHours / 24)} days ago`;
 
+  /**
+   * "sources", not "people" — and the difference is the product's core claim,
+   * so it is not a wording preference.
+   *
+   * This string used to read "N different people". It was measurably false, and
+   * the wiring of accounts (ADR-003) makes it false in a NEW way rather than
+   * fixing it, which is why it is corrected here and not left to become true on
+   * its own:
+   *
+   *   · The shared ANONYMOUS row is an unknown number of people — everyone who
+   *     ever reported without an account — collapsed into one row. It counts as
+   *     1. "1 person" understates it and misdescribes it in the same breath.
+   *   · 'Public data' is a dataset and 'Vendor' is a shop. Neither is a person
+   *     at all. Against the live database, 163 offer groups count 2 sources and
+   *     156 count 3 — those are these CATEGORY rows, because the seed spread
+   *     observations across all three. Every one of those "3 different people"
+   *     was three categories.
+   *   · Only a signed-in contributor's own row is reliably one human, and even
+   *     that is one ACCOUNT.
+   *
+   * `distinctSourceCount` is `weightsBySource.size` — a count of source rows.
+   * "Sources" is what the number is, and it stays true whatever mix of accounts,
+   * pools and feeds the table holds. The claim WetinDey wants to make — "N
+   * different PEOPLE stand behind this price" — needs a count that admits only
+   * attributed rows; it is not available yet and must not be implied by copy.
+   * Raised in the handover: the words belong to the design lane, the honesty
+   * does not.
+   */
   const who =
     distinctSourceCount === 1
-      ? "1 person"
-      : `${distinctSourceCount} different people`;
+      ? "1 source"
+      : `${distinctSourceCount} different sources`;
 
   if (availability === "unavailable") {
     return `Reported sold out ${when}.`;
@@ -422,11 +456,25 @@ function describe(
  * Assess a set of observations backing ONE offer — one (item variant, unit,
  * place) triple.
  *
- * Replaces `supportingObservationCount * 10` (src/app/actions.ts:194).
+ * Live call sites: `submitObservation` (the write path — it derives the
+ * `trust_level` and `freshness_state` it stores from this) and
+ * `getOfferTrustBatch` (the read path). `getFoodItemCandidates` still reports
+ * `supportingObservationCount * 10` and is the last holdout; see the module
+ * docblock.
  *
  * Callers must pass only observations they consider admissible; this module does
- * not know about moderation. See `getOfferTrustBatch` in src/app/actions.ts for
- * the filter the pilot database requires and why.
+ * not know about moderation. The two paths do not currently agree on what
+ * admissible means — the write path admits `moderation_status = 'approved'`,
+ * `getOfferTrustBatch` admits `<> 'rejected'`. Identical today (every row in the
+ * live table is 'approved'), divergent the day anything writes 'pending'. That
+ * is a moderation-policy decision with no moderator to make it, and it is
+ * escalated rather than settled by whichever function was edited last.
+ *
+ * The reliability weighting ADR-003 asked for is not new code — `observationWeight`
+ * has multiplied by `reliabilityWeight(sourceReliability)` since this module was
+ * written. What was missing was an INPUT that varied: every contribution resolved
+ * to one shared source row, so the model faithfully weighted a constant. The fix
+ * was in the write path, not here.
  */
 export function assessTrust(
   observations: TrustObservation[],
