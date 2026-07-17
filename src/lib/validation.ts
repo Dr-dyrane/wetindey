@@ -4,11 +4,16 @@
  * WHY THIS FILE EXISTS
  *
  * A Next.js server action is a public HTTP endpoint. `submitObservation` is
- * reachable by anyone who can POST to this origin — there is no auth anywhere in
- * this app — and until this module is wired in it takes `priceAmount` straight
- * from the caller and writes it to `observations`, from which every offer field
- * is derived. A single ₦900,000,000 rice report is not a typo. It is a write to
- * the price band that every other user then reads.
+ * reachable by anyone who can POST to this origin — auth exists now, but ADR-003
+ * makes it recognition, never a gate, so the write paths stay open by design.
+ * Unguarded, the action takes `priceAmount` straight from the caller and writes
+ * it to `observations`, from which every offer field is derived. A single
+ * ₦900,000,000 rice report is not a typo. It is a write to the price band that
+ * every other user then reads.
+ *
+ * WIRING STATUS — every schema below has a live call site in `actions.ts`.
+ * Both write paths and all nine read paths are gated. Nothing here is
+ * aspirational; if you add a schema, wire it in the same change or do not add it.
  *
  * WHY IT LIVES HERE AND NOT IN actions.ts
  *
@@ -59,8 +64,8 @@ const uuidField = (label: string) =>
  *   mid-insert. The ceiling is set below the overflow point so that anything
  *   this schema admits is guaranteed to be storable.
  */
-export const PRICE_FLOOR_NAIRA = 5;
-export const PRICE_CEILING_NAIRA = 5_000_000;
+const PRICE_FLOOR_NAIRA = 5;
+const PRICE_CEILING_NAIRA = 5_000_000;
 
 /** The int4 kobo ceiling the band above is defined to stay clear of. */
 const INT4_MAX_KOBO = 2_147_483_647;
@@ -85,7 +90,7 @@ if (PRICE_CEILING_NAIRA * 100 > INT4_MAX_KOBO) {
  * reaching `Math.round(n * 100)` yields `Infinity`, which Postgres rejects for
  * an integer column — after the observation row has already been reasoned about.
  */
-export const priceNaira = z
+const priceNaira = z
   .number({ required_error: "priceAmount is required", invalid_type_error: "priceAmount must be a number" })
   .finite("priceAmount must be a finite number")
   .gte(PRICE_FLOOR_NAIRA, `priceAmount must be at least ₦${PRICE_FLOOR_NAIRA}`)
@@ -99,7 +104,7 @@ export const priceNaira = z
  * database will accept any string that fits. These are the only two values the
  * read paths interpret; a third would sit in the column reading as neither.
  */
-export const availabilityState = z.enum(["available", "unavailable"], {
+const availabilityState = z.enum(["available", "unavailable"], {
   errorMap: () => ({ message: "availabilityState must be 'available' or 'unavailable'" }),
 });
 
@@ -108,7 +113,7 @@ export const availabilityState = z.enum(["available", "unavailable"], {
  *
  * Source extent: lng 2.6769–14.6780, lat 4.2406–13.8856.
  */
-export const NIGERIA_BBOX = {
+const NIGERIA_BBOX = {
   minLng: 2.6,
   maxLng: 14.7,
   minLat: 4.2,
@@ -127,7 +132,7 @@ const longitude = z.number().finite().gte(-180).lte(180);
  * reports; it is what a zeroed or half-parsed coordinate looks like, and it must
  * never again pass silently for a place on the sea.
  */
-export const worldCoordinate = z
+const worldCoordinate = z
   .object({ lat: latitude, lng: longitude })
   .refine((c) => !(c.lat === 0 && c.lng === 0), {
     message: "coordinate (0, 0) is not a location — it is what an unparsed coordinate looks like",
@@ -150,7 +155,7 @@ export const worldCoordinate = z
  * the app from London deserves "nearest area is Festac, 0 places within your
  * radius" rather than a thrown error. See `coverageForPointInput`.
  */
-export const nigeriaCoordinate = worldCoordinate.refine(
+const nigeriaCoordinate = worldCoordinate.refine(
   (c) =>
     c.lng >= NIGERIA_BBOX.minLng &&
     c.lng <= NIGERIA_BBOX.maxLng &&
@@ -169,7 +174,7 @@ export const nigeriaCoordinate = worldCoordinate.refine(
  * 40,000 km asks PostGIS to ST_DWithin the entire places table with the index
  * unable to help.
  */
-export const radiusKm = z.number().finite().gt(0, "radiusKm must be positive").lte(500, "radiusKm must be at most 500");
+const radiusKm = z.number().finite().gt(0, "radiusKm must be positive").lte(500, "radiusKm must be at most 500");
 
 /**
  * A row cap.
@@ -196,7 +201,7 @@ const limitField = (max: number) => z.number().int("limit must be a whole number
  * that the person sending it went anywhere. See the audit note on rate limiting
  * and `sources.reliability_score_internal`.
  */
-export const submitObservationInput = z
+const submitObservationInput = z
   .object({
     itemVariantId: uuidField("itemVariantId"),
     unitId: uuidField("unitId"),
@@ -206,7 +211,7 @@ export const submitObservationInput = z
   })
   .strict();
 
-export type SubmitObservationInput = z.infer<typeof submitObservationInput>;
+type SubmitObservationInput = z.infer<typeof submitObservationInput>;
 
 /**
  * `submitVisitConfirmation`.
@@ -236,7 +241,7 @@ const visitIdentity = {
  * level. Refining the assembled union is the same rule in the only place v3 will
  * take it.
  */
-export const visitConfirmationInput = z
+const visitConfirmationInput = z
   .discriminatedUnion("wasAvailable", [
     z
       .object({
@@ -269,7 +274,7 @@ export const visitConfirmationInput = z
  * Shaped to be assignable to `submitVisitConfirmation`'s declared parameter, so
  * wiring is a single assignment and no line below it has to change.
  */
-export type VisitConfirmationInput =
+type VisitConfirmationInput =
   | { placeId: string; itemVariantId: string; unitId: string; wasAvailable: false }
   | {
       placeId: string;
@@ -295,17 +300,16 @@ export type VisitConfirmationInput =
  * the one that clears it. Throwing there would break a working path to defend
  * nothing.
  */
-export const searchQueryInput = z.string().max(80, "search query is too long");
+const searchQueryInput = z.string().max(80, "search query is too long");
 
-export const itemIdInput = uuidField("itemId");
-export const placeIdInput = uuidField("placeId");
-export const offerIdInput = uuidField("offerId");
+const placeIdInput = uuidField("placeId");
+const offerIdInput = uuidField("offerId");
 
 /** `getPopularItems`. The landing grid asks for 8; nothing needs more than a screen. */
-export const popularItemsLimitInput = limitField(48);
+const popularItemsLimitInput = limitField(48);
 
 /** `getItemNarrowingOptions`. */
-export const itemNarrowingOptionsInput = z
+const itemNarrowingOptionsInput = z
   .object({
     itemId: uuidField("itemId"),
     center: nigeriaCoordinate,
@@ -314,24 +318,31 @@ export const itemNarrowingOptionsInput = z
   .strict();
 
 /** `getOffersNarrowed`. */
-export const offersNarrowedInput = z
+const offersNarrowedInput = z
   .object({
     itemId: uuidField("itemId"),
     variantId: uuidField("variantId").nullish(),
     unitId: uuidField("unitId").nullish(),
     center: nigeriaCoordinate,
     radiusKm,
-    // Unvalidated, this string indexes an object literal (actions.ts:800-804).
-    // Object literals inherit from Object.prototype, so `sort: "toString"` does
-    // not miss — it resolves to a function, which is then interpolated into a
-    // SQL template as an ORDER BY fragment. The enum is what stops that.
+    // Unvalidated, this string indexes an object literal (the `ranking` table in
+    // getOffersNarrowed). Object literals inherit from Object.prototype, so
+    // `sort: "toString"` does not miss — it resolves to a function.
+    //
+    // It is NOT interpolated as raw SQL, and an earlier version of this comment
+    // was wrong to imply it. Measured against the live database: Drizzle binds
+    // the function as a PARAMETER, Postgres receives `ORDER BY $1` with null,
+    // accepts it, and returns rows with the ordering silently dropped. So the
+    // real failure is not injection — it is "cheapest" quietly not being
+    // cheapest, which is the class of bug this project has already paid for
+    // once in the Gulf of Guinea. The enum is what stops that.
     sort: z.enum(["nearest", "cheapest", "freshest"]).optional(),
     limit: limitField(200).optional(),
   })
   .strict();
 
 /** `getPlacesNear`. */
-export const placesNearInput = z
+const placesNearInput = z
   .object({
     lat: latitude,
     lng: longitude,
@@ -360,7 +371,7 @@ export const placesNearInput = z
  * telling an uncovered user so rather than teleporting them to Festac. (0, 0) is
  * still refused, because that is not a user somewhere else — that is a bug.
  */
-export const coverageForPointInput = z
+const coverageForPointInput = z
   .object({
     lat: latitude,
     lng: longitude,
@@ -385,7 +396,7 @@ export const coverageForPointInput = z
  * and the rule is all the message needs to do, and the length cap keeps a
  * hostile payload from turning a hundred field errors into a log flood.
  */
-export function assertValid<T>(schema: z.ZodType<T>, data: unknown, action: string): T {
+function assertValid<T>(schema: z.ZodType<T>, data: unknown, action: string): T {
   const result = schema.safeParse(data);
   if (result.success) return result.data;
 
@@ -416,10 +427,6 @@ export function parseSearchQuery(query: unknown): string {
 
 export function parsePopularItemsLimit(limit: unknown): number {
   return assertValid(popularItemsLimitInput, limit, "getPopularItems");
-}
-
-export function parseItemId(itemId: unknown): string {
-  return assertValid(itemIdInput, itemId, "getFoodItemCandidates");
 }
 
 export function parsePlaceOffersPlaceId(placeId: unknown): string {

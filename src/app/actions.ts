@@ -5,9 +5,17 @@ import { areas, items, itemAliases, itemVariants, places, offersCurrent, units, 
 import { eq, ilike, or, and, sql, gte, isNull, isNotNull } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import {
-  assertValid,
-  submitObservationInput,
-  visitConfirmationInput,
+  parseSubmitObservation,
+  parseVisitConfirmation,
+  parseSearchQuery,
+  parsePopularItemsLimit,
+  parsePlaceOffersPlaceId,
+  parseContactPolicyPlaceId,
+  parseOfferId,
+  parseItemNarrowingOptions,
+  parseOffersNarrowed,
+  parsePlacesNear,
+  parseCoverageForPoint,
 } from "@/lib/validation";
 import { auth } from "@/lib/auth";
 import {
@@ -32,11 +40,15 @@ const itemCard = {
 
 // 1. Search food items in the database
 export async function searchFoodItems(query: string) {
-  if (!query || query.trim() === "") {
+  // Before the empty check, not after: a non-string caller reaches `.trim()`
+  // first and dies on "trim is not a function" — a 500 for what is really a
+  // rejected input. Empty stays legal; the search box clears on every keystroke.
+  const parsed = parseSearchQuery(query);
+  if (parsed.trim() === "") {
     return [];
   }
 
-  const q = `%${query.trim()}%`;
+  const q = `%${parsed.trim()}%`;
 
   // Match the canonical name, the slug, or a local-language alias, so "ewa",
   // "shinkafa" and "dodo" find their items the way a Nigerian shopper would ask.
@@ -85,7 +97,11 @@ export async function getPopularItems(input: {
   limit?: number;
 }) {
   const { lat, lng, radiusKm } = input;
-  const limit = input.limit ?? 8;
+  // Only the limit is gated here. There is no `popularItemsInput` schema — the
+  // validators were written when this action took a bare limit, and it grew a
+  // coordinate since. lat/lng/radiusKm are checked below by searchOrigin and
+  // searchRadiusMetres; the cap is the part nothing else enforces.
+  const limit = parsePopularItemsLimit(input.limit ?? 8);
 
   if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
     throw new Error(`getPopularItems: invalid centre lat=${lat}, lng=${lng}`);
@@ -233,6 +249,7 @@ export async function getPlaces() {
 
 // 4. Fetch all current food item offers at a specific place
 export async function getPlaceOffers(placeId: string) {
+  placeId = parsePlaceOffersPlaceId(placeId);
   const results = await db
     .select({
       offer: offersCurrent,
@@ -478,7 +495,7 @@ export async function submitObservation(data: {
    * appended later is simply never called. It has to happen here, inside the
    * function the client actually reaches.
    */
-  const input = assertValid(submitObservationInput, data, "submitObservation");
+  const input = parseSubmitObservation(data);
 
   // Who is filing this: their own source row, or the shared anonymous one.
   const sourceId = await contributorSourceId();
@@ -724,6 +741,7 @@ export async function getInitialSubmissionData() {
 // so the question they are asked on their return must already be in their hand
 // before they leave. The caller stashes this and hands it to ConfirmVisitSheet.
 export async function getVisitContext(offerId: string) {
+  offerId = parseOfferId(offerId);
   const [row] = await db
     .select({
       offerId: offersCurrent.id,
@@ -821,7 +839,7 @@ export async function submitVisitConfirmation(data: {
    * work. Two separate holes, two separate defences; do not let the presence of
    * one read as cover for the other.
    */
-  const input = assertValid(visitConfirmationInput, data, "submitVisitConfirmation");
+  const input = parseVisitConfirmation(data);
   data = input as typeof data;
 
   const now = new Date();
@@ -1089,7 +1107,7 @@ export async function getItemNarrowingOptions(input: {
   center: { lat: number; lng: number };
   radiusKm: number;
 }) {
-  if (!input.itemId) throw new Error("Discovery: getItemNarrowingOptions needs an itemId");
+  input = parseItemNarrowingOptions(input);
 
   const origin = searchOrigin(input.center);
   const radiusM = searchRadiusMetres(input.radiusKm);
@@ -1148,8 +1166,14 @@ export async function getItemNarrowingOptions(input: {
  * is a fact about the row, not a preference about the ordering.
  */
 export async function getOffersNarrowed(input: NarrowingInput): Promise<NarrowedOffer[]> {
-  if (!input.itemId) throw new Error("Discovery: getOffersNarrowed needs an itemId");
+  input = parseOffersNarrowed(input) as NarrowingInput;
 
+  // `sort` now comes from an enum, which is what keeps the lookup below on the
+  // object's OWN keys. Unvalidated, `sort: "toString"` hits Object.prototype and
+  // resolves to a function — and the failure is quieter than it looks: Drizzle
+  // binds it as a parameter, so Postgres runs `ORDER BY $1` with null, returns
+  // rows, and drops the ordering. Not injection — a wrong answer wearing a
+  // plausible face, which is the failure this codebase exists to refuse.
   const sort: OfferSort = input.sort ?? "nearest";
   const limit = input.limit ?? 60;
   const origin = searchOrigin(input.center);
@@ -1381,10 +1405,11 @@ export async function getPlacesNear(input: {
   radiusKm: number;
   limit?: number;
 }) {
+  // Replaces a hand-rolled `> 0 && isFinite` check that had no upper bound: a
+  // radius of 40,000 km asked PostGIS to ST_DWithin every place in the country
+  // with the index unable to help. The schema also caps `limit`, which had none.
+  input = parsePlacesNear(input);
   const point = toEwkt(input.lat, input.lng);
-  if (!Number.isFinite(input.radiusKm) || input.radiusKm <= 0) {
-    throw new Error(`Invalid radius: ${input.radiusKm} km`);
-  }
   const radiusM = input.radiusKm * 1000;
 
   const rows = await db
@@ -1429,10 +1454,12 @@ export async function getCoverageForPoint(input: {
   lng: number;
   radiusKm: number;
 }): Promise<PointCoverage> {
+  // worldCoordinate, NOT nigeriaCoordinate — deliberately. This action's whole
+  // job is answering "am I outside coverage?", so rejecting a point outside
+  // Nigeria would refuse the question it exists to answer. (0,0) is still
+  // refused: that is not a user somewhere else, that is an unparsed coordinate.
+  input = parseCoverageForPoint(input);
   const point = toEwkt(input.lat, input.lng);
-  if (!Number.isFinite(input.radiusKm) || input.radiusKm <= 0) {
-    throw new Error(`Invalid radius: ${input.radiusKm} km`);
-  }
   const radiusM = input.radiusKm * 1000;
 
   const [nearestRows, countRows] = await Promise.all([
@@ -1504,6 +1531,7 @@ export interface PlaceContactPolicy {
 }
 
 export async function getPlaceContactPolicy(placeId: string): Promise<PlaceContactPolicy> {
+  placeId = parseContactPolicyPlaceId(placeId);
   const rows = await db
     .select({
       id: places.id,
