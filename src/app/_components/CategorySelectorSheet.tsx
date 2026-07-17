@@ -48,14 +48,24 @@ export function CategorySelectorSheet({
         <ListGroup header={t.categories_header || "Pillars of Daily Uncertainty"}>
           {categories.map((c) => {
             const active = c.id === activeCategory;
+            const supported = c.id === "food";
             return (
               <ListRow
                 key={c.id}
                 label={c.label}
-                detail={active ? <Check className="h-5 w-5 text-info" strokeWidth={2.5} aria-hidden="true" /> : c.detail}
+                detail={
+                  active ? (
+                    <Check className="h-5 w-5 text-info" strokeWidth={2.5} aria-hidden="true" />
+                  ) : supported ? (
+                    c.detail
+                  ) : (
+                    "Not available in this version"
+                  )
+                }
                 pressed={active}
                 chevron={false}
-                onClick={() => handleSelect(c.id)}
+                disabled={!supported}
+                onClick={supported ? () => handleSelect(c.id) : () => undefined}
               />
             );
           })}

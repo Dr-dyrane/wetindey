@@ -285,7 +285,10 @@ export default function HomePage() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isReportOpen, setIsReportOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
-  const [activeCategory, setActiveCategory] = useState<CategoryPillar>("food");
+  // Food is the only live vertical. Keeping this at the page boundary prevents
+  // price-only search, results, and contribution flows from ever adopting a
+  // future category's label before that vertical actually exists.
+  const activeCategory: CategoryPillar = "food";
   const [isCategoryOpen, setIsCategoryOpen] = useState(false);
   const [userProfile, setUserProfile] = useState<MyProfile | null>(null);
   /** The item ItemDetailSheet is resolving down to a unit. Non-null = presented. */
@@ -1162,12 +1165,7 @@ export default function HomePage() {
               className="flex items-center gap-1 px-2.5 py-1 rounded-[14px] bg-fillSecondary text-text-primary active:scale-98 transition-all duration-instant text-[14px] font-medium"
             >
               <span>
-                {activeCategory === "food" && ((t as Record<string, string>).category_food || "Food")}
-                {activeCategory === "home" && ((t as Record<string, string>).category_home || "Home")}
-                {activeCategory === "health" && ((t as Record<string, string>).category_health || "Health")}
-                {activeCategory === "money" && ((t as Record<string, string>).category_money || "Money")}
-                {activeCategory === "transport" && ((t as Record<string, string>).category_transport || "Transport")}
-                {activeCategory === "community" && ((t as Record<string, string>).category_community || "Community")}
+                {(t as Record<string, string>).category_food || "Food"}
               </span>
               <ChevronDown className="h-3 w-3 text-text-secondary" />
             </button>
@@ -1556,7 +1554,7 @@ export default function HomePage() {
         open={isCategoryOpen}
         onClose={() => setIsCategoryOpen(false)}
         activeCategory={activeCategory}
-        onCategoryChange={setActiveCategory}
+        onCategoryChange={() => undefined}
         t={t}
       />
     </div>
