@@ -8,9 +8,9 @@ anything. One owner per path, always.
 
 ## Controller addendum - integration freeze and planned sequence
 
-**INTEGRATION FREEZE. Do not commit or push `main` until migration lineage and hot-file
-ownership are reconciled.** Current dirty and committed work crosses auth/profile,
-trust/actions, map, category, review, and migration concerns. This addendum plans work; it
+**INTEGRATION FREEZE LIFTED FOR PATH-SCOPED LOCAL COMMITS. Do not push or deploy without
+explicit owner authorization.** D1 migration lineage is reconciled and the orphaned
+auth/UI claim is retired. Exact hot-file claims and handoffs still apply; this addendum
 does not transfer another lane's files.
 
 The owner has added three architecture directives:
@@ -30,7 +30,7 @@ They authorize documentation review only.
 |---|---|---|---|---|
 | **G0 governance reconciliation** | active, docs only | existing governance owner / Sol | ADR-010/011 proposals, architecture delta, ownership matrix, freeze, handoffs | Existing governance paths only; no app/schema/migration edits |
 | **D1 database lineage** | completed, released | Terra session *Harvey*, independently refuted by Luna | Restored the exact applied `0006`-`0008` lineage artifacts and proved disposable bootstrap | Exact SQL preserved; blank migration, seed, second-pass idempotence, clean-`HEAD` failure, and cleanup were independently reproduced |
-| **D2 provenance boundary** | active | controller / Sol decision, Terra implementation | Add one enforced provenance class at the immutable observation boundary; classify seed/demo observations as synthetic and live contribution writers as observed | D1 complete; no reputation, media, partner ingest, reference CRUD, inferred-data engine, or Trust Graph storage |
+| **D2 provenance boundary** | implementation complete, migration unapplied | controller / Sol decision, Terra implementation, Sol refutation | Added one enforced provenance class at the immutable observation boundary; seed/demo observations are synthetic and live contribution writers are observed | Static refutation passed; `0009` was not applied to any database; no reputation, media, partner ingest, reference CRUD, inferred-data engine, or Trust Graph storage |
 | **V1 truth core** | planned, unclaimed | Sol | One Food path from admissible evidence to read, map, share, SEO, offline, and outcome | After auth/actions handoff, D1, and D2; no new pillar/review/reward |
 | **context header containment** | blocked, owns no paths | Sol design, Terra implementation | Target header order, visible honest category context, enforced Food filters only | Requires explicit `page.tsx`, map, actions, validation, and copy handoffs |
 | **contextual category capability vertical** | deferred Phase 5A, owns no paths | Sol | One non-price vertical plus typed capability extracted from two live implementations | ADR-002 Phases 0-4, accepted ADR-010/011, V1 exit, clean migrations; no EAV/registry before then |
@@ -205,7 +205,7 @@ in either one will conflict. **Never edit these without holding the lane that ow
 | Lane | Owner | Status | Owns these paths | Roadmap | Claimed | Notes |
 |---|---|---|---|---|---|---|
 | **auth/UI (former Claude session)** | controller custody; implementation unassigned | ⚪ **orphaned claim retired — paths released** | — | [ADR-003](docs/adr/003-identity-for-contribution-trust.md) | 2026-07-16 | Human owner confirmed the former session no longer owns these paths. The narrow category-emoji handoff to Iconography completed in `1aec02c`; every other former auth/UI path is released and must be claimed narrowly before a future edit. This retirement does not declare ADR-003 complete. |
-| **D2 provenance boundary** | controller / Sol with Terra implementation | 🟢 active | `src/db/schema/index.ts`, `src/db/seed.ts`, `src/app/actions.ts`, `src/db/migrations/0009_*`, `src/db/migrations/meta/_journal.json`, `src/db/migrations/meta/0009_snapshot.json` | D2 / DATA-01 | 2026-07-17 | Human owner authorized continuation after independent D1 closure. Exact scope is observation provenance classification and its existing writers only. `actions.ts` transfers for this narrow change; no trust formula, auth, review, reward, category, product CRUD, or media work. |
+| **D2 provenance boundary** | controller / Sol, Terra implementation, Sol refutation | ✅ implementation complete — paths released; migration unapplied | — | D2 / DATA-01 | 2026-07-17 | Enforced observation provenance and generated `0009`; static refutation passed after governance corrections. No migration or seed ran against any database. Deployment remains a separate authorization. |
 | **iconography containment** | session *iconography* | ✅ done — paths released | — | Phase 1 containment | 2026-07-17 | `1aec02c` removes the six header/category emoji and raw selector check while preserving text-first context and selected-state semantics. Its independent refuter passed the component scope; runtime confirmation remains with Interaction Validation. |
 | **interaction validation** | session *motion and interaction* plus read-only refuter | 🔵 read-only | — | Q1 UI evidence | 2026-07-17 | No write lock. Drive or refute the post-iconography category selector/header and route/Get-it interaction. Missing runtime evidence remains unverified; any defect must request a new exact-path correction lane. |
 | **motion system research** | this session | ✅ done | — | — | 2026-07-17 | Completed in `docs/design-system/MOTION-SYSTEM.md`; no application animation implementation. |

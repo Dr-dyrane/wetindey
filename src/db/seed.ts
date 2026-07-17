@@ -385,6 +385,7 @@ const run = async () => {
           observedAt: o.at,
           sourceId: o.sourceId,
           collectionMethod: "app_entry",
+          provenance: "synthetic",
           // The old seed never set this, so all 178 rows sat at the 'pending'
           // default — meaning any query filtering on 'approved' would honestly
           // report zero evidence for everything.

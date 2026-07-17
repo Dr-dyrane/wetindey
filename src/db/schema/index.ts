@@ -1,4 +1,12 @@
-import { pgTable, uuid, varchar, timestamp, text, integer, doublePrecision, boolean, jsonb, customType, index, uniqueIndex } from "drizzle-orm/pg-core";
+import { pgTable, pgEnum, uuid, varchar, timestamp, text, integer, doublePrecision, boolean, jsonb, customType, index, uniqueIndex } from "drizzle-orm/pg-core";
+
+export const observationProvenance = pgEnum("observation_provenance", [
+  "synthetic",
+  "observed",
+  "partner",
+  "reference",
+  "inferred"
+]);
 
 /**
  * Decode a PostGIS POINT from hex-encoded EWKB.
@@ -298,6 +306,7 @@ export const observations = pgTable("observations", {
   submittedAt: timestamp("submitted_at").defaultNow().notNull(),
   sourceId: uuid("source_id").references(() => sources.id).notNull(),
   collectionMethod: varchar("collection_method", { length: 100 }).notNull(), // 'app_entry', 'scraper', 'sms'
+  provenance: observationProvenance("provenance").default("synthetic").notNull(),
   moderationStatus: varchar("moderation_status", { length: 50 }).default("pending").notNull(), // 'pending', 'approved', 'rejected'
   notes: text("notes"),
   /**

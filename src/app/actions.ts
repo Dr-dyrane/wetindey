@@ -612,6 +612,7 @@ export async function submitObservation(data: {
       observedAt: now,
       sourceId,
       collectionMethod: "app_entry",
+      provenance: "observed",
       /**
        * Still hardcoded, and left that way ON PURPOSE.
        *
@@ -962,6 +963,7 @@ export async function submitVisitConfirmation(data: {
         observedAt: now,
         sourceId,
         collectionMethod: "visit_confirmation",
+        provenance: "observed",
         moderationStatus: "approved",
         rawPayload: { kind: "visit_confirmation", wasAvailable: false }
       })

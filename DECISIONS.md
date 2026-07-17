@@ -18,6 +18,7 @@ document, memo, or research note that disagrees with it.
 | [007](docs/adr/007-contact-belongs-to-a-seller-not-a-place.md) | Contact belongs to a seller, not a place | **Rejected** | **Decides nothing — kept so the argument is not rebuilt.** "`places` conflates venue with vendor" is false: `place_type` is a venue *kind*, and 19 of 38 `open_market` rows are already a single stall. The Bible already settles it — *a stall is a `place`*. **Bible 40.2 stands: consent capture is the blocker, not the schema.** |
 | [008](docs/adr/008-category-filtering-and-pillars.md) | Multi-Category Expansion and Core Pillars | Accepted; proposed amendment in ADR-010 | **Expands scope from Food to 6 pillars.** The current selector is partially wired, but a category value does not yet provide a complete typed vertical. |
 | [009](docs/adr/009-polymorphic-ratings-and-reviews.md) | Polymorphic Ratings & Reviews System | Accepted; proposed amendment in ADR-011 | **Lays schema foundation for generic reviews.** It has no live read/write capability yet and must not be treated as trust evidence or a usable rating filter. |
+| [012](docs/adr/012-observation-provenance-boundary.md) | Observation provenance is explicit and fail-closed | Accepted | **Every immutable observation is classified as synthetic, observed, partner, reference, or inferred.** Unknown and historical rows fail closed to synthetic; live writers set observed explicitly. Source type, collection method, moderation, and provenance remain separate. |
 
 ## Proposed ADRs
 

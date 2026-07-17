@@ -2910,7 +2910,7 @@ This protects the product from vendor lock-in without creating unnecessary inter
 - Vercel hosting and deployment.
 - Neon Postgres.
 - PostGIS for geospatial queries.
-- Vercel Blob for evidence and media.
+- Vercel Blob for profile avatars; evidence and catalog media storage remain open decisions.
 - Tailwind CSS for token-driven styling.
 - Radix-based primitives through shadcn/ui where they meet the specification.
 - Zod or equivalent runtime schema validation.
@@ -3032,16 +3032,20 @@ Authentication is required only when a feature truly needs identity, such as:
 
 The auth provider is an open decision. User identity data must remain minimal and portable.
 
-## 26.10 Media
+## 26.10 Media boundaries
 
-Use Vercel Blob for:
+Profile avatars currently use Vercel Blob. That identity-media implementation does not
+select storage, permissions, or lifecycle rules for other media domains.
 
-- evidence photos;
-- place photos;
-- item reference images;
-- and exports where appropriate.
+Observation evidence media remains an open decision. It requires private/public
+classification, EXIF removal, content hashing, size limits, moderation, retention,
+deletion, and offline-upload rules.
 
-Evidence should default to private access. Public assets may use public storage.
+Catalog reference imagery remains a separate open decision. It requires curator
+authorization, attribution, licensing, replacement, and duplicate-merging rules.
+
+The two domains may share low-level storage plumbing only after separate approval. An
+evidence photo must never become an item reference image automatically.
 
 Uploads must:
 
@@ -4453,6 +4457,7 @@ The team should consider pivoting the mechanism or problem when:
 | `docs/architecture/SERVICE-ARCHITECTURE.md` is the architecture of record; correctness work precedes boundary work | Accepted — see [ADR-002](docs/adr/002-service-architecture-of-record.md) | The modular architecture in Section 25/26 and `AGENTS.md` was never implemented. Documentation that describes a system that does not exist has already produced two generations of dead code |
 | Multi-Category Expansion and Core Pillars | Accepted — see [ADR-008](docs/adr/008-category-filtering-and-pillars.md); proposed amendment ADR-010 | Expands product scope beyond Food to 6 pillars. The existing selector is partial: a category value does not supply a typed subject, signal, contribution, filter, marker, trust, or outcome model |
 | Polymorphic Ratings and Reviews System | Accepted — see [ADR-009](docs/adr/009-polymorphic-ratings-and-reviews.md); proposed amendment ADR-011 | Introduces review schema, not a live review capability. Reviews remain subjective and do not become current-state evidence or usable rating filters merely because tables exist |
+| Observation provenance is explicit and fail-closed | Accepted — see [ADR-012](docs/adr/012-observation-provenance-boundary.md) | Immutable observations distinguish synthetic, observed, partner, reference, and inferred origin. Historical and forgotten writers fail closed to synthetic; live contribution writers declare observed. This classification does not itself authorize partner ingest, media, trust weighting, or public labels |
 
 > **Section 25 and Section 26 describe a TARGET, not the current system.** Verified 16 July 2026:
 > `WetinDeyModule` has zero live implementations, `src/modules/food/` is orphaned, and
@@ -4472,7 +4477,7 @@ The team should consider pivoting the mechanism or problem when:
 - Pilot city and exact coverage boundary.
 - Initial 8–12 items.
 - Canonical and local unit policy.
-- Vercel Blob for media. **Demoted from Accepted 16 July 2026.** It was an Accepted decision with zero implementation, which is the most misleading drift class in this document. Verified: `@vercel/blob` is not in `package.json`, nothing under `src/` imports it, there is no `evidence` table, and there is no media directory at all. The architecture of record defers photos entirely — when media lands it drags EXIF stripping, content hashing, size caps and IndexedDB with it. Decide it when it is built, not before.
+- Evidence and catalog media policy. **Still open.** Vercel Blob is now wired for profile avatars, but identity media does not decide report evidence or item reference imagery. There is still no evidence-media table or report attachment path. Observation evidence requires private/public classification, EXIF removal, content hashing, size caps, moderation, retention, deletion, and offline behavior. Catalog imagery separately requires curation, attribution, licensing, duplicate handling, and operator authorization. Decide and build them in separate lanes.
 - Vendor/contact model. **Promoted to blocking by [ADR-001](docs/adr/001-fulfilment-is-out-of-scope.md).** Handing fulfilment to the buyer and seller makes Contact seller the terminal step of the core journey, and it currently resolves for no place at all: `contact_visibility` defaults to `private`, and the `contact_channel_kind` / `contact_channel_value` columns are read by nothing and written by nothing. Trader consent capture (Section 24) is the unbuilt precondition.
 - Contributor compensation.
 - Public-versus-private evidence policy.
@@ -5232,7 +5237,7 @@ Documentation changes. Engineering decisions that depend on current platform beh
 - Defined map-and-sheet as the prototype interaction model with a full list alternative.
 - Established Dyrane UI/UX principles.
 - Established Apple HIG as a reference rather than a literal clone.
-- Confirmed Next.js PWA, Vercel, Neon Postgres/PostGIS, and Vercel Blob as the technical foundation.
+- Confirmed Next.js PWA, Vercel hosting, and Neon Postgres/PostGIS as the technical foundation; evidence and catalog media storage remain open.
 - Defined trust, availability, price, data operations, modular architecture, privacy, security, testing, delivery, and launch requirements.
 - Added open decisions and validation gates to prevent unresearched claims.
 

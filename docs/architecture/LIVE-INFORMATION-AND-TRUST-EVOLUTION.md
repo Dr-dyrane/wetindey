@@ -305,6 +305,8 @@ verification, moderation, confidence, or organic rank.
 | Ranking | Apply admissibility, confidence, and freshness before capability-specific comparison. Never rely only on rating or cheapest price. |
 | Map and sheet | Consume one selected category and one normalized query result. Marker and card status meanings must match. |
 | Contributions | Typed per signal, atomic, idempotent, relationally valid, and abuse-resistant. No universal report form. |
+| Catalog stewardship | Canonical item identity, aliases, variants, units, categories, duplicate merging, and reference imagery remain an operator-owned catalog concern, not a report side effect. |
+| Media | Catalog reference media and observation evidence may share storage plumbing later, but never ownership, permissions, moderation, retention, or lifecycle semantics. |
 | Moderation | Add only with a real actor. Decisions are append-only, attributed, reasoned, and auditable. |
 | Profiles | Show safe self-explanation, not fraud scores or universal social scores. |
 | Seller dashboards | Future factual accuracy and source history; no paid trust. |
@@ -325,6 +327,8 @@ verification, moderation, confidence, or organic rank.
 |---|---|---|
 | GOV-01 | Schema, SQL, snapshots, and migration journal are not one reproducible lineage | D1 database-lineage lane |
 | DATA-01 | Synthetic and observed rows have no durable provenance boundary | D2 provenance lane |
+| CATALOG-01 | Catalog records and reference images are seed-managed; there is no authorized item CRUD, attribution, or duplicate-merging workflow | Catalog Stewardship lane |
+| MEDIA-01 | Report evidence has no privacy, EXIF, hashing, moderation, retention, or offline-upload pipeline | Observation Evidence Media lane |
 | LIVE-01 | Six-category selector is partially wired over a Food-shaped data model | V1 containment before further expansion |
 | LIVE-02 | Non-Food seed concepts are encoded as price-shaped item offers | Quarantine; never reinterpret |
 | LIVE-03 | Item cards, detail, reports, sharing, and visit outcomes assume price/purchase | Keep Goods-specific; typed verticals later |
@@ -343,12 +347,12 @@ verification, moderation, confidence, or organic rank.
 
 | Release stage | Scope | Explicit exclusions |
 |---|---|---|
-| Freeze precondition | Reconcile owners, repair migrations, quarantine synthetic data, correct broken search | No graph/category/review/reward DDL |
-| V1 | Honest Food price and stock vertical, one confidence path, atomic/idempotent writes, truthful SEO/share/About handoff | No learned public reputation, generalized roles, reviews, partner API, rewards |
+| Freeze precondition | Reconcile owners, repair migrations, classify synthetic data, correct broken search | No graph/category/review/reward DDL |
+| V1 | Honest Food price and stock vertical, one confidence path, atomic/idempotent writes, truthful SEO/share/About handoff | No learned public reputation, generalized roles, reviews, partner API, rewards, catalog operator UI, or evidence uploads |
 | V1 containment | Expose only complete category capabilities; selected context is visible; header/filter work uses only enforced Food behavior | No empty registry or false category outcomes |
-| V1.5 | After real outcomes: scoped reputation events/snapshots, typed verification, real moderation if an actor exists, self-explanation | No universal score, paid verification, or reward program |
+| V1.5 | After real outcomes: scoped reputation events/snapshots, typed verification, real moderation if an actor exists, self-explanation; catalog stewardship may begin after operator authorization | No universal score, paid verification, reward program, or evidence upload without its privacy/media ADR |
 | Phase 5A | Prove one non-price vertical and extract a typed capability only from two live implementations | No EAV, generic form builder, or speculative categories |
-| V2 | Additional typed verticals, live moderated reviews, scoped partner ingest, defense-in-depth RLS | Reviews still do not become live-state evidence |
+| V2 | Additional typed verticals, live moderated reviews, scoped partner ingest, defense-in-depth RLS, and separately approved observation evidence media | Reviews still do not become live-state evidence; evidence media never becomes catalog media automatically |
 | Long term | Calibrated per-signal policies, multi-pillar composition, privacy-preserving APIs, separately approved external reward eligibility | No fulfilment, wallets, payments, purchased status, or opaque AI truth |
 
 ### Dependency graph
@@ -365,6 +369,8 @@ flowchart LR
     PILOT --> R1["R1 scoped reputation calibration"]
     R1 --> V1P5["Typed verification and real moderation"]
     T1 --> C0["C0 honest category containment"]
+    T1 --> CAT["Catalog Stewardship"]
+    D2 --> OEM["Observation Evidence Media"]
     C0 --> C1["C1 Phase 5A non-price vertical"]
     V1P5 --> REV["Live reviews"]
     V1P5 --> PARTNER["Scoped partner ingest"]
@@ -377,22 +383,38 @@ flowchart LR
 | Lane | Status | Mission | Dependencies |
 |---|---|---|---|
 | Governance / Roadmaps | Active, docs only | Review ADR-010/011, architecture delta, freeze, and handoffs | Existing governance claim |
-| D1 database lineage | Blocked until ownership transfer | Restore one reproducible migration history; no Trust Graph DDL | G0 |
-| D2 provenance boundary | Planned | Separate synthetic, observed, partner, reference, and inferred data | D1 and ADR review |
+| D1 database lineage | Complete | Restored one reproducible migration history through `0008`; no Trust Graph DDL | G0 |
+| D2 provenance boundary | Active | Enforce synthetic, observed, partner, reference, and inferred origin on immutable observations | D1 and ADR-012 |
 | V1 truth core | Planned | One truthful Food path from evidence through UI, share, SEO, and outcome | A0, D1, D2 |
 | Context header containment | Blocked | Target header order, visible honest category context, enforced Food filters only | UI/map/action owners release exact paths |
 | Contextual category capability | Deferred Phase 5A | One non-price vertical plus typed capability extracted from two live implementations | ADR-002 Phases 0-4, V1 exit, clean migrations |
+| Catalog Stewardship | Deferred V1.5/V2 | Item CRUD, aliases, variants, units, categorisation, reference imagery, attribution, and duplicate merging | Operator authorization, catalog ADR, reference-media policy, and a real stewardship workflow |
+| Observation Evidence Media | Deferred V1.5/V2 | Report attachments, receipts, EXIF removal, privacy, hashing, size limits, moderation, retention, and offline uploads | D2, media/privacy ADR, storage decision, moderation actor, and offline threat model |
 | R1 reputation calibration | Deferred V1.5 | Append-only events and scoped projections from real outcomes | Pilot outcomes and ADR-011 acceptance |
 | Review vertical | Deferred | Identity, moderation, duplicate-vote safety, read/write/UI/tests | ADR-009/011 gates |
 | Q1 release refutation | Read-only | Attempt to disprove every trust and category claim | Candidate release |
 
-No future lane owns a path until it is activated and exact files are transferred. Current
-auth/UI, map, trust hot-file, brand, and dirty migration claims remain protected.
+No future lane owns a path until it is activated and exact files are transferred. The
+former auth/UI claim is retired; its paths require new narrow claims. Current map, trust
+hot-file, brand, and migration claims remain protected.
+
+### Catalog media and observation evidence are different domains
+
+An item is a canonical subject. Its reference image is curated catalog material with
+licensing, attribution, replacement, and duplicate-merging rules.
+
+An observation is a time-bound claim. Its receipt or photo is evidence for that one claim
+and carries privacy, EXIF, moderation, retention, and access-control risk.
+
+An evidence attachment must never become an item image automatically. A catalog image must
+never be counted as observation evidence. Shared blob storage or upload primitives do not
+merge these ownership and lifecycle boundaries.
 
 ### About, legal, and WetinDey-flow handoff
 
-**Owner:** current auth/UI lane for `ProfileSheet.tsx`, `page.tsx`, and `strings.ts`, with
-human owner/counsel approval.
+**Owner:** a new narrow product/legal UI lane must be assigned for `ProfileSheet.tsx`,
+`page.tsx`, and `strings.ts`, with human owner/counsel approval. The former auth/UI session
+is no longer an owner.
 
 Required corrections:
 

@@ -1,0 +1,2 @@
+CREATE TYPE "public"."observation_provenance" AS ENUM('synthetic', 'observed', 'partner', 'reference', 'inferred');--> statement-breakpoint
+ALTER TABLE "observations" ADD COLUMN "provenance" "observation_provenance" DEFAULT 'synthetic' NOT NULL;
