@@ -117,7 +117,7 @@ export function ReportPriceSheet(p: ReportPriceSheetProps) {
           />
 
           <div className="space-y-1.5">
-            <label htmlFor="price" className="block text-footnote font-medium text-text-secondary">
+            <label htmlFor="price" className="block text-footnote text-text-secondary">
               {p.t.price_paid}
             </label>
             <Input
@@ -132,7 +132,7 @@ export function ReportPriceSheet(p: ReportPriceSheetProps) {
           </div>
 
           <div className="space-y-1.5">
-            <span className="block text-footnote font-medium text-text-secondary">
+            <span className="block text-footnote text-text-secondary">
               {p.t.availability}
             </span>
             <div className="grid grid-cols-2 gap-1 squircle bg-fillTertiary p-1">

@@ -231,7 +231,7 @@ function ConfidenceMeter({ bars }: { bars: number }) {
 /** A neutral marker for the row that wins a dimension. Never a status colour. */
 function LeadChip({ children }: { children: React.ReactNode }) {
   return (
-    <span className="squircle-full bg-fillTertiary px-2 py-[1px] text-caption-2 font-medium text-text-secondary">
+    <span className="squircle-full bg-fillTertiary px-2 py-[1px] text-caption-2 text-text-secondary">
       {children}
     </span>
   );
@@ -264,7 +264,7 @@ function NarrowStep({
     const only = options[0];
     return (
       <div>
-        <span className="mb-1.5 block text-footnote font-medium text-text-secondary">{label}</span>
+        <span className="mb-1.5 block text-footnote text-text-secondary">{label}</span>
         <div className="flex min-h-tap w-full items-center bg-fillQuaternary px-4 squircle">
           <span className="truncate text-body text-text-primary">{only?.label ?? "Nothing nearby"}</span>
         </div>

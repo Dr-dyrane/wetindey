@@ -60,7 +60,7 @@ export function SheetPicker({
   return (
     <div>
       {label && (
-        <label className="mb-1.5 block text-footnote font-medium text-text-secondary">{label}</label>
+        <label className="mb-1.5 block text-footnote text-text-secondary">{label}</label>
       )}
 
       <button

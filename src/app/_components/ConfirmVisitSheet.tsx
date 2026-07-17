@@ -423,7 +423,7 @@ function Choice<T extends string>({
 }) {
   return (
     <fieldset disabled={disabled} className="space-y-2 disabled:opacity-50">
-      <legend className="mb-2 text-subhead font-medium text-text-secondary">{legend}</legend>
+      <legend className="mb-2 text-subhead text-text-secondary">{legend}</legend>
       <div className="grid grid-cols-2 gap-1 squircle bg-fillTertiary p-1">
         {options.map((o) => {
           const active = value === o.id;
@@ -637,7 +637,7 @@ export function ConfirmVisitSheet({ open, visit, onClose, onConfirmed, lang = "e
 
             {needsPrice && (
               <div className="space-y-1.5 animate-in fade-in duration-standard">
-                <label htmlFor="visit-real-price" className="block text-footnote font-medium text-text-secondary">
+                <label htmlFor="visit-real-price" className="block text-footnote text-text-secondary">
                   {t.priceLabel}
                 </label>
                 <Input
