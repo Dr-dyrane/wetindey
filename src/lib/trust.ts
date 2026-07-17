@@ -7,13 +7,12 @@
  *
  * ─── Provenance ────────────────────────────────────────────────────────────
  *
- * This is a PORT, not a new invention. The repo already contained a real trust
- * model with zero importers:
+ * This centralizes policy that previously existed only in unwired food-specific
+ * code:
  *
- *   src/modules/food/application/FoodModule.ts:138-176
- *     · freshnessPolicy { staleHours: 24, expirationHours: 72 }   (:139-142)
- *     · age-decayed confidence                                     (:167-168)
- *     · confidence-ranked sorting                                  (:238-240)
+ *     · freshnessPolicy { staleHours: 24, expirationHours: 72 }
+ *     · age-decayed confidence
+ *     · confidence-ranked sorting
  *
  * The seed already derives freshness from that same policy (src/db/seed.ts:29-30,
  * :309-315). The app's WRITE path now does too — `submitObservation` derives
@@ -26,14 +25,14 @@
  * and blind to who reported. Ten reports from one person on a sofa read as 100%.
  * Its consumer is owned by another lane and it is flagged, not silently moved.
  *
- * What this module keeps from FoodModule, verbatim in spirit:
- *   · the 24h/72h policy                          (FoodModule.ts:139-142)
- *   · the linear age-decay curve                  (FoodModule.ts:167)
- *   · newest observation drives freshness         (FoodModule.ts:154-157)
- *   · confidence-descending ranking               (FoodModule.ts:238-240)
+ * What this module keeps from that earlier policy, verbatim in spirit:
+ *   · the 24h/72h policy
+ *   · the linear age-decay curve
+ *   · newest observation drives freshness
+ *   · confidence-descending ranking
  *
- * What it adds, because FoodModule assessed only the single latest observation
- * and therefore never had to:
+ * What it adds, because the earlier implementation assessed only the single
+ * latest observation and therefore never had to:
  *   · collection method weight    — a visit confirmation outranks a form fill
  *   · source reliability          — sources.reliabilityScoreInternal, 98/85/75,
  *                                   which until now was read by nothing
@@ -58,15 +57,15 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 interface FreshnessPolicy {
-  /** Beyond this, we say "check before you go". FoodModule.ts:141. */
+  /** Beyond this, we say "check before you go". */
   staleHours: number;
-  /** Beyond this, we stop standing behind the price at all. FoodModule.ts:140. */
+  /** Beyond this, we stop standing behind the price at all. */
   expirationHours: number;
 }
 
 /**
- * The one policy. FoodModule.ts:139-142 declared it; src/db/seed.ts:29-30
- * duplicated its numbers as bare constants. Both should import this.
+ * The one policy. Earlier code and the seed duplicated these numbers as bare
+ * constants; both live paths now import this.
  */
 export const FRESHNESS_POLICY: FreshnessPolicy = {
   staleHours: 24,
@@ -215,15 +214,15 @@ function ageHoursOf(observedAt: Date | string, now: number = Date.now()): number
 }
 
 /**
- * The age-decay curve, ported from FoodModule.ts:167.
+ * The age-decay curve retained from the earlier food-specific implementation.
  *
- *   FoodModule:  Math.max(0.5, 1 - ageHours / (expirationHours * 2))
- *   here:        clamp01(       1 - ageHours / (expirationHours * 2))
+ *   earlier:  Math.max(0.5, 1 - ageHours / (expirationHours * 2))
+ *   here:     clamp01(       1 - ageHours / (expirationHours * 2))
  *
  * Same slope, same intercept, ZERO at 144h. The 0.5 floor is dropped on purpose,
  * and the reason is the one substantive difference between the two models:
- * FoodModule assessed only the single latest observation (:154-157), so a floor
- * was harmless — the level was forced to "unavailable" past 72h anyway (:160-161).
+ * the earlier implementation assessed only the single latest observation, so a
+ * floor was harmless — the level was forced to "unavailable" past 72h anyway.
  * This module SUMS across observations. With a floor, a hundred ancient reports
  * would pile up into high confidence forever. Evidence has to be able to reach
  * zero, or age stops meaning anything.
@@ -327,10 +326,9 @@ function scoreFromEvidence(evidence: number): number {
 /**
  * How recently we heard — and ONLY that.
  *
- * Ported from FoodModule.ts:159-164, with the availability value removed from
- * the enum. FoodModule's third state ("unavailable") answered a different
- * question than its first two, which is the conflation this module exists to
- * undo.
+ * Retains the earlier freshness rule with the availability value removed from
+ * the enum. That third state ("unavailable") answered a different question than
+ * the first two, which is the conflation this module exists to undo.
  */
 function freshnessOf(
   ageHours: number,
@@ -366,8 +364,8 @@ function trustBand(confidenceScore: number, freshness: Freshness): TrustBand {
   // all — and must not read as 'low', which implies we know something faint. We
   // know nothing. Say so.
   if (confidenceScore < TRUST_BANDS.low) return "none";
-  // Expiry is a hard gate regardless of score, mirroring FoodModule.ts:160-161:
-  // past 72h we do not stand behind the price, however many people once said it.
+  // Expiry is a hard gate regardless of score: past 72h we do not stand behind
+  // the price, however many people once said it.
   if (freshness === "expired") return "low";
   if (confidenceScore >= TRUST_BANDS.high) return "high";
   if (confidenceScore >= TRUST_BANDS.medium) return "medium";
@@ -495,9 +493,9 @@ export function assessTrust(
     };
   }
 
-  // Newest report drives freshness AND availability — FoodModule.ts:154-157, and
-  // the same rule the seed writes by (src/db/seed.ts:300-302: only the newest
-  // report carries current availability; older ones are history).
+  // Newest report drives freshness AND availability — the same rule the seed
+  // writes by: only the newest report carries current availability; older ones
+  // are history.
   let newest = observations[0];
   let newestMs = toMillis(newest.observedAt);
   for (const observation of observations) {
@@ -553,8 +551,8 @@ export function assessTrust(
 }
 
 /**
- * Confidence-descending sort — ported from FoodModule.ts:238-240, which sorted
- * `b.detail.confidenceScore - a.detail.confidenceScore` and had no importers.
+ * Confidence-descending sort retains the earlier ordering:
+ * `b.detail.confidenceScore - a.detail.confidenceScore`.
  *
  * Ties break on freshness, then on distinct sources: between two equal scores,
  * prefer the one we heard about more recently, then the one more people saw.

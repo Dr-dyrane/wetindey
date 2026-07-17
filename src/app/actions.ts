@@ -1698,8 +1698,8 @@ export async function getPlaceContactPolicy(placeId: string): Promise<PlaceConta
 // ─────────────────────────────────────────────────────────────────────────────
 // 9. Trust, the READ side
 //
-// The real model lives in src/lib/trust.ts, ported from FoodModule.ts:138-176,
-// which held it correctly and had zero importers. These actions are the wire.
+// The real model lives in src/lib/trust.ts. It centralizes policy that previously
+// existed only in unwired food-specific code; these actions are the live wire.
 //
 // The WRITE side is now wired too: `submitObservation` derives `trust_level` and
 // `freshness_state` from the same `assessTrust` these functions call, so the

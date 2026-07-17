@@ -18,10 +18,9 @@ import {
 /**
  * Freshness policy.
  *
- * These are the numbers FoodModule.ts already encodes ({expirationHours: 72,
- * staleHours: 24}) — the only real trust model in the repo, which nothing
- * imports. The seed now derives freshness from the same policy the app would
- * use if it were wired, so seeded data and live data mean the same thing.
+ * These are the shared trust windows: stale after 24 hours and expired after
+ * 72. The seed derives freshness from the same policy as live reads and writes,
+ * so seeded data and live data mean the same thing.
  *
  * The old seed's comment said "expires in 7 days" while the code wrote 72h.
  * 72 is the number that was actually in force, so 72 it is; the comment was the
@@ -400,7 +399,7 @@ const run = async () => {
       const priceMax = Math.max(...prices);
       const ageH = (Date.now() - newest.at.getTime()) / 3600_000;
 
-      // Freshness follows the clock, using FoodModule's policy.
+      // Freshness follows the clock, using the shared trust policy.
       const freshnessState = !available
         ? "unavailable"
         : ageH > EXPIRATION_HOURS
