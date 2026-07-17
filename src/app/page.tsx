@@ -58,6 +58,27 @@ import {
 import { getHaversineDistance, formatDistance } from "@/lib/geospatial";
 import { fetchRoute } from "@/lib/directions";
 
+/**
+ * A price report typed while offline, waiting for a connection.
+ *
+ * `attempts` is what stops a payload the server will never accept from replaying
+ * on every reconnect for the life of the install. Optional because entries
+ * queued by an older build carry none — `?? 0` reads those as fresh rather than
+ * dropping someone's report for having been queued yesterday.
+ */
+interface PendingObservation {
+  placeId: string;
+  itemVariantId: string;
+  unitId: string;
+  priceAmount: number;
+  availabilityState: "available" | "unavailable";
+  attempts?: number;
+}
+
+/** Matches ConfirmVisitSheet's MAX_ATTEMPTS. The two queues drain together in one
+ *  function; they should give up together too. */
+const MAX_OBSERVATION_ATTEMPTS = 3;
+
 interface PlaceData {
   id: string;
   name: string;
@@ -464,24 +485,67 @@ export default function HomePage() {
       const cached = localStorage.getItem("pending_observations");
       if (cached) {
         try {
-          const queue = JSON.parse(cached) as Array<{
-            placeId: string;
-            itemVariantId: string;
-            unitId: string;
-            priceAmount: number;
-            availabilityState: "available" | "unavailable";
-          }>;
+          const queue = JSON.parse(cached) as PendingObservation[];
 
           if (queue.length > 0) {
-            console.log(`Syncing ${queue.length} offline price reports…`);
+            /**
+             * PER-ENTRY, and the whole bug was where `removeItem` used to sit.
+             *
+             * It was AFTER the loop, with the loop inside one try/catch. So entry
+             * 3 of 5 throwing skipped it — while entries 1 and 2 had already
+             * COMMITTED. The queue survived intact and replayed both on the next
+             * reconnect, and every reconnect after that, because the poisoned
+             * entry never drained. `observations` is append-only, so each replay
+             * is permanent: it inflates the evidence behind a price with copies of
+             * a single report, which is exactly what the trust model cannot see.
+             *
+             * A network blip was enough to start it. With accounts it stops being
+             * a blip — tokens expire on a schedule, so a 401 mid-queue is the
+             * routine case, and the duplicates would carry an author.
+             *
+             * This is not a new mechanism. `flushPendingVisitConfirmations`
+             * (ConfirmVisitSheet.tsx) has done it correctly since it was written:
+             * per-entry try/catch, a keep list, an attempts counter, a ceiling.
+             * The two queues drain side by side in this same function — one right,
+             * one wrong. Ported, not reinvented.
+             */
+            const keep: PendingObservation[] = [];
+            let sent = 0;
+
             for (const item of queue) {
-              await submitObservation(item);
+              try {
+                const { attempts: _a, ...payload } = item;
+                await submitObservation(payload);
+                sent++;
+              } catch (err) {
+                const attempts = (item.attempts ?? 0) + 1;
+                if (attempts >= MAX_OBSERVATION_ATTEMPTS) {
+                  // Dropped, and said out loud. An entry the server refuses three
+                  // times is not a network problem, it is a bad payload, and
+                  // retrying it forever costs a round-trip per reconnect forever.
+                  // Silence here is how a lost price report becomes invisible by
+                  // construction.
+                  console.error(
+                    `Dropping a queued price report after ${attempts} attempts; the server refused it.`,
+                    err
+                  );
+                } else {
+                  keep.push({ ...item, attempts });
+                }
+              }
             }
-            localStorage.removeItem("pending_observations");
-            changed = true;
+
+            if (keep.length > 0) {
+              localStorage.setItem("pending_observations", JSON.stringify(keep));
+            } else {
+              localStorage.removeItem("pending_observations");
+            }
+            changed = sent > 0;
           }
         } catch (err) {
-          console.error("Failed to sync offline observations:", err);
+          // Only the parse and the storage write reach here now — a failing
+          // submit is handled per entry above.
+          console.error("Failed to read the offline price report queue:", err);
         }
       }
 
@@ -753,8 +817,9 @@ export default function HomePage() {
     if (typeof window !== "undefined" && !navigator.onLine) {
       try {
         const cached = localStorage.getItem("pending_observations");
-        const queue = cached ? JSON.parse(cached) : [];
-        queue.push(payload);
+        const queue: PendingObservation[] = cached ? JSON.parse(cached) : [];
+        // Stamped at ENQUEUE, or the counter the drain reads never starts.
+        queue.push({ ...payload, attempts: 0 });
         localStorage.setItem("pending_observations", JSON.stringify(queue));
 
         setIsOfflineSaved(true);
