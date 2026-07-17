@@ -44,8 +44,8 @@ npm run dev                    # http://localhost:3000
 Everything else in `.env.example` is optional (Sentry, `APP_ENV`) and the app
 runs correctly without it. `.env.example` documents which file reads each key.
 
-> **If your map is blank, this is why.** The Mapbox token is read at
-> `MapboxAdapter.ts:135` and `MapboxCanvas.tsx:201`, and both fall back to `""`
+> **If your map is blank, this is why.** The Mapbox token is read in
+> `MapboxAdapter.ts` (the constructor) and `MapboxCanvas.tsx`, and both fall back to `""`
 > rather than throwing. A missing or misnamed token produces an empty grey
 > canvas and no error anywhere. Check the name character for character — it is
 > `NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN`, not `NEXT_PUBLIC_MAP_TOKEN`. (`.env.example`
