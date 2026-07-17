@@ -31,6 +31,8 @@ They authorize documentation review only.
 | **G0 governance reconciliation** | active, docs only | existing governance owner / Sol | ADR-010/011 proposals, architecture delta, ownership matrix, freeze, handoffs | Existing governance paths only; no app/schema/migration edits |
 | **D1 database lineage** | completed, released | Terra session *Harvey*, independently refuted by Luna | Restored the exact applied `0006`-`0008` lineage artifacts and proved disposable bootstrap | Exact SQL preserved; blank migration, seed, second-pass idempotence, clean-`HEAD` failure, and cleanup were independently reproduced |
 | **D2 provenance boundary** | implementation complete, migration unapplied | controller / Sol decision, Terra implementation, Sol refutation | Added one enforced provenance class at the immutable observation boundary; seed/demo observations are synthetic and live contribution writers are observed | Static refutation passed; `0009` was not applied to any database; no reputation, media, partner ingest, reference CRUD, inferred-data engine, or Trust Graph storage |
+| **Avatar upload transport envelope** | active; claim recorded immediately after owner-directed edit began | Iconography / Sol | `next.config.ts` only: give Server Actions multipart headroom above the existing strict 2 MiB avatar validator | No Blob/OIDC configuration, upload action, schema, dependency, push, or deploy; Motion paths excluded |
+| **Location privacy factual correction** | active | Luna | `src/app/_components/LocationSheet.tsx` only: replace the false absolute claim that location never leaves the device with factual feature-level disclosure | No server-action, map, profile, routing, retention-policy, Terms, or final Privacy wording; counsel-owned disclosures remain deferred |
 | **V1 truth core** | planned, unclaimed | Sol | One Food path from admissible evidence to read, map, share, SEO, offline, and outcome | After auth/actions handoff, D1, and D2; no new pillar/review/reward |
 | **context header containment** | blocked, owns no paths | Sol design, Terra implementation | Target header order, visible honest category context, enforced Food filters only | Requires explicit `page.tsx`, map, actions, validation, and copy handoffs |
 | **contextual category capability vertical** | deferred Phase 5A, owns no paths | Sol | One non-price vertical plus typed capability extracted from two live implementations | ADR-002 Phases 0-4, accepted ADR-010/011, V1 exit, clean migrations; no EAV/registry before then |
@@ -45,11 +47,13 @@ it.
 
 ### Product/legal handoff
 
-There is no current auth/UI owner. A new narrow product/legal UI lane must explicitly claim
-`ProfileSheet.tsx`, `page.tsx`, and `strings.ts` before editing them. That lane and human
-counsel must correct the About, How WetinDey works, Terms, Privacy, and support flow.
-Current copy calls WetinDey a price map and says every price came from a person, which
-contradicts both the platform mission and synthetic seed state.
+There is no current auth/UI owner. Current About, How WetinDey works, and Terms copy already
+describe the live local-information product, disclose the Food-only V1, and preserve
+ADR-001's fulfilment exclusion. Privacy remains explicitly draft. A future counsel-backed
+lane must claim the exact relevant paths before finalising processor, retention, deletion,
+precise-location, profile/avatar/contact, controller/contact, legal-basis, and effective-date
+disclosures. The active one-file location-privacy lane corrects only the false absolute
+device-local claim; it does not approve final legal wording.
 
 ### Contextual filtering constraints
 
