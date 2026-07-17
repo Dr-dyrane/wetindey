@@ -1,12 +1,33 @@
 # Delivery Integration: Decision Memo
 
+> ## ⚠️ SUPERSEDED — DO NOT ACT ON THIS DOCUMENT
+>
+> **Superseded by [ADR-001: Fulfilment is out of scope](../adr/001-fulfilment-is-out-of-scope.md) on 16 July 2026, the same day it was written.**
+>
+> **WetinDey does not integrate a delivery API.** Fulfilment is arranged directly
+> between buyer and seller via the Contact seller affordance. Do not build a courier
+> integration, dispatch, tracking, cart, checkout, or payments on the strength of this
+> memo. Its recommendation to "integrate Chowdeck Relay first" is **rejected**.
+>
+> **Why it was wrong:** this memo was written before checking `places.place_type`. The
+> catalogue is `open_market` / `supermarket` / `kiosk` — market stalls — while courier
+> platforms deliver from their own vendor catalogues. A handoff cannot represent a Mile 12
+> stall, so it lands the user on a different seller at a different price. The memo's Section 6
+> "ship the deep-link handoff regardless" advice is unsafe for the same reason.
+>
+> **What is still true and useful:** the provider research is sound and adversarially
+> verified. Uber Direct is genuinely unavailable in Nigeria. Chowdeck is real, funded, and
+> has a real API — but it is merchant-scoped and **cannot be a price source**, as there is
+> no vendor discovery or enumeration. Keep this document as market evidence. Read the ADR
+> for the decision.
+
 **Date:** 2026-07-16 · **Audience:** the engineer who has to ship this week
 
 ---
 
 ## 1. Bottom line
 
-**Integrate Chowdeck Relay first.** It is the only option that clears all four bars at once: it dispatches real riders on-demand inside Lagos, its docs are real and fetchable, auth is a plain `Authorization: Bearer <secret>` header, and signup is self-serve at `dashboard.chowdeck.com` with no sales call or contract in the documented path. Everything else either isn't in Nigeria (Uber Direct), isn't on-demand (Fez, Sendbox, Topship, Shipbubble-ish), needs a salesperson (Glovo LaaS), needs an email and a human to flip a flag (Kwik), or has a live API with a permanently dead key-issuing domain (Gokada). The one thing to be clear-eyed about: nobody has *empirically* confirmed that Chowdeck hands you a working Relay key without a KYC/business-verification step, and no sandbox is documented despite marketing claiming one. So: sign up on day one, and treat the first 48 hours as a spike whose only job is answering "does a key actually arrive, and is there a test mode." If the key doesn't arrive, fall back to Errandlr (also Lagos-only, also on-demand, also open registration), and if neither issues a key, go to the deep-link/WhatsApp workaround in §6 — which is a legitimate v1, not a defeat.
+**Integrate Chowdeck Relay first.** It is the only option that clears all four bars at once: it dispatches real riders on-demand inside Lagos, its docs are real and fetchable, auth is a plain `Authorization: Bearer <secret>` header, and signup is self-serve at `dashboard.chowdeck.com` with no sales call or contract in the documented path. Everything else either isn't in Nigeria (Uber Direct), isn't on-demand (Fez, Sendbox, Topship, Shipbubble-ish), needs a salesperson (Glovo LaaS), needs an email and a human to flip a flag (Kwik), or has a live API with a permanently dead key-issuing domain (Gokada). The one thing to be clear-eyed about: nobody has *empirically* confirmed that Chowdeck hands you a working Relay key without a KYC/business-verification step, and no sandbox is documented despite marketing claiming one. So: sign up on day one, and treat the first 48 hours as a spike whose only job is answering "does a key actually arrive, and is there a test mode." If the key doesn't arrive, fall back to Errandlr (also Lagos-only, also on-demand, also open registration), and if neither issues a key, go to the deep-link/WhatsApp workaround in Section 6 — which is a legitimate v1, not a defeat.
 
 ---
 

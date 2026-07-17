@@ -3062,11 +3062,19 @@ Uploads must:
 - Derived current offers may be rebuilt.
 - Geographic data uses PostGIS.
 - Times are stored in UTC.
-- IDs use UUIDv7 or another sortable unique identifier selected consistently.
+- IDs use UUIDv7 or another sortable unique identifier selected consistently. **Deviation, recorded 16 July 2026 — the code does not do this and will not.** Every primary key is `uuid().defaultRandom()` (`src/db/schema/index.ts`, all nine tables), which is Postgres `gen_random_uuid()` — UUIDv4, random and not sortable. This principle was never honoured. It is recorded as a deviation rather than repaired: changing the key type would rewrite every foreign key in the schema and every row in the database to buy an ordering property nothing queries. The principle is the bug, not the schema.
 - Money is stored as integer minor units where applicable; for naira-only whole-price data, store integer naira plus explicit currency and precision policy.
 - Every moderation action is audited.
 
 ## 27.2 Core tables
+
+**Amended 16 July 2026 to the nine tables that exist.** This section previously specified
+fifteen. Six of them were never built, and one of those — `vendors` — is obsoleted and
+struck. The schema of record is `src/db/schema/index.ts`; where it and this section
+disagree, the schema is right. Read it before you extend anything here.
+
+The nine: `areas`, `places`, `items`, `item_aliases`, `item_variants`, `units`, `sources`,
+`observations`, `offers_current`. Field lists below are the real columns.
 
 ### `areas`
 
@@ -3075,11 +3083,13 @@ Uploads must:
 - name
 - type
 - parent_area_id
-- boundary geometry, optional
 - center geography point
 - coverage_status
 - created_at
 - updated_at
+
+`boundary geometry` was specified and never built. Coverage is a point plus a radius, not
+a polygon.
 
 ### `places`
 
@@ -3093,32 +3103,42 @@ Uploads must:
 - opening_information
 - verification_status
 - contact_visibility
+- contact_channel_kind, optional — 'phone', 'whatsapp', 'sms'
+- contact_channel_value, optional — E.164 for phone/whatsapp
 - created_at
 - updated_at
 
-### `vendors`
+The contact-channel pair exists in the schema and is read by nothing and written by
+nothing. See the *Vendor/contact model* line in 40.2 — the columns are no longer the
+blocker; consent capture is.
 
-- id
-- place_id
-- display_name
-- verification_status
-- phone_encrypted, optional
-- contact_consent
-- status
-- created_at
-- updated_at
+### `vendors` — **struck 16 July 2026, see [ADR-001](docs/adr/001-fulfilment-is-out-of-scope.md)**
+
+This table does not exist and must not be built. It was the seam for a vendor-level
+fulfilment model that ADR-001 removed from the product entirely. The catalogue is market
+stalls; a stall is a `place`. Contact is `places.contact_visibility` plus the channel
+pair above, not a vendor identity. Any `vendor_id` you find elsewhere in this document is
+a ghost of this table — the schema has none.
 
 ### `items`
 
 - id
 - slug
 - canonical_name
-- category_id
 - description
+- image_url, optional
+- image_attribution, optional
+- image_license, optional
+- image_source_url, optional
 - active
-- default_freshness_policy_id
 - created_at
 - updated_at
+
+`category_id` and `default_freshness_policy_id` were specified and never built. There is
+no category table and no per-item freshness policy — freshness is flat and global
+(24h/72h, [ADR-006](docs/adr/006-freshness-windows.md)). The four image columns were not
+specified and shipped: most photos are CC BY / CC BY-SA, so the credit is stored beside
+the URL it belongs to.
 
 ### `item_aliases`
 
@@ -3126,9 +3146,10 @@ Uploads must:
 - item_id
 - alias
 - locale
-- region_id, optional
 - normalized_alias
 - weight
+
+`region_id` was specified and never built.
 
 ### `item_variants`
 
@@ -3146,20 +3167,61 @@ Uploads must:
 - display_name
 - dimension
 - canonical_quantity
-- canonical_unit_id, optional
-- conversion_precision
-- region_id, optional
 - notes
 
-### `offers_current`
+`canonical_unit_id`, `conversion_precision` and `region_id` were specified and never
+built. Nothing converts between units. See the unit-policy line in 40.2 — still open.
 
-Derived table or materialized representation:
+### `sources`
+
+- id
+- source_type — 'Contributor', 'Public data', 'Vendor'
+- user_id, optional — the account behind this source, when there is one
+- status
+- reliability_score_internal
+- created_at
+- updated_at
+
+`partner_id` and `vendor_id` were specified and never built.
+
+`user_id` ships ahead of its writer, and this is the condition
+[ADR-003](docs/adr/003-identity-for-contribution-trust.md) is waiting on: the column
+exists, nothing writes it, and `src/app/actions.ts` has no session awareness. Until a
+write path resolves a session to a per-user row, every row carries NULL and this table
+answers exactly as it did when it held three category rows — which is what makes
+`distinct_source_count` a count of *categories* rendered as "N different people"
+(`src/lib/trust.ts:405`). Do not read ADR-003 as shipped attribution. Sign-in shipped;
+attribution did not.
+
+### `observations`
 
 - id
 - item_variant_id
 - unit_id
 - place_id
-- vendor_id, optional
+- availability_state
+- price_amount, optional — stored in minor units
+- currency
+- observed_at
+- submitted_at
+- source_id
+- collection_method
+- moderation_status
+- notes
+- did_buy, optional — true / false / NULL, where NULL means never asked
+- raw_payload jsonb
+
+`vendor_id` is struck with the `vendors` table. `supersedes_observation_id` was specified
+and never built — observations are immutable and a correction is simply a newer row.
+
+### `offers_current`
+
+Derived table, materialized on write:
+
+- id
+- item_variant_id
+- unit_id
+- place_id
 - availability_state
 - price_kind
 - price_min
@@ -3172,92 +3234,24 @@ Derived table or materialized representation:
 - supporting_observation_count
 - updated_at
 
-### `observations`
+`vendor_id` is struck with the `vendors` table. `(item_variant_id, unit_id, place_id)` is
+the natural key and is enforced UNIQUE — the table's name is a promise of one current
+offer per triple, and the code reads it that way with `.limit(1)` throughout.
 
-- id
-- item_variant_id
-- unit_id
-- place_id
-- vendor_id, optional
-- availability_state
-- price_amount, optional
-- currency
-- observed_at
-- submitted_at
-- source_id
-- collection_method
-- moderation_status
-- notes
-- raw_payload jsonb
-- supersedes_observation_id, optional
+### Tables specified here and deliberately not built
 
-### `sources`
+**Amended 16 July 2026.** These five carried full field lists for months while no
+migration ever created them. An agent reading a field list as fact writes code against a
+table that does not exist. They are kept only as a record of the intent, and each one
+names why it is not built:
 
-- id
-- source_type
-- user_id, optional
-- partner_id, optional
-- vendor_id, optional
-- status
-- reliability_score_internal
-- created_at
-- updated_at
-
-### `evidence`
-
-- id
-- observation_id
-- blob_key
-- mime_type
-- content_hash
-- visibility
-- metadata jsonb
-- moderation_status
-- created_at
-
-### `trust_assessments`
-
-- id
-- observation_id or offer_id
-- algorithm_version
-- score_internal
-- level
-- factors jsonb
-- created_at
-
-### `moderation_decisions`
-
-- id
-- subject_type
-- subject_id
-- decision
-- reason_code
-- note
-- actor_id
-- created_at
-
-### `audit_log`
-
-- id
-- actor_id
-- action
-- entity_type
-- entity_id
-- before jsonb
-- after jsonb
-- created_at
-
-### `search_events`
-
-Privacy-minimized analytics:
-
-- id
-- anonymous_session_id or user_id
-- normalized_query
-- resolved_item_id, optional
-- area_id, optional
-- result_count
-- created_at
+| Table | Why it does not exist |
+|---|---|
+| `evidence` | Media is deferred entirely. `@vercel/blob` is not a dependency and nothing imports it — see the Blob line in 40.2, demoted from Accepted the same day. When photos land, this table lands with them, and it drags EXIF stripping, content hashing and size caps with it. |
+| `trust_assessments` | It would cache a pure function. `assessTrust` (`src/lib/trust.ts`) derives trust from observations on read; persisting the result buys nothing and creates an invalidation problem that does not currently exist. |
+| `moderation_decisions` | Build it when a moderator exists. `moderation_status` is a column on `observations` and no human has ever set it. |
+| `audit_log` | Same gate. There is no operations console and no actor to attribute an action to. |
+| `search_events` | Analytics is `@vercel/analytics`. Instrument the few events that answer a question before building a table to hold nineteen. |
 
 ## 27.3 Geographic indexes
 
@@ -3273,14 +3267,19 @@ Example query intent:
 
 ## 27.4 Observation indexes
 
-Important indexes:
+**Amended 16 July 2026 to what `src/db/schema/index.ts` declares.** The list below was a
+wish list; none of these six existed. What ships:
 
-- item_variant_id + place_id + observed_at desc;
-- source_id + observed_at desc;
-- moderation_status + submitted_at;
-- expires_at;
-- item_variant_id + unit_id + observed_at;
-- content_hash for evidence duplicate detection.
+- `observations`: `(item_variant_id, unit_id, place_id)` — the recompute every write
+  performs, on the only table that grows without bound;
+- `offers_current`: `(item_variant_id, unit_id, place_id)` UNIQUE (the natural key),
+  `place_id`, `unit_id`, and `(item_variant_id, last_observed_at desc)`;
+- `sources`: `user_id`, shipped with the column ahead of its writer;
+- `item_aliases`: `item_id`. Deliberately no index for the leading-wildcard `ilike` —
+  that needs GIN + `pg_trgm`, and `pg_trgm` is not installed on this database;
+- `item_variants`: `item_id`.
+
+`content_hash for evidence duplicate detection` is struck — there is no `evidence` table.
 
 ## 27.5 Data retention
 
@@ -3299,15 +3298,37 @@ Operations access requires role-based authorization and audit logging.
 
 ---
 
-# 28. API and data contracts
+# 28. Future external API — NOT BUILT. Server Actions are the actual contract
 
-## 28.1 API versioning
+> **Retitled 16 July 2026. Read this before the chapter.**
+>
+> **None of the ten `/api/v1` endpoints below exists.** Verified against the tree:
+> `src/app/api/` contains exactly one route handler —
+> `src/app/api/auth/[...path]/route.ts`, the Neon Auth proxy — and it is not one of
+> the ten. There is no `/api/v1` anything.
+>
+> **Every piece of product data flows through Server Actions in `src/app/actions.ts`,
+> and that is correct.** Seventeen exported actions are the read and write contract:
+> `searchFoodItems`, `getPopularItems`, `getFoodItemCandidates`, `getPlaces`,
+> `getPlaceOffers`, `submitObservation`, `getInitialSubmissionData`, `getVisitContext`,
+> `submitVisitConfirmation`, `getItemNarrowingOptions`, `getOffersNarrowed`,
+> `getAreaTree`, `getPlacesNear`, `getCoverageForPoint`, `getPlaceContactPolicy`,
+> `getOfferTrustBatch`, `getOfferTrust`. There is one consumer — this app — and a
+> function call typed end-to-end is a better contract for it than a hand-versioned
+> HTTP surface with no second client to serve.
+>
+> **This chapter is kept as a design for an API that has no consumer yet.** It becomes
+> real the day a partner or a second client exists, and not before. Until then: do not
+> build these, do not test against them, and do not cite this chapter as a description
+> of the system. `src/app/actions.ts` is the contract.
+
+## 28.1 API versioning — future
 
 Public or partner APIs use `/api/v1`.
 
 Internal Server Actions may evolve with the application, but shared schemas should remain versioned.
 
-## 28.2 Suggested endpoints
+## 28.2 Suggested endpoints — none of these exist
 
 ```text
 GET  /api/v1/items/search
@@ -3735,20 +3756,56 @@ Experiments may test:
 
 # 32. Testing and quality assurance
 
-## 32.1 Test layers
+## 32.0 What V1 actually ships — **amended 16 July 2026**
+
+**There are no tests. Not one.** Stated plainly because every other word in this chapter
+reads like a description of a test suite, and there is no test suite.
+
+Verified against the repo:
+
+- **No test runner.** `package.json` has no `test` script and no Vitest, Jest, Playwright
+  or Cypress in `dependencies` or `devDependencies`.
+- **No test config.** No `vitest.config.*`, no `jest.config.*`, no `playwright.config.*`.
+- **No test files.** Zero `*.test.ts`, `*.test.tsx`, `*.spec.ts` anywhere outside
+  `node_modules`.
+- **`src/test/` contains a single `.gitkeep`.** The folder was created and never used.
+
+What V1 actually ships as quality tooling, all of it static or manual:
+
+| Tool | Script | What it can and cannot catch |
+|---|---|---|
+| TypeScript | `npm run typecheck` (`tsc --noEmit`) | Types. Not behaviour. |
+| ESLint | `npm run lint` | Lint rules. Not behaviour. |
+| Knip | `npm run knip` | Unused files and exports — the one check aimed at this repo's actual disease, dead code nothing calls. |
+| Prettier | `npm run format` | Formatting. |
+| Token audit | `npm run audit:tokens` | Design-token drift. |
+| Manual | — | Everything else, including every scenario in 32.2. |
+
+The gap this leaves is not academic. `src/lib/trust.ts` is pure, total, and the single
+most consequential function in the product — it decides what every badge in the app
+claims — and nothing exercises it. The EWKB decode bug in `src/db/schema/index.ts` (every
+coordinate silently becoming (0,0), markers stacked in the Gulf of Guinea) survived the
+life of the project and would have died to one unit test.
+
+**Read 32.1–32.6 as a target, not a description.** They specify nine test layers, twelve
+end-to-end scenarios and a device matrix, none of which exist. Do not cite this chapter as
+evidence that anything is verified. If you add the first test, amend this section.
+
+## 32.1 Test layers — target, none built
 
 - Unit tests for normalization, ranking factors, freshness, and price logic.
 - Integration tests for database and service boundaries.
-- Contract tests for API schemas.
+- Contract tests for API schemas. (Note: there is no API — see Section 28. The contract to
+  test is `src/app/actions.ts`.)
 - End-to-end tests for hero flows.
 - Visual regression for core states.
 - Accessibility tests.
 - Performance tests.
 - Security tests.
 - Data-quality tests.
-- Manual usability tests.
+- Manual usability tests. **The only layer currently practised.**
 
-## 32.2 Critical end-to-end scenarios
+## 32.2 Critical end-to-end scenarios — target; today these are walked by hand or not at all
 
 1. New user, manual area, successful search.
 2. Returning user, location available, successful search.
@@ -3792,7 +3849,7 @@ Minimum manual coverage:
 - screen-reader form errors;
 - keyboard sheet controls.
 
-## 32.5 Data tests
+## 32.5 Data tests — target, none automated
 
 Automated checks should detect:
 
@@ -4375,22 +4432,30 @@ The team should consider pivoting the mechanism or problem when:
 | Apple HIG is a design reference | Accepted | Clarity, consistency, accessibility, platform discipline |
 | Next.js PWA on Vercel | Accepted | Fast cross-platform launch and existing stack preference |
 | Neon Postgres + PostGIS | Accepted | Typed relational and geospatial foundation |
-| Vercel Blob for media | Accepted | Stack alignment and managed object storage |
+| Drizzle is the ORM | Accepted — see [ADR-004](docs/adr/004-drizzle-is-the-orm.md) | Shipped and load-bearing. `drizzle-orm ^0.45.2` + `drizzle-kit ^0.31.10` own the whole data layer; `pg` is the driver beneath them, not an alternative. Listed open for months, which invited an agent to re-decide it and rewrite `src/app/actions.ts` |
+| Mapbox is the map provider; there is no geocoder | Accepted — see [ADR-005](docs/adr/005-mapbox-is-the-map-provider.md) | Shipped. Mapbox GL JS v3.1.2, CDN-loaded in `layout.tsx:88-89` — deliberately not a package dependency — keyed by the public `NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN`. Every screen sits on it |
+| Neon Auth (email OTP) is the authentication provider | Accepted — see [ADR-003](docs/adr/003-identity-for-contribution-trust.md) | Shipped `26350ba`. `@neondatabase/auth 0.4.2-beta`, proxied at `src/app/api/auth/[...path]/route.ts` so the session cookie is first-party. Reading stays anonymous forever; auth is recognition, never a gate |
+| Freshness windows are 24h stale / 72h expired | Accepted — see [ADR-006](docs/adr/006-freshness-windows.md) | The numbers are in force: `FRESHNESS_POLICY = { staleHours: 24, expirationHours: 72 }` (`src/lib/trust.ts:65-68`). **Ratified, not yet true.** `src/lib/trust.ts` is named the single authoritative expression of the policy, but it is not yet the only one: a competing model lives in `ItemDetailSheet.tsx:135` (`offerSignal`) and `:181` (`confidenceFor`), and `page.tsx:626` imports it back out of a sheet to colour map pins. 72h is also hardcoded at `actions.ts:357` and `:624` and duplicated in `seed.ts:31-32`. Phase 1 makes the policy sole. Until then, do not read this row as "freshness works" |
 | Modular monolith | Accepted | Reuse without premature microservices |
-| Anonymous browse | Accepted | Reduce friction and personal-data collection |
+| Anonymous browse, optional recognition | **Amended 16 Jul 2026 — see [ADR-003](docs/adr/003-identity-for-contribution-trust.md)** | Reading is anonymous permanently — no sign-in to open the app, search, or read a price. Writing may be attributed: signing in is how a contributor earns a reputation that weights their reports. Contributing anonymously stays possible and simply weighs less. Auth is recognition, never a gate |
 | No checkout/delivery in V1 | Accepted | Protect core decision experience |
+| Fulfilment is out of scope entirely; buyer and seller arrange it themselves via Contact seller | Accepted — see [ADR-001](docs/adr/001-fulfilment-is-out-of-scope.md) | A WetinDey price is a dated observation, not a quotable commitment; and the catalogue is market stalls, which no courier platform can represent |
+| `docs/architecture/SERVICE-ARCHITECTURE.md` is the architecture of record; correctness work precedes boundary work | Accepted — see [ADR-002](docs/adr/002-service-architecture-of-record.md) | The modular architecture in Section 25/26 and `AGENTS.md` was never implemented. Documentation that describes a system that does not exist has already produced two generations of dead code |
+
+> **Section 25 and Section 26 describe a TARGET, not the current system.** Verified 16 July 2026:
+> `WetinDeyModule` has zero live implementations, `src/modules/food/` is orphaned, and
+> `src/db/queries/` is empty. The application is `src/app/page.tsx` plus `src/app/actions.ts`.
+> Read [ADR-002](docs/adr/002-service-architecture-of-record.md) and the architecture of
+> record before citing those sections as fact.
 
 ## 40.2 Open decisions
 
 - Pilot city and exact coverage boundary.
 - Initial 8–12 items.
 - Canonical and local unit policy.
-- Map/geocoding provider.
-- ORM.
-- Authentication provider.
-- Vendor/contact model.
+- Vercel Blob for media. **Demoted from Accepted 16 July 2026.** It was an Accepted decision with zero implementation, which is the most misleading drift class in this document. Verified: `@vercel/blob` is not in `package.json`, nothing under `src/` imports it, there is no `evidence` table, and there is no media directory at all. The architecture of record defers photos entirely — when media lands it drags EXIF stripping, content hashing, size caps and IndexedDB with it. Decide it when it is built, not before.
+- Vendor/contact model. **Promoted to blocking by [ADR-001](docs/adr/001-fulfilment-is-out-of-scope.md).** Handing fulfilment to the buyer and seller makes Contact seller the terminal step of the core journey, and it currently resolves for no place at all: `contact_visibility` defaults to `private`, and the `contact_channel_kind` / `contact_channel_value` columns are read by nothing and written by nothing. Trader consent capture (Section 24) is the unbuilt precondition.
 - Contributor compensation.
-- Exact freshness windows.
 - Public-versus-private evidence policy.
 - Final visual identity and accent color.
 - Trademark and domain strategy.

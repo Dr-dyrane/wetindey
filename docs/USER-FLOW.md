@@ -1,8 +1,10 @@
 # WetinDey — user flow
 
-> Status: **target flow, not yet built.** This is the plan of record. Each step
-> below is marked with what exists today so we can see the gap honestly rather
-> than describe the app as if it were finished.
+> Status: **verified against `cc689ef` on 2026-07-16.**
+> This document was written when the flow was a plan. Most of it has since
+> shipped, and the parts that had not were still described as gaps. Both halves
+> were wrong. Every claim below is now checked against the code, with a
+> file:line. Anything unverified says so.
 
 ---
 
@@ -11,45 +13,39 @@
 ```
 User opens WetinDey
         ↓
-Map automatically loads around the best-known location
+Map loads around the last position the user committed
         ↓
-Location remains changeable from:
+Location is changeable from:
     • Location pill on map chrome
     • Recenter control
-    • Mini-profile navigation
+    • Profile → Change area
         ↓
 User searches "rice"
         ↓
-Chooses "Long-grain rice"
+Chooses "Long-grain rice"        ← variant
         ↓
-Chooses "50 kg bag"
+Chooses "50 kg bag"              ← unit
         ↓
-WetinDey shows recently confirmed nearby availability
+WetinDey ranks nearby offers by nearest / cheapest / freshest
         ↓
 User compares availability, price, freshness,
 distance and confidence
         ↓
 Selects Musa Foods
         ↓
-Sees:
-    • Available
-    • ₦78,500
-    • Confirmed 18 minutes ago
-    • High confidence
-        ↓
 Taps "Get it"
         ↓
 Chooses:
-    • Contact seller
-    • Go there
-    • Request delivery, when supported
+    • Go there   → hands off to the platform maps app
+    • Share      → share sheet, clipboard, or on-screen text
+    • Contact seller → DEAD END. See below.
         ↓
-User contacts, visits or orders from the seller
+User goes to the market
         ↓
-WetinDey asks whether:
-    • The item was available
-    • The price was correct
-    • The order was completed
+On return, WetinDey asks:
+    • Was it there?
+    • Was the price right?
+    • Did you buy it?
         ↓
 The result becomes fresher and more trustworthy
 for the next user
@@ -58,115 +54,116 @@ for the next user
 **The last two steps are the whole product.** Everything above them is a price
 lookup, which is commoditisable. The closing loop — asking the person who
 actually went whether the answer was right — is what makes the next lookup
-better, and it is the part that compounds. It is also the part that does not
-exist yet.
+better, and it is the part that compounds. It is now built
+(`ConfirmVisitSheet.tsx`, armed at `page.tsx:567-571`, collected at
+`page.tsx:471-485`).
+
+**Fulfilment is out.** ADR-001: no delivery, dispatch, courier, cart, checkout
+or payment. Buyer and seller arrange it themselves. The flow ends at "Go there"
+or at "Contact seller" — and today one of those two does not work.
 
 ---
 
 ## Step-by-step, against what is actually built
 
-| Step | Today | Gap |
-|---|---|---|
-| Map loads around best-known location | ✅ Opens on D Close, 6th Ave, Festac | ❌ "Best-known" is hardcoded, not geolocated or remembered |
-| Location pill on map chrome | ⚠️ Pill exists ("Showing Festac") | ❌ Not tappable — it's a label, not a control |
-| Recenter control | ❌ | Not built |
-| Change from mini-profile | ⚠️ Row exists, disabled | Needs an area picker sheet |
-| Search "rice" | ✅ Incl. alias search ("ewa", "dodo") | — |
-| Choose variant → unit | ⚠️ Exists in the *report* form | ❌ Not in the *search* path — search jumps straight to offers |
-| Recently confirmed nearby availability | ✅ Offers list with price + freshness | ❌ Not filtered by recency or radius (`activeRadiusKm` is never used in a query) |
-| Compare availability/price/freshness/distance/confidence | ⚠️ All five exist but are scattered | Needs one comparable row |
-| Select a seller | ✅ Detail view | — |
-| "Get it" → contact / go / deliver | ❌ | Directions & Share buttons are **inert** |
-| Post-visit confirmation | ❌ | **The loop never closes** |
+| Step | Today |
+|---|---|
+| Map loads around last committed position | ✅ Persisted to `localStorage`, rehydrated on mount (`locationStore.ts:107,140-142`; camera driven at `page.tsx:264-267`). Default before any commit is Festac Town (`locationStore.ts:71-75`) |
+| Location pill on map chrome | ✅ A real button; presents `LocationSheet` (`page.tsx:876-885`) |
+| Recenter control | ✅ `MapRecenterControl`, real `navigator.geolocation` fix, errors surfaced in `MapNotice` (`page.tsx:908-920`) |
+| Change area from profile | ✅ `ProfileSheet` → `onChangeArea` → `LocationSheet` (`page.tsx:1263`) |
+| Search "rice" | ✅ Incl. alias search ("ewa", "dodo") |
+| Choose variant → unit | ✅ `ItemDetailSheet` walks item → variant → unit (`ItemDetailSheet.tsx:282-290, 336-339`) |
+| Nearby offers, filtered by radius | ✅ Radius reaches the query — PostGIS filters server-side (`actions.ts:79-88`, `actions.ts:769-773`) |
+| Rank by nearest / cheapest / freshest | ✅ (`ItemDetailSheet.tsx:264-266`) |
+| Compare availability/price/freshness/distance/confidence | ✅ One row; colour carries freshness, confidence is a neutral meter (`ItemDetailSheet.tsx:181-200`) |
+| Select a place from a pin | ✅ Detail level with that market's prices (`page.tsx:1073-1185`) |
+| "Get it" → **Go there** | ✅ Platform-detected handoff: Apple Maps, `geo:` URI with a web-fallback watchdog, or Google Maps (`GetItSheet.tsx:99-123, 181-204, 396-417`) |
+| "Get it" → **Share** | ✅ Three tiers: `navigator.share` → clipboard → on-screen selectable text (`GetItSheet.tsx:419-442, 510-519`) |
+| "Get it" → **Contact seller** | ❌ **Renders "Not shared" for every place.** See below |
+| Post-visit confirmation | ✅ Three questions, one tap each; queued offline and flushed on reconnect (`ConfirmVisitSheet.tsx`; drain at `page.tsx:412-458`) |
 
 ---
 
-## What has to be built, in dependency order
+## The end of the journey is a dead end
 
-### 1. Location is a first-class object
-Today `mapCenter` is a coordinate and `selectedAreaName` is a string that
-nothing writes. The flow needs location to be **selectable, rememberable and
-geolocated**.
+ADR-001 hands fulfilment to **Contact seller**. Contact seller does not work,
+for any place, and cannot be made to work by the UI:
 
-- Tappable location pill → area picker sheet
-- Recenter control (needs `navigator.geolocation` — nothing calls it today)
-- Persist last area to `localStorage`
-- Honour `activeRadiusKm` in the query — right now the radius slider changes a
-  number that no query reads, and distance is computed client-side after
-  fetching every place in the country
+- `places.contactVisibility` defaults to `'private'` (`src/db/schema/index.ts:109`)
+  and no seed or write path sets it otherwise. Private means private.
+- `contact_channel_kind` and `contact_channel_value` exist as columns
+  (`schema/index.ts:129-130`, migration `0002_calm_meteorite.sql`) but are
+  **written by nothing and read by nothing** — `getPlaceContactPolicy`
+  (`actions.ts:1222`) does not even select them.
 
-### 2. Search resolves down to a unit
-`rice → long-grain → 50kg bag` is three decisions; search currently makes one.
-The variant/unit taxonomy already exists in the DB and is already used by the
-report form — the search path just doesn't walk it.
+So the row says "Not shared", honestly, forever
+(`GetItSheet.tsx:311-320`). The sheet is right; the data is missing. **This is
+the single most important open item in the product**: ADR-001 removed
+delivery on the promise that Contact seller would carry the handover, and
+Contact seller carries nothing.
 
-Presented as sheets, per the HIG mapping: each narrowing pushes a new surface.
+Fixing it needs a write path for the channel columns and a trader-facing way to
+opt in. Neither exists. Until then, "Go there" is the only working exit.
 
-### 3. The comparable row
-Five dimensions — availability, price, freshness, distance, confidence — have to
-be scannable in one row without reading. Colour carries freshness (the status
-ramp), weight carries price, and distance/confidence are secondary.
+---
 
-This is where the neutral chrome pays off: five signals only coexist if only one
-of them is allowed to be saturated.
+## What is left to build
 
-### 4. "Get it"
-An action sheet, not a menu — HIG: *"Use an action sheet, not a menu, to provide
-choices related to an action."*
+### 1. Contact seller, end to end
+The channel columns, a way for a trader to set them, and a reader that honours
+`contactVisibility` as a gate. Everything else in "Get it" is done.
 
-- **Contact seller** — needs a contact model. `places.contactVisibility` exists
-  and defaults to `private`; nothing reads it.
-- **Go there** — hand off to the platform maps app
-- **Request delivery** — later; needs an order model
+### 2. A place-detail route
+`sharePinUrl` (`GetItSheet.tsx:161-163`) shares a Google Maps pin because there
+is no WetinDey URL that resolves to a market. It should be replaced with the
+place-detail URL the moment that route ships.
 
-### 5. Close the loop
-The reason the product exists.
-
-- Trigger: returning to the app after tapping "Go there" on a place, within a
-  plausible window
-- Ask three questions, one tap each: was it there, was the price right, did you
-  buy
-- Feed answers back into `observations` → `offers_current` freshness and
-  `supporting_observation_count`
-- **This changes the trust model**: a confirmation from someone who physically
-  went is worth more than a report typed from a sofa, and `sources` already has
-  `reliability_score_internal` to hang that on
+### 3. Real routing geometry
+`route` (`page.tsx:819-825`) draws two points — a bearing and a distance, which
+is exactly what we know. `setRoute` takes geometry and asks nothing about its
+provenance, so a road-following path is more coordinates through the same seam.
+Not a delivery integration; ADR-001 permits directions.
 
 ---
 
 ## Pages this implies
 
-WetinDey is map-first with no tab bar, so "pages" are presented surfaces reached
-from the avatar or the map — not routes. Only add a route when something must be
-linkable or indexable.
+Map-first, no tab bar, so "pages" are presented surfaces reached from the avatar
+or the map — not routes. Only add a route when something must be linkable or
+indexable.
+
+**Today there is exactly one app route: `/` (`src/app/page.tsx`).** The only
+other route is `src/app/api/auth/[...path]/route.ts`. Everything below marked
+"Yes" is wanted, not built.
 
 | Surface | Reached from | Needs a URL? |
 |---|---|---|
-| Map + results | root | `/` |
-| Item detail (offers for an item) | search / card tap | Yes — shareable ("rice for Festac") |
-| Place detail | pin / offer tap | Yes — shareable, and SEO-relevant |
-| Report a price | + button | No |
-| Area picker | location pill | No |
-| My reports | profile | No (needs auth) |
-| Saved markets | profile | No (needs auth) |
-| Settings | profile | No |
-| About / Report a problem | profile | Probably — static, indexable |
+| Map + results | root | `/` — built |
+| Item detail (offers for an item) | search / card tap | Yes — shareable. Not built |
+| Place detail | pin / offer tap | Yes — shareable, SEO-relevant. Not built |
+| Report a price | + button | No — built |
+| Area picker | location pill | No — built |
+| Settings | profile | No — built |
+| My reports | profile | No. Not built |
+| Saved markets | profile | No. Not built |
+| About / Report a problem | profile | Probably — static, indexable. Not built |
 
-**Auth is the gating dependency** for My reports and Saved markets. It does not
-exist. The profile sheet is deliberately useful signed-out and shows those rows
-disabled rather than hiding them, so the shape is honest.
+Optional email-OTP accounts ship (ADR-003, `authClient.useSession` at
+`page.tsx:286`). Reading stays anonymous forever. My reports and Saved markets
+additionally need writes to be attributable, and ADR-003's condition for that is
+unmet: `sources` has no `user_id` and `actions.ts` has no session awareness.
 
 ---
 
 ## Open questions
 
-1. **What is "best-known location"?** Geolocation, last-used area, or nearest
-   covered area? They conflict: a user in Ikeja opening a Festac pilot should
-   probably see Festac, not an empty Ikeja.
+1. **What is "best-known location"?** Today it is the last position the user
+   committed, defaulting to Festac Town. Geolocation is offered but never
+   assumed. Whether a user in Ikeja opening a Festac pilot should see Festac is
+   still unanswered.
 2. **How fresh is "recently confirmed"?** `offers_current.expiresAt` is set to
-   72h by the seed but the comment says 7 days, and nothing enforces it.
-3. **What earns "high confidence"?** Today it's
-   `supportingObservationCount * 10` capped by nothing — 10 reports from one
-   person reads as 100%.
-4. **Contact seller — via what?** Phone reveals a real person's number;
-   `contactVisibility` defaults to `private` for a reason.
+   72h on write (`actions.ts:357, 624`). Whether anything *enforces* expiry at
+   read time is **unverified** — not traced in this pass.
+3. **Contact seller — via what channel, and who opts a trader in?** See above.
+   This is question 1 of the product, not question 3.
