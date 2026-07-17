@@ -157,6 +157,24 @@ test("scroll handoff and keyboard viewport handling remain in the sheet contract
   assert.match(bottomSheetSource, /window\.visualViewport\?\.addEventListener\("resize"/);
 });
 
+test("top-edge wheel handoff can collapse one detent without stealing editable controls", () => {
+  assert.match(bottomSheetSource, /WHEEL_EDITABLE_SELECTOR/);
+  assert.match(bottomSheetSource, /scroller\.scrollTop >= 1/);
+  assert.match(bottomSheetSource, /scrollCollapseSpent\.current\.add\(scroller\)/);
+  assert.match(bottomSheetSource, /stepDetent\(-1\)/);
+  assert.match(
+    bottomSheetSource,
+    /addEventListener\("wheel", onWheel, \{ capture: true, passive: false \}\)/
+  );
+});
+
+test("a downward touch drag takes the sheet as soon as an owned list reaches its top", () => {
+  assert.match(bottomSheetSource, /drag\.claim === "scroll"[\s\S]*travelPx < 0/);
+  assert.match(bottomSheetSource, /drag\.scroller !== null/);
+  assert.match(bottomSheetSource, /drag\.scroller\.scrollTop < 1/);
+  assert.match(bottomSheetSource, /handoffToSheet\(\)/);
+});
+
 test("detent settlement keeps sheet layout geometry stable", () => {
   assert.match(bottomSheetSource, /const sideInset = ISLAND_INSET/);
   assert.match(bottomSheetSource, /const bottomInset = ISLAND_INSET/);

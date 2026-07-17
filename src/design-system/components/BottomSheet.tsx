@@ -34,6 +34,27 @@ const ISLAND_INSET = 10;
 
 type DragClaim = "sheet" | "scroll" | null;
 
+const WHEEL_EDITABLE_SELECTOR = "input, textarea, select, [contenteditable='true']";
+
+/**
+ * Wheel deltas are usually pixels, but classic mice may report lines or pages.
+ * Convert those modes before comparing them with the shared pixel snap threshold.
+ */
+function wheelDeltaYInPixels(event: WheelEvent, scroller: HTMLElement): number {
+  if (event.deltaMode === WheelEvent.DOM_DELTA_LINE) {
+    const style = getComputedStyle(scroller);
+    const lineHeight = Number.parseFloat(style.lineHeight);
+    const fontSize = Number.parseFloat(style.fontSize);
+    return event.deltaY * (Number.isFinite(lineHeight) ? lineHeight : fontSize || 16);
+  }
+
+  if (event.deltaMode === WheelEvent.DOM_DELTA_PAGE) {
+    return event.deltaY * scroller.clientHeight;
+  }
+
+  return event.deltaY;
+}
+
 interface DragState {
   startY: number;
   startDetent: Detent;
@@ -65,6 +86,8 @@ export function BottomSheet({ children, detent, onDetentChange }: BottomSheetPro
   const liveFractionRef = useRef<number | null>(null);
   const scrollAnchor = useRef(new WeakMap<HTMLElement, number>());
   const scrollSpent = useRef(new WeakMap<HTMLElement, boolean>());
+  const scrollCollapseDistance = useRef(new WeakMap<HTMLElement, number>());
+  const scrollCollapseSpent = useRef(new WeakSet<HTMLElement>());
 
   const [viewportHeight, setViewportHeight] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
@@ -205,7 +228,12 @@ export function BottomSheet({ children, detent, onDetentChange }: BottomSheetPro
   );
 
   const scrollerFrom = useCallback((target: EventTarget | null): HTMLElement | null => {
-    let element = target instanceof HTMLElement ? target : null;
+    let element =
+      target instanceof HTMLElement
+        ? target
+        : target instanceof Element
+          ? target.parentElement
+          : null;
     for (; element && element !== sheetRef.current; element = element.parentElement) {
       if (element.scrollHeight <= element.clientHeight) continue;
       const overflowY = getComputedStyle(element).overflowY;
@@ -249,29 +277,45 @@ export function BottomSheet({ children, detent, onDetentChange }: BottomSheetPro
     if (!drag || drag.pointerId !== event.pointerId || viewportHeight === 0) return;
 
     let travelPx = drag.startY - event.clientY;
+    const handoffToSheet = () => {
+      /* Interrupt a CSS settle from its composited position. Leaving the
+         target transform in place while removing its transition would make
+         the sheet jump to its endpoint before the next drag frame. */
+      const frozenFraction = renderedFraction();
+      drag.claim = "sheet";
+      drag.startDetent = nearestDetent(frozenFraction);
+      drag.startFraction = frozenFraction;
+      drag.currentFraction = frozenFraction;
+      drag.startY = event.clientY;
+      drag.lastY = event.clientY;
+      drag.lastTime = event.timeStamp;
+      travelPx = 0;
+      sheetRef.current!.style.transition = "none";
+      backdropRef.current!.style.transition = "none";
+      applyFraction(frozenFraction);
+      setIsDragging(true);
+      sheetRef.current?.setPointerCapture(event.pointerId);
+    };
+
     if (drag.claim === null) {
       if (Math.abs(travelPx) < 4) return;
       const atTop = !drag.scroller || drag.scroller.scrollTop < 1;
       const listCanConsume =
         Boolean(drag.scroller) && (!atTop || (travelPx > 0 && drag.startDetent === "large"));
       drag.claim = listCanConsume ? "scroll" : "sheet";
-      if (drag.claim === "sheet") {
-        /* Interrupt a CSS settle from its composited position. Leaving the
-           target transform in place while removing its transition would make
-           the sheet jump to its endpoint before the next drag frame. */
-        const frozenFraction = renderedFraction();
-        drag.startFraction = frozenFraction;
-        drag.currentFraction = frozenFraction;
-        drag.startY = event.clientY;
-        drag.lastY = event.clientY;
-        drag.lastTime = event.timeStamp;
-        travelPx = 0;
-        sheetRef.current!.style.transition = "none";
-        backdropRef.current!.style.transition = "none";
-        applyFraction(frozenFraction);
-        setIsDragging(true);
-        sheetRef.current?.setPointerCapture(event.pointerId);
-      }
+      if (drag.claim === "sheet") handoffToSheet();
+    }
+
+    /* A list owns the drag while it has content above it. Once that content
+       reaches its top, a continued downward gesture transfers to the sheet
+       without requiring a lift and second drag. */
+    if (
+      drag.claim === "scroll" &&
+      travelPx < 0 &&
+      drag.scroller !== null &&
+      drag.scroller.scrollTop < 1
+    ) {
+      handoffToSheet();
     }
 
     if (drag.claim !== "sheet") return;
@@ -332,6 +376,10 @@ export function BottomSheet({ children, detent, onDetentChange }: BottomSheetPro
       if (!(target instanceof HTMLElement)) return;
       const top = Math.max(0, target.scrollTop);
       const anchor = scrollAnchor.current.get(target);
+      if (top > motion.sheet.armPx) {
+        scrollCollapseDistance.current.delete(target);
+        scrollCollapseSpent.current.delete(target);
+      }
       if (anchor === undefined) {
         scrollAnchor.current.set(target, top);
         return;
@@ -361,6 +409,62 @@ export function BottomSheet({ children, detent, onDetentChange }: BottomSheetPro
     sheet.addEventListener("scroll", onScroll, { capture: true, passive: true });
     return () => sheet.removeEventListener("scroll", onScroll, { capture: true });
   }, [detent, stepDetent]);
+
+  useEffect(() => {
+    const sheet = sheetRef.current;
+    if (!sheet) return;
+
+    const resetCollapseIntent = (scroller: HTMLElement) => {
+      scrollCollapseDistance.current.delete(scroller);
+      scrollCollapseSpent.current.delete(scroller);
+    };
+
+    const onWheel = (event: WheelEvent) => {
+      if (
+        event.ctrlKey ||
+        Math.abs(event.deltaY) <= Math.abs(event.deltaX) ||
+        dragRef.current?.claim === "sheet"
+      ) {
+        return;
+      }
+
+      const target = event.target;
+      if (target instanceof Element && target.closest(WHEEL_EDITABLE_SELECTOR)) {
+        return;
+      }
+
+      const scroller = scrollerFrom(target);
+      if (!scroller) return;
+
+      if (event.deltaY >= 0 || scroller.scrollTop >= 1) {
+        resetCollapseIntent(scroller);
+        return;
+      }
+
+      if (detent === "peek" || scrollCollapseSpent.current.has(scroller)) return;
+
+      const travelPx = Math.abs(wheelDeltaYInPixels(event, scroller));
+      if (travelPx === 0) return;
+
+      /* Once content is already at its top edge, an upward wheel/trackpad
+         gesture carries into one lower detent. This mirrors the existing
+         scroll-to-expand step without collapsing while someone merely reads
+         back to the first row. */
+      event.preventDefault();
+      const accumulated = (scrollCollapseDistance.current.get(scroller) ?? 0) + travelPx;
+      if (accumulated < motion.sheet.stepPx) {
+        scrollCollapseDistance.current.set(scroller, accumulated);
+        return;
+      }
+
+      scrollCollapseDistance.current.delete(scroller);
+      scrollCollapseSpent.current.add(scroller);
+      stepDetent(-1);
+    };
+
+    sheet.addEventListener("wheel", onWheel, { capture: true, passive: false });
+    return () => sheet.removeEventListener("wheel", onWheel, true);
+  }, [detent, scrollerFrom, stepDetent]);
 
   return (
     <>
