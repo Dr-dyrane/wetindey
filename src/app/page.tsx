@@ -1105,10 +1105,11 @@ export default function HomePage() {
           <button
             type="button"
             onClick={() => openSurface({ kind: "location" })}
-            aria-label="Change location"
-            className="pointer-events-auto flex min-h-tap min-w-tap items-center justify-center squircle-full
-                       material-thick px-3 py-1.5 shadow-raised active:opacity-60 transition-opacity duration-instant"
+            aria-label={`Change location, currently ${location.label}`}
+            className="pointer-events-auto flex h-11 min-w-tap items-center justify-center gap-1.5 squircle-full
+                       material-thick px-2.5 shadow-raised active:opacity-60 transition-opacity duration-instant"
           >
+            <MapPin aria-hidden="true" className="h-4 w-4 shrink-0 text-text-secondary" strokeWidth={2.25} />
             <span className="text-footnote font-medium text-text-primary">
               {location.label}
             </span>
