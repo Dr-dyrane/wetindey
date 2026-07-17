@@ -1,8 +1,8 @@
 "use server";
 
 import { db } from "@/db";
-import { areas, items, itemAliases, itemVariants, places, offersCurrent, units, observations, sources } from "@/db/schema";
-import { eq, ilike, or, and, sql, gte, isNull, isNotNull } from "drizzle-orm";
+import { areas, items, itemAliases, itemVariants, places, offersCurrent, units, observations, sources, problemReports } from "@/db/schema";
+import { eq, ilike, or, and, sql, gte, isNull, isNotNull, desc } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import {
   parseSubmitObservation,
@@ -16,6 +16,7 @@ import {
   parseOffersNarrowed,
   parsePlacesNear,
   parseCoverageForPoint,
+  parseSubmitProblemReport,
 } from "@/lib/validation";
 import { auth } from "@/lib/auth";
 import {
@@ -1667,4 +1668,168 @@ export async function getOfferTrustBatch(
 export async function getOfferTrust(key: OfferKey): Promise<TrustAssessment> {
   const batch = await getOfferTrustBatch([key]);
   return batch[offerKeyOf(key)];
+}
+
+/**
+ * One report, as the person who filed it would recognise it: what, where, how
+ * much, when.
+ *
+ * `priceAmount` is kobo and NULLABLE — a report can say "ee no dey" without
+ * naming a price. It is also non-null on reports that DO say "ee no dey" (47 of
+ * them today, every one carrying a number), which is the trap this shape hands
+ * to the view rather than hiding: see `MyReportsSheet`.
+ *
+ * There is deliberately NOTHING here about whether the report was accepted, or
+ * whether it moved the price. Neither is knowable. `moderation_status` is
+ * 'approved' on 949/949 rows — NOT because that is the column default (the
+ * schema default is 'pending', schema/index.ts:298) but because the seed and
+ * both write paths explicitly write 'approved' (actions.ts:543, :869) and no
+ * path ever writes 'rejected'. A status chip fed by it would still be a constant
+ * wearing the costume of a fact — there is no moderator surface to make it vary.
+ * And `offers_current.price_min/max` is a
+ * BAND over every source in a 72h window, not "your price", so no column
+ * anywhere records whether your report changed anything.
+ */
+export interface MyReport {
+  id: string;
+  itemName: string;
+  variantName: string;
+  unitName: string;
+  placeName: string;
+  areaName: string;
+  /** Kobo, or null when the report named no price. */
+  priceAmount: number | null;
+  currency: string;
+  availabilityState: string;
+  /** ISO 8601. Serialised here because a Date cannot cross to the client. */
+  observedAt: string;
+}
+
+/**
+ * A stated cap, NOT a page. There is no pagination behind this: someone with 101
+ * reports sees 100 and is told nothing about the rest. That is a real (if
+ * distant) limit and the sheet says so rather than implying completeness — the
+ * alternative was an unbounded query on the one table the schema's own comment
+ * calls immutable and "only ever grows".
+ */
+const MY_REPORTS_LIMIT = 100;
+
+/**
+ * The prices you reported, newest first.
+ *
+ * THE SESSION IS RESOLVED SERVER-SIDE AND THIS ACTION TAKES NO ARGUMENTS. Both
+ * halves matter. A Server Action is a public HTTP endpoint — an agent extracted
+ * this file's action ids from the JS bundle and POSTed them with no cookies
+ * (LANES H14) — so one that returned "the reports belonging to whatever id you
+ * hand it" would be a data breach reachable with curl. Taking no input at all is
+ * the strongest form of that guarantee: there is no parameter to tamper with, so
+ * there is nothing for `src/lib/validation.ts` to gate. `contributorSourceId()`
+ * above reads the session exactly this way and for exactly this reason; this is
+ * that precedent, not a second mechanism.
+ *
+ * SIGNED OUT RETURNS EMPTY AND NEVER THROWS. ADR-003: auth is recognition, never
+ * a gate. An empty list is the true answer for someone with no session — not an
+ * error, not a login wall, and not a bug.
+ *
+ * IT IS ALSO EMPTY FOR EVERYONE TODAY, INCLUDING THE OWNER, and that is correct
+ * rather than broken. All 949 observations resolve to the three shared anonymous
+ * source rows (`user_id IS NULL`, verified live), so nothing links any of them to
+ * a person and nothing ever can — the key does not exist. The first non-empty row
+ * this returns will be the first report filed by a signed-in human, which is also
+ * the first time `contributorSourceId()`'s find-or-create insert has ever run
+ * against this database.
+ *
+ * NO JOIN TO `offers_current`, deliberately. "Does my report still stand?" is
+ * computable — it is `offersCurrent.lastObservedAt === observations.observedAt`,
+ * an exact equality since both are written from one `now` — but it CANNOT BE
+ * EXERCISED on this data: the seed writes exactly one Contributor observation per
+ * variant/unit/place, always the newest, so that equality holds for all 474
+ * offers (there is no `is_latest` column — this is a derived predicate) and the
+ * superseded branch is unreachable until a signed-in human reports twice on one
+ * triple. Shipping it would mean shipping a branch that has never run, on the
+ * strength of a seed that makes it 100% green. The row is a receipt and is useful
+ * without it. Add it when there is data that can prove it wrong.
+ */
+export async function getMyReports(): Promise<MyReport[]> {
+  const { data: session } = await auth.getSession();
+  const userId = session?.user?.id;
+  if (!userId) return [];
+
+  /**
+   * This filters `sources.user_id` and orders by `observations.observed_at`, and
+   * there is no index on `observations.source_id` — so both sides seq-scan
+   * (EXPLAIN confirms: Hash Join over two Seq Scans). Correct, and cheap at 949
+   * rows; it is a tomorrow problem on a table that only grows. The index that
+   * serves both the filter and the sort — `(source_id, observed_at DESC)` — is
+   * requested from the schema lane in the handover, because
+   * `src/db/schema/index.ts` belongs to auth→trust and not to this change.
+   */
+  const rows = await db
+    .select({
+      id: observations.id,
+      priceAmount: observations.priceAmount,
+      currency: observations.currency,
+      availabilityState: observations.availabilityState,
+      observedAt: observations.observedAt,
+      itemName: items.canonicalName,
+      variantName: itemVariants.displayName,
+      unitName: units.displayName,
+      placeName: places.name,
+      areaName: areas.name,
+    })
+    .from(observations)
+    .innerJoin(sources, eq(observations.sourceId, sources.id))
+    .innerJoin(itemVariants, eq(observations.itemVariantId, itemVariants.id))
+    .innerJoin(items, eq(itemVariants.itemId, items.id))
+    .innerJoin(units, eq(observations.unitId, units.id))
+    .innerJoin(places, eq(observations.placeId, places.id))
+    .innerJoin(areas, eq(places.areaId, areas.id))
+    .where(eq(sources.userId, userId))
+    .orderBy(desc(observations.observedAt))
+    .limit(MY_REPORTS_LIMIT);
+
+  return rows.map((r) => ({ ...r, observedAt: r.observedAt.toISOString() }));
+}
+
+/**
+ * File a "something is wrong" report. Writes one row to `problem_reports`, which
+ * the owner reads directly at psql — there is no admin UI and no reply channel,
+ * by the owner's spec, so this action's whole job is to land the row honestly.
+ *
+ * PUBLIC AND ANONYMOUS-FIRST, like `submitObservation`. A Server Action is a
+ * public HTTP endpoint (an agent lifted these ids from the JS bundle and POSTed
+ * with no cookies — LANES H14), so `parseSubmitProblemReport` is the guard, not
+ * the session: ADR-003 keeps this open to signed-out callers by design, and the
+ * length cap on `body` is the only thing between an unthrottled endpoint and a
+ * `text` column (there is no rate limiter in this app yet — see validation.ts).
+ *
+ * ATTRIBUTION IS RESOLVED SERVER-SIDE AND NEVER TAKEN FROM THE PAYLOAD. `userId`
+ * is read from the session here, exactly as `contributorSourceId` and
+ * `getMyReports` read it, and it is nullable: signed in, the report carries your
+ * id; signed out — the default — it is NULL, which is the honest "filed
+ * anonymously", not an error. An auth outage resolves to NULL too, and that is
+ * the right trade: we do not claim to know who someone is when we could not
+ * check, and we do not drop the report because a third party is down.
+ *
+ * The context columns (`place_id` / `item_variant_id` / `unit_id` /
+ * `context_label`) are left NULL: this action has no offer in hand. The only
+ * opener today is the Profile row, which is cold. When a detail-sheet entry point
+ * is built it will pass that context in; the columns are already there for it.
+ */
+export async function submitProblemReport(data: {
+  kind: "price_wrong" | "place_wrong" | "app_bug" | "other";
+  body: string;
+  appLocale?: "en" | "pidgin" | "yoruba";
+}): Promise<void> {
+  const input = parseSubmitProblemReport(data);
+
+  const { data: session } = await auth.getSession();
+  const userId = session?.user?.id ?? null;
+
+  await db.insert(problemReports).values({
+    kind: input.kind,
+    body: input.body,
+    userId,
+    appLocale: input.appLocale ?? null,
+  });
 }

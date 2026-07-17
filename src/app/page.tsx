@@ -30,6 +30,10 @@ import { SettingsSheet } from "@/app/_components/SettingsSheet";
 import { ReportPriceSheet } from "@/app/_components/ReportPriceSheet";
 import { ProfileSheet, Avatar } from "@/app/_components/ProfileSheet";
 import { ItemDetailSheet, offerSignal } from "@/app/_components/ItemDetailSheet";
+import { MyReportsSheet } from "@/app/_components/MyReportsSheet";
+import { ReportProblemSheet } from "@/app/_components/ReportProblemSheet";
+import { AboutSheet } from "@/app/_components/AboutSheet";
+import { formatNaira } from "@/lib/money";
 import { GetItSheet, type GetItTarget } from "@/app/_components/GetItSheet";
 import {
   ConfirmVisitSheet,
@@ -269,6 +273,9 @@ export default function HomePage() {
   const [isReportOpen, setIsReportOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isLocationOpen, setIsLocationOpen] = useState(false);
+  const [isMyReportsOpen, setIsMyReportsOpen] = useState(false);
+  const [isReportProblemOpen, setIsReportProblemOpen] = useState(false);
+  const [isAboutOpen, setIsAboutOpen] = useState(false);
   /** The item ItemDetailSheet is resolving down to a unit. Non-null = presented. */
   const [detailItem, setDetailItem] = useState<ItemCardData | null>(null);
   /** The place GetItSheet is about to hand off to. Non-null = presented. */
@@ -861,13 +868,6 @@ export default function HomePage() {
     }
   };
 
-  const formatPrice = (koboAmount: number) =>
-    new Intl.NumberFormat("en-NG", {
-      style: "currency",
-      currency: "NGN",
-      maximumFractionDigits: 0
-    }).format(koboAmount / 100);
-
   /** The place whose detail level is pushed — NOT "the selected place". Nothing
    *  on this map has a selected state to be in. */
   const detailPlace = useMemo(
@@ -1251,7 +1251,7 @@ export default function HomePage() {
                   </div>
                   <div className="text-right shrink-0 pl-2">
                     <div className="text-caption-1 font-black text-accent tabular-nums">
-                      {formatPrice(offer.priceMin)}
+                      {formatNaira(offer.priceMin)}
                     </div>
                     <div className="text-caption-2 text-text-tertiary">/ {offer.unit}</div>
                   </div>
@@ -1384,10 +1384,39 @@ export default function HomePage() {
         onClose={() => setIsProfileOpen(false)}
         onOpenSettings={() => setIsSettingsOpen(true)}
         onChangeArea={() => setIsLocationOpen(true)}
+        onOpenMyReports={() => setIsMyReportsOpen(true)}
+        onOpenReportProblem={() => setIsReportProblemOpen(true)}
+        onOpenAbout={() => setIsAboutOpen(true)}
         currentAreaName={location.label}
         user={sessionUser}
         onSessionChange={refetchSession}
       />
+
+      {/* The reports you filed, read back to you. A sibling like every other
+          sheet — ProfileSheet dismisses itself before presenting this, so the
+          two never stack. */}
+      <MyReportsSheet
+        open={isMyReportsOpen}
+        onClose={() => setIsMyReportsOpen(false)}
+        signedIn={Boolean(sessionUser)}
+        onReportPrice={() => {
+          setIsMyReportsOpen(false);
+          setIsReportOpen(true);
+        }}
+      />
+
+      {/* "Report a problem" — a sibling sheet, cold (no offer context). ProfileSheet
+          dismisses itself before presenting this, so the two never stack. */}
+      <ReportProblemSheet
+        open={isReportProblemOpen}
+        onClose={() => setIsReportProblemOpen(false)}
+      />
+
+      {/* About — the product's account of itself, and the way to Terms of
+          service, Privacy and Support. One sheet: the three surfaces push on a
+          NavigationStack rather than stack as modals. ProfileSheet dismisses
+          itself before presenting this. */}
+      <AboutSheet open={isAboutOpen} onClose={() => setIsAboutOpen(false)} />
 
       <ReportPriceSheet
         open={isReportOpen}

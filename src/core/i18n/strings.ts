@@ -168,6 +168,151 @@ export const en = {
   "profile.report_problem": "Report a problem",
   "profile.about": "About WetinDey",
 
+  /* My reports — MyReportsSheet.tsx.
+   *
+   * TWO EMPTY STATES, NOT ONE, because they are two different facts. Signed out,
+   * we do not know who you are. Signed in with nothing here, we know you and you
+   * have not reported yet. Collapsing them would tell a signed-in user to sign
+   * in.
+   *
+   * WHAT NONE OF THIS COPY MAY SAY: that signing in makes your report count for
+   * more. It is the natural line to reach for and it is FALSE TODAY — the shared
+   * anonymous Contributor row is seeded at reliability 98, the highest in the
+   * table, while a new per-user row is minted at 75 (actions.ts:317), and
+   * trust.ts multiplies by score/100. Signing in currently weighs 23% LESS. The
+   * promise here is only what is true: your reports GATHER here, and you can SEE
+   * them.
+   *
+   * `empty_footnote` is the load-bearing line. Without it the owner opens this,
+   * sees nothing, and concludes it is broken — which is today's complaint
+   * restated. It also says "reports sent without signing in", never "your past
+   * reports": all 949 existing observations are anonymous seed rows, and we
+   * cannot distinguish "the owner typed this" from "the seed wrote it" — both
+   * are app_entry against a user_id=NULL source. The copy states what is true of
+   * ANY report filed without a session. */
+  "reports.title": "My reports",
+  "reports.empty_title": "You haven't reported a price yet",
+  "reports.empty_body": "Prices you report while signed in show up here.",
+  "reports.empty_footnote":
+    "Reports sent without signing in stay anonymous — they still count, but nothing links them back to you.",
+  "reports.signed_out_title": "Sign in to see your reports",
+  "reports.signed_out_body":
+    "You can report a price without an account — WetinDey never asks. Sign in and the prices you report gather here.",
+  /* Pidgin-inflected English in the `en` table, matching LocationSheet.tsx:132's
+     "We no fit load the areas right now." verbatim in register. This app's
+     English locale already reads "Wetin you dey find?" — the default voice is
+     Nigerian English, not Received Standard. */
+  "reports.err_load": "We no fit load your reports right now.",
+  /* The verdict on a report that said the food was finished. The price is
+     SUPPRESSED beside this — see MyReportsSheet. Matches `item.status_*` and
+     offerSignal's owner-approved wording exactly; "ee no dey", never "not dey". */
+  "reports.sold_out": "E no dey",
+
+  /* Report a problem — ReportProblemSheet.tsx.
+   *
+   * The DESTINATION for the Profile "Report a problem" row, which shipped dead
+   * (disabled, no-op onClick). Anyone can file, signed in or out (ADR-003).
+   *
+   * `success_body` is the load-bearing honest line. There is NO reply channel in
+   * this product — no email-back, no ticket, no status the user can check — so
+   * the copy must never say "we'll get back to you". It promises only receipt:
+   * the report lands in a table the owner reads directly, and that is the whole
+   * loop.
+   *
+   * `err_send` is Nigerian English, matching `reports.err_load` and
+   * LocationSheet.tsx's register verbatim — the app's English voice is Lagos
+   * English, not Received Standard. It is the line the user WILL see today: the
+   * `problem_reports` migration is generated but not yet applied, so a real
+   * submit throws until the orchestrator applies it. */
+  "problem.title": "Report a problem",
+  "problem.kind_label": "What kind of problem?",
+  "problem.kind_placeholder": "Choose one",
+  "problem.kind_price": "A price is wrong",
+  "problem.kind_place": "A place is wrong",
+  "problem.kind_bug": "Something's broken",
+  "problem.kind_other": "Something else",
+  "problem.body_label": "What's wrong?",
+  "problem.body_placeholder": "Tell us what you saw",
+  "problem.send": "Send",
+  "problem.sending": "Sending…",
+  "problem.success_title": "Thanks — we got it.",
+  "problem.success_body":
+    "This goes to the people who run WetinDey. We read every one, but we can't always write back.",
+  "problem.err_send": "We no fit send your report right now.",
+
+  /* About / legal / support — AboutSheet.tsx.
+   *
+   * This is the About row given a destination: a hub that leads to three
+   * surfaces (Terms of service, Privacy, Support), pushed on ONE sheet via
+   * NavigationStack rather than stacked as separate modals.
+   *
+   * THE LEGAL PROSE IS FACTUAL AND UNREVIEWED, ON PURPOSE. Every word here is a
+   * plain description of what the app demonstrably does, derived from the schema
+   * and the code — no warranties, no liability limits, no governing law, nothing
+   * that reads as counsel, because an agent may not invent those. `about.draft_*`
+   * says so IN THE UI, and it is load-bearing: a privacy notice that misdescribes
+   * what is collected is worse than none. The owner must have a lawyer review it
+   * before it is relied on.
+   *
+   * The privacy copy states only what the scout verified is collected — email
+   * (only if you sign in), the prices you report, and device-local preferences —
+   * and the third parties that receive data BY CONSTRUCTION: Mapbox (location, to
+   * draw the map + measure distance), Neon (email + auth + the reports), Vercel
+   * (cookieless analytics + hosting). It names Wikimedia (food photos) and the
+   * Apple/Google Maps hand-off ("Go there"). It does NOT mention Sentry: the DSN
+   * is empty and @sentry/nextjs is not installed, so no error reports leave the
+   * device — claiming otherwise would be the same false statement in reverse. */
+  "about.lede": "Street-food prices around south-west Lagos, reported by the people who saw them.",
+  "about.body_what":
+    "WetinDey tells you where food is and what it costs. It doesn't sell or deliver anything — tap Go there and your own maps app takes over.",
+  "about.body_prices":
+    "Every price is something a person saw and reported, so each one shows when it was seen and how many people have seen it. Know before you go.",
+  "about.body_account":
+    "You never need an account to read. Sign in only so the prices you report gather in one place.",
+  "about.body_pilot":
+    "This is an early pilot in south-west Lagos. Some areas hold more prices than others.",
+
+  /* Row labels + the back affordance. `about.back` is the NavigationStack back
+     row's label: it names where back goes (the About hub), the way iOS shows the
+     parent screen's title on the back button. */
+  "about.terms": "Terms of service",
+  "about.privacy": "Privacy",
+  "about.support": "Support",
+  "about.back": "About",
+
+  /* The review marker every drafted legal surface must carry. Shown at the top
+     of Terms and Privacy, in a caution tint, so it cannot be mistaken for the
+     copy it guards. */
+  "about.draft_notice":
+    "Plain-language draft. It describes how WetinDey works today and is waiting on the owner's review — not yet a formal policy.",
+
+  "about.terms_title": "Terms of service",
+  "about.terms_intro":
+    "WetinDey is a community price map. Anyone can read it, and anyone can add a price they saw.",
+  "about.terms_prices":
+    "Prices come from other people, not from the shops, so they can be wrong, out of date, or missing. Always confirm at the market before you rely on one.",
+  "about.terms_fulfilment":
+    "WetinDey does not sell food, take payment, or deliver. It points you to a place — getting there and buying is between you and the trader.",
+  "about.terms_reporting":
+    "When you report a price, you add it for everyone. Report only what you actually saw.",
+
+  "about.privacy_title": "Privacy",
+  "about.privacy_intro":
+    "You can use WetinDey without an account, and most people do. Here is what it keeps, and what it doesn't.",
+  "about.privacy_collect":
+    "If you sign in, WetinDey keeps your email address — that's how it recognises you next time. The prices and availability you report are saved too: linked to you when you're signed in, anonymous when you're not.",
+  "about.privacy_device":
+    "Your language and theme stay on your device, and so does your location — it is never stored on our servers. Location is sent to the map provider only to draw the map and measure distance, and your reports record the market, never where you were standing.",
+  "about.privacy_third":
+    "To work, WetinDey shares data with a few services: Mapbox draws the map and receives your location to do it; Neon stores your email, sign-in and reports; Vercel hosts the app and counts visits without cookies. Food photos load from Wikimedia, and tapping Go there hands your destination to Apple or Google Maps.",
+  "about.privacy_ads": "There are no adverts, and no tracking for advertising.",
+  "about.privacy_delete": "To have your account and email removed, email {email}.",
+
+  "about.support_title": "Support",
+  "about.support_body":
+    "Found a problem, a price that's off, or have a question? Send us a mail.",
+  "about.support_cta": "Email support",
+
   /* Sign in — ProfileSheet.tsx.
    *
    * There is no sign-up copy here because there is no sign-up step:
@@ -445,6 +590,91 @@ const pidgin: LocaleTable = {
   "profile.report_problem": "Tell us wetin spoil",
   "profile.about": "About WetinDey",
 
+  /* My reports.
+   *
+   * THE PROSE IS `UNTRANSLATED` AND THAT IS A DECISION, NOT LAZINESS. This
+   * header's own doctrine: "Nigerian Pidgin is written for new keys where the
+   * register is unambiguous. Where it is not, the key is UNTRANSLATED rather
+   * than guessed." These are three sentences of careful explanatory prose about
+   * anonymity and attribution — the hardest register in this app to land, and
+   * the exact place a foreigner's guess reads worst. This repo shipped "Not dey"
+   * once and it read worse to a Lagos shopper than English would have.
+   *
+   * The three keys that ARE written here each have direct precedent in this file
+   * and invent nothing:
+   *   · `reports.title` matches `profile.my_reports` above, verbatim.
+   *   · `reports.err_load` mirrors LocationSheet.tsx:132's existing register.
+   *   · `reports.sold_out` is `item.status_unavailable`'s word, owner-approved. */
+  "reports.title": "My reports",
+  "reports.empty_title": UNTRANSLATED,
+  "reports.empty_body": UNTRANSLATED,
+  "reports.empty_footnote": UNTRANSLATED,
+  "reports.signed_out_title": UNTRANSLATED,
+  "reports.signed_out_body": UNTRANSLATED,
+  "reports.err_load": "We no fit load your reports right now.",
+  "reports.sold_out": "E no dey",
+
+  /* Report a problem.
+   *
+   * THE PROSE IS UNTRANSLATED, BY THE HEADER'S OWN RULE — the kind labels, the
+   * body prompts, and above all `success_body` (three clauses about who reads a
+   * report and that they may not reply) are exactly the register a foreigner's
+   * guess reads worst in. English shows through, on purpose.
+   *
+   * The two written here have direct precedent and invent nothing:
+   *   · `title` matches `profile.report_problem` above ("Tell us wetin spoil"),
+   *     so the sheet reads the same as the row that opens it. Listed for review.
+   *   · `err_send` mirrors `reports.err_load` / LocationSheet's register verbatim. */
+  "problem.title": "Tell us wetin spoil",
+  "problem.kind_label": UNTRANSLATED,
+  "problem.kind_placeholder": UNTRANSLATED,
+  "problem.kind_price": UNTRANSLATED,
+  "problem.kind_place": UNTRANSLATED,
+  "problem.kind_bug": UNTRANSLATED,
+  "problem.kind_other": UNTRANSLATED,
+  "problem.body_label": UNTRANSLATED,
+  "problem.body_placeholder": UNTRANSLATED,
+  "problem.send": UNTRANSLATED,
+  "problem.sending": UNTRANSLATED,
+  "problem.success_title": UNTRANSLATED,
+  "problem.success_body": UNTRANSLATED,
+  "problem.err_send": "We no fit send your report right now.",
+
+  /* About / legal / support. EVERY key is UNTRANSLATED, and that is the
+     doctrine, not laziness. This header's own rule: "Nigerian Pidgin is written
+     for new keys where the register is unambiguous. Where it is not, the key is
+     UNTRANSLATED rather than guessed." A privacy notice and a terms surface are
+     careful explanatory prose about what data leaves the device — the single
+     worst place in this app for a foreigner's guess, where a wrong nuance is a
+     false statement to a user about their own information. The row labels ride
+     the same decision: English ("Support", "Privacy") shows through honestly
+     rather than a Pidgin coinage no Lagos speaker vouched for. */
+  "about.lede": UNTRANSLATED,
+  "about.body_what": UNTRANSLATED,
+  "about.body_prices": UNTRANSLATED,
+  "about.body_account": UNTRANSLATED,
+  "about.body_pilot": UNTRANSLATED,
+  "about.terms": UNTRANSLATED,
+  "about.privacy": UNTRANSLATED,
+  "about.support": UNTRANSLATED,
+  "about.back": UNTRANSLATED,
+  "about.draft_notice": UNTRANSLATED,
+  "about.terms_title": UNTRANSLATED,
+  "about.terms_intro": UNTRANSLATED,
+  "about.terms_prices": UNTRANSLATED,
+  "about.terms_fulfilment": UNTRANSLATED,
+  "about.terms_reporting": UNTRANSLATED,
+  "about.privacy_title": UNTRANSLATED,
+  "about.privacy_intro": UNTRANSLATED,
+  "about.privacy_collect": UNTRANSLATED,
+  "about.privacy_device": UNTRANSLATED,
+  "about.privacy_third": UNTRANSLATED,
+  "about.privacy_ads": UNTRANSLATED,
+  "about.privacy_delete": UNTRANSLATED,
+  "about.support_title": UNTRANSLATED,
+  "about.support_body": UNTRANSLATED,
+  "about.support_cta": UNTRANSLATED,
+
   // "Sign in"/"Sign out" stay English on purpose — `profile.signed_out_name`
   // above already reads "Sign in to see WetinDey" in this table, and inventing a
   // Pidgin verb for it here would make one sheet disagree with itself.
@@ -687,6 +917,64 @@ const yoruba: LocaleTable = {
   "profile.report_problem": UNTRANSLATED,
   "profile.about": UNTRANSLATED,
 
+  /* My reports. Every key, without exception — LANES H2: Yorùbá is withheld
+     pending a native speaker, and no agent may stand in for one. English shows
+     through, on purpose. */
+  "reports.title": UNTRANSLATED,
+  "reports.empty_title": UNTRANSLATED,
+  "reports.empty_body": UNTRANSLATED,
+  "reports.empty_footnote": UNTRANSLATED,
+  "reports.signed_out_title": UNTRANSLATED,
+  "reports.signed_out_body": UNTRANSLATED,
+  "reports.err_load": UNTRANSLATED,
+  "reports.sold_out": UNTRANSLATED,
+
+  /* Report a problem. Every key UNTRANSLATED — LANES H2: Yorùbá is withheld
+     pending a native speaker. English shows through, on purpose. */
+  "problem.title": UNTRANSLATED,
+  "problem.kind_label": UNTRANSLATED,
+  "problem.kind_placeholder": UNTRANSLATED,
+  "problem.kind_price": UNTRANSLATED,
+  "problem.kind_place": UNTRANSLATED,
+  "problem.kind_bug": UNTRANSLATED,
+  "problem.kind_other": UNTRANSLATED,
+  "problem.body_label": UNTRANSLATED,
+  "problem.body_placeholder": UNTRANSLATED,
+  "problem.send": UNTRANSLATED,
+  "problem.sending": UNTRANSLATED,
+  "problem.success_title": UNTRANSLATED,
+  "problem.success_body": UNTRANSLATED,
+  "problem.err_send": UNTRANSLATED,
+
+  /* About / legal / support. Every key, without exception — LANES H2: Yorùbá is
+     withheld pending a native speaker, and no agent may stand in for one, least
+     of all for a privacy notice. English shows through, on purpose. */
+  "about.lede": UNTRANSLATED,
+  "about.body_what": UNTRANSLATED,
+  "about.body_prices": UNTRANSLATED,
+  "about.body_account": UNTRANSLATED,
+  "about.body_pilot": UNTRANSLATED,
+  "about.terms": UNTRANSLATED,
+  "about.privacy": UNTRANSLATED,
+  "about.support": UNTRANSLATED,
+  "about.back": UNTRANSLATED,
+  "about.draft_notice": UNTRANSLATED,
+  "about.terms_title": UNTRANSLATED,
+  "about.terms_intro": UNTRANSLATED,
+  "about.terms_prices": UNTRANSLATED,
+  "about.terms_fulfilment": UNTRANSLATED,
+  "about.terms_reporting": UNTRANSLATED,
+  "about.privacy_title": UNTRANSLATED,
+  "about.privacy_intro": UNTRANSLATED,
+  "about.privacy_collect": UNTRANSLATED,
+  "about.privacy_device": UNTRANSLATED,
+  "about.privacy_third": UNTRANSLATED,
+  "about.privacy_ads": UNTRANSLATED,
+  "about.privacy_delete": UNTRANSLATED,
+  "about.support_title": UNTRANSLATED,
+  "about.support_body": UNTRANSLATED,
+  "about.support_cta": UNTRANSLATED,
+
   /* Sign in. Every key, without exception — the header's rule for NEW keys, and
      this is the worst possible place to break it. A user who cannot tell
      invented Yorùbá from careless Yorùbá is being asked, in that moment, to hand
@@ -888,6 +1176,10 @@ export const NEEDS_NATIVE_REVIEW: Readonly<
     "get.title",
     "get.contact_seller",
     "profile.report_problem",
+    // "Tell us wetin spoil" — the same phrase as `profile.report_problem` above,
+    // carried onto the sheet's own title so the two agree. Genuine Pidgin, but it
+    // wants a Lagos speaker's ear like everything else here.
+    "problem.title",
   ],
 
   /**

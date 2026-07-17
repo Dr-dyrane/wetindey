@@ -389,3 +389,70 @@ export const offersCurrent = pgTable("offers_current", {
    */
   index("offers_current_variant_last_observed_idx").on(t.itemVariantId, t.lastObservedAt.desc())
 ]);
+
+/**
+ * 10. Problem Reports — free-text "something is wrong" reports from users.
+ *
+ * There is DELIBERATELY NO ADMIN UI behind this table, by the owner's own spec:
+ * "we are admin, it's our site... we read the db directly, make inference". The
+ * whole read surface is one query at psql — `select * from problem_reports order
+ * by created_at desc`. Everything below is shaped for that reader, not for a
+ * moderation queue that does not exist.
+ *
+ * NO status / moderation column, and its absence is a decision. `observations`
+ * carries `moderation_status` and it is 'approved' on 949/949 rows — not because
+ * that is the column default (the default is 'pending', see :298) but because
+ * the seed and both write paths explicitly write 'approved' and nothing writes
+ * 'rejected'. A status column here would be that same constant wearing the
+ * costume of a fact.
+ * A report is read once by a human and acted on outside the app; there is no
+ * state for the app to track.
+ *
+ * `userId` is nullable with NO foreign key — the exact precedent of
+ * `sources.userId` above (see its comment): ADR-003 makes contribution
+ * anonymous-first, an anonymous report is the product's default and is never
+ * refused, and a hard FK into Neon's managed `neon_auth.user` is a liability
+ * NDPR erasure would rather see degrade to "unrecognised" than block.
+ *
+ * The context columns (`placeId` / `itemVariantId` / `unitId` / `contextLabel`)
+ * are nullable with NO foreign key for a second, mechanical reason on top of the
+ * first: `db:seed` TRUNCATEs `places` CASCADE and re-inserts with fresh
+ * defaultRandom() UUIDs (keyed by slug), so a real FK would either CASCADE-delete
+ * every report on the next seed or block the seed outright. `contextLabel` is a
+ * denormalised human string ("Rice (imported) · 50kg bag · Mile 12 Market") so a
+ * report stays legible at psql with no join and survives a re-seed that moves the
+ * ids underneath it.
+ *
+ * These four columns SHIP AHEAD OF A WRITER, the same way `sources.userId` and
+ * `observations.didBuy` did. The entry point that captures an offer in context
+ * (a "report a problem" button inside a detail sheet) is not built in this
+ * change; the only opener today is the Profile row, which is cold — no offer is
+ * on screen there. So every row written now carries NULL here, and NULL is the
+ * honest value: "filed without an offer in context", not a default pretending to
+ * be a fact. The column earns its migration now because adding it later is a
+ * second migration against a table the owner reads by hand.
+ */
+export const problemReports = pgTable("problem_reports", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  // 'price_wrong' | 'place_wrong' | 'app_bug' | 'other'. varchar+comment, not a
+  // pg enum, matching every other categorical column here; the closed set is
+  // enforced at the write boundary by zod (src/lib/validation.ts), not by the DB.
+  kind: varchar("kind", { length: 50 }).notNull(),
+  // The report itself. Capped at 1000 chars by validation before it reaches here
+  // — a text column is a free storage-exhaustion vector for an unthrottled public
+  // write, and length is the only in-scope guard (there is no rate limiter yet).
+  body: text("body").notNull(),
+  userId: uuid("user_id"),
+  placeId: uuid("place_id"),
+  itemVariantId: uuid("item_variant_id"),
+  unitId: uuid("unit_id"),
+  contextLabel: text("context_label"),
+  // 'en' | 'pidgin' | 'yoruba' — the locale the reporter was reading. Answers
+  // "did they see English, or something we translated?" when a bug is about copy.
+  appLocale: varchar("app_locale", { length: 50 }),
+  createdAt: timestamp("created_at").defaultNow().notNull()
+}, (t) => [
+  // The only read this table has is `order by created_at desc`. The index serves
+  // it directly rather than sorting the whole table every time the owner looks.
+  index("problem_reports_created_at_idx").on(t.createdAt.desc())
+]);

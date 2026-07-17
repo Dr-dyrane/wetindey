@@ -21,6 +21,36 @@ interface ProfileSheetProps {
    */
   onChangeArea: () => void;
   /**
+   * Present the "My reports" sheet. Required, not optional, for the same reason
+   * `onChangeArea` is: this row spent its whole life `disabled` over a no-op
+   * `onClick`, and an optional callback is exactly how it would go dead a second
+   * time — silently, with the type checker satisfied.
+   *
+   * It is NOT gated on the session. Auth is recognition, never a gate (ADR-003),
+   * and signed-out is this app's permanent default; the sheet opens either way
+   * and explains itself. See MyReportsSheet.
+   */
+  onOpenMyReports: () => void;
+  /**
+   * Present the "Report a problem" sheet. Required, not optional, for the same
+   * reason `onOpenMyReports` is: this row shipped `disabled` over a no-op
+   * `onClick`, and an optional callback is how it would go dead again with the
+   * type checker none the wiser.
+   *
+   * Not gated on the session either — anyone can report a problem (ADR-003). See
+   * ReportProblemSheet.
+   */
+  onOpenReportProblem: () => void;
+  /**
+   * Present the About sheet — the product's account of itself, and the way to
+   * Terms of service, Privacy and Support. Required, not optional, for the same
+   * reason the rows above are: `about` spent its whole life `disabled` over a
+   * no-op `onClick`, and an optional callback is how it goes dead again with the
+   * type checker satisfied. Not gated on the session — About and its legal
+   * surfaces read the same for everyone. See AboutSheet.
+   */
+  onOpenAbout: () => void;
+  /**
    * What the location actually is, from `useLocationChrome().label`. Never the
    * literal "Festac" — this row and the map pill must not be able to disagree
    * about where the user is standing.
@@ -165,6 +195,9 @@ export function ProfileSheet({
   onClose,
   onOpenSettings,
   onChangeArea,
+  onOpenMyReports,
+  onOpenReportProblem,
+  onOpenAbout,
   currentAreaName,
   user,
   onSessionChange,
@@ -579,12 +612,23 @@ export function ProfileSheet({
         )}
 
         <ListGroup>
+          {/* Enabled in BOTH session states, and not disabled while signed out.
+              The rule above — rows with no destination are disabled — is about
+              DESTINATIONS, not auth, and this row now has one. Signing out does
+              not remove the destination; it changes what the destination says.
+              Disabling it for a signed-out user would reproduce the exact "still
+              muted" complaint that opened this work, permanently, for the app's
+              default state (ADR-003: reading is anonymous, forever). */}
           <ListRow
             icon={<TrendingUp className="h-4 w-4 text-status-info-fg" />}
             iconTint="bg-status-info-bg"
             label={t("profile.my_reports")}
-            disabled
-            onClick={() => {}}
+            onClick={() => {
+              // Dismiss first, like Change area and Settings: two stacked sheets
+              // would bury this one behind the next with no way back to it.
+              onClose();
+              onOpenMyReports();
+            }}
           />
           <ListRow
             icon={<Bookmark className="h-4 w-4 text-status-caution-fg" />}
@@ -622,14 +666,22 @@ export function ProfileSheet({
           <ListRow
             icon={<Flag className="h-4 w-4 text-text-secondary" />}
             label={t("profile.report_problem")}
-            disabled
-            onClick={() => {}}
+            onClick={() => {
+              // Dismiss first, like Settings and Change area above: two stacked
+              // sheets would bury this one with no way back to it.
+              onClose();
+              onOpenReportProblem();
+            }}
           />
           <ListRow
             icon={<CircleHelp className="h-4 w-4 text-text-secondary" />}
             label={t("profile.about")}
-            disabled
-            onClick={() => {}}
+            onClick={() => {
+              // Dismiss first, like Settings and Report a problem above: two
+              // stacked sheets would bury this one with no way back to it.
+              onClose();
+              onOpenAbout();
+            }}
           />
         </ListGroup>
 

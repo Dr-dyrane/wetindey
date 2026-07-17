@@ -382,6 +382,51 @@ const coverageForPointInput = z
     message: "coordinate (0, 0) is not a location — it is what an unparsed coordinate looks like",
   });
 
+/**
+ * `submitProblemReport` — the second unauthenticated public write, after
+ * `submitObservation`. Same exposure exactly: a Server Action is a public HTTP
+ * endpoint, ADR-003 keeps it open to anonymous callers by design, and there is
+ * no rate limiter in this app (no middleware, no upstash/arcjet dependency — the
+ * device-cookie throttle is still Phase 2, and when it lands it owns BOTH this
+ * endpoint and submitObservation). So this schema is the only guard standing
+ * between the open internet and a `text` column.
+ *
+ * `body` is where that matters. Uncapped, one POST can write an 8 KB essay — or
+ * a 10 MB one — into the reports table for free, which is storage exhaustion by
+ * the same reasoning `searchQueryInput` caps its query at 80. `.max(1000)` is
+ * well past a phone paragraph and far below anything worth storing in bulk;
+ * `.min(1)` after `.trim()` refuses an empty filing, so a blank report cannot be
+ * logged as if it said something.
+ *
+ * `kind` is a closed enum — the enum IS the guard, the same as `sort` at the
+ * offers path. Anything outside the four the reader triages by would sit in the
+ * column meaning nothing.
+ *
+ * `appLocale` is metadata (which language the reporter was reading), NOT
+ * security-sensitive, so the client supplies it and the enum bounds it. `userId`
+ * is deliberately ABSENT from this payload: attribution is resolved server-side
+ * from the session in the action, never taken from the caller, for the same
+ * reason `getMyReports` takes no arguments — a client-supplied identity on a
+ * public endpoint is a breach waiting for a curl.
+ */
+const problemReportKind = z.enum(["price_wrong", "place_wrong", "app_bug", "other"], {
+  errorMap: () => ({ message: "kind must be one of price_wrong, place_wrong, app_bug, other" }),
+});
+
+const submitProblemReportInput = z
+  .object({
+    kind: problemReportKind,
+    body: z
+      .string({ required_error: "body is required", invalid_type_error: "body must be a string" })
+      .trim()
+      .min(1, "say what's wrong")
+      .max(1000, "keep it under 1000 characters"),
+    appLocale: z.enum(["en", "pidgin", "yoruba"]).optional(),
+  })
+  .strict();
+
+type SubmitProblemReportInput = z.infer<typeof submitProblemReportInput>;
+
 /* ─────────────────────────────────────────────────────────────────────────────
    The helper
    ──────────────────────────────────────────────────────────────────────────── */
@@ -455,4 +500,8 @@ export function parsePlacesNear(data: unknown): z.infer<typeof placesNearInput> 
 
 export function parseCoverageForPoint(data: unknown): z.infer<typeof coverageForPointInput> {
   return assertValid(coverageForPointInput, data, "getCoverageForPoint");
+}
+
+export function parseSubmitProblemReport(data: unknown): SubmitProblemReportInput {
+  return assertValid(submitProblemReportInput, data, "submitProblemReport");
 }
