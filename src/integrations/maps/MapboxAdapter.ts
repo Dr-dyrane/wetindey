@@ -299,6 +299,47 @@ const POI_SORT_KEY: Expression = [
 ];
 
 /**
+ * Markets are two points bigger than everything else. Both themes.
+ *
+ * This is the "larger symbol" lever, and it is expressed as an OFFSET on top of
+ * the stock size ramp rather than as a replacement for it, deliberately: the
+ * stock expression already handles the case where a POI came from a big polygon
+ * (`sizerank` < 5 earns 18px), and rewriting it wholesale to add two pixels
+ * would quietly drop that. `+2` keeps their cartography and adds ours.
+ *
+ * Two points, not six. Every Lagos POI is a point, so `sizerank` is always 16
+ * and everything lands on the same 12px — which means markets currently have no
+ * way to be more important than a petrol station, and also means a small nudge
+ * is legible against a perfectly uniform field. The brief asked for "slightly
+ * larger" and slightly is doing real work in that sentence: the prominence here
+ * is carried by colour and by winning collisions, and the size is the whisper
+ * that confirms it, not the shout that delivers it.
+ */
+const MARKET_SIZE_BUMP: Expression = [
+  "case",
+  ["==", ["get", "class"], "food_and_drink_stores"],
+  2,
+  0
+];
+
+/**
+ * THE `+` IS INSIDE THE ZOOM STEP, and it has to be. Mapbox allows `["zoom"]`
+ * ONLY as the direct input of a top-level `step`/`interpolate`; wrapping that
+ * step in arithmetic makes the whole expression invalid and throws at runtime,
+ * taking the style with it. The first version of this did exactly that. It
+ * typechecked and it linted and it would have blanked the map — caught by
+ * running the patched style through Mapbox's own validator, which is the only
+ * thing in reach that actually knows this grammar.
+ */
+const POI_TEXT_SIZE: Expression = [
+  "step",
+  ["zoom"],
+  ["+", ["step", ["get", "sizerank"], 18, 5, 12], MARKET_SIZE_BUMP],
+  17,
+  ["+", ["step", ["get", "sizerank"], 18, 13, 12], MARKET_SIZE_BUMP]
+];
+
+/**
  * Restore POI symbols in dark. dark-v11 sets `icon-image: ""` on all six
  * icon-capable layers, so no sprite pixel ever draws — that absence is most of
  * what reads as "dead", more than the colour is.
@@ -465,7 +506,7 @@ const DARK_LANDUSE_COLOR: Expression = [
   "match",
   ["get", "class"],
   ["park", "grass", "agriculture", "scrub", "wood", "pitch"],
-  "hsl(140, 24%, 21%)",
+  "hsl(140, 22%, 18%)", // see DARK_PARK — a ground recedes, 1.20:1
   "commercial_area",
   "hsl(36, 30%, 21%)", // the warm wash that says "commerce lives here"
   "sand",
@@ -495,7 +536,25 @@ const DARK_LANDUSE_COLOR: Expression = [
  */
 const DARK_LAND = "hsl(35, 8%, 15%)";
 const DARK_WATER = "hsl(205, 32%, 27%)";
-const DARK_PARK = "hsl(140, 24%, 21%)";
+
+/**
+ * Park green, and the number is borrowed rather than chosen.
+ *
+ * A park is land that happens to be green. It is a GROUND, so it must recede —
+ * the moment it competes with a label it has stopped doing its job. The first
+ * version of this shipped at `hsl(140,24%,21%)`, which measured 1.37:1 against
+ * the land and read on screen as a green slab sitting ON the map rather than
+ * as part of it. Caught by looking at it, which is the only way this class of
+ * mistake is ever caught: it typechecked and it validated.
+ *
+ * Two independent references agree on the restraint, so this is not taste:
+ * streets-v12's own park sits at 1.21:1 against ITS land, and Mapbox's
+ * navigation-night-v1 — the richest dark basemap they ship — sits at 1.25:1
+ * against its land. 18% lightness lands at 1.20:1, i.e. the same restraint
+ * light already exercises, which is exactly the answer: the dark park should
+ * recede as much as the light one does.
+ */
+const DARK_PARK = "hsl(140, 22%, 18%)";
 
 /**
  * Neighbourhood labels. Structurally these are ALREADY identical between the
@@ -779,6 +838,7 @@ export class MapboxAdapter implements MapProviderAdapter {
     // colour below is anything other than a nicer-looking hospital map.
     filter("poi-label", POI_FILTER);
     layout("poi-label", "symbol-sort-key", POI_SORT_KEY);
+    layout("poi-label", "text-size", POI_TEXT_SIZE);
     paint("poi-label", "text-color", dark ? DARK_POI_COLOR : LIGHT_POI_COLOR);
 
     if (!dark) return;
@@ -808,9 +868,9 @@ export class MapboxAdapter implements MapProviderAdapter {
       5,
       0,
       6,
-      0.6,
+      0.5,
       12,
-      0.45
+      0.35
     ]);
 
     // Commercial districts appear at all — filter first, then colour.
