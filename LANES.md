@@ -55,10 +55,10 @@ in either one will conflict. **Never edit these without holding the lane that ow
 
 | File | Lines | Currently owned by |
 |---|---:|---|
-| `src/app/actions.ts` | ~1358 | *unclaimed* |
-| `src/app/page.tsx` | ~1300 | **auth** | session *WetinDey UI/UX + auth* | 🟢 **active — scope resolved** | `src/lib/auth.ts`, `src/lib/auth-client.ts`, `src/app/api/auth/**`, `src/app/_components/ProfileSheet.tsx`, `src/app/page.tsx`, `package.json`, `src/core/i18n/strings.ts` | route 1 | 2026-07-16 | **OWNER DECIDED 2026-07-16: KEEP AUTH.** Route 1 of the *Open conflict* below. Committed at 26350ba, signed in live. **governance: this needs a superseding ADR** — it must supersede Bible 40.1 *Anonymous browse* and amend ADR-002's refusal list ("no accounts/auth/RBAC"). I have not written it: `docs/adr/**` is your lane. Also: SERVICE-ARCHITECTURE.md:62 "Zero route handlers" is false and the code wins — yours to correct. |
-| `package.json` / `package-lock.json` | — | **auth** | session *WetinDey UI/UX + auth* | 🟢 **active — scope resolved** | `src/lib/auth.ts`, `src/lib/auth-client.ts`, `src/app/api/auth/**`, `src/app/_components/ProfileSheet.tsx`, `src/app/page.tsx`, `package.json`, `src/core/i18n/strings.ts` | route 1 | 2026-07-16 | **OWNER DECIDED 2026-07-16: KEEP AUTH.** Route 1 of the *Open conflict* below. Committed at 26350ba, signed in live. **governance: this needs a superseding ADR** — it must supersede Bible 40.1 *Anonymous browse* and amend ADR-002's refusal list ("no accounts/auth/RBAC"). I have not written it: `docs/adr/**` is your lane. Also: SERVICE-ARCHITECTURE.md:62 "Zero route handlers" is false and the code wins — yours to correct. |
-| `AGENTS.md`, `DECISIONS.md`, `WETINDEY_BIBLE.md`, `docs/adr/**` | — | **governance** |
+| `src/app/actions.ts` | ~1358 | **auth→trust** — claimed 2026-07-16 for the ADR-003 wiring. Contested: phase-1/trust and phase-3/field-data both need it. Coordinate before taking it. |
+| `src/app/page.tsx` | ~1300 | **auth** |
+| `package.json` / `package-lock.json` | — | **auth** |
+| `AGENTS.md`, `DECISIONS.md`, `WETINDEY_BIBLE.md`, `docs/adr/**`, `docs/architecture/**`, `LANES.md` | — | **governance** |
 
 ---
 
@@ -66,10 +66,11 @@ in either one will conflict. **Never edit these without holding the lane that ow
 
 | Lane | Owner | Status | Owns these paths | Roadmap | Claimed | Notes |
 |---|---|---|---|---|---|---|
-| **auth** | session *WetinDey UI/UX + auth* | 🟢 **active — scope resolved** | `src/lib/auth.ts`, `src/lib/auth-client.ts`, `src/app/api/auth/**`, `src/app/_components/ProfileSheet.tsx`, `src/app/page.tsx`, `package.json`, `src/core/i18n/strings.ts` | route 1 | 2026-07-16 | **OWNER DECIDED 2026-07-16: KEEP AUTH.** Route 1 of the *Open conflict* below. Committed at 26350ba, signed in live. **governance: this needs a superseding ADR** — it must supersede Bible 40.1 *Anonymous browse* and amend ADR-002's refusal list ("no accounts/auth/RBAC"). I have not written it: `docs/adr/**` is your lane. Also: SERVICE-ARCHITECTURE.md:62 "Zero route handlers" is false and the code wins — yours to correct. | session *WetinDey UI/UX + auth* (identified) | 🔴 **active — needs a decision** | `src/lib/auth.ts`, `src/lib/auth-client.ts`, `src/app/api/auth/**`, `src/app/_components/ProfileSheet.tsx`, `src/app/page.tsx`, `package.json`, `src/core/i18n/strings.ts` | **none — out of scope** | 2026-07-16 | **Blocked on scope, not on code — agreed.** Owner asked for it directly in chat ("commcne neon auth", "create an auth account using halodyrane@gmail.com", "ill provide otp"), which is why it exists; that instruction and ADR-002's refusal list are both the owner's and they contradict. Escalated to the owner — route 1 (a superseding ADR) or route 2 (shelve). Correction: work is **committed** (26350ba), not uncommitted, and signed in live as halodyrane@gmail.com. This lane will not widen or proceed pending the decision. |
+| **auth** | session *WetinDey UI/UX + auth* | 🟢 **active — scope resolved** | `src/lib/auth.ts`, `src/lib/auth-client.ts`, `src/app/api/auth/**`, `src/app/_components/ProfileSheet.tsx`, `src/app/page.tsx`, `package.json`, `src/core/i18n/strings.ts` | [ADR-003](docs/adr/003-identity-for-contribution-trust.md) | 2026-07-16 | **Resolved: auth stays.** [ADR-003](docs/adr/003-identity-for-contribution-trust.md) landed — supersedes Bible 40.1, strikes accounts/auth from ADR-002's refusal list. Shipped `26350ba`. **The ADR is conditional and its condition is unmet** — see *The unbuilt half* below. Architecture doc corrected; that action is closed. |
 | **logo / brand** | session *Logo SVG refinement* | 🟡 active | `src/design-system/brand/**`, `NigeriaLogo.tsx` | — | 2026-07-16 | Briefed on ADR-001/002. Design canons unchanged. |
 | **governance** | this session | 🟢 active | `AGENTS.md`, `DECISIONS.md`, `WETINDEY_BIBLE.md`, `docs/adr/**`, `docs/architecture/**`, `LANES.md` | Phase 6 | 2026-07-16 | ADR-001, ADR-002 landed. Owns doc/code drift corrections. |
 | **phase-0 / orphans** | session *WetinDey UI/UX + auth* | 🟢 active | `src/modules/**`, `src/core/module-contract.ts`, `src/core/*/`, `src/integrations/*/`, `knip` config, CI, `src/design-system/components/Card.tsx` | Phase 0 | 2026-07-16 | **Unblocked:** the only stated blocker was the auth conflict (Phase 0 cuts `jotai` from `page.tsx`, which auth owns) — same session owns both, so there is no cross-lane edit. Taking it because the repo generating dead code is the cause of most of the rest, and I proved it again today: I shipped a route seam nothing called and a `.squircle-card` with one consumer. `knip` in CI is the fix I could not be trusted to be. |
+| **auth→trust** | session *WetinDey UI/UX + auth* | 🟢 active | `src/app/actions.ts`, `src/lib/trust.ts`, `src/db/schema/index.ts`, `src/db/migrations/**` | ADR-003 condition | 2026-07-16 | **Making ADR-003's condition true.** Nullable `sources.user_id`; the write paths resolve a session to a per-user source instead of the one shared "Contributor" row; anonymous fallback preserved; `assessTrust` weights a `reliability_score_internal` that finally varies. Taken because governance is right that auth today is a capability with no live call site in the domain — my own rule, and I broke it one level up. **Overlaps phase-1/trust by design** (both want actions.ts + trust.ts): this IS the front half of Phase 1, so whoever takes phase-1 should talk to me rather than fork it. |
 | **phase-1 / trust** | *unclaimed* | ⚪ blocked | `src/lib/trust.ts`, `src/app/actions.ts`, `ItemDetailSheet.tsx`, `ItemCard.tsx` | Phase 1 | — | Blocked by Phase 0. The product's core claim. |
 | **phase-2 / pilot safety** | *unclaimed* | ⚪ blocked | `vercel.json`, contact resolution, rate limiting | Phase 2 | — | Blocked by Phase 1. |
 | **phase-3 / field data** | *unclaimed* | ⚪ blocked | `src/db/migrations/**`, observation write path, offline queue | Phase 3 | — | Blocked by Phase 2. |
@@ -79,34 +80,43 @@ in either one will conflict. **Never edit these without holding the lane that ow
 
 ---
 
-## Open conflict — the auth lane
+## Resolved 2026-07-16 — the auth lane
 
-**Unresolved as of 2026-07-16. Whoever owns the auth work must resolve this before it merges.**
+**Auth stays.** The owner's reasoning: it is how the app knows who says what, and how
+contribution trust can rise above a constant. That is not scope creep — it is the
+precondition the architecture of record identified for the trust model, which has no author
+for any row. [ADR-003](docs/adr/003-identity-for-contribution-trust.md) records it:
+**reading is anonymous forever; writing may be attributed. Recognition, never a gate.**
 
-An uncommitted change adds authentication: `@neondatabase/auth` (`0.4.2-beta`, with an
-`overrides` pin on `next`), a route handler at `src/app/api/auth/[...path]/route.ts`, and
-`src/lib/auth.ts` / `auth-client.ts`. The code itself is careful and well-reasoned. **The
-problem is scope, not quality.**
+Bible 40.1 is superseded; ADR-002's refusal list no longer refuses accounts (RBAC still
+refused). The architecture doc's "zero route handlers" claim is corrected. **Both handoffs
+from the auth lane are closed.**
 
-It contradicts two decisions accepted the same day:
+*The precedence rule earned its keep on day one: the doc went stale within hours, the code
+won, and the document was fixed — not the code.*
 
-- **Bible Section 40.1: `Anonymous browse | Accepted | Reduce friction and personal-data collection`.**
-- **[ADR-002](docs/adr/002-service-architecture-of-record.md)**, whose accepted roadmap lists
-  *User accounts / auth / RBAC* under **What to NOT do yet** — "Phase 2 needs *device
-  identity*, not users. Do not confuse 'we need auth' with 'we need accounts'."
+---
 
-Two honest ways out, and they are the owner's call, not an agent's:
+## The unbuilt half — the live risk, and it outranks Phase 0
 
-1. **Auth is genuinely wanted** → write an ADR that supersedes the anonymous-browse
-   decision and amends ADR-002's refusal list. Argue why accounts beat device identity for
-   the pilot. Then this is legitimate and the lane is unblocked.
-2. **Auth is premature** → shelve the branch. Phase 2 needs a signed device cookie for rate
-   limiting, which is much less than an account system.
+**[ADR-003](docs/adr/003-identity-for-contribution-trust.md) is accepted but its condition
+is NOT met.** Auth ships and delivers none of the benefit it was accepted for:
 
-**What this conflict already proves:** the architecture of record claims "Server Actions
-only — zero route handlers." That is **now false**. Per the precedence rule in
-[AGENTS.md](AGENTS.md), *the code wins* — so the document is the bug and the **governance**
-lane must correct it. Nobody should "fix" the code to match the doc.
+- `sources` has **no `user_id`**. Every contribution still resolves to the one shared
+  `"Contributor"` row (`src/app/actions.ts:313-322`).
+- `src/app/actions.ts` has **no session awareness**. Its comments still read *"there is no
+  auth in this app"* — accurate, for the write path.
+- `reliability_score_internal` is still the constant `70` for everyone.
+
+**Today the app collects an email address and gets nothing for it.** That is worse than
+having no auth: PII taken, benefit unbuilt, NDPR obligations incurred. It is also the exact
+failure mode this repo keeps repeating — a correct capability with no live call site — only
+this time it is the *domain* that is unwired, not a leaf file.
+
+**Whoever takes the wiring owns `src/app/actions.ts` and a migration**, so it will contest
+the phase-1/trust lane. Claim before starting. The shape is in ADR-003: nullable
+`sources.user_id`, session-resolved source per writer, anonymous fallback preserved,
+`assessTrust` weighting a score that finally varies.
 
 ---
 
