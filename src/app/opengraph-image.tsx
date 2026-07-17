@@ -69,7 +69,7 @@ const INK = {
   statusConfirmedBg: "#E9F9EE",
 } as const;
 
-export const alt = "WetinDey — know before you go. Food prices confirmed by people who went.";
+export const alt = "WetinDey: know before you go. Food prices confirmed by people who went.";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -192,7 +192,7 @@ export default async function OpengraphImage() {
               letterSpacing: "-0.02em",
             }}
           >
-            Know before you go — food prices confirmed by people who went.
+            Know before you go: food prices confirmed by people who went.
           </div>
 
           {/* Separation is fill, never a stroke. Both pills are fills sitting on

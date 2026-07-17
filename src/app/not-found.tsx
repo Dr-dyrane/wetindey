@@ -7,10 +7,10 @@ import { MapPinOff } from "lucide-react";
  * Custom 404 page.
  *
  * Without this file, any request to a path other than `/` rendered Next's own
- * default — an unstyled white page reading "404 | This page could not be
- * found." Entirely correct, entirely off-brand. One route is all this app has;
- * anything else is a mistype or a stale link, and the only honest answer is to
- * send them to the map.
+ * default: an unstyled white page reading "404 | This page could not be
+ * found." Entirely correct, entirely off-brand. The app is the map plus the
+ * item and place pages; a path that matches none of them is a mistype or a
+ * stale link, and the only honest answer is to send them to the map.
  *
  * Voice matches the error boundaries: Nigerian English, not formal.
  */
@@ -29,8 +29,7 @@ export default function NotFound() {
             Nothing dey here
           </h1>
           <p className="mt-1.5 text-subhead text-text-secondary">
-            This page no exist. WetinDey get only one page — the map — and na
-            there everything dey.
+            This page no exist. Check the map, na there everything dey.
           </p>
         </div>
 

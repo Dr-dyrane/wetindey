@@ -1,18 +1,65 @@
 import type { Metadata, Viewport } from "next";
 import { Analytics } from "@vercel/analytics/next";
 import { ThemeProvider } from "@/core/context/ThemeContext";
+import { siteOrigin } from "./sitemap";
+import { JsonLd, organizationJsonLd, websiteJsonLd } from "@/lib/seo";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "WetinDey - Food Availability & Price Map",
-  description: "Know before you go. Confirm food availability and prices in your neighborhood.",
+  /**
+   * The absolute origin every other URL in the tree resolves against: canonical
+   * tags, OpenGraph `url`, and the OG image. Without it Next resolves them
+   * against `http://localhost:3000` and warns, so a shared production link would
+   * carry a localhost OG image. Resolved through the same `siteOrigin()` the
+   * sitemap and robots use, so there is one canonical host, not three.
+   */
+  metadataBase: new URL(siteOrigin()),
+  /**
+   * A title TEMPLATE, so every child route reads "<its title> · WetinDey"
+   * without repeating the brand. `default` is what `/` and any route that sets
+   * no title get. The middot is not an em dash: the house rule forbids em
+   * dashes in copy, and titles are copy.
+   */
+  title: {
+    default: "WetinDey: street-food prices in Lagos",
+    template: "%s · WetinDey",
+  },
+  description:
+    "See what street food costs around south-west Lagos, market by market, reported by the people who saw the price. Know before you go.",
+  applicationName: "WetinDey",
   // app/manifest.ts is served at /manifest.webmanifest, not /manifest.json.
   manifest: "/manifest.webmanifest",
+  alternates: { canonical: "/" },
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
     title: "WetinDey",
   },
+  openGraph: {
+    type: "website",
+    siteName: "WetinDey",
+    locale: "en_NG",
+    url: "/",
+    title: "WetinDey: street-food prices in Lagos",
+    description:
+      "See what street food costs around south-west Lagos, reported by the people who saw the price.",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "WetinDey: street-food prices in Lagos",
+    description:
+      "See what street food costs around south-west Lagos, reported by the people who saw the price.",
+  },
+  /**
+   * Google Search Console verification, emitted as
+   * `<meta name="google-site-verification">` only when the token is set. The
+   * value is public by design (it ships in the HTML), so a NEXT_PUBLIC_ env is
+   * correct; it is spread conditionally so an unset token adds no empty tag.
+   * See docs/SEO.md.
+   */
+  ...(process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION
+    ? { verification: { google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION } }
+    : {}),
 };
 
 export const viewport: Viewport = {
@@ -196,6 +243,13 @@ export default function RootLayout({
         <script src="https://api.mapbox.com/mapbox-gl-js/v3.1.2/mapbox-gl.js" defer />
       </head>
       <body className="h-full min-h-screen selection:bg-accent selection:text-accent-contrast">
+        {/* Site-wide structured data. Outside ThemeProvider's visibility gate on
+            purpose: a script carries no pixels, so it does not need to wait for
+            the theme, and it is read from the HTML source either way. Per-page
+            structured data (Product / GroceryStore / BreadcrumbList) is added by
+            each route; this is the WebSite + Organization every page shares. */}
+        <JsonLd data={websiteJsonLd()} />
+        <JsonLd data={organizationJsonLd()} />
         <ThemeProvider>
           {children}
         </ThemeProvider>

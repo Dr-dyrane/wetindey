@@ -133,15 +133,17 @@ Map-first, no tab bar, so "pages" are presented surfaces reached from the avatar
 or the map — not routes. Only add a route when something must be linkable or
 indexable.
 
-**Today there is exactly one app route: `/` (`src/app/page.tsx`).** The only
-other route is `src/app/api/auth/[...path]/route.ts`. Everything below marked
-"Yes" is wanted, not built.
+**The app is map-first: `/` (`src/app/page.tsx`) is the primary route.** Two
+indexable content routes now ship alongside it: `/item/[slug]` and
+`/place/[slug]`, server-rendered and already in the sitemap. The only other
+route is `src/app/api/auth/[...path]/route.ts`. Rows still marked "Not built"
+are wanted, not built.
 
 | Surface | Reached from | Needs a URL? |
 |---|---|---|
 | Map + results | root | `/` — built |
-| Item detail (offers for an item) | search / card tap | Yes — shareable. Not built |
-| Place detail | pin / offer tap | Yes — shareable, SEO-relevant. Not built |
+| Item detail (offers for an item) | search / card tap | Yes, shareable and SEO-relevant. Built: `/item/[slug]` |
+| Place detail | pin / offer tap | Yes, shareable and SEO-relevant. Built: `/place/[slug]` |
 | Report a price | + button | No — built |
 | Area picker | location pill | No — built |
 | Settings | profile | No — built |
