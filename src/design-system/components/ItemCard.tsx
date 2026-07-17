@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import Image from "next/image";
 import { StatusBadge, type StatusKind } from "./StatusBadge";
+import { useT } from "@/core/i18n";
 
 export interface ItemCardData {
   id: string;
@@ -31,27 +32,43 @@ const toStatus = (freshness?: string | null): StatusKind =>
   freshness === "confirmed" ? "confirmed" : freshness === "unavailable" ? "unavailable" : "caution";
 
 /**
- * "E no dey", not "Not dey" — corrected by a native speaker.
+ * The badge's words now live in the dictionary, not here.
  *
- * The app's English voice is Nigerian English, not Received Standard: the search
- * field already asks "Wetin you dey find?". So Pidgin sitting in this otherwise
- * English map is the brand, not a leak. What was wrong was the grammar. Pidgin
- * needs the subject: "e no dey" is *it isn't there*; "not dey" is neither Pidgin
- * nor English, it is a foreigner's guess at Pidgin — which reads worse to a
- * Lagos shopper than plain English would, because it is visibly an outsider
- * imitating them.
+ * They were a hardcoded `Record` — which is why no locale ever reached the
+ * most-seen string in the product: three languages shipped and this answered to
+ * none of them. `useStatusLabel` reads `item.status_*`, so a Pidgin speaker can
+ * be given Pidgin badges without anyone opening a component.
  *
- * "Otilo" (Yorùbá, roughly *it has gone*) is the other true answer and is the
- * better one where the item SOLD OUT rather than was never stocked. This map
- * cannot tell those apart — `unavailable` covers both — so it takes the one that
- * is right in both cases.
+ * WHAT IS NOT CHANGING, because it was right: "E no dey", not "Not dey" —
+ * corrected by a native speaker. The app's English voice IS Nigerian English;
+ * the search field asks "Wetin you dey find?". So Pidgin sitting in an otherwise
+ * English map is the brand, not a leak, and `item.status_unavailable` keeps it
+ * in the ENGLISH table on purpose. What was once wrong was the grammar: Pidgin
+ * needs the subject — "e no dey" is *it isn't there*, while "not dey" is neither
+ * Pidgin nor English, a foreigner's guess that reads worse to a Lagos shopper
+ * than plain English would, because it is visibly an outsider imitating them.
+ *
+ * That is also why Pidgin's `item.status_confirmed` / `_caution` are
+ * UNTRANSLATED rather than guessed: English shows through, which is honest,
+ * until a native speaker supplies the words.
+ *
+ * "Otilo" (Yorùbá, roughly *it has gone*) is the other true answer and is better
+ * where the item SOLD OUT rather than was never stocked. This map cannot tell
+ * those apart — `unavailable` covers both — so it takes the one right in both.
+ *
+ * `info` stays hardcoded: it is a fallback for a state the product does not
+ * currently produce, and inventing a translated string for an unreachable badge
+ * is how this repo grows dictionary entries nobody reads.
  */
-const STATUS_LABEL: Record<StatusKind, string> = {
-  confirmed: "Confirmed",
-  caution: "Check again",
-  unavailable: "E no dey",
-  info: "Info",
-};
+function useStatusLabel(): Record<StatusKind, string> {
+  const t = useT();
+  return {
+    confirmed: t("item.status_confirmed"),
+    caution: t("item.status_caution"),
+    unavailable: t("item.status_unavailable"),
+    info: "Info",
+  };
+}
 
 /**
  * Monogram for an item with no photo. Hue is derived from the slug so the same
@@ -91,6 +108,7 @@ function Monogram({ name, slug }: { name: string; slug: string }) {
  * Nothing in this component has a border. Separation is surface + elevation.
  */
 export function ItemCard({ item, onSelect }: { item: ItemCardData; onSelect: (item: ItemCardData) => void }) {
+  const statusLabel = useStatusLabel();
   const [broken, setBroken] = useState(false);
   const status = toStatus(item.freshest);
   const showImage = item.imageUrl && !broken;
@@ -166,7 +184,7 @@ export function ItemCard({ item, onSelect }: { item: ItemCardData; onSelect: (it
           )}
         </p>
         <div className="mt-1 flex items-center gap-1.5">
-          <StatusBadge kind={status}>{STATUS_LABEL[status]}</StatusBadge>
+          <StatusBadge kind={status}>{statusLabel[status]}</StatusBadge>
           {item.placeCount ? (
             <span className="truncate text-caption-1 text-text-secondary">
               {item.placeCount} {item.placeCount === 1 ? "place" : "places"}

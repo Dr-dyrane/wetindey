@@ -284,6 +284,31 @@ export const en = {
   "item.a11y_available": "Available",
   "item.a11y_not_available": "Not available",
 
+  /*
+   * The status badge — the highest-frequency copy in the product, on every card
+   * and every offer row. It lived as a hardcoded `Record` in ItemCard.tsx and
+   * ItemDetailSheet.tsx, which is why no locale ever reached it: three languages
+   * shipped and the most-seen string in the app answered to none of them.
+   *
+   * These are NOT `item.a11y_*`. Those describe availability for a screen
+   * reader ("Available" / "Not available"). These are the visible verdict, and
+   * the verdict is freshness AND availability at once — "Check again" is not a
+   * claim about stock, it is an instruction about age.
+   *
+   * The English is taken verbatim from the card, not from this file's older
+   * `freshness`/`data_confidence` wording, because the code is the truth and the
+   * card is better: "Confirmed" beats "Confirmed Available", and "Check again"
+   * tells a shopper what to DO where "Likely Available" only hedges.
+   *
+   * `status_unavailable` keeps "E no dey" in ENGLISH deliberately. This app's
+   * English is Nigerian English — the search field asks "Wetin you dey find?" —
+   * so Pidgin here is the brand, not a leak. See ItemCard.tsx, which carries the
+   * native speaker's correction of "Not dey" and the reasoning for it.
+   */
+  "item.status_confirmed": "Confirmed",
+  "item.status_caution": "Check again",
+  "item.status_unavailable": "E no dey",
+
   /* Get it — GetItSheet.tsx:99-504, hardcoded English today. */
   "get.title": "Get it",
   "get.go_there": "Go there",
@@ -510,6 +535,26 @@ const pidgin: LocaleTable = {
   "item.a11y_available": "E dey",
   "item.a11y_not_available": "E no dey",
 
+  /*
+   * UNTRANSLATED, and that is the honest answer rather than a gap to fill in
+   * passing. The English these fall back to is already Nigerian English and
+   * `status_unavailable` is already Pidgin ("E no dey"), so nothing reads as an
+   * outsider's app today.
+   *
+   * What is missing is Pidgin for "Confirmed" and "Check again", and no agent
+   * should invent it. This file's own history is the argument: three components
+   * shipped "Not dey" — neither Pidgin nor English, a foreigner's guess — and it
+   * read worse to a Lagos shopper than plain English would, precisely because it
+   * is visibly an outsider imitating them. A guess here would repeat that on the
+   * most-seen string in the product.
+   *
+   * The point of moving these out of TSX is that a native speaker can now fill
+   * them without touching a component.
+   */
+  "item.status_confirmed": UNTRANSLATED,
+  "item.status_caution": UNTRANSLATED,
+  "item.status_unavailable": UNTRANSLATED,
+
   "get.title": "Go get am",
   "get.go_there": "Go there",
   "get.share": "Share",
@@ -714,6 +759,10 @@ const yoruba: LocaleTable = {
   "item.confidence_low": UNTRANSLATED,
   "item.a11y_available": UNTRANSLATED,
   "item.a11y_not_available": UNTRANSLATED,
+
+  "item.status_confirmed": UNTRANSLATED,
+  "item.status_caution": UNTRANSLATED,
+  "item.status_unavailable": UNTRANSLATED,
 
   "get.title": UNTRANSLATED,
   "get.go_there": UNTRANSLATED,
