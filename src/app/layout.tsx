@@ -85,6 +85,78 @@ export default function RootLayout({
             }catch(e){}})();`
           }}
         />
+        {/**
+         * `crypto.randomUUID` for non-secure origins, so the app boots on a phone.
+         *
+         * WHY THIS EXISTS. Over `http://192.168.x.x:3000` — the only way a phone
+         * reaches a dev server, and this is a phone-first Lagos app — the app used
+         * to die at boot to the "Something scatter" boundary with
+         * `TypeError: crypto.randomUUID is not a function`. Not our code: the
+         * bundled Neon/better-auth client runs `crypto.randomUUID()` at MODULE TOP
+         * LEVEL (grep `CURRENT_TAB_CLIENT_ID` in the served chunk). `randomUUID` is
+         * secure-context-only — present on https and on localhost, undefined on
+         * plain-http LAN. Top level means no try/catch of ours can reach it, and
+         * a polyfill applied after the bundle has run is already too late. It has
+         * to be here, blocking, before any bundle byte executes.
+         *
+         * Production is HTTPS, so `randomUUID` is native and this NEVER FIRES
+         * there. That is exactly why the bug hid: every environment anyone tested
+         * — prod, and localhost, which is secure by spec — was immune. Nobody had
+         * opened the app on a phone.
+         *
+         * IT IS NOT WEAK. `getRandomValues` is NOT secure-context-gated (measured:
+         * `function` on the same origin where `randomUUID` is `undefined`), so this
+         * is a real v4 UUID from the same CSPRNG the native one uses. No
+         * `Math.random`. If `getRandomValues` is ever missing too, we define
+         * nothing and let the original TypeError happen — a wrong id is worse than
+         * a loud crash on the one path that would produce it.
+         *
+         * `src/lib/report-error.ts` already guards its own `randomUUID` call for
+         * this exact reason, and says so. Our code anticipated the platform rule;
+         * the dependency did not. That guard is NOT made redundant by this: it
+         * still covers the server path, where this script never runs.
+         *
+         * ORDER IS GUARANTEED, NOT LUCKY — and not for the obvious reason. Next's
+         * chunk tags sit ABOVE this one and are `async`, which looks like a race.
+         * It is not: those chunks only push factory functions onto an array. The
+         * code that RUNS them is `webpack.js`, which the parser does not reach
+         * until far below this script, in `<body>`. So the top-level
+         * `crypto.randomUUID()` inside the auth factory cannot execute before this
+         * line. Do NOT "fix" this with `next/script strategy="beforeInteractive"`:
+         * that hands ordering to Next's injector and forfeits the document-order
+         * guarantee that is currently making it correct.
+         *
+         * IT SHIPS TO PRODUCTION, DELIBERATELY. The service-worker script below
+         * gates on NODE_ENV; this one does not. ~400 inert bytes, because prod is
+         * HTTPS and Vercel 308s http to https before this HTML is ever parsed. The
+         * trade: if the app is ever served from an unexpected plain-http origin, it
+         * boots with a proper CSPRNG v4 instead of crashing. Gating it would buy
+         * nothing and forfeit that.
+         *
+         * THIS IS PERMANENT UNTIL SOMEONE FILES UPSTREAM. It reads like a
+         * temporary workaround; it is not. Both exits are unowned — Neon is pinned
+         * at `0.4.2-beta`, and nothing has moved on serving the dev server over
+         * https. A top-level secure-context-only call in a client SDK breaks every
+         * plain-http dev origin, which is worth reporting; no agent here can send
+         * it. See LANES.md H17. Delete this when that issue closes, not before.
+         */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{
+              var c=window.crypto;
+              if(!c||typeof c.randomUUID==='function'||typeof c.getRandomValues!=='function')return;
+              c.randomUUID=function(){
+                var b=new Uint8Array(16);
+                c.getRandomValues(b);
+                b[6]=(b[6]&15)|64;
+                b[8]=(b[8]&63)|128;
+                var h=[],i=0;
+                for(;i<256;i++)h[i]=(i+256).toString(16).slice(1);
+                return h[b[0]]+h[b[1]]+h[b[2]]+h[b[3]]+'-'+h[b[4]]+h[b[5]]+'-'+h[b[6]]+h[b[7]]+'-'+h[b[8]]+h[b[9]]+'-'+h[b[10]]+h[b[11]]+h[b[12]]+h[b[13]]+h[b[14]]+h[b[15]];
+              };
+            }catch(e){}})();`
+          }}
+        />
         <link href="https://api.mapbox.com/mapbox-gl-js/v3.1.2/mapbox-gl.css" rel="stylesheet" />
         <script src="https://api.mapbox.com/mapbox-gl-js/v3.1.2/mapbox-gl.js" defer />
       </head>
