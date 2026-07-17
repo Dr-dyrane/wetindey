@@ -30,9 +30,7 @@ import { SettingsSheet } from "@/app/_components/SettingsSheet";
 import { ReportPriceSheet } from "@/app/_components/ReportPriceSheet";
 import { ProfileSheet, Avatar } from "@/app/_components/ProfileSheet";
 import { ItemDetailSheet, offerSignal } from "@/app/_components/ItemDetailSheet";
-import { MyReportsSheet } from "@/app/_components/MyReportsSheet";
-import { ReportProblemSheet } from "@/app/_components/ReportProblemSheet";
-import { AboutSheet } from "@/app/_components/AboutSheet";
+import { PresentationHost } from "@/app/_components/PresentationHost";
 import { formatNaira } from "@/lib/money";
 import { GetItSheet, type GetItTarget } from "@/app/_components/GetItSheet";
 import {
@@ -42,9 +40,9 @@ import {
   flushPendingVisitConfirmations,
   type VisitContext
 } from "@/app/_components/ConfirmVisitSheet";
-import { LocationSheet } from "@/app/_components/LocationSheet";
 
 import { useTheme } from "@/core/context/ThemeContext";
+import { usePresentation } from "@/core/navigation/usePresentation";
 import { useGlobalStore } from "@/core/state/globalStore";
 import { useLocationChrome, useLocationHydration, useLocationStore } from "@/core/state/locationStore";
 import { useLocaleControl, useStrings } from "@/core/i18n";
@@ -67,7 +65,7 @@ import { fetchRoute } from "@/lib/directions";
  *
  * `attempts` is what stops a payload the server will never accept from replaying
  * on every reconnect for the life of the install. Optional because entries
- * queued by an older build carry none — `?? 0` reads those as fresh rather than
+ * queued by an older build carry none, `?? 0` reads those as fresh rather than
  * dropping someone's report for having been queued yesterday.
  */
 interface PendingObservation {
@@ -112,7 +110,7 @@ interface PlaceOffer {
  * a timeout, and its contract says do not swallow it. There is no toast system
  * in this app and one control does not justify inventing one, so the message
  * lands here: on the map, under the pill, dismissible, and gone on its own after
- * a beat. Solid fill rather than the translucent material — this is the one
+ * a beat. Solid fill rather than the translucent material, this is the one
  * thing on the map that has to be read rather than seen through.
  */
 function MapNotice({ message, onDismiss }: { message: string; onDismiss: () => void }) {
@@ -149,8 +147,8 @@ export default function HomePage() {
    * Copy comes from `@/core/i18n`, not from a dictionary in this file.
    *
    * There was a 110-line `TRANSLATIONS` literal here, and it was the reason
-   * every sheet built after this file — GetItSheet, ItemDetailSheet,
-   * LocationSheet — is hardcoded English: no component could add a key without
+   * every sheet built after this file, GetItSheet, ItemDetailSheet,
+   * LocationSheet, is hardcoded English: no component could add a key without
    * editing a 1000-line page component, so none of them tried. It had also
    * already forked, into ConfirmVisitSheet's own `COPY`. `useStrings()` returns
    * the same shape under the same key names, so the sheets that take `t` as a
@@ -159,7 +157,7 @@ export default function HomePage() {
   const t = useStrings();
   const [locale, setLocale] = useLocaleControl();
 
-  // Zustand global state — the camera anchor and the search radius. Where the
+  // Zustand global state, the camera anchor and the search radius. Where the
   // USER is lives in locationStore; these two are not the same fact.
   const { mapCenter, setMapCenter, activeRadiusKm, setActiveRadiusKm } = useGlobalStore();
 
@@ -173,7 +171,7 @@ export default function HomePage() {
    * WHICH PLACE'S DETAIL LEVEL IS PUSHED. Null = none. That is the whole
    * meaning, and writing it always costs both halves: it gates `detailPlace`,
    * which pushes level 1, and it is the only thing `getPlaceOffers` is fetched
-   * for — `placeOffers` is read nowhere but inside `detailNode`. A flow that
+   * for, `placeOffers` is read nowhere but inside `detailNode`. A flow that
    * wants no pushed level must therefore not write it at all; there is no
    * partial use.
    */
@@ -188,17 +186,17 @@ export default function HomePage() {
    * How much of the leading edge the shell's panel covers, in px.
    *
    * AdaptiveShell publishes this as `--shell-leading-inset` precisely so this
-   * file can pad the camera by it — otherwise a selected pin lands UNDER the
+   * file can pad the camera by it, otherwise a selected pin lands UNDER the
    * panel, including the pin the user just tapped.
    *
    * MEASURED, not recomputed. The value is
-   * `calc(clamp(12px,1.5vw,24px) + clamp(320px,36vw,420px))` — continuous, so
+   * `calc(clamp(12px,1.5vw,24px) + clamp(320px,36vw,420px))`, continuous, so
    * there is no constant to copy, and `getComputedStyle` hands back that string
    * unresolved rather than a number. A zero-height probe styled with the
    * variable makes the browser do the arithmetic, and a ResizeObserver on it
    * tracks every viewport change AND the compact↔regular flip for free. Copying
    * the clamps into JS would be a second source of truth that silently drifts
-   * the day the panel is retuned — which is exactly what happened to the
+   * the day the panel is retuned, which is exactly what happened to the
    * hardcoded `452` this replaces (it was the old 420px panel + its 24px inset,
    * and both numbers are gone).
    */
@@ -219,7 +217,7 @@ export default function HomePage() {
    * from a second copy of its media query: a `useMediaQuery("(min-width:768px)")`
    * here would be this file guessing at a breakpoint AdaptiveShell owns, and the
    * two would disagree the moment it moves. Zero until measured, which is the
-   * compact default — and ThemeProvider hides the tree until mount, so that
+   * compact default, and ThemeProvider hides the tree until mount, so that
    * frame is never seen.
    */
   const isRegular = leadingInset > 0;
@@ -228,7 +226,7 @@ export default function HomePage() {
    * A presented sheet demotes an expanded one underneath it, so the map survives.
    *
    * `large` is 94vh. Present anything over it and there is no map left on
-   * screen — and the map is what the sheet on top is about. `medium` (52vh)
+   * screen, and the map is what the sheet on top is about. `medium` (52vh)
    * puts it back in frame. `peek` and `medium` are left exactly where they are:
    * they already show the map, and moving a sheet the user deliberately parked
    * costs more than it buys.
@@ -244,7 +242,7 @@ export default function HomePage() {
   const syncDetentToModal = useEventCallback((presented: boolean) => {
     if (presented) {
       // RegularShell mounts a panel and no BottomSheet at all, so there is no
-      // detent to demote — `activeDetent` is state nothing reads there.
+      // detent to demote, `activeDetent` is state nothing reads there.
       if (isRegular || activeDetent !== "large") return;
       preModalDetent.current = activeDetent;
       setActiveDetent("medium");
@@ -268,14 +266,22 @@ export default function HomePage() {
     syncDetentToModal(modalPresented);
   }, [modalPresented, syncDetentToModal]);
 
-  // Presented surfaces
+  /**
+   * The presentation spine. One surface at a time, location, my reports, report
+   * a problem, about, so opening one closes any other and none can peek above
+   * the next. It also owns the hash deep-links (#about, #terms, #privacy,
+   * #support, #report-problem): a link opens the surface, an open surface writes
+   * the hash, and the browser Back button closes it. See usePresentation.
+   */
+  const { surface, openSurface, closeSurface } = usePresentation();
+
+  // Presented surfaces that stay their own booleans: Settings and Profile carry
+  // no shareable state, and Report a price holds ~15 form fields below that this
+  // controller does not own. The four data-carrying flows (detail/GetIt/Confirm)
+  // keep their own state too, further down.
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isReportOpen, setIsReportOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
-  const [isLocationOpen, setIsLocationOpen] = useState(false);
-  const [isMyReportsOpen, setIsMyReportsOpen] = useState(false);
-  const [isReportProblemOpen, setIsReportProblemOpen] = useState(false);
-  const [isAboutOpen, setIsAboutOpen] = useState(false);
   /** The item ItemDetailSheet is resolving down to a unit. Non-null = presented. */
   const [detailItem, setDetailItem] = useState<ItemCardData | null>(null);
   /** The place GetItSheet is about to hand off to. Non-null = presented. */
@@ -287,7 +293,7 @@ export default function HomePage() {
   const [searchQuery, setSearchQuery] = useState("");
   /**
    * `undefined` until the first fetch settles. `[]` would claim we looked and
-   * found nothing, which AsyncList would correctly render as "No prices yet" —
+   * found nothing, which AsyncList would correctly render as "No prices yet" ,
    * on the very first frame, before the effect has even run.
    */
   const [popularItems, setPopularItems] = useState<ItemCardData[] | undefined>(undefined);
@@ -352,9 +358,9 @@ export default function HomePage() {
    * Server Components may not.
    *
    * `pending` is deliberately unused. This resolves after first paint and the
-   * map must never wait on it — a shopper reading prices is not asked to sign in,
+   * map must never wait on it, a shopper reading prices is not asked to sign in,
    * so signed-out IS the ready state, not a loading state. If the fetch fails,
-   * `data` is null, which means "not recognised" — the honest degradation, and
+   * `data` is null, which means "not recognised", the honest degradation, and
    * identical to the anonymous path the app is built around.
    */
   const { data: session, refetch: refetchSession } = authClient.useSession();
@@ -384,7 +390,7 @@ export default function HomePage() {
   /**
    * The location-INDEPENDENT half: every place on the map, and the form's
    * vocabulary. Neither changes when the user moves, so neither is refetched
-   * when they do — the map draws all pins regardless of the radius, and the
+   * when they do, the map draws all pins regardless of the radius, and the
    * report form must be able to name a stall anywhere.
    *
    * A callback, not an effect body: the error state needs a retry handle.
@@ -394,7 +400,7 @@ export default function HomePage() {
       try {
         setLoadError(null);
 
-        // In parallel — these don't depend on each other, and doing them in
+        // In parallel, these don't depend on each other, and doing them in
         // series stacked round-trips before anything rendered.
         const [placesList, metadata] = await Promise.all([
           getPlaces(),
@@ -425,7 +431,7 @@ export default function HomePage() {
    * The location-DEPENDENT half, and the reason the split exists.
    *
    * The landing list is the answer to "what does food cost around here", so it
-   * refetches when "here" changes — the position or the radius. It used to be
+   * refetches when "here" changes, the position or the radius. It used to be
    * fetched once, with no location at all, which is why the header could say
    * "Popular items around Yaba" over rows ranked from every offer in the
    * country. Moving to Festac changed the header and nothing else.
@@ -443,7 +449,7 @@ export default function HomePage() {
         setPopularItems(items);
       } catch (err) {
         console.error("Failed to load popular items:", err);
-        // Settled, and we know nothing — NOT "never fetched". Without this the
+        // Settled, and we know nothing, NOT "never fetched". Without this the
         // list stays undefined and skeletons spin forever behind the error.
         setPopularItems([]);
         setPopularError("We no fit reach the price data right now.");
@@ -462,8 +468,8 @@ export default function HomePage() {
   /**
    * Retry only what actually broke.
    *
-   * The sheet's list is the app's one error affordance — the map layer has no
-   * retry chrome — so it reports either failure. Splitting the loads without
+   * The sheet's list is the app's one error affordance, the map layer has no
+   * retry chrome, so it reports either failure. Splitting the loads without
    * this left `loadError` written and read by nothing: a dead `getPlaces()`
    * emptied the map of all 60 pins and said nothing anywhere, because the list
    * had stopped watching that flag. The compiler flagged it as an unused
@@ -499,7 +505,7 @@ export default function HomePage() {
              * PER-ENTRY, and the whole bug was where `removeItem` used to sit.
              *
              * It was AFTER the loop, with the loop inside one try/catch. So entry
-             * 3 of 5 throwing skipped it — while entries 1 and 2 had already
+             * 3 of 5 throwing skipped it, while entries 1 and 2 had already
              * COMMITTED. The queue survived intact and replayed both on the next
              * reconnect, and every reconnect after that, because the poisoned
              * entry never drained. `observations` is append-only, so each replay
@@ -507,13 +513,13 @@ export default function HomePage() {
              * a single report, which is exactly what the trust model cannot see.
              *
              * A network blip was enough to start it. With accounts it stops being
-             * a blip — tokens expire on a schedule, so a 401 mid-queue is the
+             * a blip, tokens expire on a schedule, so a 401 mid-queue is the
              * routine case, and the duplicates would carry an author.
              *
              * This is not a new mechanism. `flushPendingVisitConfirmations`
              * (ConfirmVisitSheet.tsx) has done it correctly since it was written:
              * per-entry try/catch, a keep list, an attempts counter, a ceiling.
-             * The two queues drain side by side in this same function — one right,
+             * The two queues drain side by side in this same function, one right,
              * one wrong. Ported, not reinvented.
              */
             const keep: PendingObservation[] = [];
@@ -550,7 +556,7 @@ export default function HomePage() {
             changed = sent > 0;
           }
         } catch (err) {
-          // Only the parse and the storage write reach here now — a failing
+          // Only the parse and the storage write reach here now, a failing
           // submit is handled per entry above.
           console.error("Failed to read the offline price report queue:", err);
         }
@@ -612,7 +618,7 @@ export default function HomePage() {
    *
    * Keyed on the pushed level rather than on any broader notion of selection:
    * the result is rendered only inside `detailNode`, so a fetch with no level
-   * pushed would be a round-trip whose answer has nowhere to land — on
+   * pushed would be a round-trip whose answer has nowhere to land, on
    * connections this app is otherwise careful to spend nothing on.
    */
   useEffect(() => {
@@ -653,7 +659,7 @@ export default function HomePage() {
    *
    * Fetched when GetItSheet opens rather than when "Go there" is tapped, and the
    * reason is the handoff itself: on Android it assigns `window.location.href`,
-   * so a promise started on the tap may never resolve — the page is gone. By the
+   * so a promise started on the tap may never resolve, the page is gone. By the
    * time the tap happens this is already in hand and arming is a synchronous
    * write. It is also the last moment we are guaranteed a connection; the person
    * walking back from a market is the least likely user in the product to have one.
@@ -670,7 +676,7 @@ export default function HomePage() {
         if (!cancelled) visitContextRef.current = ctx;
       })
       .catch((err) => {
-        // No snapshot means no question. That is the honest outcome — asking
+        // No snapshot means no question. That is the honest outcome, asking
         // "was the price right?" without knowing what price we quoted would file
         // an answer against nothing.
         console.error("Could not snapshot the visit; the trip will not be confirmed:", err);
@@ -705,7 +711,7 @@ export default function HomePage() {
   };
 
   /**
-   * Picking an item presents the narrowing sheet — it does not dump a flat list.
+   * Picking an item presents the narrowing sheet, it does not dump a flat list.
    *
    * `rice → long-grain → 50 kg bag` is three decisions (USER-FLOW §2). This used
    * to make one and hand back every offer for every variant at every size,
@@ -731,7 +737,7 @@ export default function HomePage() {
    *
    * Writes NO `detailPlaceId`, and that absence is the flow. The user arrived
    * from the offer list, not from a pin, so this market's detail level is a
-   * surface they never asked for and have never seen — pushing it would seat a
+   * surface they never asked for and have never seen, pushing it would seat a
    * full level under the Get it modal and leave the map covered by two surfaces
    * at once. The camera is `setMapCenter`'s job and needs nothing from the atom.
    *
@@ -769,7 +775,7 @@ export default function HomePage() {
    * Stable identity, forever.
    *
    * This was a plain function declaration, so it took a new identity on every
-   * render — and it is a dependency of MapboxCanvas's marker effect, which
+   * render, and it is a dependency of MapboxCanvas's marker effect, which
    * clears and rebuilds every pin when it re-runs. Every unrelated re-render
    * (a keystroke, a focus) tore down and reconstructed the whole map.
    */
@@ -853,7 +859,7 @@ export default function HomePage() {
 
         // Refetch what the user can actually see. The old code called
         // `getPlaces()`, which returns no price data, and never re-fetched
-        // `popularItems` at all — so reporting a price from the landing screen,
+        // `popularItems` at all, so reporting a price from the landing screen,
         // the common case, changed nothing on screen.
         loadBaseline();
 
@@ -868,7 +874,7 @@ export default function HomePage() {
     }
   };
 
-  /** The place whose detail level is pushed — NOT "the selected place". Nothing
+  /** The place whose detail level is pushed, NOT "the selected place". Nothing
    *  on this map has a selected state to be in. */
   const detailPlace = useMemo(
     () => allPlaces.find((p) => p.id === detailPlaceId),
@@ -878,7 +884,7 @@ export default function HomePage() {
   /**
    * Pins: the narrowed offers when there are some, otherwise every place.
    *
-   * The status comes from `offerSignal` — the same derivation the rows use —
+   * The status comes from `offerSignal`, the same derivation the rows use ,
    * rather than from `freshnessState` directly. Reading the column here would
    * paint a pin green while the row beside it said "Needs checking" for the same
    * expired offer, and nothing would tell the user which to believe.
@@ -916,7 +922,7 @@ export default function HomePage() {
    * An effect and not a memo, because the geometry is fetched: it is Mapbox's
    * answer, and it lands some time after the tap that asked for it. Cleared to
    * null on the way in, so the previous market's roads never linger under this
-   * market's pin, and the request is aborted on every change of target —
+   * market's pin, and the request is aborted on every change of target ,
    * a shopper taps through offers faster than the network answers, and a late
    * reply drawing the route the user already moved on from is the whole bug.
    *
@@ -924,7 +930,7 @@ export default function HomePage() {
    * back to a straight line, which is the point: a straight line reads as a road
    * and cuts through the lagoon.
    *
-   * `[lng, lat]` — GeoJSON order, the opposite of every other map call here. See
+   * `[lng, lat]`, GeoJSON order, the opposite of every other map call here. See
    * RouteGeometry.
    */
   const [route, setRoute] = useState<RouteGeometry | null>(null);
@@ -968,14 +974,14 @@ export default function HomePage() {
         center={mapCenter}
         route={route}
         /* At regular width the shell mounts no bottom sheet, so there is nothing
-           below to compensate for — but the panel covers the leading edge, and
+           below to compensate for, but the panel covers the leading edge, and
            without that padding a pin can be flown to and land behind it. */
         detent={isRegular ? null : activeDetent}
         padding={isRegular ? { left: leadingInset } : undefined}
       />
 
       {/* Floating controls. These sit directly on the map, so they use the
-          translucent material rather than a solid surface — the map needs to
+          translucent material rather than a solid surface, the map needs to
           stay legible through them. */}
       {/* `left` clears the shell's panel rather than sitting at a flat left-4.
           This chrome lives in the z-0 map layer, so at every regular width the
@@ -989,7 +995,7 @@ export default function HomePage() {
         }}
       >
         <div className="flex items-start justify-between gap-2">
-          {/* A control, not a label — hence `pointer-events-auto` against the
+          {/* A control, not a label, hence `pointer-events-auto` against the
               stack's `pointer-events-none`, and the tap floors. `min-w-tap` is
               load-bearing now the label stands alone: the shortest area name in
               the db is "Ojo", which would otherwise collapse the width under
@@ -997,7 +1003,7 @@ export default function HomePage() {
               row in LocationSheet, at the point where it is actionable. */}
           <button
             type="button"
-            onClick={() => setIsLocationOpen(true)}
+            onClick={() => openSurface({ kind: "location" })}
             aria-label="Change location"
             className="pointer-events-auto flex min-h-tap min-w-tap items-center justify-center squircle-full
                        material-thick px-3 py-1.5 shadow-raised active:opacity-60 transition-opacity duration-instant"
@@ -1021,7 +1027,7 @@ export default function HomePage() {
         {locateError && <MapNotice message={locateError} onDismiss={dismissLocateError} />}
       </div>
 
-      {/* Recenter. Parked above the peek detent so the sheet never covers it —
+      {/* Recenter. Parked above the peek detent so the sheet never covers it ,
           the fraction is imported rather than typed as "20vh", so retuning the
           detent moves this with it. */}
       <div
@@ -1031,7 +1037,7 @@ export default function HomePage() {
         <MapRecenterControl
           /* recenterTo ONLY. Writing the position to the store here would fire
              the mapCenter effect above, and its state-driven flyTo would land a
-             commit later and interrupt this animation mid-flight — freezing the
+             commit later and interrupt this animation mid-flight, freezing the
              zoom at whatever value it had reached. Two things must never drive
              the camera for one interaction. This is the camera control; the
              location pill is the position control. */
@@ -1078,7 +1084,7 @@ export default function HomePage() {
                   Without a name it drew the anonymous silhouette forever, so
                   signing in changed nothing anyone could see: you were
                   recognised only inside the sheet you had to reopen to check.
-                  `||`, not `??` — email OTP mints users with name: "". */}
+                  `||`, not `??`, email OTP mints users with name: "". */}
               <Avatar name={sessionUser ? sessionUser.name || sessionUser.email : undefined} size={32} />
             </button>
           </div>
@@ -1103,7 +1109,7 @@ export default function HomePage() {
           spans the home indicator, and adding the safe area to it would pad the
           same 34px twice. At `large` the sheet is docked, `--sheet-hidden` is 0,
           and the safe area is the whole reservation. 20px is the breathing room.
-          The `0px` fallback is load-bearing — the regular shell mounts no
+          The `0px` fallback is load-bearing, the regular shell mounts no
           BottomSheet, so the variable is undefined there and `max()` yields the
           safe area alone, the padding it has always had, with no branch on size
           class.
@@ -1132,8 +1138,8 @@ export default function HomePage() {
                   location now. AsyncList remounts its skeletons when the subject
                   changes, so switching area shows the list loading rather than
                   silently swapping Festac's prices for Yaba's under a header
-                  that already says Yaba. This was previously omitted — correctly,
-                  at the time — because the query ignored location and a refetch
+                  that already says Yaba. This was previously omitted, correctly,
+                  at the time, because the query ignored location and a refetch
                   returned byte-identical rows. It no longer does. */}
               <AsyncList
                 subject={`${location.label}·${activeRadiusKm}`}
@@ -1158,7 +1164,7 @@ export default function HomePage() {
             </div>
           )}
 
-          {/* B. Search results. One branch, not two — the old "searching" branch
+          {/* B. Search results. One branch, not two, the old "searching" branch
               rendered h-12 bars that stood in for ItemCards and jumped the layout
               the moment real rows arrived. */}
           {searchQuery && (
@@ -1181,10 +1187,10 @@ export default function HomePage() {
     </div>
   );
 
-  // 3. Place detail — level 1 of the navigation stack, in BOTH size classes.
+  // 3. Place detail, level 1 of the navigation stack, in BOTH size classes.
   //
   // Not a sidebar and not desktop-only: RegularShell's right island is gone, so
-  // both shells hand this node to the same NavigationStack — compact inside the
+  // both shells hand this node to the same NavigationStack, compact inside the
   // bottom sheet, regular inside the left panel.
   //
   // ONE way in: tapping a pin. The offer list hands off to GetItSheet directly
@@ -1204,7 +1210,7 @@ export default function HomePage() {
               <h2 className="text-headline tracking-tight text-text-primary">{detailPlace.name}</h2>
               <p className="text-caption-1 text-text-secondary mt-1 flex items-center">
                 <MapPin className="h-3.5 w-3.5 text-accent mr-1 shrink-0" />
-                {/* From the user, not from the camera — this panel opens by
+                {/* From the user, not from the camera, this panel opens by
                     tapping a pin, which centres the camera ON that pin, so
                     measuring from `mapCenter` printed "0 m away" for every
                     market you clicked. */}
@@ -1285,7 +1291,7 @@ export default function HomePage() {
                 lng: detailPlace.location.lng,
                 address: detailPlace.address,
                 areaName: location.label,
-                // Reached from a pin, so there is no single price under test —
+                // Reached from a pin, so there is no single price under test ,
                 // and therefore nothing to confirm on the way back.
                 offer: null
               })
@@ -1360,11 +1366,22 @@ export default function HomePage() {
         lang={locale}
       />
 
-      <LocationSheet
-        open={isLocationOpen}
-        onClose={() => setIsLocationOpen(false)}
+      {/* The presentation spine: the four controller surfaces (location, my
+          reports, report a problem, about), each gated by `surface`. One is open
+          at a time, so opening any of them closes the others and none peeks above
+          the next, and this is where a hash deep-link surfaces. */}
+      <PresentationHost
+        surface={surface}
+        onClose={closeSurface}
         radiusKm={activeRadiusKm}
-        onCommit={(coords) => setMapCenter(coords)}
+        onCommitLocation={(coords) => setMapCenter(coords)}
+        signedIn={Boolean(sessionUser)}
+        onReportPrice={() => {
+          // The empty-state exit from My reports: close this surface, then open
+          // the report-price sheet, which stays page.tsx's own boolean.
+          closeSurface();
+          setIsReportOpen(true);
+        }}
       />
 
       <SettingsSheet
@@ -1383,40 +1400,14 @@ export default function HomePage() {
         open={isProfileOpen}
         onClose={() => setIsProfileOpen(false)}
         onOpenSettings={() => setIsSettingsOpen(true)}
-        onChangeArea={() => setIsLocationOpen(true)}
-        onOpenMyReports={() => setIsMyReportsOpen(true)}
-        onOpenReportProblem={() => setIsReportProblemOpen(true)}
-        onOpenAbout={() => setIsAboutOpen(true)}
+        onChangeArea={() => openSurface({ kind: "location" })}
+        onOpenMyReports={() => openSurface({ kind: "my-reports" })}
+        onOpenReportProblem={() => openSurface({ kind: "report-problem" })}
+        onOpenAbout={() => openSurface({ kind: "about" })}
         currentAreaName={location.label}
         user={sessionUser}
         onSessionChange={refetchSession}
       />
-
-      {/* The reports you filed, read back to you. A sibling like every other
-          sheet — ProfileSheet dismisses itself before presenting this, so the
-          two never stack. */}
-      <MyReportsSheet
-        open={isMyReportsOpen}
-        onClose={() => setIsMyReportsOpen(false)}
-        signedIn={Boolean(sessionUser)}
-        onReportPrice={() => {
-          setIsMyReportsOpen(false);
-          setIsReportOpen(true);
-        }}
-      />
-
-      {/* "Report a problem" — a sibling sheet, cold (no offer context). ProfileSheet
-          dismisses itself before presenting this, so the two never stack. */}
-      <ReportProblemSheet
-        open={isReportProblemOpen}
-        onClose={() => setIsReportProblemOpen(false)}
-      />
-
-      {/* About — the product's account of itself, and the way to Terms of
-          service, Privacy and Support. One sheet: the three surfaces push on a
-          NavigationStack rather than stack as modals. ProfileSheet dismisses
-          itself before presenting this. */}
-      <AboutSheet open={isAboutOpen} onClose={() => setIsAboutOpen(false)} />
 
       <ReportPriceSheet
         open={isReportOpen}
