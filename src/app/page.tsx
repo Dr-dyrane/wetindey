@@ -22,6 +22,7 @@ import {
 import type { RouteGeometry } from "@/integrations/maps/MapboxAdapter";
 import { authClient } from "@/lib/auth-client";
 import { DETENT_FRACTION, type Detent } from "@/design-system/components/BottomSheet";
+import { useModalPresented } from "@/design-system/components/ModalSheet";
 import { AsyncList } from "@/design-system/components/AsyncList";
 import { NigeriaLogo } from "@/design-system/components/NigeriaLogo";
 import { ItemCard, PhotoCredits, type ItemCardData } from "@/design-system/components/ItemCard";
@@ -55,6 +56,7 @@ import {
   type NarrowedOffer
 } from "@/app/actions";
 import { getHaversineDistance, formatDistance } from "@/lib/geospatial";
+import { fetchRoute } from "@/lib/directions";
 
 interface PlaceData {
   id: string;
@@ -196,6 +198,50 @@ export default function HomePage() {
    * frame is never seen.
    */
   const isRegular = leadingInset > 0;
+
+  /**
+   * A presented sheet demotes an expanded one underneath it, so the map survives.
+   *
+   * `large` is 94vh. Present anything over it and there is no map left on
+   * screen — and the map is what the sheet on top is about. `medium` (52vh)
+   * puts it back in frame. `peek` and `medium` are left exactly where they are:
+   * they already show the map, and moving a sheet the user deliberately parked
+   * costs more than it buys.
+   *
+   * ONE seam, not eight. `useModalPresented` counts presentations inside
+   * ModalSheet, the only thing that knows one is up, so all eight call sites get
+   * this without opting in and a ninth cannot forget to.
+   */
+  const modalPresented = useModalPresented();
+  /** The detent to hand back on dismissal. Null = we never took one. */
+  const preModalDetent = useRef<Detent | null>(null);
+
+  const syncDetentToModal = useEventCallback((presented: boolean) => {
+    if (presented) {
+      // RegularShell mounts a panel and no BottomSheet at all, so there is no
+      // detent to demote — `activeDetent` is state nothing reads there.
+      if (isRegular || activeDetent !== "large") return;
+      preModalDetent.current = activeDetent;
+      setActiveDetent("medium");
+      return;
+    }
+
+    const restore = preModalDetent.current;
+    preModalDetent.current = null;
+    /**
+     * Give it back. Expanding to `large` was a decision, and silently keeping
+     * someone at `medium` afterwards spends it on their behalf.
+     *
+     * Only from where we left it. Any other detent means the user moved the
+     * sheet themselves while the sheet above was up, and the position they chose
+     * outranks the one we remembered.
+     */
+    if (restore && activeDetent === "medium") setActiveDetent(restore);
+  });
+
+  useEffect(() => {
+    syncDetentToModal(modalPresented);
+  }, [modalPresented, syncDetentToModal]);
 
   // Presented surfaces
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
@@ -796,33 +842,45 @@ export default function HomePage() {
   }, [itemOffers, allPlaces]);
 
   /**
-   * The line from you to the market you are about to walk to.
+   * The roads from you to the market you are about to walk to.
    *
    * Drawn only while a `GetItTarget` is open, because that is the only moment the
    * question "how do I get from me to there" is being asked. A line to every pin
    * would be noise, and a line to nothing is not a line.
    *
-   * TWO POINTS TODAY, NOT A ROUTE. `setRoute` takes geometry and asks nothing
-   * about where it came from, so a real routed path — one that follows roads
-   * rather than cutting through the lagoon — is a matter of handing it more
-   * coordinates, from this same seam, with no change below. Nothing is drawn that
-   * claims to be a road: two points read as a bearing and a distance, which is
-   * exactly what we know.
+   * An effect and not a memo, because the geometry is fetched: it is Mapbox's
+   * answer, and it lands some time after the tap that asked for it. Cleared to
+   * null on the way in, so the previous market's roads never linger under this
+   * market's pin, and the request is aborted on every change of target —
+   * a shopper taps through offers faster than the network answers, and a late
+   * reply drawing the route the user already moved on from is the whole bug.
    *
-   * ADR-001 rules out couriers, dispatch and checkout. It does not rule out
-   * drawing a line — "where is it" is the question the product exists to answer,
-   * and the ADR keeps it. A directions source is not a delivery integration.
+   * No route, no network, no token → null → no line. `fetchRoute` never falls
+   * back to a straight line, which is the point: a straight line reads as a road
+   * and cuts through the lagoon.
    *
    * `[lng, lat]` — GeoJSON order, the opposite of every other map call here. See
    * RouteGeometry.
    */
-  const route = useMemo<RouteGeometry | null>(() => {
-    if (!getItTarget) return null;
-    return [
-      [locPosition.lng, locPosition.lat],
-      [getItTarget.lng, getItTarget.lat]
-    ];
-  }, [getItTarget, locPosition.lat, locPosition.lng]);
+  const [route, setRoute] = useState<RouteGeometry | null>(null);
+  const routeTargetLat = getItTarget?.lat ?? null;
+  const routeTargetLng = getItTarget?.lng ?? null;
+  useEffect(() => {
+    setRoute(null);
+    if (routeTargetLat === null || routeTargetLng === null) return;
+
+    const controller = new AbortController();
+    void fetchRoute(
+      { lat: locPosition.lat, lng: locPosition.lng },
+      { lat: routeTargetLat, lng: routeTargetLng },
+      controller.signal
+    ).then((geometry) => {
+      if (controller.signal.aborted) return;
+      setRoute(geometry);
+    });
+
+    return () => controller.abort();
+  }, [routeTargetLat, routeTargetLng, locPosition.lat, locPosition.lng]);
 
   // 1. Map node (base layer)
   const mapNode = (

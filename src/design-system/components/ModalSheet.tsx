@@ -1,9 +1,48 @@
 "use client";
 
-import React, { useCallback, useEffect, useRef } from "react";
+import React, { useCallback, useEffect, useRef, useSyncExternalStore } from "react";
 import { X } from "lucide-react";
 import { SHEET_RADIUS } from "./BottomSheet";
 import { useMediaQuery } from "@/core/hooks/useMediaQuery";
+
+/**
+ * How many sheets are presented right now, app-wide.
+ *
+ * It lives HERE because this component is the only thing in the app that knows a
+ * sheet is up. There are eight call sites; asking each to announce itself is
+ * eight chances to forget, and the ninth would never know it had to.
+ *
+ * A COUNT, not a flag. SheetPicker presents a ModalSheet from inside
+ * ReportPriceSheet's and ItemDetailSheet's, so presentations stack two deep — a
+ * flag would clear when the picker dismisses and report "nothing presented"
+ * while the sheet that owns the picker still covers the screen.
+ */
+let presentedCount = 0;
+const presentedListeners = new Set<() => void>();
+const emitPresented = () => presentedListeners.forEach((notify) => notify());
+
+const subscribePresented = (onStoreChange: () => void) => {
+  presentedListeners.add(onStoreChange);
+  return () => {
+    presentedListeners.delete(onStoreChange);
+  };
+};
+
+const getPresentedSnapshot = () => presentedCount > 0;
+/** Nothing is presented on a server render, and `useSyncExternalStore` needs to
+ *  be told so rather than reaching for a client-only count during SSR. */
+const getPresentedServerSnapshot = () => false;
+
+/**
+ * Is ANY sheet presented over the app right now?
+ *
+ * For the layer underneath, which may have to get out of the way — see page.tsx,
+ * where an expanded bottom sheet demotes so the map stays in frame behind a
+ * presented sheet.
+ */
+export function useModalPresented(): boolean {
+  return useSyncExternalStore(subscribePresented, getPresentedSnapshot, getPresentedServerSnapshot);
+}
 
 interface ModalSheetProps {
   open: boolean;
@@ -33,10 +72,10 @@ interface ModalSheetProps {
  * Drilling into a new task opens a NEW surface stacked over the current one,
  * rather than swapping the contents of the surface you are already looking at.
  * That is the HIG model, and it matters for orientation: the sheet slides in
- * from the edge it will leave by, keeps the previous context visible and dimmed
- * behind it, and hands back exactly where you were on dismiss. Replacing a
- * panel's contents in place gives none of those cues — the user loses the
- * thread of where they came from and how to get back.
+ * from the edge it will leave by, keeps the previous context visible behind it,
+ * and hands back exactly where you were on dismiss. Replacing a panel's contents
+ * in place gives none of those cues — the user loses the thread of where they
+ * came from and how to get back.
  *
  * Dismissal follows the platform's three paths: the close control, the
  * backdrop, and Escape.
@@ -56,6 +95,22 @@ export function ModalSheet({ open, onClose, title, action, hero, children, size 
     },
     [onClose]
   );
+
+  /**
+   * Publish the presentation for the layer underneath. Its own effect, not a
+   * branch of the focus one below: this tracks "a sheet is on screen" and
+   * nothing else, and it must not acquire that effect's timers or its dependency
+   * on `onKeyDown`.
+   */
+  useEffect(() => {
+    if (!open) return;
+    presentedCount += 1;
+    emitPresented();
+    return () => {
+      presentedCount -= 1;
+      emitPresented();
+    };
+  }, [open]);
 
   useEffect(() => {
     if (!open) return;
@@ -88,11 +143,19 @@ export function ModalSheet({ open, onClose, title, action, hero, children, size 
      * pretending a desktop is a phone.
      */
     <div className="absolute inset-0 z-50 flex flex-col justify-end md:items-center md:justify-center md:p-6">
-      <button
-        aria-label="Dismiss"
-        onClick={onClose}
-        className="absolute inset-0 bg-scrim animate-in fade-in duration-standard"
-      />
+      {/*
+       * The dismiss target — and only that. No fill.
+       *
+       * Three separate jobs can live on an inset-0 element over a sheet: dimming
+       * what is behind, being the backdrop dismissal path, and swallowing taps
+       * aimed at what is behind. This element does the last two and not the
+       * first. The map is the product; it stays lit while a sheet is up, and a
+       * tap out here means "done with this sheet" rather than "pan the map".
+       *
+       * Modality is carried by the panel's own material and elevation, which is
+       * how every surface in this app states it — zero borders, no scrims.
+       */}
+      <button aria-label="Dismiss" onClick={onClose} className="absolute inset-0" />
 
       <div
         ref={panelRef}
