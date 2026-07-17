@@ -57,7 +57,7 @@
 // Policy
 // ─────────────────────────────────────────────────────────────────────────────
 
-export interface FreshnessPolicy {
+interface FreshnessPolicy {
   /** Beyond this, we say "check before you go". FoodModule.ts:141. */
   staleHours: number;
   /** Beyond this, we stop standing behind the price at all. FoodModule.ts:140. */
@@ -100,21 +100,21 @@ export const COLLECTION_METHOD_WEIGHTS: Readonly<Record<string, number>> = {
  * times it reports. This is the cap that makes the model resistant to the sofa:
  * a single source saturates at the worth of one perfect report.
  */
-export const PER_SOURCE_CAP = 1.0;
+const PER_SOURCE_CAP = 1.0;
 
 /**
  * Weight multiplier applied to a source's 2nd, 3rd, … report (0.35, then 0.1225…).
  * Repetition from the same mouth is worth something — it is a re-check, and a
  * re-check is not nothing — but it decays fast and hits PER_SOURCE_CAP quickly.
  */
-export const REPEAT_OBSERVATION_DECAY = 0.35;
+const REPEAT_OBSERVATION_DECAY = 0.35;
 
 /**
  * Saturation constant for the evidence → score curve. See `scoreFromEvidence()`.
  * Tuned so the 2nd and 3rd distinct source move the number most, which is where
  * the real information is.
  */
-export const EVIDENCE_SATURATION = 1.6;
+const EVIDENCE_SATURATION = 1.6;
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Inputs and outputs
@@ -149,7 +149,7 @@ export type Availability = "available" | "unavailable";
  * PROVISIONAL. What earns each band is a product decision, not an engineering
  * one — see the module docblock in the handover and `trustBand()` below.
  */
-export type TrustBand = "high" | "medium" | "low" | "none";
+type TrustBand = "high" | "medium" | "low" | "none";
 
 export interface TrustAssessment {
   /** 0-100. Asymptotic: it never reaches 100, because we are never certain. */
@@ -204,7 +204,7 @@ function toMillis(value: Date | string): number {
  * otherwise read as permanently, maximally fresh. That is exactly the class of
  * plausible-wrong the repo has already paid for once.
  */
-export function ageHoursOf(observedAt: Date | string, now: number = Date.now()): number {
+function ageHoursOf(observedAt: Date | string, now: number = Date.now()): number {
   const ageH = (now - toMillis(observedAt)) / MS_PER_HOUR;
   if (ageH < -FUTURE_SKEW_TOLERANCE_HOURS) {
     throw new Error(
@@ -244,7 +244,7 @@ export function ageDecay(
  * Adding a method to the schema means deciding what it is worth — that decision
  * belongs here, made deliberately, not inferred by a fallback.
  */
-export function methodWeight(collectionMethod: string): number {
+function methodWeight(collectionMethod: string): number {
   const weight = COLLECTION_METHOD_WEIGHTS[collectionMethod];
   if (weight === undefined) {
     throw new Error(
@@ -256,7 +256,7 @@ export function methodWeight(collectionMethod: string): number {
 }
 
 /** Normalise sources.reliability_score_internal (0-100) to a 0-1 multiplier. */
-export function reliabilityWeight(sourceReliability: number): number {
+function reliabilityWeight(sourceReliability: number): number {
   if (!Number.isFinite(sourceReliability) || sourceReliability < 0 || sourceReliability > 100) {
     throw new Error(`trust: sourceReliability out of range: ${sourceReliability}`);
   }
@@ -268,7 +268,7 @@ export function reliabilityWeight(sourceReliability: number): number {
  * Range 0-1. A perfect report is a maximally reliable source confirming a visit
  * right now.
  */
-export function observationWeight(
+function observationWeight(
   observation: TrustObservation,
   now: number = Date.now(),
   policy: FreshnessPolicy = FRESHNESS_POLICY
@@ -289,7 +289,7 @@ export function observationWeight(
  * ~3.0. The brief's requirement, arithmetically: three reports from one source
  * do not equal three from three.
  */
-export function sourceContribution(
+function sourceContribution(
   weights: number[],
   cap: number = PER_SOURCE_CAP
 ): number {
@@ -317,7 +317,7 @@ export function sourceContribution(
  *
  * One report is 46, and that is deliberate. One report is one person.
  */
-export function scoreFromEvidence(evidence: number): number {
+function scoreFromEvidence(evidence: number): number {
   if (!Number.isFinite(evidence) || evidence < 0) {
     throw new Error(`trust: evidence out of range: ${evidence}`);
   }
@@ -332,7 +332,7 @@ export function scoreFromEvidence(evidence: number): number {
  * question than its first two, which is the conflation this module exists to
  * undo.
  */
-export function freshnessOf(
+function freshnessOf(
   ageHours: number,
   policy: FreshnessPolicy = FRESHNESS_POLICY
 ): Freshness {
@@ -350,7 +350,7 @@ export function freshnessOf(
  * Encoded here so there is exactly one place to change when the call is made,
  * rather than a threshold smeared across call sites.
  */
-export const TRUST_BANDS = {
+const TRUST_BANDS = {
   /** Provisional: ≥2 fresh distinct sources, roughly. */
   high: 70,
   /** Provisional: roughly one solid fresh report. */
@@ -359,7 +359,7 @@ export const TRUST_BANDS = {
   low: 1,
 } as const;
 
-export function trustBand(confidenceScore: number, freshness: Freshness): TrustBand {
+function trustBand(confidenceScore: number, freshness: Freshness): TrustBand {
   // No evidence is 'none', and it outranks every other rule. Checked before the
   // expiry gate because an observation old enough to have fully decayed (>144h,
   // ageDecay hits zero) carries exactly as much information as no observation at
@@ -559,7 +559,7 @@ export function assessTrust(
  * Ties break on freshness, then on distinct sources: between two equal scores,
  * prefer the one we heard about more recently, then the one more people saw.
  */
-export function rankByConfidence<T>(
+function rankByConfidence<T>(
   candidates: T[],
   assessmentOf: (candidate: T) => TrustAssessment
 ): T[] {

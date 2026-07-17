@@ -216,55 +216,6 @@ export async function getPopularItems(input: {
 }
 
 // 2. Fetch candidates/offers for a selected food item
-export async function getFoodItemCandidates(itemId: string) {
-  if (!itemId) return [];
-
-  // Retrieve the list of variants for this item
-  const variants = await db
-    .select()
-    .from(itemVariants)
-    .where(eq(itemVariants.itemId, itemId));
-
-  if (variants.length === 0) return [];
-
-  const variantIds = variants.map((v) => v.id);
-
-  // Build the dynamic OR checks for variant matches
-  const variantChecks = variantIds.map((id) => eq(offersCurrent.itemVariantId, id));
-
-  // Query offers current, joining places, units, and variants
-  const results = await db
-    .select({
-      offer: offersCurrent,
-      place: places,
-      unitName: units.displayName,
-      variantName: itemVariants.displayName,
-    })
-    .from(offersCurrent)
-    .innerJoin(places, eq(offersCurrent.placeId, places.id))
-    .innerJoin(units, eq(offersCurrent.unitId, units.id))
-    .innerJoin(itemVariants, eq(offersCurrent.itemVariantId, itemVariants.id))
-    .where(or(...variantChecks));
-
-  return results.map((r) => ({
-    id: r.offer.id,
-    placeId: r.place.id,
-    placeName: r.place.name,
-    lat: r.place.location.lat,
-    lng: r.place.location.lng,
-    address: r.place.address || "",
-    detail: {
-      priceMin: r.offer.priceMin,
-      priceMax: r.offer.priceMax || undefined,
-      priceType: r.offer.priceKind,
-      unit: r.unitName,
-      timestamp: r.offer.lastObservedAt.toISOString(),
-      sourceType: "Community",
-      confidenceLevel: r.offer.freshnessState, // 'confirmed', 'caution', 'unavailable'
-      confidenceScore: r.offer.supportingObservationCount * 10
-    }
-  }));
-}
 
 // 3. Fetch all places (markets/kiosks) for default startup rendering
 export async function getPlaces() {
