@@ -58,7 +58,16 @@ unsupervised mistake is not caught for hours.
 - Take an **unclaimed** lane. Claim it here first, in a commit, before the first edit.
 - Commit to `main` in path-scoped form — `git commit -F <file> -- <paths>`. **Never bare
   `git add`/`git commit`**: it commits the shared index and will swallow another lane's
-  in-flight work. That has happened twice in this repo, in one hour, in both directions.
+  in-flight work. That has happened **three times** in this repo tonight, in both directions.
+
+  > **AND PATH-SCOPING IS NOT ENOUGH — this is the gap in the rule I wrote.** It protects
+  > you ACROSS files. It does nothing WITHIN one. `dea4c78` was a correctly path-scoped
+  > commit of `LANES.md` and it still swept up another session's uncommitted edits to
+  > `LANES.md`, because git commits the file's whole working state, not your half of it.
+  > **This file is the worst case**: every lane edits it, constantly, by design.
+  > So: **edit LANES.md in one short burst and commit immediately.** Never leave edits to it
+  > sitting while you do other work. If your commit lands changes you did not write, say so
+  > rather than letting `git log --follow` credit them to your message.
 - Delete code that is provably dead, and correct a document the code contradicts.
 
 **Pushing — PROPOSAL, not in force. Needs one word from the owner.**
