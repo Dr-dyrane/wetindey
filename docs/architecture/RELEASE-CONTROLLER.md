@@ -241,6 +241,22 @@ safety/integrity lanes until their separate gates are independently satisfied.
 - Presence target authorization, counsel, safety-responder, rate-budget, two-account
   Festac allowlist, default-off application flag, database kill switch, retention, pilot,
   and public-rollout gates remain unresolved.
+- Founder standing authorization dated 2026-07-18 covers recurring retrieval/review of
+  current attributable Lagos/Nigeria food-price news and NBS Selected Food Price Watch.
+  This approval must not be requested again. Its evidence envelope includes source links,
+  distinct timestamps, SHA-256 hashes, attribution, external raw pointers, deterministic
+  review artifacts, append-only candidate staging, and a separate provenance-aware
+  development-only current-food-news fixture. Existing seed/demo bytes remain immutable;
+  `src/db/seed.ts` is prohibited for recurring ingestion; availability may not be inferred
+  and market/place coverage may not be overstated. Source prohibition or unverifiable
+  terms, shared/production migration, live promotion, push, and deployment remain
+  separate gates. Daily automation `lagos-food-data-ingestion` is recorded as updated; the
+  controller did not create or modify it.
+- Sol provenance lead task `019f75a8-7eb2-7be2-9bbc-781e318bda0d` is active read-only to
+  propose exact new paths. Terra fixture engineer task
+  `019f75a8-7d3b-7482-b7e2-ce8ed35b9491` and Luna source refuter task
+  `019f75a8-8062-7330-93ee-1fb0d8d4fbc5` are queued/pathless. This is lane design only:
+  no fixture or implementation path is claimed until Sol returns the exact proposal.
 - Decision: **NO PUSH / NO DEPLOY**. This documentation checkpoint authorizes no test,
   push, deployment, migration, seed, shared-database access, or external change.
 
