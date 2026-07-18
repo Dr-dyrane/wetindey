@@ -3976,6 +3976,19 @@ and public rollout each retain separate Founder, target-evidence, full rate-budg
 safety, legal, kill-switch, lifecycle, and independent-refutation gates; none is
 authorized by this roadmap.
 
+**Accepted Aboki FX provider-aware reference roadmap gate.**
+[ADR-017](docs/adr/017-cbn-reference-rate-converter.md) authorizes a provider-aware
+reference calculator over the curated maximum set `USD`, `GBP`, `EUR`, `CAD`, `AUD`,
+`GHS`, `KES`, `ZAR`, `AED`, `CNY`, `INR`, `BRL`, `CHF`, `JPY`, and `SAR`, but the
+interface may expose only NGN pairs admitted by the current validated server catalog.
+Only explicitly CBN-attributed results may say CBN; other or blended results say
+Frankfurter reference, with accessible provider and effective-date attribution. The
+amount-first calculator, searchable Recent/Popular/All picker, licensed local non-emoji
+SVG flag sprite, 44-point targets, and reduced-motion behavior remain implementation
+direction. WetinDey does not exchange money, and this roadmap authorizes no wallet,
+recipient, send, transfer, fee, rate lock, payment, remote flag request, code, asset,
+deployment, or provider-availability claim.
+
 ---
 
 # 34. Departments and responsibilities
@@ -4474,7 +4487,7 @@ The team should consider pivoting the mechanism or problem when:
 | Database desired state is pillar-based and shared rollout is forward-only | Accepted — see [ADR-014](docs/adr/014-pillar-baselines-and-release-migrations.md) | Canonical pillars define the intended schema; numbered Drizzle migrations are release deltas. Applied lineage and ledger evidence are immutable, fresh databases use the latest proven baseline plus later deltas, existing databases receive pending deltas only, and remote ledger reconciliation is exceptional recovery rather than deployment |
 | Live confidence admits observed evidence; synthetic data stays labelled demo | Accepted — see [ADR-015](docs/adr/015-observation-provenance-admissibility.md) | Observed is the only V1 provenance class admissible to current-state confidence. Synthetic remains visible only as zero-confidence labelled demo fallback; partner, reference, and inferred remain quarantined. No provenance-aware deployment may precede authorized target-database application of `0009` |
 | Privacy-safe nearby-user presence implementation architecture | Accepted — see [ADR-016](docs/adr/016-nearby-user-presence.md); rollout disabled | Signed-in reciprocal opt-in uses a fixed 500 m centroid and an explicit foreground lease of no more than 15 minutes. Separate consent may expose only a chosen display name/avatar to reciprocal active sharers. The accessible presence card permits ephemeral rate-limited `Wave`, Block, Report, and Close. `0011` is frozen; presence owns forward `0012`, and contribution integrity begins at `0013` or later. This acceptance does not authorize shared migration, deployment, pilot traffic, or public rollout |
-| Money & Exchange reference and Sample discovery prototype | Accepted — see [ADR-017](docs/adr/017-cbn-reference-rate-converter.md) | Frankfurter’s CBN provider supplies a national reference conversion for USD, GBP, and EUR. Generic bank/BDC points exist only to exercise map/list/filter UI and must remain unmistakably Sample; they are not businesses, licence records, directions, contacts, hours, or outlet rates. |
+| Provider-aware Money & Exchange reference and Sample discovery prototype | Accepted — see [ADR-017](docs/adr/017-cbn-reference-rate-converter.md) | Aboki FX may consider the curated maximum set USD, GBP, EUR, CAD, AUD, GHS, KES, ZAR, AED, CNY, INR, BRL, CHF, JPY, and SAR, while showing only NGN pairs admitted by the validated server catalog. CBN labels require explicit CBN attribution; blended corridors say Frankfurter reference, with accessible provider/date attribution. The amount-first calculator and searchable picker do not exchange money or imply wallet, recipient, send, transfer, fee, or payment. Generic bank/BDC points remain unmistakably Sample and are not businesses, licences, directions, contacts, hours, or outlet rates. |
 
 > **Section 25 and Section 26 describe a TARGET, not the current system.** Verified 16 July 2026:
 > `WetinDeyModule` has zero live implementations, `src/modules/food/` is orphaned, and
