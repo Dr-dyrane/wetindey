@@ -169,9 +169,19 @@ export function ItemCard({
        * a step larger inverts the hierarchy: the thing you scan for last would
        * shout loudest.
        *
-       * Everything under them steps down on all three axes — size, weight and
-       * colour — and stops at SECONDARY. No text in this card is tertiary: that
-       * tier means "you may ignore this", and nothing left in the row qualifies.
+       * The decision-bearing qualifiers below them step down on all three axes
+       * — size, weight and colour — and stop at SECONDARY. Unit and place count
+       * are facts needed to interpret the offer; status keeps its own semantic
+       * signal.
+       *
+       * The top-right origin label is the sole provenance-metadata tier. It is
+       * plain caption-sized, normal-weight microcopy with no icon, fill, border,
+       * shadow or badge geometry. Its semantic PRIMARY ink is mixed through
+       * standalone 54% opacity because these bare-variable colour tokens cannot
+       * compile slash alpha. That yields about 4.59:1 on the light card and
+       * 4.58:1 on the dark card: just above the 4.5:1 small-text floor and well
+       * below full-primary contrast. Type size, weight and placement make it
+       * last without sacrificing readability.
        *
        * No tier-two element has a taller line box than the tier it serves —
        * the ramp is rem-based, so that holds at every Dynamic Type size. Row
@@ -183,7 +193,7 @@ export function ItemCard({
             {item.name}
           </span>
           {originLabel ? (
-            <span className="inline-flex h-5 shrink-0 items-center rounded-[14px] bg-surface-sunken px-2 text-caption-2 font-semibold text-text-secondary">
+            <span className="shrink-0 text-caption-2 font-normal text-text-primary opacity-[0.54]">
               {originLabel}
             </span>
           ) : null}
