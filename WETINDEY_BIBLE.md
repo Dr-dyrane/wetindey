@@ -1750,32 +1750,36 @@ provisional universal green accent, separator tokens, and any routine border-as-
 containment interpretation. It accepts visual architecture only; it does not claim that
 the current runtime conforms.
 
-Primary surfaces and ordinary destinations, actions, navigation, inputs, disclosures,
-and system controls are monochrome or neutral. Color has a named semantic owner:
+Primary cards, sheets, inputs, and page surfaces remain calm and neutral. Repeated icon
+contexts use controlled named color tokens:
 
 | Family | Meaning |
 |---|---|
 | Authentic content | Licensed flags, attributed photography, and user-chosen avatars may retain authentic color without implying status or trust |
-| Domain | A complete enabled category may use a documented domain tone; disabled future categories remain neutral |
-| Status | `confirmed`, `caution`, `unavailable`, and `info` apply only to an actual asserted state |
-| Rating | Rating uses its own token and never borrows caution, confirmation, domain, trust, or verification meaning |
-| Neutral | Ordinary destinations, actions, navigation, system controls, and unavailable future capabilities |
+| Food | Warm contextual family |
+| Money | Teal contextual family |
+| Location and navigation | Blue contextual family |
+| Contact and phone | Green contextual family, separate from confirmed status |
+| Rating | Gold contextual family, separate from caution |
+| Status | Dedicated `caution`, `confirmed`, and `unavailable` families apply only to actual asserted states |
+| Neutral | Universal close, search, settings, other universal controls, and disabled/future categories |
 
-Domain, status, and rating are separate token families even when provisional values look
-similar. Color never carries meaning alone. State requires redundant text, shape, icon,
-or position. All text and icon combinations must meet applicable contrast requirements,
-tertiary text cannot contain essential information, and map colors require separate
-surface testing.
+Context, status, and rating are separate named token families even when values look
+similar. Repeated contexts reuse their named token; there is no blanket rainbow or
+per-screen color invention. Color never carries meaning alone.
 
-`IconOrb` is circular and borderless at exactly 28, 32, or 48 px. It is decorative by
-default; the containing row, button, link, or control owns the accessible name and state.
+`IconOrb` is circular and has an opaque contextual base, subtle lighter-top/deeper-lower
+gradient, restrained inner sheen or ambient depth, soft elevation, and no decorative
+hairline. Its glyph is redesigned, solid, optically balanced, high-contrast ink with
+restrained depth. Sizes remain exactly 28, 32, or 48 px. It is decorative by default; the
+containing row, button, link, or control owns the accessible name and state.
 An interactive parent is at least 44 × 44 CSS pixels, supplies visible focus, and pairs
 the icon with redundant text. Grayscale and forced-colors must preserve meaning and
 focus; reduced motion removes nonessential icon animation.
 
-There is no blanket orb, circle, color, or border-removal rule for pills, cards, inputs,
-status badges, flags, photographs, avatars, map markers, or every glyph. Those components
-retain their own semantic contracts. Accessibility-required focus outlines,
+Flags, photographs, and avatars retain authentic color and are excluded from orb
+treatment. There is no blanket orb, circle, color, or border-removal rule for pills,
+cards, inputs, status badges, map markers, or every glyph. Accessibility-required focus outlines,
 forced-colors outlines, and information-bearing visualization strokes are not decorative
 borders.
 
@@ -3994,14 +3998,15 @@ direction. WetinDey does not exchange money, and this roadmap authorizes no wall
 recipient, send, transfer, fee, rate lock, payment, remote flag request, code, asset,
 deployment, or provider-availability claim.
 
-**Accepted controlled semantic iconography roadmap gate.**
-[ADR-018](docs/adr/018-controlled-semantic-iconography.md) accepts neutral primary
-surfaces, authentic licensed/media color, separate domain/status/rating token families,
-neutral disabled future categories, and the 28/32/48 px borderless `IconOrb` contract.
-Status tones remain exclusive to actual asserted `confirmed`, `caution`, `unavailable`,
-or `info` states. The implementation lane is separate and unclaimed; this roadmap makes
-no runtime-conformance, token-value, asset-licence, accessibility-evidence, code, asset,
-test, deployment, or launch claim.
+**Accepted controlled contextual iconography roadmap gate.**
+[ADR-018](docs/adr/018-controlled-semantic-iconography.md) accepts stable Food-warm,
+Money-teal, navigation/location-blue, contact/phone-green, rating-gold mappings; neutral
+universal controls and disabled/future categories; authentic excluded media; and the
+dimensional opaque 28/32/48 px `IconOrb` contract. Status families remain exclusive to
+actual caution/confirmed/unavailable assertions. Commit `284a685` is technically
+accessible but visually **NOT ACCEPTED**. Completion requires independent light/dark,
+grayscale, forced-colors, reduced-motion, 44 px, screen-reader-name, and reused-tab visual
+refutation.
 
 ---
 
@@ -4502,7 +4507,7 @@ The team should consider pivoting the mechanism or problem when:
 | Live confidence admits observed evidence; synthetic data stays labelled demo | Accepted — see [ADR-015](docs/adr/015-observation-provenance-admissibility.md) | Observed is the only V1 provenance class admissible to current-state confidence. Synthetic remains visible only as zero-confidence labelled demo fallback; partner, reference, and inferred remain quarantined. No provenance-aware deployment may precede authorized target-database application of `0009` |
 | Privacy-safe nearby-user presence implementation architecture | Accepted — see [ADR-016](docs/adr/016-nearby-user-presence.md); rollout disabled | Signed-in reciprocal opt-in uses a fixed 500 m centroid and an explicit foreground lease of no more than 15 minutes. Separate consent may expose only a chosen display name/avatar to reciprocal active sharers. The accessible presence card permits ephemeral rate-limited `Wave`, Block, Report, and Close. `0011` is frozen; presence owns forward `0012`, and contribution integrity begins at `0013` or later. This acceptance does not authorize shared migration, deployment, pilot traffic, or public rollout |
 | Provider-aware Money & Exchange reference and Sample discovery prototype | Accepted — see [ADR-017](docs/adr/017-cbn-reference-rate-converter.md) | Aboki FX may consider the curated maximum set USD, GBP, EUR, CAD, AUD, GHS, KES, ZAR, AED, CNY, INR, BRL, CHF, JPY, and SAR, while showing only NGN pairs admitted by the validated server catalog. CBN labels require explicit CBN attribution; blended corridors say Frankfurter reference, with accessible provider/date attribution. The amount-first calculator and searchable picker do not exchange money or imply wallet, recipient, send, transfer, fee, or payment. Generic bank/BDC points remain unmistakably Sample and are not businesses, licences, directions, contacts, hours, or outlet rates. |
-| Controlled semantic iconography visual architecture | Accepted — see [ADR-018](docs/adr/018-controlled-semantic-iconography.md); runtime completion unverified | Primary surfaces and ordinary actions are neutral; licensed flags, photography, and avatars may retain authentic color. Domain, status, and rating tokens are separate, disabled future categories stay neutral, and only actual asserted states use confirmed/caution/unavailable/info. `IconOrb` is circular and borderless at 28/32/48 px, decorative by default, with a ≥44 px interactive parent and redundant accessible text. This supersedes provisional universal green-accent, separator, and routine border language without authorizing implementation |
+| Controlled contextual iconography visual architecture | Accepted — see [ADR-018](docs/adr/018-controlled-semantic-iconography.md); runtime completion unverified | Stable mappings are Food warm, Money teal, navigation/location blue, contact/phone green, and rating gold; universal close/search/settings and disabled/future categories stay neutral. Actual caution/confirmed/unavailable use separate status families. The 28/32/48 px `IconOrb` has an opaque dimensional gradient, restrained sheen/depth, soft elevation, no decorative hairline, and a solid optically balanced high-contrast glyph. Authentic flags/photos/avatars are excluded. `284a685` is technically accessible but visually not accepted |
 | Per-request nonce Content Security Policy architecture | Accepted — see [ADR-020](docs/adr/020-per-request-nonce-content-security-policy.md); implementation unclaimed | One request-boundary nonce policy is copied byte-identically to Next 15.5.20 request headers and the browser response. The later enforcing change removes the static Vercel CSP in the same commit, nonces all three raw layout scripts plus parser-inserted Mapbox, and serves nonce HTML dynamic/private/no-store. Report-only evidence, environment separation, exact Blob origin admission, and independent security refutation remain gates; duplicate enforcement is prohibited |
 
 > **Section 25 and Section 26 describe a TARGET, not the current system.** Verified 16 July 2026:
@@ -4542,9 +4547,9 @@ The team should consider pivoting the mechanism or problem when:
 - Vendor/contact model. **Promoted to blocking by [ADR-001](docs/adr/001-fulfilment-is-out-of-scope.md).** Handing fulfilment to the buyer and seller makes Contact seller the terminal step of the core journey, and it currently resolves for no place at all: `contact_visibility` defaults to `private`, and the `contact_channel_kind` / `contact_channel_value` columns are read by nothing and written by nothing. Trader consent capture (Section 24) is the unbuilt precondition.
 - Contributor compensation.
 - Public-versus-private evidence policy.
-- Final brand identity and exact neutral/domain/status/rating/focus token values remain
-  open. ADR-018 closes universal green accent and routine separators as defaults; it does
-  not choose production token values or prove runtime conformance.
+- Final brand identity and exact contextual/status/focus token values remain open.
+  ADR-018 fixes semantic mappings and dimensional language but does not choose production
+  values or prove runtime conformance.
 - Trademark and domain strategy.
 
 ## 40.3 ADR template
