@@ -209,6 +209,7 @@ CREATE TABLE "public_source_registry" (
 );
 --> statement-breakpoint
 ALTER TABLE "public_candidate_reviews" ADD CONSTRAINT "public_candidate_reviews_candidate_id_public_food_candidates_id_fk" FOREIGN KEY ("candidate_id") REFERENCES "public"."public_food_candidates"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+CREATE UNIQUE INDEX "public_food_candidates_id_fingerprint_key" ON "public_food_candidates" USING btree ("id","candidate_fingerprint");--> statement-breakpoint
 ALTER TABLE "public_candidate_reviews" ADD CONSTRAINT "public_candidate_reviews_candidate_fingerprint_fk" FOREIGN KEY ("candidate_id","candidate_fingerprint") REFERENCES "public"."public_food_candidates"("id","candidate_fingerprint") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "public_food_candidates" ADD CONSTRAINT "public_food_candidates_source_registry_id_public_source_registry_id_fk" FOREIGN KEY ("source_registry_id") REFERENCES "public"."public_source_registry"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "public_food_candidates" ADD CONSTRAINT "public_food_candidates_source_capture_id_public_source_captures_id_fk" FOREIGN KEY ("source_capture_id") REFERENCES "public"."public_source_captures"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
@@ -219,6 +220,7 @@ ALTER TABLE "public_food_candidates" ADD CONSTRAINT "public_food_candidates_norm
 ALTER TABLE "public_food_candidates" ADD CONSTRAINT "public_food_candidates_normalized_place_id_places_id_fk" FOREIGN KEY ("normalized_place_id") REFERENCES "public"."places"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "public_food_candidates" ADD CONSTRAINT "public_food_candidates_normalized_area_id_areas_id_fk" FOREIGN KEY ("normalized_area_id") REFERENCES "public"."areas"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "public_food_candidates" ADD CONSTRAINT "public_food_candidates_related_candidate_id_public_food_candidates_id_fk" FOREIGN KEY ("related_candidate_id") REFERENCES "public"."public_food_candidates"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+CREATE UNIQUE INDEX "public_source_captures_id_source_key" ON "public_source_captures" USING btree ("id","source_registry_id");--> statement-breakpoint
 ALTER TABLE "public_food_candidates" ADD CONSTRAINT "public_food_candidates_capture_source_fk" FOREIGN KEY ("source_capture_id","source_registry_id") REFERENCES "public"."public_source_captures"("id","source_registry_id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "public_ingestion_fetches" ADD CONSTRAINT "public_ingestion_fetches_ingestion_run_id_public_ingestion_runs_id_fk" FOREIGN KEY ("ingestion_run_id") REFERENCES "public"."public_ingestion_runs"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "public_ingestion_fetches" ADD CONSTRAINT "public_ingestion_fetches_source_registry_id_public_source_registry_id_fk" FOREIGN KEY ("source_registry_id") REFERENCES "public"."public_source_registry"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
@@ -228,7 +230,6 @@ ALTER TABLE "public_source_captures" ADD CONSTRAINT "public_source_captures_sour
 ALTER TABLE "public_source_captures" ADD CONSTRAINT "public_source_captures_revises_capture_id_public_source_captures_id_fk" FOREIGN KEY ("revises_capture_id") REFERENCES "public"."public_source_captures"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 CREATE INDEX "public_candidate_reviews_candidate_reviewed_idx" ON "public_candidate_reviews" USING btree ("candidate_id","reviewed_at" DESC NULLS LAST,"created_at" DESC NULLS LAST);--> statement-breakpoint
 CREATE UNIQUE INDEX "public_food_candidates_fingerprint_key" ON "public_food_candidates" USING btree ("candidate_fingerprint");--> statement-breakpoint
-CREATE UNIQUE INDEX "public_food_candidates_id_fingerprint_key" ON "public_food_candidates" USING btree ("id","candidate_fingerprint");--> statement-breakpoint
 CREATE INDEX "public_food_candidates_review_queue_idx" ON "public_food_candidates" USING btree ("candidate_status","created_at" DESC NULLS LAST);--> statement-breakpoint
 CREATE INDEX "public_food_candidates_capture_idx" ON "public_food_candidates" USING btree ("source_capture_id");--> statement-breakpoint
 CREATE INDEX "public_food_candidates_related_idx" ON "public_food_candidates" USING btree ("related_candidate_id");--> statement-breakpoint
@@ -237,7 +238,6 @@ CREATE INDEX "public_ingestion_fetches_source_fetched_idx" ON "public_ingestion_
 CREATE UNIQUE INDEX "public_ingestion_runs_run_key_key" ON "public_ingestion_runs" USING btree ("run_key");--> statement-breakpoint
 CREATE INDEX "public_ingestion_runs_scheduled_idx" ON "public_ingestion_runs" USING btree ("scheduled_at" DESC NULLS LAST);--> statement-breakpoint
 CREATE UNIQUE INDEX "public_source_captures_identity_key" ON "public_source_captures" USING btree ("source_registry_id","canonical_url",coalesce("upstream_publication_identity", ''),"content_hash");--> statement-breakpoint
-CREATE UNIQUE INDEX "public_source_captures_id_source_key" ON "public_source_captures" USING btree ("id","source_registry_id");--> statement-breakpoint
 CREATE INDEX "public_source_captures_source_fetched_idx" ON "public_source_captures" USING btree ("source_registry_id","fetched_at" DESC NULLS LAST);--> statement-breakpoint
 CREATE INDEX "public_source_captures_hash_idx" ON "public_source_captures" USING btree ("content_hash");--> statement-breakpoint
 CREATE UNIQUE INDEX "public_source_registry_domain_landing_key" ON "public_source_registry" USING btree ("canonical_domain","canonical_landing_url");--> statement-breakpoint

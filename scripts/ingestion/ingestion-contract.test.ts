@@ -360,6 +360,52 @@ test("migration enforces immutable evidence, staging policy, and composite linea
   assert.match(migration, /public_food_candidates_capture_source_fk/);
   assert.match(migration, /public_ingestion_fetches_capture_source_fk/);
   assert.match(migration, /public_candidate_reviews_candidate_fingerprint_fk/);
+  const migrationStatements = migration.split("--> statement-breakpoint");
+  const statementPosition = (
+    label: string,
+    predicate: (statement: string) => boolean
+  ): number => {
+    const position = migrationStatements.findIndex(predicate);
+    assert.notEqual(position, -1, `${label} statement must exist`);
+    return position;
+  };
+  const captureIdentityIndex = statementPosition(
+    "capture identity unique index",
+    (statement) =>
+      statement.includes("CREATE UNIQUE INDEX") &&
+      statement.includes('ON "public_source_captures"') &&
+      /\(\s*"id"\s*,\s*"source_registry_id"\s*\)/.test(statement)
+  );
+  for (const foreignKey of [
+    "public_ingestion_fetches_capture_source_fk",
+    "public_food_candidates_capture_source_fk",
+  ]) {
+    const foreignKeyPosition = statementPosition(foreignKey, (statement) =>
+      statement.includes(`ADD CONSTRAINT "${foreignKey}"`)
+    );
+    assert.ok(
+      captureIdentityIndex < foreignKeyPosition,
+      `capture identity unique index must precede ${foreignKey}`
+    );
+  }
+  const candidateFingerprintIndex = statementPosition(
+    "candidate fingerprint unique index",
+    (statement) =>
+      statement.includes("CREATE UNIQUE INDEX") &&
+      statement.includes('ON "public_food_candidates"') &&
+      /\(\s*"id"\s*,\s*"candidate_fingerprint"\s*\)/.test(statement)
+  );
+  const candidateFingerprintForeignKey = statementPosition(
+    "public_candidate_reviews_candidate_fingerprint_fk",
+    (statement) =>
+      statement.includes(
+        'ADD CONSTRAINT "public_candidate_reviews_candidate_fingerprint_fk"'
+      )
+  );
+  assert.ok(
+    candidateFingerprintIndex < candidateFingerprintForeignKey,
+    "candidate fingerprint unique index must precede its composite foreign key"
+  );
   assert.match(
     migration,
     /"raw_price" is null or \("public_food_candidates"\."price_kobo" > 0 and "public_food_candidates"\."currency" = 'NGN'\)/
