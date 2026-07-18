@@ -365,10 +365,15 @@ safety/integrity lanes until their separate gates are independently satisfied.
   or live effect. Terra committed forward correction `6ae4df9` over the same ten paths
   with implementing static PASS. Its four contracts are: current recurring-fetch
   timestamp; development fixture validator reads candidate artifacts; historical validator
-  default/contract restored; and fingerprint/ID relationship enforced. All ten paths remain
-  exclusively claimed pending repeat Luna original-source refutation of
-  `e49782b + 6ae4df9`; do not release them. No tests, DB, seed, schema, migration, UI,
-  push, or deploy is authorized.
+  default/contract restored; and fingerprint/ID relationship enforced. Luna's repeat verdict
+  closed the prior three P2s and P3 but **REFUTED** one remaining P2: `Date.parse +
+  endsWith('Z')` accepted calendar-invalid and noncanonical timestamps. Terra committed the
+  narrow one-file correction `449cb82` in
+  `scripts/ingestion/fetch-nbs-selected-food-price-watch.ts`; independent implementing
+  static refutation passed. Luna now rechecks exact candidate
+  `e49782b + 6ae4df9 + 449cb82`. Source facts remain PASS and all ten paths stay claimed
+  until final verdict. No tests, DB, seed, schema, migration, UI, push, or deploy is
+  authorized.
 - Decision: **NO PUSH / NO DEPLOY**. This documentation checkpoint authorizes no test,
   push, deployment, migration, seed, shared-database access, or external change.
 
