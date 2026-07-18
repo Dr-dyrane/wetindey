@@ -31,7 +31,11 @@ export function CategorySelectorSheet({
     { id: "fuel", label: "Fuel prices", detail: "Fuel stations and pump prices" },
     { id: "home", label: t.category_home || "Home & Living", detail: t.category_home_desc || "Building materials, charcoal" },
     { id: "health", label: t.category_health || "Health & Beauty", detail: t.category_health_desc || "Medicine, pharmacy, beauty" },
-    { id: "money", label: t.category_money || "Money & Exchange", detail: t.category_money_desc || "Parallel USD/GBP rates" },
+    {
+      id: "money",
+      label: t.category_money || "Money & Exchange",
+      detail: "Official CBN reference and Sample places",
+    },
     { id: "transport", label: t.category_transport || "Transport", detail: t.category_transport_desc || "Bus fares, ride prices, ferry" },
     { id: "community", label: t.category_community || "Community", detail: t.category_community_desc || "Outages, services, happenings" },
   ];
@@ -50,7 +54,7 @@ export function CategorySelectorSheet({
         <ListGroup header={t.categories_header || "Pillars of Daily Uncertainty"}>
           {categories.map((c) => {
             const active = c.id === activeCategory;
-            const supported = c.id === "food";
+            const supported = c.id === "food" || c.id === "money";
             return (
               <ListRow
                 key={c.id}
@@ -68,7 +72,7 @@ export function CategorySelectorSheet({
                 chevron={false}
                 disabled={!supported}
                 onClick={() => {
-                  if (c.id === "food") handleSelect(c.id);
+                  if (c.id === "food" || c.id === "money") handleSelect(c.id);
                 }}
               />
             );

@@ -30,6 +30,14 @@ import { SettingsSheet } from "@/app/_components/SettingsSheet";
 import { ReportPriceSheet } from "@/app/_components/ReportPriceSheet";
 import { ProfileSheet, Avatar } from "@/app/_components/ProfileSheet";
 import { CategorySelectorSheet, type CategoryPillar } from "@/app/_components/CategorySelectorSheet";
+import {
+  ExchangePanel,
+  type ExchangeLocationFilter
+} from "@/app/_components/ExchangePanel";
+import {
+  EXCHANGE_SAMPLE_LOCATIONS,
+  type ExchangeSampleLocation
+} from "@/app/_data/exchange-sample-locations";
 import { ItemDetailSheet, offerSignal } from "@/app/_components/ItemDetailSheet";
 import { PresentationHost } from "@/app/_components/PresentationHost";
 import { formatNaira } from "@/lib/money";
@@ -288,11 +296,13 @@ export default function HomePage() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isReportOpen, setIsReportOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
-  // Food is the only live vertical. Keeping this at the page boundary prevents
-  // price-only search, results, and contribution flows from ever adopting a
-  // future category's label before that vertical actually exists.
-  const activeCategory: CategoryPillar = "food";
+  const [activeCategory, setActiveCategory] = useState<CategoryPillar>("food");
   const [isCategoryOpen, setIsCategoryOpen] = useState(false);
+  const [exchangeFilter, setExchangeFilter] = useState<ExchangeLocationFilter>("all");
+  const [selectedExchangeLocationId, setSelectedExchangeLocationId] = useState<string | null>(
+    null
+  );
+  const [exchangeNoticeVisible, setExchangeNoticeVisible] = useState(true);
   const [userProfile, setUserProfile] = useState<MyProfile | null>(null);
   const [sharedUsers, setSharedUsers] = useState<SharedUserLocation[]>([]);
   /** The item ItemDetailSheet is resolving down to a unit. Non-null = presented. */
@@ -499,6 +509,7 @@ export default function HomePage() {
    * country. Moving to Festac changed the header and nothing else.
    */
   const loadPopular = useCallback(() => {
+    if (activeCategory !== "food") return;
     startTransition(async () => {
       try {
         setPopularError(null);
@@ -529,23 +540,47 @@ export default function HomePage() {
   }, [loadPopular]);
 
   useEffect(() => {
-    if (searchQuery.trim() !== "") {
-      setIsSearching(true);
-      setSearchError(null);
-      startTransition(async () => {
-        try {
-          const matched = await searchItems(searchQuery, activeCategory, { lat: locPosition.lat, lng: locPosition.lng, radiusKm: activeRadiusKm });
-          setSearchResults(matched);
-        } catch (err) {
-          console.error("Search failed:", err);
+    if (activeCategory !== "food" || searchQuery.trim() === "") {
+      setIsSearching(false);
+      if (activeCategory !== "food") {
+        setSearchResults([]);
+        setSearchError(null);
+      }
+      return;
+    }
+
+    let cancelled = false;
+    setIsSearching(true);
+    setSearchError(null);
+    startTransition(async () => {
+      try {
+        const matched = await searchItems(searchQuery, "food", {
+          lat: locPosition.lat,
+          lng: locPosition.lng,
+          radiusKm: activeRadiusKm
+        });
+        if (!cancelled) setSearchResults(matched);
+      } catch (err) {
+        console.error("Search failed:", err);
+        if (!cancelled) {
           setSearchResults([]);
           setSearchError("Couldn't search. Check your connection.");
-        } finally {
-          setIsSearching(false);
         }
-      });
-    }
-  }, [activeCategory, searchQuery]);
+      } finally {
+        if (!cancelled) setIsSearching(false);
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    activeCategory,
+    searchQuery,
+    locPosition.lat,
+    locPosition.lng,
+    activeRadiusKm
+  ]);
 
   useEffect(() => {
     const categoryInfo: Record<CategoryPillar, { title: string; desc: string }> = {
@@ -562,8 +597,8 @@ export default function HomePage() {
         desc: "Search nearby pharmacy prices, drug stock levels, and personal care/cosmetics in your neighborhood."
       },
       money: {
-        title: "WetinDey — Parallel Market FX & USD Rates",
-        desc: "Compare current black market and parallel exchange rates for USD, GBP, and EUR in Lagos."
+        title: "WetinDey — Official CBN Exchange Reference",
+        desc: "Convert USD, GBP, and EUR with the official CBN reference rate and explore clearly labelled Sample exchange-place UI."
       },
       transport: {
         title: "WetinDey — Local Transport Fares & Ride Prices",
@@ -823,31 +858,7 @@ export default function HomePage() {
 
     if (val.trim() === "") {
       setSearchResults([]);
-      return;
     }
-
-    setIsSearching(true);
-    setSearchError(null);
-    startTransition(async () => {
-      try {
-        const matched = await searchItems(val, activeCategory, { lat: locPosition.lat, lng: locPosition.lng, radiusKm: activeRadiusKm });
-        setSearchResults(matched);
-      } catch (err) {
-        // The third async transition in this file, and until now the only one
-        // without a catch. `searchFoodItems` is a "use server" POST; offline it
-        // rejects, and an unguarded rejection escapes the transition and
-        // unmounts the WHOLE app into the route error boundary ("Something
-        // scatter") for a single search keystroke. loadPopular (its catch
-        // below) and loadBaseline already learned this exact lesson. A search
-        // that cannot reach the network must degrade to a message in the list,
-        // not take the app down.
-        console.error("Search failed:", err);
-        setSearchResults([]);
-        setSearchError("Couldn't search. Check your connection.");
-      } finally {
-        setIsSearching(false);
-      }
-    });
   };
 
   /**
@@ -911,6 +922,22 @@ export default function HomePage() {
     });
   });
 
+  const filteredExchangeLocations = useMemo(
+    () =>
+      exchangeFilter === "all"
+        ? EXCHANGE_SAMPLE_LOCATIONS
+        : EXCHANGE_SAMPLE_LOCATIONS.filter((location) => location.kind === exchangeFilter),
+    [exchangeFilter]
+  );
+
+  const handleSelectExchangeLocation = useEventCallback(
+    (location: ExchangeSampleLocation) => {
+      setSelectedExchangeLocationId(location.id);
+      setMapCenter({ lat: location.lat, lng: location.lng });
+      setActiveDetent("medium");
+    }
+  );
+
   /**
    * Stable identity, forever.
    *
@@ -920,6 +947,12 @@ export default function HomePage() {
    * (a keystroke, a focus) tore down and reconstructed the whole map.
    */
   const handleMarkerSelection = useEventCallback((placeId: string) => {
+    if (activeCategory === "money") {
+      const match = EXCHANGE_SAMPLE_LOCATIONS.find((location) => location.id === placeId);
+      if (match) handleSelectExchangeLocation(match);
+      return;
+    }
+
     // The pin flow, and the one place the pushed level is right: the user asked
     // for this market by tapping it, so its prices are where they were going.
     setDetailPlaceId(placeId);
@@ -929,6 +962,23 @@ export default function HomePage() {
     if (match) {
       setMapCenter({ lat: match.location.lat, lng: match.location.lng });
     }
+  });
+
+  const handleCategoryChange = useEventCallback((category: CategoryPillar) => {
+    if (category !== "food" && category !== "money") return;
+
+    setActiveCategory(category);
+    setSearchQuery("");
+    setSearchResults([]);
+    setSearchError(null);
+    setDetailItem(null);
+    setItemOffers([]);
+    setDetailPlaceId(null);
+    setGetItTarget(null);
+    setSelectedExchangeLocationId(null);
+    if (category === "money") setExchangeNoticeVisible(true);
+    setIsReportOpen(false);
+    setActiveDetent("medium");
   });
 
   const clearSearch = () => {
@@ -1030,6 +1080,18 @@ export default function HomePage() {
    * expired offer, and nothing would tell the user which to believe.
    */
   const mapMarkers = useMemo(() => {
+    if (activeCategory === "money") {
+      return filteredExchangeLocations.map((location) => ({
+        id: location.id,
+        placeId: location.id,
+        placeName: location.name,
+        placeType: location.kind === "bank" ? "bank" : "bureau_de_change",
+        lat: location.lat,
+        lng: location.lng,
+        address: `${location.description} · Sample`
+      }));
+    }
+
     if (itemOffers.length > 0) {
       return itemOffers.map((o) => ({
         id: o.id,
@@ -1051,7 +1113,7 @@ export default function HomePage() {
       lng: p.location.lng,
       address: p.address || ""
     }));
-  }, [itemOffers, allPlaces]);
+  }, [activeCategory, filteredExchangeLocations, itemOffers, allPlaces]);
 
   /**
    * The roads from you to the market you are about to walk to.
@@ -1079,7 +1141,12 @@ export default function HomePage() {
   const routeTargetLng = getItTarget?.lng ?? null;
   useEffect(() => {
     setRoute(null);
-    if (routeTargetLat === null || routeTargetLng === null) return;
+    if (
+      activeCategory !== "food" ||
+      routeTargetLat === null ||
+      routeTargetLng === null
+    )
+      return;
 
     const controller = new AbortController();
     void fetchRoute(
@@ -1092,7 +1159,7 @@ export default function HomePage() {
     });
 
     return () => controller.abort();
-  }, [routeTargetLat, routeTargetLng, locPosition.lat, locPosition.lng]);
+  }, [activeCategory, routeTargetLat, routeTargetLng, locPosition.lat, locPosition.lng]);
 
   // 1. Map node (base layer)
   const mapNode = (
@@ -1110,7 +1177,9 @@ export default function HomePage() {
       <MapboxCanvas
         ref={mapCameraRef}
         candidates={mapMarkers}
-        selectedPlaceId={detailPlaceId}
+        selectedPlaceId={
+          activeCategory === "money" ? selectedExchangeLocationId : detailPlaceId
+        }
         onMarkerClick={handleMarkerSelection}
         center={mapCenter}
         route={route}
@@ -1168,6 +1237,12 @@ export default function HomePage() {
         </div>
 
         {locateError && <MapNotice message={locateError} onDismiss={dismissLocateError} />}
+        {activeCategory === "money" && !locateError && exchangeNoticeVisible && (
+          <MapNotice
+            message="Sample locations—these pins are not real businesses."
+            onDismiss={() => setExchangeNoticeVisible(false)}
+          />
+        )}
       </div>
 
       {/* Recenter. Parked above the peek detent so the sheet never covers it ,
@@ -1207,7 +1282,9 @@ export default function HomePage() {
               className="flex items-center gap-1 px-2.5 py-1 rounded-[14px] bg-fillSecondary text-text-primary active:scale-98 transition-all duration-instant text-[14px] font-medium"
             >
               <span>
-                {(t as Record<string, string>).category_food || "Food"}
+                {activeCategory === "money"
+                  ? (t as Record<string, string>).category_money || "Money & Exchange"
+                  : (t as Record<string, string>).category_food || "Food"}
               </span>
               <ChevronDown className="h-3 w-3 text-text-secondary" />
             </button>
@@ -1216,14 +1293,16 @@ export default function HomePage() {
           {/* Both actions present a sheet over this one rather than replacing
               its contents, so the search context stays put underneath. */}
           <div className="flex items-center gap-1.5">
-            <button
-              onClick={() => setIsReportOpen(true)}
-              className="grid place-items-center h-8 w-8 rounded-full bg-fillSecondary text-text-primary
-                         active:scale-90 transition-transform duration-instant"
-              aria-label={t.report_price}
-            >
-              <Plus className="h-[18px] w-[18px]" strokeWidth={2.5} />
-            </button>
+            {activeCategory === "food" && (
+              <button
+                onClick={() => setIsReportOpen(true)}
+                className="grid place-items-center h-8 w-8 rounded-full bg-fillSecondary text-text-primary
+                           active:scale-90 transition-transform duration-instant"
+                aria-label={t.report_price}
+              >
+                <Plus className="h-[18px] w-[18px]" strokeWidth={2.5} />
+              </button>
+            )}
 
             <button
               onClick={() => setIsProfileOpen(true)}
@@ -1241,12 +1320,14 @@ export default function HomePage() {
           </div>
         </div>
 
-        <SearchField
-          value={searchQuery}
-          onChange={handleSearchChange}
-          onClear={clearSearch}
-          placeholder={t.search_placeholder}
-        />
+        {activeCategory === "food" && (
+          <SearchField
+            value={searchQuery}
+            onChange={handleSearchChange}
+            onClear={clearSearch}
+            placeholder={t.search_placeholder}
+          />
+        )}
       </div>
 
       {/* The app's level-0 scroller, sibling to NavigationStack's level-1
@@ -1269,7 +1350,26 @@ export default function HomePage() {
           from chaining out to the document behind the sheet. It has no bearing
           on BottomSheet's wrapper box, which cannot scroll in the first place:
           that box's only child is `h-full`. */}
-      <div className="flex-1 overflow-y-auto overscroll-contain px-3 pb-[calc(max(var(--sheet-hidden,0px),var(--safe-area-bottom))+20px)]">
+      <div
+        className={`flex-1 overflow-y-auto overscroll-contain ${
+          activeCategory === "food"
+            ? "px-3 pb-[calc(max(var(--sheet-hidden,0px),var(--safe-area-bottom))+20px)]"
+            : ""
+        }`}
+      >
+        {activeCategory === "money" ? (
+          <ExchangePanel
+            origin={searchOrigin}
+            locations={filteredExchangeLocations}
+            filter={exchangeFilter}
+            onFilterChange={(filter) => {
+              setExchangeFilter(filter);
+              setSelectedExchangeLocationId(null);
+            }}
+            selectedLocationId={selectedExchangeLocationId}
+            onSelectLocation={handleSelectExchangeLocation}
+          />
+        ) : (
         <div className="space-y-4">
           {/* A. Popular items */}
           {!searchQuery && (
@@ -1336,6 +1436,7 @@ export default function HomePage() {
             />
           )}
         </div>
+        )}
       </div>
     </div>
   );
@@ -1353,7 +1454,7 @@ export default function HomePage() {
   // Place → its items. Offer detail is NOT this axis and does not belong here;
   // ItemDetailSheet owns item → its places, on both shells.
   const detailNode = useMemo(() => {
-    if (!detailPlace) return undefined;
+    if (activeCategory !== "food" || !detailPlace) return undefined;
 
     return (
       <div className="space-y-5 h-full flex flex-col justify-between">
@@ -1457,6 +1558,7 @@ export default function HomePage() {
       </div>
     );
   }, [
+    activeCategory,
     detailPlace,
     placeOffers,
     placeOffersError,
@@ -1486,7 +1588,7 @@ export default function HomePage() {
 
       {/* rice → long-grain → 50 kg bag → ranked offers. */}
       <ItemDetailSheet
-        open={Boolean(detailItem)}
+        open={activeCategory === "food" && Boolean(detailItem)}
         onClose={() => setDetailItem(null)}
         item={detailItem}
         center={searchOrigin}
@@ -1499,7 +1601,7 @@ export default function HomePage() {
 
       {/* The lookup becomes a trip. */}
       <GetItSheet
-        open={Boolean(getItTarget)}
+        open={activeCategory === "food" && Boolean(getItTarget)}
         onClose={() => setGetItTarget(null)}
         target={getItTarget}
         origin={searchOrigin}
@@ -1508,7 +1610,7 @@ export default function HomePage() {
 
       {/* The trip becomes an answer. This is the part that compounds. */}
       <ConfirmVisitSheet
-        open={Boolean(pendingVisit)}
+        open={activeCategory === "food" && Boolean(pendingVisit)}
         visit={pendingVisit}
         onClose={() => setPendingVisit(null)}
         onConfirmed={({ queued }) => {
@@ -1566,7 +1668,7 @@ export default function HomePage() {
       />
 
       <ReportPriceSheet
-        open={isReportOpen}
+        open={activeCategory === "food" && isReportOpen}
         onClose={() => setIsReportOpen(false)}
         t={t}
         places={submitPlaces}
@@ -1596,7 +1698,7 @@ export default function HomePage() {
         open={isCategoryOpen}
         onClose={() => setIsCategoryOpen(false)}
         activeCategory={activeCategory}
-        onCategoryChange={() => undefined}
+        onCategoryChange={handleCategoryChange}
         t={t}
       />
     </div>
