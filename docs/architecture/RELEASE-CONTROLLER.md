@@ -218,12 +218,13 @@ safety/integrity lanes until their separate gates are independently satisfied.
   evidence gaps, not retained ownership. Exact screenshot paths remain in the HI report.
   That completed flattening lane released `ExchangePanel.tsx`; the path is now separately
   claimed by the later ADR-017 provider-aware implementation lane recorded below.
-- A later Founder-directed HI slim-category-trigger lane now owns exactly
-  `src/app/page.tsx` for the category trigger only: preserve a >=44px outer target while
-  making the visible surface a slim 30–32px rounded rectangle. Evidence is
-  `/var/folders/n9/d2z6ybln5vb34xvzpqrwj4wr0000gn/T/codex-clipboard-73abf622-9a6d-4201-9202-487733a63d08.png`.
-  No ExchangePanel, currency, actions, search, or contribution change is authorized;
-  require one path-scoped commit and HI Quality visible-pixel refutation.
+- Human Interface Design Engineer task `019f75a5-0fc6-7f40-9a0f-8097ead3b45d` completed
+  the Founder-directed slim-category-trigger implementation at exact one-file commit
+  `9f7b2c74d3395c687c91338fe475b8d3872cbcb1`. It preserves a 44px outer target
+  around a 32px visible surface with 8px horizontal padding and a 2px label-chevron gap.
+  No tests, browser, push, or deploy occurred during implementation. HI Quality reused-tab
+  visual refutation is active, so `src/app/page.tsx` remains exclusively claimed until
+  verdict.
 - Search & Ranking Engineer task `019f75b7-6c59-7952-bf14-b01cfbfd2793` committed
   `48fac46` over `src/app/actions.ts` `searchItems()` only. Independent static/diff
   refutation passed with no P1/P2/P3, but HI Quality runtime refutation **REFUTED** the
@@ -253,8 +254,8 @@ safety/integrity lanes until their separate gates are independently satisfied.
   `src/app/_data/reference-currencies.ts`, `src/app/_components/ExchangePanel.tsx`,
   `src/app/_components/CurrencyPickerSheet.tsx`, `src/app/_components/CurrencyFlag.tsx`,
   `public/icons/currency-flags.svg`, and `public/icons/currency-flags.LICENSE.md`. The
-  claim is active but implementation is sequenced after that employee's one-file
-  slim-header commit. Scope is a fail-closed live-catalog intersection for at most USD,
+  sequencing condition was satisfied by `9f7b2c7`, and implementation has started. Scope
+  is a fail-closed live-catalog intersection for at most USD,
   GBP, EUR, CAD, AUD, GHS, KES, ZAR, AED, CNY, INR, BRL, CHF, JPY, and SAR; typed
   provider/effective-date data; truthful CBN/Frankfurter labels; amount-first calculation;
   a searchable deduplicated Recent/Popular/All picker with device-local recents; bundled
@@ -269,22 +270,25 @@ safety/integrity lanes until their separate gates are independently satisfied.
   `WETINDEY_BIBLE.md` and `docs/adr/016-nearby-user-presence.md`, now released. ADR-016 is
   Accepted for implementation architecture only and authorizes no shared migration,
   deployment, pilot traffic, or public rollout.
-- Presence Platform Engineer task `019f759f-3521-7ee1-90a3-5af3539d757e` now owns the
-  reduced local-only Nearby Presence schema lane over exactly:
+- Presence Platform Engineer task `019f759f-3521-7ee1-90a3-5af3539d757e` completed the
+  reduced local-only Nearby Presence schema lane at `3e50656` over exactly:
   `src/db/schema/presence.ts`, `src/db/schema/index.ts`,
   `src/db/pillars/80-presence-services.sql`,
   `src/db/pillars/90-presence-security.sql`,
   `src/db/migrations/0012_guarded_presence.sql`,
   `src/db/migrations/meta/0012_snapshot.json`,
   `src/db/migrations/meta/_journal.json`, and
-  `scripts/presence/presence-migration-contract.test.ts`. Scope is a disabled seven-table
-  core (`presence_control`, preferences, leases, blocks, waves, reports, rate buckets),
-  nine RPCs, forced RLS with no `PUBLIC`, removal of unsafe `user_profiles` location
-  fields, and forward `0012` while frozen `0011` remains byte-identical. No DB access,
-  migration or test execution, shared repair/application, disposable execution,
-  app/UI/actions/map changes, allowlist activation, pilot traffic, push, or deploy is
-  authorized. Require one path-scoped local commit and independent static/diff refutation;
-  disposable execution remains a separate future authorization. Contribution integrity
+  `scripts/presence/presence-migration-contract.test.ts`. Independent static/diff
+  refutation passed with no P1/P2. The source implements a disabled seven-table core
+  (`presence_control`, preferences, leases, blocks, waves, reports, rate buckets), nine
+  RPCs, empty allowlist/no traffic, forced RLS with no `PUBLIC` and least privilege,
+  removal of unsafe `user_profiles` location fields without backfill, kill purge,
+  reciprocity, nonrenewing leases, Wave/report/block/rate controls, and forward `0012`
+  while frozen `0011` remains byte-identical. The eight source paths are released into an
+  unapplied execution-gate state. No tests, typecheck, lint, build, migration, seed, DB,
+  push, or deploy occurred; Drizzle generated only local named artifacts. Disposable
+  SQL/role/PostGIS/RLS/lineage/restore proof remains separately unauthorized. Shared
+  migration, pilot traffic, and public rollout remain blocked. Contribution integrity
   follows as `0013` or later.
 - Catalog Stewardship Engineer task
   `019f75a3-f38d-7893-9b82-2d6871a2563c` completed in path-scoped commit `32b15ae` over
