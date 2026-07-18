@@ -589,13 +589,15 @@ function parseOtpPayload(
     );
   }
 
-  if (
-    deliveryPreference &&
-    !isDeliveryPreference(deliveryPreference)
-  ) {
-    throw new NeonWebhookVerificationError(
-      "Invalid webhook delivery preference",
-    );
+  let verifiedDeliveryPreference: "email" | "sms" | undefined;
+  if (deliveryPreference) {
+    if (!isDeliveryPreference(deliveryPreference)) {
+      throw new NeonWebhookVerificationError(
+        "Invalid webhook delivery preference",
+      );
+    }
+
+    verifiedDeliveryPreference = deliveryPreference;
   }
 
   return {
@@ -605,7 +607,9 @@ function parseOtpPayload(
     otpCode,
     otpType,
     expiresAt,
-    ...(deliveryPreference ? { deliveryPreference } : {}),
+    ...(verifiedDeliveryPreference
+      ? { deliveryPreference: verifiedDeliveryPreference }
+      : {}),
   };
 }
 
