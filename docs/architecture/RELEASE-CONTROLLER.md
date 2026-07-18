@@ -479,6 +479,22 @@ safety/integrity lanes until their separate gates are independently satisfied.
   static/data-trust refutation. No seed/reseed, connected DB, destructive refresh, push,
   or deployment is authorized; stale-comment cleanup remains separately unclaimed and
   blocked where Contribution retains `actions.ts`.
+- H27 evidence reconciliation does not invent a second result for `32b15ae`. That commit
+  and its independent PASS close the deterministic catalog/seed-generation scope over
+  `src/db/seed.ts` and `src/db/seedContent.ts`; current `src/db/seed.ts` still contains the
+  hardcoded freshness-to-trust assignment. The attempted new H27 employee handoff found no
+  live worker and produced no edit or commit, so `src/db/seed.ts` is released/unclaimed and
+  H27 remains open. No seed execution, connected DB, push, or deployment occurred.
+- Foundation commit `1d0515583418acf91469c00b57c25b2a2fcc1118` is independently
+  **REFUTED** with no P1 and one P2. Exact five-path scope and a clean worktree were
+  confirmed. In `src/app/globals.css`, forced-colours globally sets `.solid-icon` to
+  `CanvasText`, overriding an interactive parent's inherited system colour and risking
+  selected/button contrast. The bounded forward lane owns only `src/app/globals.css` and
+  `scripts/iconography-contracts.test.ts`: inherit parent colour and make the contract
+  prohibit glyph-level forced-colour ownership; licensing provenance cannot be proven by
+  a self-attesting comment regex. Iconography & Visual Systems Lead remains owner and the
+  same independent visual/accessibility refuter must re-refute the forward commit. Sheet
+  Adoption, Market Details, and Map Symbols remain closed. No push/deploy.
 - Contribution Integrity & Moderation Engineer task
   `019f75a3-f50d-7180-8e92-0a7aabd8a98c` completed exact five-path containment at
   `495750aaa0730dcd35b4e7a6dbeba24caef1caf3` over `src/app/actions.ts`,
