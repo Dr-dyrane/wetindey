@@ -2413,12 +2413,6 @@ export interface MyProfile {
   /** From `user_profiles`, or null when they have stored no contact channel. */
   contactChannelKind: string | null;
   contactChannelValue: string | null;
-  /**
-   * From `user_profiles`. Whether this user shows their location on the public
-   * map. Defaults to false, including for a session that has no row yet, so the
-   * map lane reads a definite "not sharing" rather than an absence.
-   */
-  locationSharing: boolean;
   /** From `user_profiles`, or null when they have uploaded no avatar. A Vercel Blob URL. */
   avatarUrl: string | null;
 }
@@ -2451,7 +2445,6 @@ export async function getMyProfile(): Promise<MyProfile | null> {
     .select({
       contactChannelKind: userProfiles.contactChannelKind,
       contactChannelValue: userProfiles.contactChannelValue,
-      locationSharing: userProfiles.locationSharing,
       avatarUrl: userProfiles.avatarUrl,
     })
     .from(userProfiles)
@@ -2463,9 +2456,8 @@ export async function getMyProfile(): Promise<MyProfile | null> {
     email: user.email,
     contactChannelKind: row?.contactChannelKind ?? null,
     contactChannelValue: row?.contactChannelValue ?? null,
-    // No row means the user has never saved a profile, which is "not sharing" and
-    // "no avatar", the same answer a row carrying the column defaults would give.
-    locationSharing: row?.locationSharing ?? false,
+    // No row means the user has never saved a profile, which is "no avatar", the
+    // same answer a row carrying the column default would give.
     avatarUrl: row?.avatarUrl ?? null,
   };
 }
@@ -2495,42 +2487,10 @@ export async function getMyProfile(): Promise<MyProfile | null> {
  * exactly this purpose (schema/index.ts). Sending null for both fields clears the
  * channel.
  *
- * `locationSharing` is the map's public-location opt-in and is INDEPENDENT of the
- * contact pair. It is optional, and absence is deliberately NOT the same as false:
- * an absent flag leaves the stored value alone, so a contact-only save can never
- * silently un-share a user, and a flag-only save can be added later without a
- * both-or-neither rule. It is folded into the write only when it was sent; a brand
- * new row falls back to the column default of false.
  */
-/**
- * Coarsens latitude/longitude to the centroid of a fixed 500m grid cell
- * to preserve user privacy and comply with ADR-016.
- */
-function coarsenCoordinates(lat: number, lng: number): { latitude: number; longitude: number } {
-  // 500 meters is approximately 0.0045 degrees of latitude
-  const LAT_STEP = 0.0045;
-  const gridLat = Math.round(lat / LAT_STEP) * LAT_STEP;
-
-  // Degrees of longitude per 500 meters varies by latitude
-  const latRad = (gridLat * Math.PI) / 180;
-  const cosLat = Math.cos(latRad);
-  // Prevent division by zero at poles
-  const safeCosLat = Math.max(cosLat, 0.0001);
-  const lonStep = 0.0045 / safeCosLat;
-  const gridLng = Math.round(lng / lonStep) * lonStep;
-
-  return {
-    latitude: parseFloat(gridLat.toFixed(6)),
-    longitude: parseFloat(gridLng.toFixed(6)),
-  };
-}
-
 export async function updateMyProfile(data: {
   contactChannelKind?: "phone" | "whatsapp" | "sms" | null;
   contactChannelValue?: string | null;
-  locationSharing?: boolean;
-  latitude?: number | null;
-  longitude?: number | null;
 }): Promise<void> {
   const input = parseUpdateMyProfile(data);
 
@@ -2543,32 +2503,12 @@ export async function updateMyProfile(data: {
   const contactChannelKind = input.contactChannelKind ?? null;
   const contactChannelValue = input.contactChannelValue ?? null;
 
-  let latitude = input.latitude;
-  let longitude = input.longitude;
-
-  if (latitude != null && longitude != null) {
-    const coarse = coarsenCoordinates(latitude, longitude);
-    latitude = coarse.latitude;
-    longitude = coarse.longitude;
-  }
-
-  // Only touch the flag/coordinates when the caller actually sent them.
-  const sharing: {
-    locationSharing?: boolean;
-    latitude?: number | null;
-    longitude?: number | null;
-  } = {
-    ...(input.locationSharing === undefined ? {} : { locationSharing: input.locationSharing }),
-    ...(input.latitude === undefined ? {} : { latitude }),
-    ...(input.longitude === undefined ? {} : { longitude }),
-  };
-
   await db
     .insert(userProfiles)
-    .values({ userId, contactChannelKind, contactChannelValue, ...sharing })
+    .values({ userId, contactChannelKind, contactChannelValue })
     .onConflictDoUpdate({
       target: userProfiles.userId,
-      set: { contactChannelKind, contactChannelValue, ...sharing, updatedAt: new Date() },
+      set: { contactChannelKind, contactChannelValue, updatedAt: new Date() },
     });
 }
 
@@ -2715,42 +2655,16 @@ export interface SharedUserLocation {
   contactChannelValue: string | null;
 }
 
+/**
+ * Fail-closed compatibility boundary for the contained nearby-presence slice.
+ *
+ * Keep the empty array shape so a stale caller degrades without learning whether
+ * any profiles exist. Do not authenticate, count, or query: every caller gets the
+ * same no-capability response and no identity, contact, avatar, or coordinate row
+ * reaches application memory.
+ */
 export async function getSharedUserLocations(): Promise<SharedUserLocation[]> {
-  const result = await db.execute<{
-    user_id: string;
-    name: string | null;
-    email: string | null;
-    avatar_url: string | null;
-    latitude: string | number;
-    longitude: string | number;
-    contact_channel_kind: string | null;
-    contact_channel_value: string | null;
-  }>(sql`
-    SELECT 
-      up.user_id,
-      u.name,
-      u.email,
-      up.avatar_url,
-      up.latitude,
-      up.longitude,
-      up.contact_channel_kind,
-      up.contact_channel_value
-    FROM user_profiles up
-    LEFT JOIN neon_auth.user u ON u.id = up.user_id
-    WHERE up.location_sharing = true 
-      AND up.latitude IS NOT NULL 
-      AND up.longitude IS NOT NULL
-  `);
-
-  return result.rows.map(row => ({
-    userId: row.user_id,
-    name: row.name || row.email || "Anonymous",
-    avatarUrl: row.avatar_url,
-    latitude: Number(row.latitude),
-    longitude: Number(row.longitude),
-    contactChannelKind: row.contact_channel_kind,
-    contactChannelValue: row.contact_channel_value,
-  }));
+  return [];
 }
 
 export interface ReviewData {

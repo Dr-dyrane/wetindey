@@ -60,9 +60,6 @@ import {
   searchItems,
   getPopularItems,
   getMyProfile,
-  updateMyProfile,
-  getSharedUserLocations,
-  type SharedUserLocation,
   type MyProfile,
   getPlaces,
   getPlaceOffers,
@@ -303,7 +300,6 @@ export default function HomePage() {
     null
   );
   const [userProfile, setUserProfile] = useState<MyProfile | null>(null);
-  const [sharedUsers, setSharedUsers] = useState<SharedUserLocation[]>([]);
   /** The item ItemDetailSheet is resolving down to a unit. Non-null = presented. */
   const [detailItem, setDetailItem] = useState<ItemCardData | null>(null);
   /** The place GetItSheet is about to hand off to. Non-null = presented. */
@@ -397,7 +393,7 @@ export default function HomePage() {
     return { name: u.name ?? "", email: u.email };
   }, [session]);
 
-  // Load user profile when signed in to fetch locationSharing and avatarUrl (H41)
+  // Load the signed-in user's profile for their avatar.
   useEffect(() => {
     if (sessionUser) {
       getMyProfile().then(setUserProfile).catch(() => {});
@@ -405,43 +401,6 @@ export default function HomePage() {
       setUserProfile(null);
     }
   }, [sessionUser]);
-
-  // Sync client-side coordinates to the server if location sharing is enabled
-  useEffect(() => {
-    if (sessionUser && userProfile?.locationSharing) {
-      updateMyProfile({
-        latitude: locPosition.lat,
-        longitude: locPosition.lng,
-      }).catch((err) => {
-        console.error("Failed to sync location to server:", err);
-      });
-    }
-  }, [sessionUser, userProfile?.locationSharing, locPosition.lat, locPosition.lng]);
-
-  // Load and refresh location-sharing users
-  useEffect(() => {
-    let active = true;
-
-    async function loadSharedUsers() {
-      try {
-        const users = await getSharedUserLocations();
-        if (active) {
-          setSharedUsers(users);
-        }
-      } catch (err) {
-        console.error("Failed to load shared user locations:", err);
-      }
-    }
-
-    loadSharedUsers();
-
-    // Poll every 10 seconds to keep locations reasonably fresh without overwhelming the server
-    const interval = window.setInterval(loadSharedUsers, 10_000);
-    return () => {
-      active = false;
-      window.clearInterval(interval);
-    };
-  }, []);
 
   /**
    * Where the user IS. Every distance, radius and "Nearest" measures from here.
@@ -1186,7 +1145,7 @@ export default function HomePage() {
            without that padding a pin can be flown to and land behind it. */
         detent={isRegular ? null : activeDetent}
         padding={isRegular ? { left: leadingInset } : undefined}
-        sharedUsers={sharedUsers}
+        sharedUsers={[]}
       />
 
       {/* Floating controls. These sit directly on the map, so they use the

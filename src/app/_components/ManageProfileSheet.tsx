@@ -18,7 +18,6 @@ import {
 } from "@/app/actions";
 import { Avatar } from "@/app/_components/ProfileSheet";
 import { haptics } from "@/lib/haptics";
-import { useLocationStore } from "@/core/state/locationStore";
 
 /**
  * Manage profile: the editable half of the account.
@@ -109,43 +108,6 @@ function Spinner() {
   );
 }
 
-/**
- * iOS switch: a track and a knob, and no stroke, so the no-border rule holds. On
- * is systemGreen (`status-confirmed`); the knob is a raised chip (`bg-surface` +
- * `shadow-card`), the same material the Segmented control's active segment uses,
- * so the two controls read as one system. Named by the row's own label via
- * `aria-labelledby` rather than a duplicated `aria-label`.
- */
-function Switch({
-  checked,
-  onChange,
-  disabled,
-  labelledBy,
-}: {
-  checked: boolean;
-  onChange: (next: boolean) => void;
-  disabled?: boolean;
-  labelledBy: string;
-}) {
-  return (
-    <button
-      type="button"
-      role="switch"
-      aria-checked={checked}
-      aria-labelledby={labelledBy}
-      disabled={disabled}
-      onClick={() => onChange(!checked)}
-      className={`relative inline-flex h-[31px] w-[51px] shrink-0 items-center squircle-full p-0.5 transition-colors duration-micro active:opacity-80 disabled:opacity-40
-        ${checked ? "bg-status-confirmed" : "bg-fillTertiary"}`}
-    >
-      <span
-        className={`h-[27px] w-[27px] squircle-full bg-surface shadow-card transition-transform duration-micro
-          ${checked ? "translate-x-5" : "translate-x-0"}`}
-      />
-    </button>
-  );
-}
-
 export function ManageProfileSheet({
   open,
   onClose,
@@ -180,13 +142,7 @@ export function ManageProfileSheet({
   const [saveError, setSaveError] = useState<string | null>(null);
   const [justSaved, setJustSaved] = useState(false);
 
-  // Location sharing and the avatar apply IMMEDIATELY, not through the Save
-  // button: a switch and a photo picker are instant controls on iOS, so each
-  // owns its own in-flight and error state rather than joining the name/contact
-  // form's dirtiness. The Save button stays for the two text fields only.
-  const [sharingBusy, setSharingBusy] = useState(false);
-  const [sharingError, setSharingError] = useState<string | null>(null);
-
+  // The avatar applies immediately rather than through the text form's Save.
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [avatarBusy, setAvatarBusy] = useState<"upload" | "remove" | null>(null);
   const [avatarError, setAvatarError] = useState<string | null>(null);
@@ -222,7 +178,6 @@ export function ManageProfileSheet({
         email: userRef.current?.email ?? "",
         contactChannelKind: null,
         contactChannelValue: null,
-        locationSharing: false,
         avatarUrl: null,
       };
       setProfile(resolved);
@@ -290,8 +245,8 @@ export function ManageProfileSheet({
       // Only a name touches the session; the avatar and mini-profile read from it.
       if (nameDirty) onSessionChange();
       // Rebase so the form is clean and Save disables until the next edit. Spread
-      // the loaded profile so fields this form does not touch (locationSharing,
-      // avatarUrl) carry through unchanged rather than being reset.
+      // the loaded profile so avatarUrl carries through unchanged rather than
+      // being reset.
       setProfile({
         ...profile,
         name: trimmedName,
@@ -348,35 +303,6 @@ export function ManageProfileSheet({
       setAvatarError("Could not remove photo. Check your connection.");
     } finally {
       setAvatarBusy(null);
-    }
-  }
-
-  async function handleLocationSharingChange(next: boolean) {
-    haptics.selection();
-    setSharingBusy(true);
-    setSharingError(null);
-
-    try {
-      if (next) {
-        const pos = useLocationStore.getState().position;
-        await updateMyProfile({
-          locationSharing: true,
-          latitude: pos.lat,
-          longitude: pos.lng,
-        });
-      } else {
-        await updateMyProfile({
-          locationSharing: false,
-          latitude: null,
-          longitude: null,
-        });
-      }
-      setProfile((prev) => (prev ? { ...prev, locationSharing: next } : null));
-    } catch (err) {
-      console.error("ManageProfileSheet: failed to toggle location sharing", err);
-      setSharingError("Could not update settings. Check your connection.");
-    } finally {
-      setSharingBusy(false);
     }
   }
 
@@ -502,30 +428,21 @@ export function ManageProfileSheet({
             </div>
           </ListGroup>
 
-          {/* Location Sharing Opt-in Switch */}
           <ListGroup
             header="Location Sharing"
-            footer="When active, other verified contributors can see your approximate location on the map. Opt-in only."
+            footer="Nearby location sharing is unavailable while we build the safer consent and privacy controls it needs."
           >
             <div className="flex min-h-tap items-center justify-between px-4 py-2">
-              <span id="loc-share-label" className="text-body text-text-primary">
+              <span className="text-body text-text-primary">
                 Share My Location
               </span>
-              <div className="flex items-center gap-2">
-                {sharingBusy && <Spinner />}
-                <Switch
-                  checked={profile.locationSharing}
-                  onChange={handleLocationSharingChange}
-                  disabled={sharingBusy}
-                  labelledBy="loc-share-label"
-                />
-              </div>
+              <span
+                aria-label="Location sharing unavailable"
+                className="squircle bg-fillTertiary px-3 py-1.5 text-footnote font-medium text-text-secondary"
+              >
+                Unavailable
+              </span>
             </div>
-            {sharingError && (
-              <div className="px-4 pb-3">
-                <p role="alert" className="text-footnote text-status-unavailable">{sharingError}</p>
-              </div>
-            )}
           </ListGroup>
 
           {justSaved && !isDirty && (
