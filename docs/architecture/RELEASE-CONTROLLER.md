@@ -465,6 +465,20 @@ safety/integrity lanes until their separate gates are independently satisfied.
   execution, migration, push, or deploy occurred; connected stale data remains unchanged.
   `src/db/seed.ts` stays prohibited for recurring ingestion, and destructive refresh
   remains a separate explicit gate.
+- The next unblocked non-overlapping Stage 0 lane is the H27 seed-trust correction.
+  Catalog Stewardship Engineer `019f75a3-f38d-7893-9b82-2d6871a2563c` owns exactly
+  `src/db/seed.ts`; independent default-to-refuted review is assigned to
+  `/root/h27_seed_trust_refuter`. Remove the hardcoded freshness-to-high/medium/low trust
+  ladder so synthetic/Sample offers cannot earn observed-evidence confidence from age.
+  Use the canonical derived trust contract or a justified conservative schema-compatible
+  synthetic value. Preserve deterministic per-place PRNG, one run timestamp,
+  catalog/slugs/variants, consumer-primary ordering, the Spaghetti contract,
+  freshness/availability timestamps, synthetic provenance, and Sample wording. Exclude
+  `src/app/actions.ts`, `src/lib/trust.ts`, `src/db/seedContent.ts`, schemas, migrations,
+  UI, and test paths. One path-scoped local commit is required before independent
+  static/data-trust refutation. No seed/reseed, connected DB, destructive refresh, push,
+  or deployment is authorized; stale-comment cleanup remains separately unclaimed and
+  blocked where Contribution retains `actions.ts`.
 - Contribution Integrity & Moderation Engineer task
   `019f75a3-f50d-7180-8e92-0a7aabd8a98c` completed exact five-path containment at
   `495750aaa0730dcd35b4e7a6dbeba24caef1caf3` over `src/app/actions.ts`,
