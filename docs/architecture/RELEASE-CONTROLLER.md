@@ -402,6 +402,17 @@ safety/integrity lanes until their separate gates are independently satisfied.
   `src/app/_components/ProfileSheet.tsx` or `src/app/page.tsx` only when entry wiring
   changes. This record claims none of those paths, preserves current owners, and retains
   counsel approval for final legal wording.
+- `src/app/page.tsx` modularisation and reusable core engines are a future pathless
+  architecture lane. Contribution retains `page.tsx`; this record transfers no path and
+  authorizes no implementation. Required planning deliverables are the current code tree,
+  live caller/dependency graph, ownership-boundary matrix for discovery/search, location,
+  map/presence, sheet/presentation, contribution, exchange, seller, trust/confidence, and
+  legal/analytics, documentation changes, and an incremental strangler sequence. ADR-002
+  correctness-before-boundaries controls the work: extract only live vertical slices with
+  callers wired in the same change, keep domain logic out of UI, prefer shared typed
+  contracts/configuration and reusable core engines, and prove no behavior regression.
+  Every extraction requires exact paths, a named owner, and independent refutation.
+  `src/modules` remains aspirational until wired to a live caller in the same change.
 - Catalog Stewardship Engineer task
   `019f75a3-f38d-7893-9b82-2d6871a2563c` completed in path-scoped commit `32b15ae` over
   exactly `src/db/seed.ts` and `src/db/seedContent.ts`; an independent static refuter
@@ -488,6 +499,43 @@ safety/integrity lanes until their separate gates are independently satisfied.
   four governance paths. Do not close H6 or open `src/middleware.ts`,
   `src/app/layout.tsx`, `vercel.json`, or any dependent implementation lane before a
   no-P1/P2 verdict covering the full acceptance contract.
+- H6 governance is now complete for exact commits
+  `14aff35fa98728c4d2c22e61e773254d42186db7` and
+  `6c74c147678eefbda8e5b5030c0ab51c13a6a952`. Independent refuter
+  `019f7692-d254-7e43-a687-154876274927` returned **NOT REFUTED** with no P1/P2/P3.
+  The forward one-file correction explicitly rejects `x-nonce` alone and requires cloned
+  request headers containing raw `x-nonce` plus the exact nonce-bearing CSP, explicit
+  `NextResponse.next({request:{headers}})`, and a byte-identical response CSP. The four
+  governance paths are released. This closes architecture evidence only and authorizes no
+  implementation, Preview/Production enforcement, push, or deployment.
+- The next highest-priority conflict-free lane is H6 nonce-CSP implementation. Prospective
+  owner `/root/h6_nonce_implementation` has read-only readiness over exactly new
+  `src/middleware.ts`, existing `src/app/layout.tsx`, and `vercel.json`; no code started in
+  this reporting checkpoint. Independent refuter after commit is
+  `019f7692-d254-7e43-a687-154876274927`. Acceptance requires one canonical per-request
+  policy, raw nonce plus exact CSP on cloned request headers, identical response CSP,
+  nonce coverage for all three raw layout scripts and the Mapbox script, same-change
+  removal of only the static Vercel CSP while preserving every other header,
+  private/no-store and environment contracts, and no product/layout redesign or second
+  enforcement boundary.
+- Account deletion completion is not supported by repository evidence. All visible refs,
+  `git log --all`, reflog, and inspected unreachable commit subjects reveal no deletion
+  implementation; current and reachable source/history contain no `deleteUser` or
+  `deleteAccount`. `src/app/_components/ProfileSheet.tsx` exposes Sign out only, while
+  `src/core/i18n/strings.ts` says deletion and retention remain under review and directs
+  account requests to support. Commit `708bc73` documents unresolved Neon provider
+  capability; it is not implementation. No deletion test, destructive authenticated proof,
+  counsel-approved retention/anonymisation matrix, or approval receipt is present. The old
+  blocker remains; no completion is invented.
+- Founder approval activates Seller Identity, reusable RBAC & Onboarding as architecture
+  planning only, with seller onboarding as the first vertical. The reusable model must be
+  deny-by-default and server-authorized for seller owner/manager/staff, moderator, field
+  operator, support, and community roles with scoped permissions and audit. Identity
+  verification, business verification, reputation, confidence, and rewards remain
+  separate; suspension/revocation, appeals, and non-purchasable badges are mandatory.
+  Seller updates do not automatically become trusted public observations. Auth/provider,
+  RLS/schema, legal/privacy, moderation, Trust Graph, exact paths, and independent
+  refutation remain gates; no implementation or deployment authority follows.
 - H37 place iconography is complete at `6611068`, and current HEAD corrects a stale final
   audit description: `MapboxCanvas` forwards `candidate.placeType`, `MapMarkerOptions`
   declares `placeType`, and the adapter selects semantic place symbols. Those two
