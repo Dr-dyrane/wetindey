@@ -263,61 +263,23 @@ export async function searchItems(
       FROM live_observations
       GROUP BY item_id, item_variant_id, unit_id, place_id
     ),
-    sample_observations AS (
+    sample_current_offers AS (
       /*
-       * Demo prices are a separate, deliberately zero-confidence projection.
-       * They use the same immutable relationship, time window, and geographic
-       * scope as live observed offers, but never join the mutable offer
-       * projection. A Sample may fill an item only when that item has no live
-       * observed offer at all; the final join enforces that precedence.
+       * The landing surface owns the canonical Sample DTO: its current-offer
+       * projection supplies the fresh spatial unit, range, and place facts.
+       * Search must reproduce that projection exactly for a pure-Sample item;
+       * immutable observations still decide whether this projection is allowed
+       * to render at all in the final join.
        */
       SELECT
-        observation.id,
-        variant.item_id,
-        observation.item_variant_id,
-        observation.unit_id,
-        observation.place_id,
-        observation.price_amount,
-        observation.availability_state,
-        observation.observed_at
-      FROM ${observations} observation
-      JOIN ${itemVariants} variant ON variant.id = observation.item_variant_id
+        sample_offer.*,
+        variant.item_id
+      FROM ${offersCurrent} sample_offer
+      JOIN ${itemVariants} variant ON variant.id = sample_offer.item_variant_id
       JOIN matched_items mi ON mi.id = variant.item_id
-      JOIN ${units} sample_unit ON sample_unit.id = observation.unit_id
-      JOIN ${places} sample_place ON sample_place.id = observation.place_id
-      WHERE observation.moderation_status <> 'rejected'
-        AND observation.provenance = 'synthetic'
-        AND observation.observed_at >=
-          now() - make_interval(hours => ${FRESHNESS_POLICY.expirationHours})
-        AND observation.observed_at <= now()
+      JOIN ${places} sample_place ON sample_place.id = sample_offer.place_id
+      WHERE sample_offer.expires_at > now()
         ${useLocation ? sql`AND ST_DWithin(sample_place.location, ${searchPoint}::geography, ${radiusM})` : sql``}
-    ),
-    sample_offers AS (
-      /*
-       * Keep sample price semantics aligned with live_offers: one offer per
-       * persisted triple, available-only price range, newest report wins for
-       * availability, and a deterministic tie-break. This CTE is never trust
-       * evidence and is never considered while an observed offer exists.
-       */
-      SELECT
-        item_id,
-        item_variant_id,
-        unit_id,
-        place_id,
-        (MIN(price_amount) FILTER (
-          WHERE availability_state = 'available'
-        ))::int AS price_min,
-        (MAX(price_amount) FILTER (
-          WHERE availability_state = 'available'
-        ))::int AS price_max,
-        (array_agg(
-          availability_state
-          ORDER BY observed_at DESC, id ASC
-        ))[1] AS availability_state,
-        MAX(observed_at) AS last_observed_at,
-        (array_agg(id ORDER BY observed_at DESC, id ASC))[1] AS latest_observation_id
-      FROM sample_observations
-      GROUP BY item_id, item_variant_id, unit_id, place_id
     ),
     offer_units AS (
       SELECT
@@ -336,8 +298,8 @@ export async function searchItems(
       SELECT
         item_id,
         unit_id,
-        COUNT(*) AS offers_in_unit
-      FROM sample_offers
+        COUNT(id) AS offers_in_unit
+      FROM sample_current_offers
       GROUP BY item_id, unit_id
     ),
     sample_modal_unit AS (
@@ -352,7 +314,8 @@ export async function searchItems(
        * (variant, unit, place) triple on a real observation. Grouping all
        * non-rejected, nonfuture history for that triple lets fallback ordering
        * distinguish observed trust history, non-synthetic inadmissible evidence,
-       * and a genuinely synthetic-only sample without offers_current.
+       * and a genuinely synthetic-only sample without trusting an offer
+       * projection to classify its provenance.
        */
       SELECT
         variant.item_id,
@@ -487,7 +450,7 @@ export async function searchItems(
       u.display_name                                   AS "unitLabel",
       COALESCE(
         NULLIF(COUNT(o.item_variant_id), 0),
-        COUNT(sample.item_variant_id),
+        COUNT(sample.id),
         0
       )::int                                           AS "offerCount",
       COALESCE(
@@ -544,7 +507,7 @@ export async function searchItems(
     JOIN ${units} u ON u.id = ru.unit_id
     LEFT JOIN live_offers o ON o.item_id = i.id AND o.unit_id = ru.unit_id
     LEFT JOIN fallback_trust_context fallback_trust ON fallback_trust.item_id = i.id
-    LEFT JOIN sample_offers sample
+    LEFT JOIN sample_current_offers sample
       ON sample.item_id = i.id
       AND sample.unit_id = ru.unit_id
       /* Only a pure synthetic fallback can publish a visibly-labelled Sample. */
