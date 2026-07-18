@@ -83,8 +83,11 @@ c-185 -112 -210 -120 -285 -94 -30 11 -34 9 -86 -40 l-54 -51 -85 0 -84 0 -40 45 c
 
 export const NIGERIA_TRANSFORM = "translate(0,1024) scale(0.1,-0.1)";
 
-/** Centroid of the silhouette's rendered mass — the cutout is centered here. */
-export const NIGERIA_CENTROID = { x: 463.6, y: 470.8 } as const;
+/**
+ * The silhouette's rendered-mass centroid is (463.6, 470.8). The measured
+ * value is retained in the geometry notes below because the finished transform
+ * is intentionally frozen rather than recomputed at runtime.
+ */
 
 /**
  * Question mark, authored as pure geometry (no font dependency — a <text> element
@@ -94,8 +97,6 @@ export const NIGERIA_CENTROID = { x: 463.6, y: 470.8 } as const;
  * Native bbox: x=28 y=28 w=344 h=581.99.
  */
 export const QUESTION_PATH = "M48.133 280.7491A172 172 0 0 1 119.2509 48.133A172 172 0 0 1 351.867 119.2509A172 172 0 0 1 286 348.9564A52 52 0 0 0 260 393.9897L260 407.9897L140 407.9897L140 393.9897A172 172 0 0 1 226 245.0333A52 52 0 0 0 245.9133 175.5875A52 52 0 0 0 175.5875 154.0867A52 52 0 0 0 154.0867 224.4125ZM133 542.9897A67 67 0 0 1 200 475.9897A67 67 0 0 1 267 542.9897A67 67 0 0 1 200 609.9897A67 67 0 0 1 133 542.9897Z";
-
-export const QUESTION_BBOX = { x: 28, y: 28, w: 344, h: 581.9897 } as const;
 
 /**
  * Places the question mark at height 420 centered on NIGERIA_CENTROID.
@@ -110,8 +111,4 @@ export const QUESTION_BBOX = { x: 28, y: 28, w: 344, h: 581.9897 } as const;
  * 93.3 units minimum edge clearance, and the cutout does not leak into the
  * background.
  */
-export const QUESTION_HEIGHT = 420;
 export const QUESTION_TRANSFORM = "translate(319.6676 239.7935) scale(0.7216623)";
-
-/** Rendered cutout size at QUESTION_TRANSFORM. */
-export const QUESTION_RENDERED = { w: 248.25, h: 420 } as const;
