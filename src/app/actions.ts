@@ -1274,10 +1274,14 @@ export async function submitObservation(data: {
   let priceMax: number | undefined = undefined;
   let priceKind = "Exact";
 
-  if (band?.min != null) {
-    priceMin = band.min;
-    if (band.max != null && band.max > band.min) {
-      priceMax = band.max;
+  const observedBandMin = band?.min;
+  const observedBandMax = band?.max;
+  const bandMin = observedBandMin ?? koboPrice;
+  const bandMax = observedBandMax ?? bandMin;
+  if (observedBandMin != null) {
+    priceMin = bandMin;
+    if (observedBandMax != null && bandMax > bandMin) {
+      priceMax = bandMax;
       priceKind = "Range";
     }
   }
@@ -1592,10 +1596,12 @@ export async function submitVisitConfirmation(data: {
   let priceNaira: number;
 
   if (data.priceWasRight === false) {
-    if (typeof data.actualPrice !== "number" || !Number.isFinite(data.actualPrice) || data.actualPrice <= 0) {
+    const reportedActualPrice = data.actualPrice;
+    const actualPrice = reportedActualPrice ?? Number.NaN;
+    if (typeof reportedActualPrice !== "number" || !Number.isFinite(actualPrice) || actualPrice <= 0) {
       throw new Error("submitVisitConfirmation: 'the price was different' requires the price they actually saw.");
     }
-    priceNaira = data.actualPrice;
+    priceNaira = actualPrice;
   } else if (data.priceWasRight === true) {
     // Read the confirmed figure from the server rather than trusting a number
     // round-tripped through the client: the user tapped "yes, that's it", and
