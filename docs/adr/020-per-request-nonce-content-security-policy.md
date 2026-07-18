@@ -38,15 +38,25 @@ For every matched HTML/document request, the request boundary:
 
 1. creates a cryptographically unpredictable nonce independently for that request;
 2. constructs one canonical policy string containing that nonce;
-3. clones the incoming request headers and sets that exact policy as
-   `Content-Security-Policy`;
-4. passes the cloned headers to Next 15.5.20 so Next can discover and apply the nonce to
-   its generated scripts; and
-5. sets the byte-identical policy on the outgoing response.
+3. clones the incoming request headers and sets both `x-nonce` to the raw nonce and
+   `Content-Security-Policy` to that exact canonical policy;
+4. passes that clone through
+   `NextResponse.next({ request: { headers: clonedRequestHeaders } })` so Next 15.5.20
+   receives both request headers and can discover and apply the nonce to its generated
+   scripts; and
+5. sets the byte-identical canonical policy as `Content-Security-Policy` on that outgoing
+   response.
 
 The request and response policy must come from the same value, not two builders or two
 templates. A test must compare them byte-for-byte. The nonce is never reused, persisted,
 logged, added to analytics, placed in a URL, or exposed as application data.
+
+An `x-nonce` request header alone is insufficient for Next 15.5.20 script nonce
+propagation. The boundary MUST provide both `x-nonce` and the exact nonce-bearing
+`Content-Security-Policy` on the cloned request headers, MUST pass that clone with the
+`NextResponse.next` request-header override above, and MUST emit the identical policy on
+the response. Calling `NextResponse.next()` without that request-header override, or
+forwarding only `x-nonce`, violates this invariant.
 
 ### Script coverage
 
