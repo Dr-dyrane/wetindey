@@ -579,13 +579,20 @@ export function ItemDetailSheet({
                     {signal.label}
                   </span>
 
-                  <span className="mt-1.5 flex items-center gap-2">
-                    <span className="text-footnote tabular-nums text-text-secondary">
+                  <span className="mt-1.5 flex min-w-0 items-center gap-2">
+                    <span className="shrink-0 whitespace-nowrap text-footnote tabular-nums text-text-secondary">
                       {formatDistance(offer.distanceM / 1000)}
                     </span>
-                    <span className="flex items-center gap-1" title={`${confidence.word} confidence`}>
-                      <ConfidenceMeter bars={confidence.bars} />
-                      <span className="text-caption-1 text-text-secondary">{confidence.label}</span>
+                    <span
+                      className="flex min-w-0 flex-1 items-center gap-1"
+                      title={`${confidence.word} confidence`}
+                    >
+                      <span className="shrink-0">
+                        <ConfidenceMeter bars={confidence.bars} />
+                      </span>
+                      <span className="min-w-0 truncate text-caption-1 text-text-secondary">
+                        {confidence.label}
+                      </span>
                     </span>
                   </span>
                 </span>
