@@ -1247,17 +1247,19 @@ export default function HomePage() {
             {activeCategory === "food" && (
               <button
                 onClick={() => setIsReportOpen(true)}
-                className="grid place-items-center h-8 w-8 rounded-full bg-fillSecondary text-text-primary
+                className="grid h-11 w-11 place-items-center text-text-primary
                            active:scale-90 transition-transform duration-instant"
                 aria-label={t.report_price}
               >
-                <Plus className="h-[18px] w-[18px]" strokeWidth={2.5} />
+                <span className="grid h-8 w-8 place-items-center rounded-full bg-fillSecondary">
+                  <Plus className="h-[18px] w-[18px]" strokeWidth={2.5} />
+                </span>
               </button>
             )}
 
             <button
               onClick={() => setIsProfileOpen(true)}
-              className="grid place-items-center squircle-full
+              className="grid h-11 w-11 place-items-center squircle-full
                          active:scale-90 transition-transform duration-instant"
               aria-label="Profile"
             >
