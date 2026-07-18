@@ -244,14 +244,15 @@ safety/integrity lanes until their separate gates are independently satisfied.
   disposable execution remains a separate future authorization. Contribution integrity
   follows as `0013` or later.
 - Catalog Stewardship Engineer task
-  `019f75a3-f38d-7893-9b82-2d6871a2563c` completed its source audit and now owns the
-  active exclusive source-only lane over exactly `src/db/seed.ts` and
-  `src/db/seedContent.ts`. Scope is deterministic seeded PRNG plus consumer-primary
-  variant coverage while preserving every slug/content field, the single Spaghetti 500g
-  variant at ₦900–₦1,400, and explicit synthetic provenance. This does not relax the
-  prohibition on using `src/db/seed.ts` for recurring ingestion. No database access,
-  reseed, migration, schema, UI, live-data claim, push, or deployment is authorized.
-  Release requires one path-scoped source commit and independent refutation.
+  `019f75a3-f38d-7893-9b82-2d6871a2563c` completed in path-scoped commit `32b15ae` over
+  exactly `src/db/seed.ts` and `src/db/seedContent.ts`; an independent static refuter
+  returned PASS with no P1/P2/P3. The source now uses a stable per-place PRNG, item-first
+  `variants[0]`, one run timestamp, and a primary consumer contract. Catalog 48/85, all
+  slugs/content, the single Spaghetti 500g ₦900–₦1,400 variant, and explicit synthetic
+  provenance/Sample wording are preserved. Both paths are released. No DB access, seed
+  execution, migration, push, or deploy occurred; connected stale data remains unchanged.
+  `src/db/seed.ts` stays prohibited for recurring ingestion, and destructive refresh
+  remains a separate explicit gate.
 - Contribution Integrity & Moderation Engineer task
   `019f75a3-f50d-7180-8e92-0a7aabd8a98c` is queued read-only/pathless pending its exact
   containment plan. `src/app/page.tsx` remains withheld by the HI Add/Profile 44px lane
