@@ -14,12 +14,14 @@ import {
 } from "../src/design-system/motion";
 import {
   WHEEL_GESTURE_GAP_MS,
-  advanceWheelCollapseGesture,
+  advanceScrollExpansionGesture,
+  advanceWheelDetentGesture,
   continuesWheelGesture,
   permitsScrollChaining,
   remainingDownwardTravel,
   scrollerForDirection,
-  type WheelCollapseGesture,
+  startScrollExpansionGesture,
+  type WheelDetentGesture,
 } from "../src/design-system/components/BottomSheet";
 
 function test(name: string, run: () => void) {
@@ -168,9 +170,19 @@ test("scroll handoff and keyboard viewport handling remain in the sheet contract
 
 test("top-edge wheel handoff can collapse one detent without stealing editable controls", () => {
   assert.match(bottomSheetSource, /\[contenteditable\]:not\(\[contenteditable='false'\]\)/);
+  assert.match(
+    bottomSheetSource,
+    /target\.closest\(EDITABLE_SELECTOR\)[\s\S]*dragRef\.current = null/
+  );
   assert.match(bottomSheetSource, /gesture\.spent/);
   assert.match(bottomSheetSource, /continuesWheelGesture\(previous\.lastTime, eventTime\)/);
-  assert.match(bottomSheetSource, /stepDetent\(-1\)/);
+  assert.match(bottomSheetSource, /const canCollapse =/);
+  assert.match(bottomSheetSource, /stepDetent\(advanced\.step\)/);
+  assert.match(
+    bottomSheetSource,
+    /pointerGesture\?\.pointerEnded[\s\S]*dragRef\.current = null/
+  );
+  assert.match(bottomSheetSource, /const inputDirection: ScrollDirection \| null/);
   assert.match(
     bottomSheetSource,
     /addEventListener\("wheel", onWheel, \{ capture: true, passive: false \}\)/
@@ -182,42 +194,93 @@ test("wheel momentum spends one detent but a later gesture starts cleanly", () =
   assert.equal(continuesWheelGesture(1000, 1001 + WHEEL_GESTURE_GAP_MS), false);
   assert.equal(continuesWheelGesture(1000, 999), false);
 
-  let gesture: WheelCollapseGesture | null = null;
-  let advanced = advanceWheelCollapseGesture(gesture, 1000, motion.sheet.stepPx / 2);
+  let gesture: WheelDetentGesture | null = null;
+  let advanced = advanceWheelDetentGesture(gesture, 1000, -1, motion.sheet.stepPx / 2);
   gesture = advanced.gesture;
-  assert.equal(advanced.shouldStep, false);
+  assert.equal(advanced.step, null);
 
-  advanced = advanceWheelCollapseGesture(gesture, 1010, motion.sheet.stepPx / 2);
+  advanced = advanceWheelDetentGesture(gesture, 1010, -1, motion.sheet.stepPx / 2);
   gesture = advanced.gesture;
-  assert.equal(advanced.shouldStep, true);
+  assert.equal(advanced.step, -1);
 
-  advanced = advanceWheelCollapseGesture(gesture, 1020, 0);
+  advanced = advanceWheelDetentGesture(gesture, 1020, null, 0);
   gesture = advanced.gesture;
-  assert.equal(advanced.shouldStep, false);
-  advanced = advanceWheelCollapseGesture(gesture, 1030, motion.sheet.stepPx);
+  assert.equal(advanced.step, null);
+  advanced = advanceWheelDetentGesture(gesture, 1030, 1, motion.sheet.stepPx);
   gesture = advanced.gesture;
-  assert.equal(advanced.shouldStep, false);
+  assert.equal(advanced.step, null);
 
-  advanced = advanceWheelCollapseGesture(
+  advanced = advanceWheelDetentGesture(
     gesture,
     1031 + WHEEL_GESTURE_GAP_MS,
+    1,
     motion.sheet.stepPx
   );
-  assert.equal(advanced.shouldStep, true);
+  assert.equal(advanced.step, 1);
 });
 
-test("a wheel reversal cancels only unspent collapse travel", () => {
-  let gesture: WheelCollapseGesture | null = null;
-  let advanced = advanceWheelCollapseGesture(gesture, 1000, motion.sheet.stepPx / 2);
+test("a wheel reversal cancels unspent credit without rearming a spent gesture", () => {
+  let gesture: WheelDetentGesture | null = null;
+  let advanced = advanceWheelDetentGesture(gesture, 1000, -1, motion.sheet.stepPx / 2);
   gesture = advanced.gesture;
   assert.equal(gesture.distance, motion.sheet.stepPx / 2);
 
-  advanced = advanceWheelCollapseGesture(gesture, 1010, -8);
+  advanced = advanceWheelDetentGesture(gesture, 1010, 1, 1);
   gesture = advanced.gesture;
+  assert.equal(gesture.distance, 1);
+
+  advanced = advanceWheelDetentGesture(gesture, 1020, 1, motion.sheet.stepPx / 2);
+  assert.equal(advanced.step, null);
+
+  advanced = advanceWheelDetentGesture(gesture, 1030, 1, motion.sheet.stepPx);
+  gesture = advanced.gesture;
+  assert.equal(advanced.step, 1);
+
+  advanced = advanceWheelDetentGesture(gesture, 1040, -1, motion.sheet.stepPx);
+  assert.equal(advanced.step, null);
+});
+
+test("a terminal wheel reversal clears credit even when that detent cannot move", () => {
+  let gesture: WheelDetentGesture | null = null;
+  let advanced = advanceWheelDetentGesture(gesture, 1000, -1, motion.sheet.stepPx / 2);
+  gesture = advanced.gesture;
+
+  advanced = advanceWheelDetentGesture(gesture, 1010, 1, 0);
+  gesture = advanced.gesture;
+  assert.equal(gesture.direction, 1);
   assert.equal(gesture.distance, 0);
 
-  advanced = advanceWheelCollapseGesture(gesture, 1020, motion.sheet.stepPx / 2);
+  advanced = advanceWheelDetentGesture(gesture, 1020, -1, motion.sheet.stepPx / 2);
+  assert.equal(advanced.step, null);
+});
+
+test("one touch scroll gesture spends once across nested scrollers and reversal", () => {
+  let gesture = startScrollExpansionGesture();
+  let advanced = advanceScrollExpansionGesture(gesture, motion.sheet.stepPx);
+  gesture = advanced.gesture;
+  assert.equal(advanced.shouldStep, true);
+
+  advanced = advanceScrollExpansionGesture(gesture, motion.sheet.stepPx);
   assert.equal(advanced.shouldStep, false);
+
+  advanced = advanceScrollExpansionGesture(gesture, -motion.sheet.stepPx);
+  assert.equal(advanced.shouldStep, false);
+  advanced = advanceScrollExpansionGesture(gesture, motion.sheet.stepPx);
+  assert.equal(advanced.shouldStep, false);
+});
+
+test("a later touch scroll gesture starts unblocked by prior element position", () => {
+  const priorGesture = startScrollExpansionGesture();
+  assert.equal(
+    advanceScrollExpansionGesture(priorGesture, motion.sheet.stepPx).shouldStep,
+    true
+  );
+
+  const laterGesture = startScrollExpansionGesture();
+  assert.equal(
+    advanceScrollExpansionGesture(laterGesture, motion.sheet.stepPx).shouldStep,
+    true
+  );
 });
 
 test("nested scroll ownership searches every eligible ancestor in the gesture direction", () => {
@@ -239,11 +302,25 @@ test("nested scroll ownership searches every eligible ancestor in the gesture di
 });
 
 test("a downward touch drag takes the sheet as soon as an owned list reaches its top", () => {
+  assert.doesNotMatch(bottomSheetSource, /scrollSpent|scrollAnchor\.current/);
+  assert.match(bottomSheetSource, /scrollExpansion: startScrollExpansionGesture\(\)/);
+  assert.match(bottomSheetSource, /drag\.scrollAnchors\.get\(target\)/);
+  assert.match(
+    bottomSheetSource,
+    /drag\.lastScrollDirection === -1 \? -Math\.abs\(scrollDelta\) : scrollDelta/
+  );
+  assert.match(bottomSheetSource, /advanceScrollExpansionGesture\(drag\.scrollExpansion/);
   assert.match(bottomSheetSource, /drag\.claim === "scroll"[\s\S]*travelPx < 0/);
   assert.match(bottomSheetSource, /scrollerForDirection\(drag\.scrollers, -1\) === null/);
   assert.match(bottomSheetSource, /scheduleScrolledDragEnd\(drag\)/);
   assert.match(bottomSheetSource, /drag\.pointerEnded[\s\S]*finishScrolledDrag\(drag\)/);
   assert.match(bottomSheetSource, /cancelDrag = \(event: React\.PointerEvent/);
+  assert.match(bottomSheetSource, /!drag \|\| drag\.pointerId !== event\.pointerId/);
+  assert.match(bottomSheetSource, /drag && drag\.pointerId !== event\.pointerId/);
+  assert.match(
+    bottomSheetSource,
+    /drag\?\.pointerType === "touch"[\s\S]*drag\.claim === null[\s\S]*drag\.claim = "scroll"/
+  );
   assert.match(bottomSheetSource, /addEventListener\("scrollend", onScrollEnd/);
   assert.match(bottomSheetSource, /updateScrollDirection\(drag, event\.clientY\)/);
   assert.match(bottomSheetSource, /drag\.pointerCancelled[\s\S]*onTouchMove/);

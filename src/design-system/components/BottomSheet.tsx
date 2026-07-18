@@ -63,31 +63,60 @@ export function continuesWheelGesture(previousTime: number, currentTime: number)
   return elapsed >= 0 && elapsed <= WHEEL_GESTURE_GAP_MS;
 }
 
-export interface WheelCollapseGesture {
+export interface WheelDetentGesture {
   lastTime: number;
+  distance: number;
+  spent: boolean;
+  direction: ScrollDirection | null;
+}
+
+export function advanceWheelDetentGesture(
+  previous: WheelDetentGesture | null,
+  eventTime: number,
+  direction: ScrollDirection | null,
+  travelPx: number
+): { gesture: WheelDetentGesture; step: ScrollDirection | null } {
+  const gesture =
+    previous && continuesWheelGesture(previous.lastTime, eventTime)
+      ? previous
+      : { lastTime: eventTime, distance: 0, spent: false, direction: null };
+
+  gesture.lastTime = eventTime;
+  if (gesture.spent) return { gesture, step: null };
+  if (direction !== null && gesture.direction !== direction) {
+    gesture.direction = direction;
+    gesture.distance = 0;
+  }
+  if (direction === null || travelPx <= 0) return { gesture, step: null };
+
+  gesture.distance += travelPx;
+  if (gesture.distance < motion.sheet.stepPx) return { gesture, step: null };
+
+  gesture.spent = true;
+  return { gesture, step: direction };
+}
+
+export interface ScrollExpansionGesture {
   distance: number;
   spent: boolean;
 }
 
-export function advanceWheelCollapseGesture(
-  previous: WheelCollapseGesture | null,
-  eventTime: number,
-  edgeTravelPx: number
-): { gesture: WheelCollapseGesture; shouldStep: boolean } {
-  const gesture =
-    previous && continuesWheelGesture(previous.lastTime, eventTime)
-      ? previous
-      : { lastTime: eventTime, distance: 0, spent: false };
+export function startScrollExpansionGesture(): ScrollExpansionGesture {
+  return { distance: 0, spent: false };
+}
 
-  gesture.lastTime = eventTime;
+export function advanceScrollExpansionGesture(
+  gesture: ScrollExpansionGesture,
+  scrollDeltaPx: number
+): { gesture: ScrollExpansionGesture; shouldStep: boolean } {
   if (gesture.spent) return { gesture, shouldStep: false };
-  if (edgeTravelPx < 0) {
+  if (scrollDeltaPx < 0) {
     gesture.distance = 0;
     return { gesture, shouldStep: false };
   }
-  if (edgeTravelPx === 0) return { gesture, shouldStep: false };
+  if (scrollDeltaPx === 0) return { gesture, shouldStep: false };
 
-  gesture.distance += edgeTravelPx;
+  gesture.distance += scrollDeltaPx;
   if (gesture.distance < motion.sheet.stepPx) return { gesture, shouldStep: false };
 
   gesture.spent = true;
@@ -143,6 +172,8 @@ interface DragState {
   pointerType: string;
   pointerCancelled: boolean;
   pointerEnded: boolean;
+  scrollExpansion: ScrollExpansionGesture;
+  scrollAnchors: Map<HTMLElement, number>;
 }
 
 /**
@@ -165,9 +196,7 @@ export function BottomSheet({ children, detent, onDetentChange }: BottomSheetPro
   const settleFrameRef = useRef<number | null>(null);
   const scrollEndFrameRef = useRef<number | null>(null);
   const liveFractionRef = useRef<number | null>(null);
-  const scrollAnchor = useRef(new WeakMap<HTMLElement, number>());
-  const scrollSpent = useRef(new WeakMap<HTMLElement, boolean>());
-  const wheelCollapseGesture = useRef<WheelCollapseGesture | null>(null);
+  const wheelDetentGesture = useRef<WheelDetentGesture | null>(null);
 
   const [viewportHeight, setViewportHeight] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
@@ -392,11 +421,12 @@ export function BottomSheet({ children, detent, onDetentChange }: BottomSheetPro
 
   const onPointerDown = (event: React.PointerEvent<HTMLElement>) => {
     const target = event.target;
-    if (
-      viewportHeight === 0 ||
-      !event.isPrimary ||
-      (target instanceof Element && target.closest(EDITABLE_SELECTOR))
-    ) {
+    if (viewportHeight === 0 || !event.isPrimary) {
+      return;
+    }
+    if (target instanceof Element && target.closest(EDITABLE_SELECTOR)) {
+      cancelScrollEndFrame();
+      dragRef.current = null;
       return;
     }
     cancelSettlingFrame();
@@ -404,6 +434,9 @@ export function BottomSheet({ children, detent, onDetentChange }: BottomSheetPro
     const startFraction = renderedFraction();
     const scrollers = scrollersFrom(target);
     const distanceToTop = scrollDistanceToTop(scrollers);
+    const scrollAnchors = new Map(
+      scrollers.map((scroller) => [scroller, Math.max(0, scroller.scrollTop)])
+    );
     dragRef.current = {
       gestureStartX: event.clientX,
       downwardStartY: event.clientY,
@@ -422,6 +455,8 @@ export function BottomSheet({ children, detent, onDetentChange }: BottomSheetPro
       pointerType: event.pointerType,
       pointerCancelled: false,
       pointerEnded: false,
+      scrollExpansion: startScrollExpansionGesture(),
+      scrollAnchors,
     };
   };
 
@@ -545,7 +580,7 @@ export function BottomSheet({ children, detent, onDetentChange }: BottomSheetPro
 
   const endDrag = (event: React.PointerEvent<HTMLElement>) => {
     const drag = dragRef.current;
-    if (!drag) return;
+    if (!drag || drag.pointerId !== event.pointerId) return;
 
     /* WebKit can commit the final scroll-to-zero after the last pointermove.
        Keep the gesture through the browser's final scroll events, then resolve
@@ -586,11 +621,23 @@ export function BottomSheet({ children, detent, onDetentChange }: BottomSheetPro
 
   const cancelDrag = (event: React.PointerEvent<HTMLElement>) => {
     const drag = dragRef.current;
+    if (drag && drag.pointerId !== event.pointerId) return;
     if (drag?.pointerType === "touch" && activeTouchCountRef.current > 1) {
       cancelScrollEndFrame();
       dragRef.current = null;
       if (drag.claim === "sheet") settle(drag.startDetent);
       return;
+    }
+
+    if (
+      drag?.pointerType === "touch" &&
+      drag.claim === null &&
+      drag.scrollers.length > 0
+    ) {
+      /* WebKit may award native pan-y before React receives a decisive
+         pointermove. The known scroll ancestors still make ownership
+         deterministic, so retain the same gesture session for scroll events. */
+      drag.claim = "scroll";
     }
 
     if (drag?.claim === "scroll") {
@@ -685,7 +732,6 @@ export function BottomSheet({ children, detent, onDetentChange }: BottomSheetPro
       const target = event.target;
       if (!(target instanceof HTMLElement)) return;
       const top = Math.max(0, target.scrollTop);
-      const anchor = scrollAnchor.current.get(target);
 
       const drag = dragRef.current;
       if (drag?.claim === "scroll") {
@@ -706,31 +752,19 @@ export function BottomSheet({ children, detent, onDetentChange }: BottomSheetPro
           );
           handoffToSheet(drag, drag.lastY, drag.lastTime, carriedTravelPx);
         }
-      }
 
-      if (anchor === undefined) {
-        scrollAnchor.current.set(target, top);
-        return;
-      }
+        if (drag.claim === "scroll") {
+          const anchor = drag.scrollAnchors.get(target);
+          drag.scrollAnchors.set(target, top);
+          if (anchor === undefined) return;
 
-      if (top < anchor) {
-        scrollAnchor.current.set(target, top);
-        if (top <= motion.sheet.armPx) scrollSpent.current.set(target, false);
-        return;
-      }
-
-      if (
-        scrollSpent.current.get(target) ||
-        dragRef.current?.claim === "sheet" ||
-        detent === "large"
-      ) {
-        return;
-      }
-
-      if (top - anchor >= motion.sheet.stepPx) {
-        scrollAnchor.current.set(target, top);
-        scrollSpent.current.set(target, true);
-        stepDetent(1);
+          const scrollDelta = top - anchor;
+          const expansionDelta =
+            drag.lastScrollDirection === -1 ? -Math.abs(scrollDelta) : scrollDelta;
+          const advanced = advanceScrollExpansionGesture(drag.scrollExpansion, expansionDelta);
+          drag.scrollExpansion = advanced.gesture;
+          if (advanced.shouldStep && detentRef.current !== "large") stepDetent(1);
+        }
       }
     };
 
@@ -749,7 +783,6 @@ export function BottomSheet({ children, detent, onDetentChange }: BottomSheetPro
       sheet.removeEventListener("scrollend", onScrollEnd, { capture: true });
     };
   }, [
-    detent,
     finishScrolledDrag,
     handoffToSheet,
     scheduleScrolledDragEnd,
@@ -761,14 +794,21 @@ export function BottomSheet({ children, detent, onDetentChange }: BottomSheetPro
     if (!sheet) return;
 
     const onWheel = (event: WheelEvent) => {
-      if (event.ctrlKey || dragRef.current?.claim === "sheet") {
-        return;
+      const pointerGesture = dragRef.current;
+      if (event.ctrlKey || (pointerGesture && !pointerGesture.pointerEnded)) return;
+      if (pointerGesture?.pointerEnded) {
+        /* A new wheel gesture supersedes a retained touch-scroll tail. Without
+           this boundary, its resulting scroll event could spend both the old
+           touch session and the new wheel session. */
+        cancelScrollEndFrame();
+        dragRef.current = null;
       }
 
       if (Math.abs(event.deltaY) <= Math.abs(event.deltaX)) {
-        wheelCollapseGesture.current = advanceWheelCollapseGesture(
-          wheelCollapseGesture.current,
+        wheelDetentGesture.current = advanceWheelDetentGesture(
+          wheelDetentGesture.current,
           event.timeStamp,
+          null,
           0
         ).gesture;
         return;
@@ -781,30 +821,35 @@ export function BottomSheet({ children, detent, onDetentChange }: BottomSheetPro
       const atSharedTop = scrollerForDirection(scrollers, -1) === null;
       const canCollapse =
         !editable && scroller !== null && event.deltaY < 0 && atSharedTop && detent !== "peek";
+      const canExpand =
+        !editable &&
+        scroller !== null &&
+        event.deltaY > 0 &&
+        scrollerForDirection(scrollers, 1) !== null &&
+        detent !== "large";
       const wheelTravelPx = scroller === null ? 0 : Math.abs(wheelDeltaYInPixels(event, scroller));
-      const travelPx = canCollapse ? wheelTravelPx : event.deltaY > 0 ? -wheelTravelPx : 0;
-      const advanced = advanceWheelCollapseGesture(
-        wheelCollapseGesture.current,
+      const inputDirection: ScrollDirection | null =
+        event.deltaY < 0 ? -1 : event.deltaY > 0 ? 1 : null;
+      const canStep = canCollapse || canExpand;
+      const advanced = advanceWheelDetentGesture(
+        wheelDetentGesture.current,
         event.timeStamp,
-        travelPx
+        inputDirection,
+        canStep ? wheelTravelPx : 0
       );
-      wheelCollapseGesture.current = advanced.gesture;
+      wheelDetentGesture.current = advanced.gesture;
 
-      if (!canCollapse || travelPx <= 0) {
-        return;
-      }
+      if (canCollapse && wheelTravelPx > 0) event.preventDefault();
 
-      /* Once content is already at its top edge, an upward wheel/trackpad
-         gesture carries into one lower detent. This mirrors the existing
-         scroll-to-expand step without collapsing while someone merely reads
-         back to the first row. */
-      event.preventDefault();
-      if (advanced.shouldStep) stepDetent(-1);
+      /* Wheel expansion and top-edge collapse share one gesture spend. A
+         reversal can change intent before the threshold, but can never buy a
+         second detent from the same physical gesture. */
+      if (advanced.step !== null) stepDetent(advanced.step);
     };
 
     sheet.addEventListener("wheel", onWheel, { capture: true, passive: false });
     return () => sheet.removeEventListener("wheel", onWheel, true);
-  }, [detent, scrollersFrom, stepDetent]);
+  }, [cancelScrollEndFrame, detent, scrollersFrom, stepDetent]);
 
   return (
     <>
