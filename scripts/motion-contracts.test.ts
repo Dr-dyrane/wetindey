@@ -12,6 +12,15 @@ import {
   resolveSheetRelease,
   transition,
 } from "../src/design-system/motion";
+import {
+  WHEEL_GESTURE_GAP_MS,
+  advanceWheelCollapseGesture,
+  continuesWheelGesture,
+  permitsScrollChaining,
+  remainingDownwardTravel,
+  scrollerForDirection,
+  type WheelCollapseGesture,
+} from "../src/design-system/components/BottomSheet";
 
 function test(name: string, run: () => void) {
   try {
@@ -148,7 +157,7 @@ test("the drag path schedules DOM work instead of setting per-frame React state"
   assert.doesNotMatch(bottomSheetSource, /setDragFraction/);
   assert.match(bottomSheetSource, /settleFrameRef/);
   assert.match(bottomSheetSource, /style\.transition = "none"/);
-  assert.match(bottomSheetSource, /applyFraction\(frozenFraction\)/);
+  assert.match(bottomSheetSource, /applyFraction\(drag\.currentFraction\)/);
   assert.match(bottomSheetSource, /releaseSheetVelocity\(\{/);
 });
 
@@ -158,9 +167,9 @@ test("scroll handoff and keyboard viewport handling remain in the sheet contract
 });
 
 test("top-edge wheel handoff can collapse one detent without stealing editable controls", () => {
-  assert.match(bottomSheetSource, /WHEEL_EDITABLE_SELECTOR/);
-  assert.match(bottomSheetSource, /scroller\.scrollTop >= 1/);
-  assert.match(bottomSheetSource, /scrollCollapseSpent\.current\.add\(scroller\)/);
+  assert.match(bottomSheetSource, /\[contenteditable\]:not\(\[contenteditable='false'\]\)/);
+  assert.match(bottomSheetSource, /gesture\.spent/);
+  assert.match(bottomSheetSource, /continuesWheelGesture\(previous\.lastTime, eventTime\)/);
   assert.match(bottomSheetSource, /stepDetent\(-1\)/);
   assert.match(
     bottomSheetSource,
@@ -168,11 +177,105 @@ test("top-edge wheel handoff can collapse one detent without stealing editable c
   );
 });
 
+test("wheel momentum spends one detent but a later gesture starts cleanly", () => {
+  assert.equal(continuesWheelGesture(1000, 1000 + WHEEL_GESTURE_GAP_MS), true);
+  assert.equal(continuesWheelGesture(1000, 1001 + WHEEL_GESTURE_GAP_MS), false);
+  assert.equal(continuesWheelGesture(1000, 999), false);
+
+  let gesture: WheelCollapseGesture | null = null;
+  let advanced = advanceWheelCollapseGesture(gesture, 1000, motion.sheet.stepPx / 2);
+  gesture = advanced.gesture;
+  assert.equal(advanced.shouldStep, false);
+
+  advanced = advanceWheelCollapseGesture(gesture, 1010, motion.sheet.stepPx / 2);
+  gesture = advanced.gesture;
+  assert.equal(advanced.shouldStep, true);
+
+  advanced = advanceWheelCollapseGesture(gesture, 1020, 0);
+  gesture = advanced.gesture;
+  assert.equal(advanced.shouldStep, false);
+  advanced = advanceWheelCollapseGesture(gesture, 1030, motion.sheet.stepPx);
+  gesture = advanced.gesture;
+  assert.equal(advanced.shouldStep, false);
+
+  advanced = advanceWheelCollapseGesture(
+    gesture,
+    1031 + WHEEL_GESTURE_GAP_MS,
+    motion.sheet.stepPx
+  );
+  assert.equal(advanced.shouldStep, true);
+});
+
+test("a wheel reversal cancels only unspent collapse travel", () => {
+  let gesture: WheelCollapseGesture | null = null;
+  let advanced = advanceWheelCollapseGesture(gesture, 1000, motion.sheet.stepPx / 2);
+  gesture = advanced.gesture;
+  assert.equal(gesture.distance, motion.sheet.stepPx / 2);
+
+  advanced = advanceWheelCollapseGesture(gesture, 1010, -8);
+  gesture = advanced.gesture;
+  assert.equal(gesture.distance, 0);
+
+  advanced = advanceWheelCollapseGesture(gesture, 1020, motion.sheet.stepPx / 2);
+  assert.equal(advanced.shouldStep, false);
+});
+
+test("nested scroll ownership searches every eligible ancestor in the gesture direction", () => {
+  const innerAtTop = { scrollTop: 0, scrollHeight: 600, clientHeight: 200 };
+  const outerCanScrollUp = { scrollTop: 80, scrollHeight: 900, clientHeight: 400 };
+  const outerAtTop = { ...outerCanScrollUp, scrollTop: 0 };
+  const innerCanScrollDown = { ...innerAtTop, scrollTop: 200 };
+
+  assert.equal(scrollerForDirection([innerAtTop, outerCanScrollUp], -1), outerCanScrollUp);
+  assert.equal(scrollerForDirection([innerAtTop, outerAtTop], -1), null);
+  assert.equal(
+    scrollerForDirection([{ ...innerAtTop, scrollTop: 0.25 }, outerAtTop], -1)?.scrollTop,
+    0.25
+  );
+  assert.equal(scrollerForDirection([innerCanScrollDown, outerAtTop], 1), innerCanScrollDown);
+  assert.equal(permitsScrollChaining("auto"), true);
+  assert.equal(permitsScrollChaining("contain"), false);
+  assert.equal(permitsScrollChaining("none"), false);
+});
+
 test("a downward touch drag takes the sheet as soon as an owned list reaches its top", () => {
   assert.match(bottomSheetSource, /drag\.claim === "scroll"[\s\S]*travelPx < 0/);
-  assert.match(bottomSheetSource, /drag\.scroller !== null/);
-  assert.match(bottomSheetSource, /drag\.scroller\.scrollTop < 1/);
-  assert.match(bottomSheetSource, /handoffToSheet\(\)/);
+  assert.match(bottomSheetSource, /scrollerForDirection\(drag\.scrollers, -1\) === null/);
+  assert.match(bottomSheetSource, /scheduleScrolledDragEnd\(drag\)/);
+  assert.match(bottomSheetSource, /drag\.pointerEnded[\s\S]*finishScrolledDrag\(drag\)/);
+  assert.match(bottomSheetSource, /cancelDrag = \(event: React\.PointerEvent/);
+  assert.match(bottomSheetSource, /addEventListener\("scrollend", onScrollEnd/);
+  assert.match(bottomSheetSource, /updateScrollDirection\(drag, event\.clientY\)/);
+  assert.match(bottomSheetSource, /drag\.pointerCancelled[\s\S]*onTouchMove/);
+  assert.match(bottomSheetSource, /onTouchEnd=\{endCancelledTouch\}/);
+  assert.match(bottomSheetSource, /onTouchCancel=\{cancelCancelledTouch\}/);
+  assert.match(bottomSheetSource, /event\.touches\.length !== 0/);
+  assert.match(
+    bottomSheetSource,
+    /cancelCancelledTouch[\s\S]*drag\.pointerType !== "touch"[\s\S]*dragRef\.current = null/
+  );
+  assert.match(bottomSheetSource, /activeTouchCountRef\.current > 1/);
+  assert.match(
+    bottomSheetSource,
+    /const owner = scrollerForDirection\(drag\.scrollers, -1\)[\s\S]*event\.target === owner/
+  );
+  assert.equal(
+    (bottomSheetSource.match(/addEventListener\("scrollend", onScrollEnd/g) ?? []).length,
+    1
+  );
+  assert.match(
+    bottomSheetSource,
+    /drag\.pointerType !== "touch"[\s\S]*dragRef\.current = null/
+  );
+  assert.doesNotMatch(bottomSheetSource, /scrollEndTimerRef|setTimeout\(/);
+  assert.match(
+    bottomSheetSource,
+    /handoffToSheet\(drag, drag\.lastY, drag\.lastTime, carriedTravelPx\)/
+  );
+  assert.equal(remainingDownwardTravel(100, 180, 50), -30);
+  assert.equal(remainingDownwardTravel(100, 140, 50), 0);
+  assert.equal(remainingDownwardTravel(100, 220, 50), -70);
+  assert.equal(remainingDownwardTravel(150, 230, 100), 0);
 });
 
 test("detent settlement keeps sheet layout geometry stable", () => {

@@ -32,9 +32,79 @@ export const SHEET_RADIUS = motion.radius.sheet;
 
 const ISLAND_INSET = 10;
 
-type DragClaim = "sheet" | "scroll" | null;
+type DragClaim = "horizontal" | "sheet" | "scroll" | null;
+type ScrollDirection = -1 | 1;
 
-const WHEEL_EDITABLE_SELECTOR = "input, textarea, select, [contenteditable='true']";
+const EDITABLE_SELECTOR =
+  "input, textarea, select, [contenteditable]:not([contenteditable='false'])";
+export const WHEEL_GESTURE_GAP_MS = motion.sheet.velocityMemoryMs * 2;
+
+interface ScrollMetrics {
+  scrollTop: number;
+  scrollHeight: number;
+  clientHeight: number;
+}
+
+export function scrollerForDirection<T extends ScrollMetrics>(
+  scrollers: readonly T[],
+  direction: ScrollDirection
+): T | null {
+  return (
+    scrollers.find((scroller) => {
+      const top = Math.max(0, scroller.scrollTop);
+      const maximum = Math.max(0, scroller.scrollHeight - scroller.clientHeight);
+      return direction < 0 ? top > 0 : top < maximum;
+    }) ?? null
+  );
+}
+
+export function continuesWheelGesture(previousTime: number, currentTime: number): boolean {
+  const elapsed = currentTime - previousTime;
+  return elapsed >= 0 && elapsed <= WHEEL_GESTURE_GAP_MS;
+}
+
+export interface WheelCollapseGesture {
+  lastTime: number;
+  distance: number;
+  spent: boolean;
+}
+
+export function advanceWheelCollapseGesture(
+  previous: WheelCollapseGesture | null,
+  eventTime: number,
+  edgeTravelPx: number
+): { gesture: WheelCollapseGesture; shouldStep: boolean } {
+  const gesture =
+    previous && continuesWheelGesture(previous.lastTime, eventTime)
+      ? previous
+      : { lastTime: eventTime, distance: 0, spent: false };
+
+  gesture.lastTime = eventTime;
+  if (gesture.spent) return { gesture, shouldStep: false };
+  if (edgeTravelPx < 0) {
+    gesture.distance = 0;
+    return { gesture, shouldStep: false };
+  }
+  if (edgeTravelPx === 0) return { gesture, shouldStep: false };
+
+  gesture.distance += edgeTravelPx;
+  if (gesture.distance < motion.sheet.stepPx) return { gesture, shouldStep: false };
+
+  gesture.spent = true;
+  return { gesture, shouldStep: true };
+}
+
+export function permitsScrollChaining(overscrollBehaviorY: string): boolean {
+  return overscrollBehaviorY !== "contain" && overscrollBehaviorY !== "none";
+}
+
+export function remainingDownwardTravel(
+  startY: number,
+  currentY: number,
+  scrollDistanceToTop: number
+): number {
+  return Math.min(0, startY - currentY + Math.max(0, scrollDistanceToTop));
+}
 
 /**
  * Wheel deltas are usually pixels, but classic mice may report lines or pages.
@@ -56,6 +126,10 @@ function wheelDeltaYInPixels(event: WheelEvent, scroller: HTMLElement): number {
 }
 
 interface DragState {
+  gestureStartX: number;
+  downwardStartY: number;
+  downwardScrollDistanceToTop: number;
+  lastScrollDirection: ScrollDirection | null;
   startY: number;
   startDetent: Detent;
   startFraction: number;
@@ -64,8 +138,11 @@ interface DragState {
   lastTime: number;
   velocityFractionPerMs: number;
   claim: DragClaim;
-  scroller: HTMLElement | null;
+  scrollers: HTMLElement[];
   pointerId: number;
+  pointerType: string;
+  pointerCancelled: boolean;
+  pointerEnded: boolean;
 }
 
 /**
@@ -80,14 +157,17 @@ interface DragState {
 export function BottomSheet({ children, detent, onDetentChange }: BottomSheetProps) {
   const sheetRef = useRef<HTMLElement>(null);
   const backdropRef = useRef<HTMLDivElement>(null);
+  const detentRef = useRef(detent);
+  detentRef.current = detent;
+  const activeTouchCountRef = useRef(0);
   const dragRef = useRef<DragState | null>(null);
   const liveFrameRef = useRef<number | null>(null);
   const settleFrameRef = useRef<number | null>(null);
+  const scrollEndFrameRef = useRef<number | null>(null);
   const liveFractionRef = useRef<number | null>(null);
   const scrollAnchor = useRef(new WeakMap<HTMLElement, number>());
   const scrollSpent = useRef(new WeakMap<HTMLElement, boolean>());
-  const scrollCollapseDistance = useRef(new WeakMap<HTMLElement, number>());
-  const scrollCollapseSpent = useRef(new WeakSet<HTMLElement>());
+  const wheelCollapseGesture = useRef<WheelCollapseGesture | null>(null);
 
   const [viewportHeight, setViewportHeight] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
@@ -125,6 +205,11 @@ export function BottomSheet({ children, detent, onDetentChange }: BottomSheetPro
   const cancelSettlingFrame = useCallback(() => {
     if (settleFrameRef.current !== null) cancelAnimationFrame(settleFrameRef.current);
     settleFrameRef.current = null;
+  }, []);
+
+  const cancelScrollEndFrame = useCallback(() => {
+    if (scrollEndFrameRef.current !== null) cancelAnimationFrame(scrollEndFrameRef.current);
+    scrollEndFrameRef.current = null;
   }, []);
 
   const applyFraction = useCallback(
@@ -174,8 +259,9 @@ export function BottomSheet({ children, detent, onDetentChange }: BottomSheetPro
     () => () => {
       cancelLiveFrame();
       cancelSettlingFrame();
+      cancelScrollEndFrame();
     },
-    [cancelLiveFrame, cancelSettlingFrame]
+    [cancelLiveFrame, cancelScrollEndFrame, cancelSettlingFrame]
   );
 
   const initialDetent = useRef(true);
@@ -221,13 +307,14 @@ export function BottomSheet({ children, detent, onDetentChange }: BottomSheetPro
         backdrop.style.transition = "";
         applyFraction(DETENT_FRACTION[next]);
         setSettlingFraction(DETENT_FRACTION[next]);
-        if (next !== detent) onDetentChange(next);
+        if (next !== detentRef.current) onDetentChange(next);
       });
     },
-    [applyFraction, cancelLiveFrame, cancelSettlingFrame, detent, onDetentChange]
+    [applyFraction, cancelLiveFrame, cancelSettlingFrame, onDetentChange]
   );
 
-  const scrollerFrom = useCallback((target: EventTarget | null): HTMLElement | null => {
+  const scrollersFrom = useCallback((target: EventTarget | null): HTMLElement[] => {
+    const scrollers: HTMLElement[] = [];
     let element =
       target instanceof HTMLElement
         ? target
@@ -235,12 +322,37 @@ export function BottomSheet({ children, detent, onDetentChange }: BottomSheetPro
           ? target.parentElement
           : null;
     for (; element && element !== sheetRef.current; element = element.parentElement) {
-      if (element.scrollHeight <= element.clientHeight) continue;
-      const overflowY = getComputedStyle(element).overflowY;
-      if (overflowY === "auto" || overflowY === "scroll") return element;
+      const style = getComputedStyle(element);
+      const overflowY = style.overflowY;
+      const isScrollContainer = overflowY === "auto" || overflowY === "scroll";
+      if (isScrollContainer && element.scrollHeight > element.clientHeight) {
+        scrollers.push(element);
+      }
+      if (isScrollContainer && !permitsScrollChaining(style.overscrollBehaviorY)) break;
     }
-    return null;
+    return scrollers;
   }, []);
+
+  const scrollDistanceToTop = useCallback(
+    (scrollers: readonly HTMLElement[]) =>
+      scrollers.reduce((distance, scroller) => distance + Math.max(0, scroller.scrollTop), 0),
+    []
+  );
+
+  const updateScrollDirection = useCallback(
+    (drag: DragState, clientY: number) => {
+      const movement = clientY - drag.lastY;
+      if (movement === 0) return;
+
+      const direction: ScrollDirection = movement > 0 ? -1 : 1;
+      if (direction < 0 && drag.lastScrollDirection !== direction) {
+        drag.downwardStartY = drag.lastY;
+        drag.downwardScrollDistanceToTop = scrollDistanceToTop(drag.scrollers);
+      }
+      drag.lastScrollDirection = direction;
+    },
+    [scrollDistanceToTop]
+  );
 
   /** Reads the composited transform so a new drag can interrupt a settling sheet
       from the pixel the person actually sees, not from the prior prop value. */
@@ -254,11 +366,49 @@ export function BottomSheet({ children, detent, onDetentChange }: BottomSheetPro
     return DETENT_FRACTION.large - translateY / viewportHeight;
   }, [restingFraction, viewportHeight]);
 
+  const handoffToSheet = useCallback(
+    (drag: DragState, clientY: number, timeStamp: number, carriedTravelPx = 0) => {
+      /* Interrupt a CSS settle from its composited position. Leaving the
+         target transform in place while removing its transition would make
+         the sheet jump to its endpoint before the next drag frame. */
+      const frozenFraction = renderedFraction();
+      drag.claim = "sheet";
+      drag.startDetent = nearestDetent(frozenFraction);
+      drag.startFraction = frozenFraction;
+      drag.currentFraction = resistedSheetFraction(
+        frozenFraction + carriedTravelPx / viewportHeight
+      );
+      drag.startY = clientY + carriedTravelPx;
+      drag.lastY = clientY;
+      drag.lastTime = timeStamp;
+      sheetRef.current!.style.transition = "none";
+      backdropRef.current!.style.transition = "none";
+      applyFraction(drag.currentFraction);
+      setIsDragging(true);
+      sheetRef.current?.setPointerCapture(drag.pointerId);
+    },
+    [applyFraction, renderedFraction, viewportHeight]
+  );
+
   const onPointerDown = (event: React.PointerEvent<HTMLElement>) => {
-    if (viewportHeight === 0) return;
+    const target = event.target;
+    if (
+      viewportHeight === 0 ||
+      !event.isPrimary ||
+      (target instanceof Element && target.closest(EDITABLE_SELECTOR))
+    ) {
+      return;
+    }
     cancelSettlingFrame();
+    cancelScrollEndFrame();
     const startFraction = renderedFraction();
+    const scrollers = scrollersFrom(target);
+    const distanceToTop = scrollDistanceToTop(scrollers);
     dragRef.current = {
+      gestureStartX: event.clientX,
+      downwardStartY: event.clientY,
+      downwardScrollDistanceToTop: distanceToTop,
+      lastScrollDirection: null,
       startY: event.clientY,
       startDetent: nearestDetent(startFraction),
       startFraction,
@@ -267,43 +417,47 @@ export function BottomSheet({ children, detent, onDetentChange }: BottomSheetPro
       lastTime: event.timeStamp,
       velocityFractionPerMs: 0,
       claim: null,
-      scroller: scrollerFrom(event.target),
+      scrollers,
       pointerId: event.pointerId,
+      pointerType: event.pointerType,
+      pointerCancelled: false,
+      pointerEnded: false,
     };
   };
 
   const onPointerMove = (event: React.PointerEvent<HTMLElement>) => {
     const drag = dragRef.current;
-    if (!drag || drag.pointerId !== event.pointerId || viewportHeight === 0) return;
+    if (
+      !drag ||
+      drag.pointerEnded ||
+      drag.pointerId !== event.pointerId ||
+      viewportHeight === 0
+    ) {
+      return;
+    }
 
+    if (drag.claim !== "sheet") updateScrollDirection(drag, event.clientY);
     let travelPx = drag.startY - event.clientY;
-    const handoffToSheet = () => {
-      /* Interrupt a CSS settle from its composited position. Leaving the
-         target transform in place while removing its transition would make
-         the sheet jump to its endpoint before the next drag frame. */
-      const frozenFraction = renderedFraction();
-      drag.claim = "sheet";
-      drag.startDetent = nearestDetent(frozenFraction);
-      drag.startFraction = frozenFraction;
-      drag.currentFraction = frozenFraction;
-      drag.startY = event.clientY;
-      drag.lastY = event.clientY;
-      drag.lastTime = event.timeStamp;
-      travelPx = 0;
-      sheetRef.current!.style.transition = "none";
-      backdropRef.current!.style.transition = "none";
-      applyFraction(frozenFraction);
-      setIsDragging(true);
-      sheetRef.current?.setPointerCapture(event.pointerId);
-    };
 
     if (drag.claim === null) {
-      if (Math.abs(travelPx) < 4) return;
-      const atTop = !drag.scroller || drag.scroller.scrollTop < 1;
+      const horizontalTravel = Math.abs(event.clientX - drag.gestureStartX);
+      if (Math.max(Math.abs(travelPx), horizontalTravel) < 4) return;
+      if (horizontalTravel > Math.abs(travelPx)) {
+        drag.claim = "horizontal";
+        drag.lastY = event.clientY;
+        drag.lastTime = event.timeStamp;
+        return;
+      }
+      const direction: ScrollDirection = travelPx > 0 ? 1 : -1;
+      const scrollOwner = scrollerForDirection(drag.scrollers, direction);
       const listCanConsume =
-        Boolean(drag.scroller) && (!atTop || (travelPx > 0 && drag.startDetent === "large"));
+        scrollOwner !== null ||
+        (direction > 0 && drag.startDetent === "large" && drag.scrollers.length > 0);
       drag.claim = listCanConsume ? "scroll" : "sheet";
-      if (drag.claim === "sheet") handoffToSheet();
+      if (drag.claim === "sheet") {
+        handoffToSheet(drag, event.clientY, event.timeStamp);
+        travelPx = 0;
+      }
     }
 
     /* A list owns the drag while it has content above it. Once that content
@@ -311,14 +465,24 @@ export function BottomSheet({ children, detent, onDetentChange }: BottomSheetPro
        without requiring a lift and second drag. */
     if (
       drag.claim === "scroll" &&
+      drag.lastScrollDirection === -1 &&
       travelPx < 0 &&
-      drag.scroller !== null &&
-      drag.scroller.scrollTop < 1
+      scrollerForDirection(drag.scrollers, -1) === null
     ) {
-      handoffToSheet();
+      const carriedTravelPx = remainingDownwardTravel(
+        drag.downwardStartY,
+        event.clientY,
+        drag.downwardScrollDistanceToTop
+      );
+      handoffToSheet(drag, event.clientY, event.timeStamp, carriedTravelPx);
+      travelPx = carriedTravelPx;
     }
 
-    if (drag.claim !== "sheet") return;
+    if (drag.claim !== "sheet") {
+      drag.lastY = event.clientY;
+      drag.lastTime = event.timeStamp;
+      return;
+    }
 
     const elapsedMs = Math.max(1, event.timeStamp - drag.lastTime);
     const rawVelocity = (drag.lastY - event.clientY) / elapsedMs / viewportHeight;
@@ -331,10 +495,77 @@ export function BottomSheet({ children, detent, onDetentChange }: BottomSheetPro
     event.preventDefault();
   };
 
+  const finishScrolledDrag = useCallback(
+    (drag: DragState) => {
+      cancelScrollEndFrame();
+      if (dragRef.current !== drag) return;
+      dragRef.current = null;
+
+      const travelPx = remainingDownwardTravel(
+        drag.downwardStartY,
+        drag.lastY,
+        drag.downwardScrollDistanceToTop
+      );
+      if (
+        drag.lastScrollDirection !== -1 ||
+        travelPx >= 0 ||
+        scrollerForDirection(drag.scrollers, -1) !== null
+      ) {
+        return;
+      }
+
+      const currentFraction = renderedFraction();
+      settle(
+        resolveSheetRelease({
+          startDetent: nearestDetent(currentFraction),
+          currentFraction,
+          velocityFractionPerMs: 0,
+          travelPx,
+        })
+      );
+    },
+    [cancelScrollEndFrame, renderedFraction, settle]
+  );
+
+  const scheduleScrolledDragEnd = useCallback(
+    (drag: DragState) => {
+      cancelScrollEndFrame();
+      scrollEndFrameRef.current = requestAnimationFrame(() => {
+        scrollEndFrameRef.current = null;
+        if (
+          dragRef.current === drag &&
+          scrollerForDirection(drag.scrollers, -1) === null
+        ) {
+          finishScrolledDrag(drag);
+        }
+      });
+    },
+    [cancelScrollEndFrame, finishScrolledDrag]
+  );
+
   const endDrag = (event: React.PointerEvent<HTMLElement>) => {
     const drag = dragRef.current;
+    if (!drag) return;
+
+    /* WebKit can commit the final scroll-to-zero after the last pointermove.
+       Keep the gesture through the browser's final scroll events, then resolve
+       from the actual top edge instead of forcing a second gesture. */
+    if (drag.claim === "scroll") {
+      updateScrollDirection(drag, event.clientY);
+      drag.pointerEnded = true;
+      drag.lastY = event.clientY;
+      drag.lastTime = event.timeStamp;
+      if (drag.pointerType !== "touch") {
+        if (scrollerForDirection(drag.scrollers, -1) === null) finishScrolledDrag(drag);
+        else dragRef.current = null;
+        return;
+      }
+      scheduleScrolledDragEnd(drag);
+      return;
+    }
+
     dragRef.current = null;
-    if (!drag || drag.claim !== "sheet") return;
+    if (drag.claim !== "sheet") return;
     sheetRef.current?.releasePointerCapture?.(event.pointerId);
     const travelPx = drag.startY - drag.lastY;
     const velocityAge = Math.max(0, event.timeStamp - drag.lastTime);
@@ -353,13 +584,92 @@ export function BottomSheet({ children, detent, onDetentChange }: BottomSheetPro
     settle(next);
   };
 
-  const cancelDrag = () => {
+  const cancelDrag = (event: React.PointerEvent<HTMLElement>) => {
     const drag = dragRef.current;
+    if (drag?.pointerType === "touch" && activeTouchCountRef.current > 1) {
+      cancelScrollEndFrame();
+      dragRef.current = null;
+      if (drag.claim === "sheet") settle(drag.startDetent);
+      return;
+    }
+
+    if (drag?.claim === "scroll") {
+      const clientY = Number.isFinite(event.clientY) ? event.clientY : drag.lastY;
+      updateScrollDirection(drag, clientY);
+      drag.lastY = clientY;
+      drag.lastTime = event.timeStamp;
+      if (drag.pointerType === "touch") {
+        /* Native pan-y cancels the pointer stream but touch coordinates keep
+           arriving. Retain the gesture until touchend so travel beyond the
+           list's top is not lost. */
+        drag.pointerCancelled = true;
+        return;
+      }
+
+      cancelScrollEndFrame();
+      dragRef.current = null;
+      return;
+    }
+
+    cancelScrollEndFrame();
     dragRef.current = null;
     if (!drag || drag.claim !== "sheet") return;
     const travelPx = drag.startY - drag.lastY;
     const next = resolveSheetCancellation({ startDetent: drag.startDetent, travelPx });
     settle(next);
+  };
+
+  const onTouchStart = (event: React.TouchEvent<HTMLElement>) => {
+    activeTouchCountRef.current = event.touches.length;
+  };
+
+  const onTouchMove = (event: React.TouchEvent<HTMLElement>) => {
+    activeTouchCountRef.current = event.touches.length;
+    const drag = dragRef.current;
+    if (
+      !drag ||
+      drag.claim !== "scroll" ||
+      !drag.pointerCancelled ||
+      event.touches.length !== 1
+    ) {
+      return;
+    }
+
+    const clientY = event.touches[0]!.clientY;
+    updateScrollDirection(drag, clientY);
+    drag.lastY = clientY;
+    drag.lastTime = event.timeStamp;
+  };
+
+  const endCancelledTouch = (event: React.TouchEvent<HTMLElement>) => {
+    activeTouchCountRef.current = event.touches.length;
+    const drag = dragRef.current;
+    if (
+      event.touches.length !== 0 ||
+      !drag ||
+      drag.claim !== "scroll" ||
+      !drag.pointerCancelled
+    ) {
+      return;
+    }
+
+    const finalTouch = event.changedTouches[0];
+    if (finalTouch) {
+      updateScrollDirection(drag, finalTouch.clientY);
+      drag.lastY = finalTouch.clientY;
+    }
+    drag.lastTime = event.timeStamp;
+    drag.pointerEnded = true;
+    scheduleScrolledDragEnd(drag);
+  };
+
+  const cancelCancelledTouch = (event: React.TouchEvent<HTMLElement>) => {
+    activeTouchCountRef.current = event.touches.length;
+    const drag = dragRef.current;
+    if (!drag || drag.pointerType !== "touch") return;
+    cancelScrollEndFrame();
+    dragRef.current = null;
+    if (drag.claim === "sheet") settle(drag.startDetent);
   };
 
   const cycleDetent = () => {
@@ -376,10 +686,28 @@ export function BottomSheet({ children, detent, onDetentChange }: BottomSheetPro
       if (!(target instanceof HTMLElement)) return;
       const top = Math.max(0, target.scrollTop);
       const anchor = scrollAnchor.current.get(target);
-      if (top > motion.sheet.armPx) {
-        scrollCollapseDistance.current.delete(target);
-        scrollCollapseSpent.current.delete(target);
+
+      const drag = dragRef.current;
+      if (drag?.claim === "scroll") {
+        const reachedSharedTop = scrollerForDirection(drag.scrollers, -1) === null;
+        if (drag.pointerEnded) {
+          if (reachedSharedTop) finishScrolledDrag(drag);
+          else scheduleScrolledDragEnd(drag);
+        } else if (
+          !drag.pointerCancelled &&
+          drag.lastScrollDirection === -1 &&
+          drag.lastY > drag.downwardStartY &&
+          reachedSharedTop
+        ) {
+          const carriedTravelPx = remainingDownwardTravel(
+            drag.downwardStartY,
+            drag.lastY,
+            drag.downwardScrollDistanceToTop
+          );
+          handoffToSheet(drag, drag.lastY, drag.lastTime, carriedTravelPx);
+        }
       }
+
       if (anchor === undefined) {
         scrollAnchor.current.set(target, top);
         return;
@@ -406,65 +734,77 @@ export function BottomSheet({ children, detent, onDetentChange }: BottomSheetPro
       }
     };
 
+    const onScrollEnd = (event: Event) => {
+      const drag = dragRef.current;
+      if (drag?.claim !== "scroll" || !drag.pointerEnded) return;
+
+      const owner = scrollerForDirection(drag.scrollers, -1);
+      if (owner === null || event.target === owner) finishScrolledDrag(drag);
+    };
+
     sheet.addEventListener("scroll", onScroll, { capture: true, passive: true });
-    return () => sheet.removeEventListener("scroll", onScroll, { capture: true });
-  }, [detent, stepDetent]);
+    sheet.addEventListener("scrollend", onScrollEnd, { capture: true, passive: true });
+    return () => {
+      sheet.removeEventListener("scroll", onScroll, { capture: true });
+      sheet.removeEventListener("scrollend", onScrollEnd, { capture: true });
+    };
+  }, [
+    detent,
+    finishScrolledDrag,
+    handoffToSheet,
+    scheduleScrolledDragEnd,
+    stepDetent,
+  ]);
 
   useEffect(() => {
     const sheet = sheetRef.current;
     if (!sheet) return;
 
-    const resetCollapseIntent = (scroller: HTMLElement) => {
-      scrollCollapseDistance.current.delete(scroller);
-      scrollCollapseSpent.current.delete(scroller);
-    };
-
     const onWheel = (event: WheelEvent) => {
-      if (
-        event.ctrlKey ||
-        Math.abs(event.deltaY) <= Math.abs(event.deltaX) ||
-        dragRef.current?.claim === "sheet"
-      ) {
+      if (event.ctrlKey || dragRef.current?.claim === "sheet") {
+        return;
+      }
+
+      if (Math.abs(event.deltaY) <= Math.abs(event.deltaX)) {
+        wheelCollapseGesture.current = advanceWheelCollapseGesture(
+          wheelCollapseGesture.current,
+          event.timeStamp,
+          0
+        ).gesture;
         return;
       }
 
       const target = event.target;
-      if (target instanceof Element && target.closest(WHEEL_EDITABLE_SELECTOR)) {
+      const editable = target instanceof Element && target.closest(EDITABLE_SELECTOR);
+      const scrollers = scrollersFrom(target);
+      const scroller = scrollers[0] ?? null;
+      const atSharedTop = scrollerForDirection(scrollers, -1) === null;
+      const canCollapse =
+        !editable && scroller !== null && event.deltaY < 0 && atSharedTop && detent !== "peek";
+      const wheelTravelPx = scroller === null ? 0 : Math.abs(wheelDeltaYInPixels(event, scroller));
+      const travelPx = canCollapse ? wheelTravelPx : event.deltaY > 0 ? -wheelTravelPx : 0;
+      const advanced = advanceWheelCollapseGesture(
+        wheelCollapseGesture.current,
+        event.timeStamp,
+        travelPx
+      );
+      wheelCollapseGesture.current = advanced.gesture;
+
+      if (!canCollapse || travelPx <= 0) {
         return;
       }
-
-      const scroller = scrollerFrom(target);
-      if (!scroller) return;
-
-      if (event.deltaY >= 0 || scroller.scrollTop >= 1) {
-        resetCollapseIntent(scroller);
-        return;
-      }
-
-      if (detent === "peek" || scrollCollapseSpent.current.has(scroller)) return;
-
-      const travelPx = Math.abs(wheelDeltaYInPixels(event, scroller));
-      if (travelPx === 0) return;
 
       /* Once content is already at its top edge, an upward wheel/trackpad
          gesture carries into one lower detent. This mirrors the existing
          scroll-to-expand step without collapsing while someone merely reads
          back to the first row. */
       event.preventDefault();
-      const accumulated = (scrollCollapseDistance.current.get(scroller) ?? 0) + travelPx;
-      if (accumulated < motion.sheet.stepPx) {
-        scrollCollapseDistance.current.set(scroller, accumulated);
-        return;
-      }
-
-      scrollCollapseDistance.current.delete(scroller);
-      scrollCollapseSpent.current.add(scroller);
-      stepDetent(-1);
+      if (advanced.shouldStep) stepDetent(-1);
     };
 
     sheet.addEventListener("wheel", onWheel, { capture: true, passive: false });
     return () => sheet.removeEventListener("wheel", onWheel, true);
-  }, [detent, scrollerFrom, stepDetent]);
+  }, [detent, scrollersFrom, stepDetent]);
 
   return (
     <>
@@ -510,6 +850,10 @@ export function BottomSheet({ children, detent, onDetentChange }: BottomSheetPro
         onPointerMove={onPointerMove}
         onPointerUp={endDrag}
         onPointerCancel={cancelDrag}
+        onTouchStart={onTouchStart}
+        onTouchMove={onTouchMove}
+        onTouchEnd={endCancelledTouch}
+        onTouchCancel={cancelCancelledTouch}
       >
         <h1 className="sr-only">WetinDey</h1>
         <button
