@@ -154,6 +154,86 @@ test("canonical service and security pillars are embedded in 0012", () => {
   assert.match(services, /IF NOT p_operations_allowed THEN\s+DELETE FROM public\.presence_leases;\s+DELETE FROM public\.presence_waves;/);
 });
 
+test("all executable RPC result columns are qualified and type exact", () => {
+  assert.match(
+    services,
+    /FROM public\.presence_leases existing_lease\s+WHERE existing_lease\.account_id = p_actor[\s\S]*?existing_lease\.expires_at > clock_timestamp\(\)/,
+  );
+  assert.match(
+    services,
+    /FROM public\.presence_leases viewer_lease\s+WHERE viewer_lease\.account_id = p_actor[\s\S]*?viewer_lease\.control_generation = v_control\.generation/,
+  );
+  assert.match(
+    services,
+    /FROM public\.presence_leases sender_lease\s+WHERE sender_lease\.account_id = p_actor[\s\S]*?sender_lease\.expires_at > clock_timestamp\(\)/,
+  );
+  assert.match(
+    services,
+    /FROM public\.presence_leases recipient_lease\s+WHERE recipient_lease\.account_id = p_recipient[\s\S]*?recipient_lease\.expires_at > clock_timestamp\(\)/,
+  );
+  assert.equal(
+    services.match(
+      /CASE WHEN (?:bounded|preference)\.profile_consented THEN (?:bounded|preference)\.display_name::text ELSE NULL::text END/g,
+    )?.length,
+    2,
+  );
+  assert.match(
+    services,
+    /UPDATE public\.presence_reports report\s+SET resolution = 'closed'[\s\S]*?report\.id = p_report_id AND report\.resolution = 'open'/,
+  );
+});
+
+test("retention and account deletion have explicit least-privilege boundaries", () => {
+  assert.match(
+    services,
+    /CREATE OR REPLACE FUNCTION public\.presence_run_retention_cleanup\(\)[\s\S]*?PERFORM public\.presence_cleanup_internal\(\);/,
+  );
+  assert.match(
+    services,
+    /CREATE OR REPLACE FUNCTION public\.presence_delete_account\(\s+p_actor uuid,\s+p_session_digest text DEFAULT NULL,\s+p_device_digest text DEFAULT NULL,\s+p_network_digest text DEFAULT NULL/,
+  );
+  assert.match(
+    services,
+    /operations_allowed = false,[\s\S]*?generation = generation \+ 1/,
+  );
+  assert.match(
+    services,
+    /DELETE FROM public\.presence_preferences\s+WHERE account_id = p_actor/,
+  );
+  assert.match(
+    services,
+    /DELETE FROM public\.presence_blocks\s+WHERE blocker_account_id = p_actor OR blocked_account_id = p_actor/,
+  );
+  assert.match(
+    services,
+    /dimension = 'account' AND key_digest = v_account_digest/,
+  );
+  assert.equal(
+    services.match(
+      /public\.presence_erasure_uuid\(report\.id, 'deleted-(?:reporter|subject)'\)/g,
+    )?.length,
+    2,
+  );
+  assert.equal(
+    services.match(/UPDATE public\.presence_reports report\s+SET[\s\S]*?details = NULL/g)
+      ?.length,
+    2,
+  );
+  assert.match(security, /wetindey_presence_lifecycle NOLOGIN NOBYPASSRLS/);
+  assert.match(
+    security,
+    /GRANT EXECUTE ON FUNCTION public\.presence_run_retention_cleanup\(\)\s+TO wetindey_presence_safety/,
+  );
+  assert.match(
+    security,
+    /GRANT EXECUTE ON FUNCTION public\.presence_delete_account\(uuid, text, text, text\)\s+TO wetindey_presence_lifecycle/,
+  );
+  assert.doesNotMatch(
+    security,
+    /GRANT EXECUTE ON FUNCTION public\.presence_delete_account[\s\S]*?TO wetindey_presence_runtime/,
+  );
+});
+
 test("RLS and grants fail closed", () => {
   for (const table of presenceTables) {
     assert.match(security, new RegExp(`ALTER TABLE public\\.${table} FORCE ROW LEVEL SECURITY`));
@@ -161,6 +241,7 @@ test("RLS and grants fail closed", () => {
   assert.match(security, /wetindey_presence_owner NOLOGIN NOBYPASSRLS/);
   assert.match(security, /wetindey_presence_runtime NOLOGIN NOBYPASSRLS/);
   assert.match(security, /wetindey_presence_safety NOLOGIN NOBYPASSRLS/);
+  assert.match(security, /wetindey_presence_lifecycle NOLOGIN NOBYPASSRLS/);
   assert.match(security, /FROM PUBLIC, wetindey_presence_runtime, wetindey_presence_safety/);
   assert.doesNotMatch(security, /GRANT (SELECT|INSERT|UPDATE|DELETE|ALL) ON TABLE/i);
   assert.doesNotMatch(security, /GRANT EXECUTE[\s\S]*presence_review_reports[\s\S]*TO wetindey_presence_runtime/);

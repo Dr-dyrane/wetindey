@@ -27,6 +27,19 @@ BEGIN
 END;
 $$;
 
+-- Maintenance-only retention entrypoint. A target-owned scheduler invokes this
+-- even when the pilot has no foreground traffic; runtime callers cannot.
+CREATE OR REPLACE FUNCTION public.presence_run_retention_cleanup()
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = pg_catalog
+AS $$
+BEGIN
+  PERFORM public.presence_cleanup_internal();
+END;
+$$;
+
 CREATE OR REPLACE FUNCTION public.presence_assert_digest(
   p_name text,
   p_digest text
@@ -41,6 +54,142 @@ BEGIN
     RAISE EXCEPTION '% must be a lowercase SHA-256 HMAC digest', p_name
       USING ERRCODE = '22023';
   END IF;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION public.presence_erasure_uuid(
+  p_report_id uuid,
+  p_role text
+)
+RETURNS uuid
+LANGUAGE sql
+IMMUTABLE
+STRICT
+SET search_path = pg_catalog
+AS $$
+  WITH digest AS (
+    SELECT encode(
+      sha256(convert_to(p_report_id::text || ':' || p_role, 'UTF8')),
+      'hex'
+    ) AS value
+  )
+  SELECT (
+    substr(value, 1, 8) || '-' ||
+    substr(value, 9, 4) || '-4' ||
+    substr(value, 14, 3) || '-a' ||
+    substr(value, 18, 3) || '-' ||
+    substr(value, 21, 12)
+  )::uuid
+  FROM digest;
+$$;
+
+-- Account lifecycle boundary. Operational presence state is purged. Retained
+-- safety reports keep only their policy-owned kind/timestamps/resolution:
+-- both account keys become unlinkable per-report tombstones and free text is
+-- removed. Non-account rate keys supplied by the trusted lifecycle provider
+-- are purged immediately; any older unlinkable keys remain bounded by their
+-- existing window expiry and the deterministic retention runner above.
+CREATE OR REPLACE FUNCTION public.presence_delete_account(
+  p_actor uuid,
+  p_session_digest text DEFAULT NULL,
+  p_device_digest text DEFAULT NULL,
+  p_network_digest text DEFAULT NULL
+)
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = pg_catalog
+AS $$
+DECLARE
+  v_control public.presence_control%ROWTYPE;
+  v_control_principal boolean;
+  v_account_digest text;
+BEGIN
+  IF p_actor IS NULL THEN
+    RAISE EXCEPTION 'account deletion requires an actor'
+      USING ERRCODE = '22023';
+  END IF;
+  IF p_session_digest IS NOT NULL THEN
+    PERFORM public.presence_assert_digest('session digest', p_session_digest);
+  END IF;
+  IF p_device_digest IS NOT NULL THEN
+    PERFORM public.presence_assert_digest('device digest', p_device_digest);
+  END IF;
+  IF p_network_digest IS NOT NULL THEN
+    PERFORM public.presence_assert_digest('network digest', p_network_digest);
+  END IF;
+
+  SELECT * INTO STRICT v_control
+  FROM public.presence_control
+  WHERE id = 1
+  FOR UPDATE;
+
+  v_control_principal :=
+    p_actor IN (
+      v_control.allowlist_account_a,
+      v_control.allowlist_account_b,
+      v_control.safety_responder_account_id,
+      v_control.safety_backup_account_id
+    );
+
+  IF v_control_principal THEN
+    UPDATE public.presence_control
+    SET
+      operations_allowed = false,
+      allowlist_account_a = CASE
+        WHEN p_actor IN (allowlist_account_a, allowlist_account_b) THEN NULL
+        ELSE allowlist_account_a
+      END,
+      allowlist_account_b = CASE
+        WHEN p_actor IN (allowlist_account_a, allowlist_account_b) THEN NULL
+        ELSE allowlist_account_b
+      END,
+      safety_responder_account_id = CASE
+        WHEN p_actor IN (safety_responder_account_id, safety_backup_account_id) THEN NULL
+        ELSE safety_responder_account_id
+      END,
+      safety_backup_account_id = CASE
+        WHEN p_actor IN (safety_responder_account_id, safety_backup_account_id) THEN NULL
+        ELSE safety_backup_account_id
+      END,
+      generation = generation + 1,
+      updated_at = clock_timestamp()
+    WHERE id = 1;
+
+    DELETE FROM public.presence_leases;
+    DELETE FROM public.presence_waves;
+  ELSE
+    DELETE FROM public.presence_leases
+    WHERE account_id = p_actor;
+  END IF;
+
+  DELETE FROM public.presence_preferences
+  WHERE account_id = p_actor;
+
+  DELETE FROM public.presence_blocks
+  WHERE blocker_account_id = p_actor OR blocked_account_id = p_actor;
+
+  v_account_digest := encode(sha256(convert_to(p_actor::text, 'UTF8')), 'hex');
+  DELETE FROM public.presence_rate_buckets
+  WHERE (dimension = 'account' AND key_digest = v_account_digest)
+     OR (p_session_digest IS NOT NULL
+       AND dimension = 'session' AND key_digest = p_session_digest)
+     OR (p_device_digest IS NOT NULL
+       AND dimension = 'device' AND key_digest = p_device_digest)
+     OR (p_network_digest IS NOT NULL
+       AND dimension = 'network' AND key_digest = p_network_digest);
+
+  UPDATE public.presence_reports report
+  SET
+    reporter_account_id = public.presence_erasure_uuid(report.id, 'deleted-reporter'),
+    details = NULL
+  WHERE report.reporter_account_id = p_actor;
+
+  UPDATE public.presence_reports report
+  SET
+    subject_account_id = public.presence_erasure_uuid(report.id, 'deleted-subject'),
+    details = NULL
+  WHERE report.subject_account_id = p_actor;
 END;
 $$;
 
@@ -424,10 +573,10 @@ BEGIN
   END IF;
   IF EXISTS (
     SELECT 1
-    FROM public.presence_leases
-    WHERE account_id = p_actor
-      AND revoked_at IS NULL
-      AND expires_at > clock_timestamp()
+    FROM public.presence_leases existing_lease
+    WHERE existing_lease.account_id = p_actor
+      AND existing_lease.revoked_at IS NULL
+      AND existing_lease.expires_at > clock_timestamp()
   ) THEN
     RAISE EXCEPTION 'active presence leases cannot renew'
       USING ERRCODE = '55000';
@@ -535,11 +684,11 @@ BEGIN
   v_control := public.presence_assert_allowed_account(p_actor);
 
   SELECT * INTO STRICT v_viewer
-  FROM public.presence_leases
-  WHERE account_id = p_actor
-    AND revoked_at IS NULL
-    AND expires_at > clock_timestamp()
-    AND control_generation = v_control.generation;
+  FROM public.presence_leases viewer_lease
+  WHERE viewer_lease.account_id = p_actor
+    AND viewer_lease.revoked_at IS NULL
+    AND viewer_lease.expires_at > clock_timestamp()
+    AND viewer_lease.control_generation = v_control.generation;
 
   IF NOT EXISTS (
     SELECT 1 FROM public.presence_preferences
@@ -631,7 +780,7 @@ BEGIN
     bounded.id,
     public.ST_Y(bounded.centroid::public.geometry),
     public.ST_X(bounded.centroid::public.geometry),
-    CASE WHEN bounded.profile_consented THEN bounded.display_name ELSE NULL END,
+    CASE WHEN bounded.profile_consented THEN bounded.display_name::text ELSE NULL::text END,
     CASE WHEN bounded.profile_consented THEN bounded.avatar_url ELSE NULL END,
     NULL::uuid,
     bounded.snapshot_expires_at,
@@ -668,7 +817,7 @@ BEGIN
     wave.sender_lease_id,
     NULL::double precision,
     NULL::double precision,
-    CASE WHEN preference.profile_consented THEN preference.display_name ELSE NULL END,
+    CASE WHEN preference.profile_consented THEN preference.display_name::text ELSE NULL::text END,
     CASE WHEN preference.profile_consented THEN preference.avatar_url ELSE NULL END,
     wave.id,
     least(v_viewer.expires_at, wave.expires_at),
@@ -728,18 +877,18 @@ BEGIN
   END IF;
 
   SELECT * INTO STRICT v_sender
-  FROM public.presence_leases
-  WHERE account_id = p_actor
-    AND revoked_at IS NULL
-    AND expires_at > clock_timestamp()
-    AND control_generation = v_control.generation;
+  FROM public.presence_leases sender_lease
+  WHERE sender_lease.account_id = p_actor
+    AND sender_lease.revoked_at IS NULL
+    AND sender_lease.expires_at > clock_timestamp()
+    AND sender_lease.control_generation = v_control.generation;
 
   SELECT * INTO STRICT v_recipient
-  FROM public.presence_leases
-  WHERE account_id = p_recipient
-    AND revoked_at IS NULL
-    AND expires_at > clock_timestamp()
-    AND control_generation = v_control.generation;
+  FROM public.presence_leases recipient_lease
+  WHERE recipient_lease.account_id = p_recipient
+    AND recipient_lease.revoked_at IS NULL
+    AND recipient_lease.expires_at > clock_timestamp()
+    AND recipient_lease.control_generation = v_control.generation;
 
   IF NOT public.presence_pair_is_reciprocal(
     p_actor,
@@ -927,9 +1076,9 @@ BEGIN
       USING ERRCODE = '22023';
   END IF;
   IF p_close THEN
-    UPDATE public.presence_reports
+    UPDATE public.presence_reports report
     SET resolution = 'closed', resolved_at = clock_timestamp()
-    WHERE id = p_report_id AND resolution = 'open';
+    WHERE report.id = p_report_id AND report.resolution = 'open';
   END IF;
 
   RETURN QUERY
@@ -1026,4 +1175,3 @@ BEGIN
   END IF;
 END;
 $$;
-

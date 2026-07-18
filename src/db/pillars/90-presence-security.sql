@@ -13,12 +13,16 @@ BEGIN
   IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'wetindey_presence_safety') THEN
     CREATE ROLE wetindey_presence_safety NOLOGIN NOBYPASSRLS;
   END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'wetindey_presence_lifecycle') THEN
+    CREATE ROLE wetindey_presence_lifecycle NOLOGIN NOBYPASSRLS;
+  END IF;
 END;
 $$;
 
 ALTER ROLE wetindey_presence_owner NOLOGIN NOBYPASSRLS;
 ALTER ROLE wetindey_presence_runtime NOLOGIN NOBYPASSRLS;
 ALTER ROLE wetindey_presence_safety NOLOGIN NOBYPASSRLS;
+ALTER ROLE wetindey_presence_lifecycle NOLOGIN NOBYPASSRLS;
 
 ALTER TABLE public.presence_control ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.presence_control FORCE ROW LEVEL SECURITY;
@@ -58,12 +62,23 @@ REVOKE ALL ON TABLE
   public.presence_waves,
   public.presence_reports,
   public.presence_rate_buckets
-FROM PUBLIC, wetindey_presence_runtime, wetindey_presence_safety;
+FROM PUBLIC, wetindey_presence_runtime, wetindey_presence_safety,
+  wetindey_presence_lifecycle;
 
 REVOKE ALL ON FUNCTION public.presence_cleanup_internal()
-  FROM PUBLIC, wetindey_presence_runtime, wetindey_presence_safety;
+  FROM PUBLIC, wetindey_presence_runtime, wetindey_presence_safety,
+    wetindey_presence_lifecycle;
+REVOKE ALL ON FUNCTION public.presence_run_retention_cleanup()
+  FROM PUBLIC, wetindey_presence_runtime, wetindey_presence_safety,
+    wetindey_presence_lifecycle;
 REVOKE ALL ON FUNCTION public.presence_assert_digest(text, text)
-  FROM PUBLIC, wetindey_presence_runtime, wetindey_presence_safety;
+  FROM PUBLIC, wetindey_presence_runtime, wetindey_presence_safety,
+    wetindey_presence_lifecycle;
+REVOKE ALL ON FUNCTION public.presence_erasure_uuid(uuid, text)
+  FROM PUBLIC, wetindey_presence_runtime, wetindey_presence_safety,
+    wetindey_presence_lifecycle;
+REVOKE ALL ON FUNCTION public.presence_delete_account(uuid, text, text, text)
+  FROM PUBLIC;
 REVOKE ALL ON FUNCTION public.presence_consume_bucket(
   public.presence_rate_dimension,
   public.presence_rate_operation,
@@ -108,7 +123,8 @@ REVOKE ALL ON FUNCTION public.presence_set_control(
 ) FROM PUBLIC;
 
 GRANT USAGE ON SCHEMA public
-  TO wetindey_presence_runtime, wetindey_presence_safety;
+  TO wetindey_presence_runtime, wetindey_presence_safety,
+    wetindey_presence_lifecycle;
 GRANT USAGE ON TYPE
   public.presence_rate_dimension,
   public.presence_rate_operation,
@@ -140,6 +156,11 @@ GRANT EXECUTE ON FUNCTION public.presence_review_reports(uuid, boolean)
 GRANT EXECUTE ON FUNCTION public.presence_set_control(
   boolean, boolean, uuid, uuid, public.geography, integer, integer, uuid, uuid
 ) TO wetindey_presence_safety;
+GRANT EXECUTE ON FUNCTION public.presence_run_retention_cleanup()
+  TO wetindey_presence_safety;
+
+GRANT EXECUTE ON FUNCTION public.presence_delete_account(uuid, text, text, text)
+  TO wetindey_presence_lifecycle;
 
 -- Transfer ownership last. The migration role creates the policies and grants
 -- while it still owns the objects; runtime and safety roles never acquire direct
@@ -158,7 +179,12 @@ ALTER TYPE public.presence_report_kind OWNER TO wetindey_presence_owner;
 ALTER TYPE public.presence_report_resolution OWNER TO wetindey_presence_owner;
 
 ALTER FUNCTION public.presence_cleanup_internal() OWNER TO wetindey_presence_owner;
+ALTER FUNCTION public.presence_run_retention_cleanup() OWNER TO wetindey_presence_owner;
 ALTER FUNCTION public.presence_assert_digest(text, text) OWNER TO wetindey_presence_owner;
+ALTER FUNCTION public.presence_erasure_uuid(uuid, text) OWNER TO wetindey_presence_owner;
+ALTER FUNCTION public.presence_delete_account(
+  uuid, text, text, text
+) OWNER TO wetindey_presence_owner;
 ALTER FUNCTION public.presence_consume_bucket(
   public.presence_rate_dimension,
   public.presence_rate_operation,
