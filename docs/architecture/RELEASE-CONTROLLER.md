@@ -226,10 +226,19 @@ safety/integrity lanes until their separate gates are independently satisfied.
   require one path-scoped commit and HI Quality visible-pixel refutation.
 - Search & Ranking Engineer task `019f75b7-6c59-7952-bf14-b01cfbfd2793` committed
   `48fac46` over `src/app/actions.ts` `searchItems()` only. Independent static/diff
-  refutation passed with no P1/P2/P3; no DB, tests, build, push, or deploy occurred. HI
-  Quality now owns the direct Amuwo Odofin 5 km `rice` browser refutation. Keep
-  `actions.ts` claimed and Contribution Integrity containment blocked until that verdict.
-  All writes remain excluded. The prior `c6f304b` static correction was not runtime
+  refutation passed with no P1/P2/P3, but HI Quality runtime refutation **REFUTED** the
+  candidate. Browser-process hygiene passed in dedicated Safari window
+  `1CF45F15-490E-49FC-B4A4-A1115A9B7708`, and the temporary duplicate was closed. Home
+  versus search Sample parity still differed: Rice was 81,158–101,401/7 versus
+  82,280–101,401/5, and Pepper was 3,982–7,949/12 versus 5,101–7,749/7. Keep
+  `src/app/actions.ts` exclusively claimed by Search for a forward correction; do not
+  amend `48fac46`. The correction must reuse the canonical `getPopularItems`
+  `offers_current` aggregation for pure-synthetic fallback while preserving observed
+  precedence, synthetic/observed separation, the provenance firewall, location/radius/
+  query behavior, all write paths, and exclusion from `getOfferTrustBatch`. Require a
+  fresh path-scoped commit and repeat HI Quality refutation in the same dedicated QA tab.
+  Contribution Integrity remains blocked until PASS and path release. No DB, tests, build,
+  push, or deploy is authorized. The prior `c6f304b` static correction was not runtime
   closure.
 - Product & Data Governance Architect task
   `019f7599-0eaa-7423-9ebf-a1bfea8efe37` completed the two-path ADR-017 governance
@@ -289,11 +298,11 @@ safety/integrity lanes until their separate gates are independently satisfied.
   remains a separate explicit gate.
 - Contribution Integrity & Moderation Engineer task
   `019f75a3-f50d-7180-8e92-0a7aabd8a98c` is queued read-only/pathless pending its exact
-  containment plan. HI Quality must complete the `48fac46` browser verdict and the
-  controller must release `src/app/actions.ts` first. Contribution migration work is
-  `0013` or later, after presence-owned
-  forward `0012`. Threat model, disposable integration evidence, and independent
-  refutation remain prerequisites to implementation ownership.
+  containment plan. Search runtime refuted `48fac46`; Search must land the forward
+  correction and HI Quality must PASS the repeated same-tab verdict before the controller
+  releases `src/app/actions.ts`. Contribution migration work is `0013` or later, after
+  presence-owned forward `0012`. Threat model, disposable integration evidence, and
+  independent refutation remain prerequisites to implementation ownership.
 - Preview schema/ledger drift remains proven and quarantined. Production identity, ledger,
   schema/RPC/RLS/grant fingerprint, migration state, compatibility, restore evidence, and
   deployment ordering remain unknown.
