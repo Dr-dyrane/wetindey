@@ -80,6 +80,7 @@ The Codex Controller's daily portfolio auditor compares all documented plans aga
 - `LANES.md`;
 - implementation handoffs and independent verdicts;
 - release-controller decisions and evidence;
+- the Founder department crosswalk and active functional roster in the operating system;
 - current Food field outcomes and operating blockers.
 
 ### Required comparisons
@@ -93,6 +94,10 @@ The Codex Controller's daily portfolio auditor compares all documented plans aga
 - released behavior represented as a successful field outcome without field evidence;
 - Aboki FX, Nearby Presence, Reviews, category, or community work leaking into the Food
   launch phase;
+- documented work with no explicit functional home, accountable chief, or department
+  classification;
+- a Future, Shared-specialist, or hardware-only capability being represented as an active
+  team, staffed commitment, or implementation authority;
 - duplicate, contradictory, stale, or orphaned plans.
 
 ### Packet output
@@ -106,10 +111,38 @@ The Codex Controller's daily portfolio auditor compares all documented plans aga
 7. Food truth, coverage, correction, seller, and field outcome movement.
 8. Recommended continue, narrow, repair, resequence, park, reject, or graduate actions.
 9. Explicitly deferred scope.
+10. Functional-home gaps and specialist or future-capability handoffs requiring Founder
+    review.
 
 The auditor does not silently add an entry, change a stage, create a roadmap item, claim a
 lane, accept an ADR, assign a worker, or authorize promotion. It may prepare the packet;
 the authorized decision-maker records each accepted change afterward.
+
+### Documented-plan intake to `LANES.md`
+
+When a plan, proposal, research note, roadmap line, ADR, discussion, or completed-looking
+artifact describes work that is not represented accurately in `LANES.md`, the auditor
+creates one review item in the next Founder / Operating CEO packet. It does not create a
+task for every document.
+
+The review item records:
+
+1. the source artifact and exact statement;
+2. the problem or outcome it appears to pursue;
+3. its current register stage, or `Unregistered`;
+4. its department-crosswalk classification and WetinDey functional home;
+5. the relevant accepted or proposed ADR status;
+6. whether a lane is absent, stale, conflicting, wider than authority, or already released;
+7. current-phase relevance, dependencies, risks, and explicit non-goals;
+8. the smallest recommended disposition: register, continue discovery, make Candidate,
+   approve, claim a narrow lane, reconcile, park, reject, or mark superseded;
+9. the exact consequential question, if any, requiring Founder decision.
+
+The Founder or authorized accountable chief decides the disposition. Only afterward may
+the Controller update the register or request an exact lane through the separately
+governed `LANES.md` process. Silence creates no entry, approval, assignment, lane, or
+deadline. Related discrepancies are bundled into one outcome-oriented review item so the
+intake process does not become dozens of noisy tasks.
 
 ## 5. Entry template
 
@@ -125,6 +158,7 @@ Use this structure for every new idea:
 | Proposer | Name or function |
 | Portfolio owner | Product & Portfolio |
 | Accountable function | Function |
+| Department classification | Active now / Shared specialist / Future / Not applicable until hardware exists |
 | Current phase relevance | Direct / Enabling / Outside current phase |
 | Consequential choice | Yes/No and why |
 | ADR status | None / Required / Proposed ADR-NNN / Accepted ADR-NNN |
@@ -514,6 +548,8 @@ Product & Portfolio reports:
 - Active WIP and blocked days;
 - Active entries with exact lane and refuter coverage;
 - plan-to-lane discrepancies from the daily audit;
+- unregistered documented plans and functional-home gaps awaiting disposition;
+- Future, Shared-specialist, or hardware-only capabilities incorrectly represented as active;
 - parked ideas repeatedly resurfacing without a trigger;
 - percentage of field outcomes that produced an explicit disposition;
 - current-phase scope leaks prevented.

@@ -164,6 +164,57 @@ the independent refuter remain separately occupied.
 This is an inspiration map, not a claim that WetinDey has Apple's scale, reporting lines,
 or hundreds of specialists.
 
+### 6.1 Complete Founder department crosswalk
+
+The Founder-provided department inventory is authoritative input to this operating model.
+Every listed department is classified below. The classification describes current
+organizational posture, not a new team, title, lane, roadmap commitment, or permission to
+hire.
+
+| Classification | Meaning |
+|---|---|
+| Active now | The responsibility is required in the Food truth and pilot phase and has an explicit WetinDey functional home now; it need not be a standalone team. |
+| Shared specialist | WetinDey retains the decision and accountability internally but brings in qualified human expertise when the question arises. |
+| Future | Preserve the capability as a future organizational concern, but do not staff, activate, or create work for it during the current phase. |
+| Not applicable until hardware exists | WetinDey is currently a software service and has no physical-device program to justify the discipline. |
+
+| Founder-listed department | Classification | WetinDey functional home | Current boundary |
+|---|---|---|---|
+| Executive Leadership | Active now | Founder plus Codex Controller | Dr. Dyrane holds final product and human corporate authority. The Controller orchestrates operations but is not the legal CEO or a corporate officer. |
+| HI Design | Active now | Human Interface | Founder-led product interaction, information hierarchy, visual design, content hierarchy, and Apple HIG adaptation across the map-and-sheet experience. |
+| Software | Active now | Consumer App | The live PWA and complete Food user journey; no speculative module reorganization. |
+| Frameworks | Future | Platform/Database/SRE | Use and govern current frameworks now, but do not create a standalone framework team or proprietary framework before repeated product needs justify it. |
+| System Software | Future | Platform/Database/SRE | No operating-system, firmware, driver, or device-runtime product exists. Reassess only if platform depth or hardware scope materially changes. |
+| Security | Active now | Security/Privacy/Legal plus Trust & Safety | Threat modeling, authorization, abuse resistance, secrets, data boundaries, and incident containment are current gates. |
+| AI/ML | Future | Data/Truth Platform | No AI/ML organization is active. Future models must never turn synthetic, inferred, or generated output into observed local truth or earned trust. |
+| Developer Tools | Active now | Platform/Database/SRE plus Quality/Release | Repository tooling, evidence harnesses, local workflows, and release diagnostics support current delivery; this is a responsibility, not a product line. |
+| Cloud | Active now | Platform/Database/SRE | Vercel, Neon, storage, environments, target identity, observability, recovery, and cost discipline. |
+| Maps | Active now | Maps/Location | Location permission, area context, spatial semantics, map/list/sheet agreement, and graceful map failure. |
+| Services | Active now | Consumer App plus Data/Truth Platform | Server Actions and service boundaries serving authoritative Food reads and writes; no fulfilment services. |
+| App Store/release | Active now | Quality/Release | Evidence-linked promotion, PWA release readiness, and future store requirements. No App Store submission is implied while WetinDey remains a PWA. |
+| Operations | Active now | Food Operations plus Seller/Community Operations | Field truth collection, source review, catalog/place stewardship, seller consent, corrections, disputes, and bounded pilot execution. |
+| Reliability | Active now | Platform/Database/SRE | Availability, latency, offline recovery, migration compatibility, incident response, restore evidence, and fail-closed behavior. |
+| QE | Active now | Quality/Release | Test strategy, direct behavior evidence, accessibility/browser proof, independent refutation, and escaped-defect learning. |
+| Privacy | Active now | Security/Privacy/Legal | Data minimization, consent, retention, location and identity boundaries, processor facts, and qualified-counsel handoffs. |
+| Accessibility | Active now | Localization/Accessibility plus Quality/Release | Keyboard, screen reader, focus, motion, contrast, text scaling, touch targets, and task-completion evidence. |
+| Localization | Active now | Localization/Accessibility | Plain language and Nigerian-language readiness with native-language review; no agent invents local-language copy. |
+| Marketing | Active now | Product & Portfolio plus Growth/Analytics | Truthful positioning, pilot communication, demand learning, and launch claims. No broad acquisition campaign or unsupported coverage promise. |
+| Developer Relations | Future | Product & Portfolio | Reassess when WetinDey exposes a supported external developer platform, API, SDK, or contributor ecosystem. Internal repository coordination is not Developer Relations. |
+| Finance | Shared specialist | Founder with qualified finance/accounting support | Budget, accounting, tax, controls, and financial commitments require an authorized human; the Controller cannot spend or bind WetinDey. |
+| Legal | Shared specialist | Security/Privacy/Legal | The Founder owns the handoff and approved posture; qualified human counsel supplies legal conclusions and regulated advice. |
+| People | Shared specialist | Founder with qualified people/employment support | Hiring, employment, contractor, performance, and workplace commitments remain human decisions. No agent is a legal employee or people officer. |
+| BI | Active now | Growth/Analytics | Decision-quality, coverage, field outcome, operational-load, reliability, and portfolio-flow reporting; no vanity dashboard or hidden worker scoring. |
+| Product Management | Active now | Product & Portfolio | Product thesis, outcome framing, sequencing, non-goals, decision packets, field learning, and Founder review. |
+| Program Management | Active now | Product & Portfolio, operated by the Codex Controller | Cross-functional sequencing, dependency and risk control, plan-to-lane reconciliation, handoffs, evidence flow, and decision follow-through without noisy task proliferation. |
+| Hardware disciplines | Not applicable until hardware exists | No current functional home | Industrial/product hardware design, silicon, electrical, mechanical, wireless/RF, camera/imaging, acoustics, sensors, hardware manufacturing engineering, hardware QE, and hardware supply chain remain inactive unless the Founder authorizes a physical-device program. |
+
+An Active-now classification does not create a lane. A Future classification does not
+create discovery work. A Shared-specialist classification does not authorize the
+Controller to retain, instruct, or impersonate a regulated professional. Hardware
+disciplines remain absent rather than being folded into software roles.
+
+### 6.2 Lean functional pattern
+
 | Apple-inspired pattern | WetinDey adaptation | Startup constraint |
 |---|---|---|
 | Deep functional expertise | Thirteen explicit functional accountability hats | One person or agent may hold several hats |
@@ -216,7 +267,7 @@ activated lane. "Fresh refuter" means a person or agent that did not produce the
 | Food Truth | Current launch outcome; Codex Controller | Until the Stage 0 truth gate and Founder disposition | Product & Portfolio, Consumer App, Data/Truth Platform, Trust & Safety, Quality/Release, Food Operations | Fresh refuter per candidate; Release Controller; cross-surface truth, false-high, outcome, and wasted-trip evidence | Only exact paths currently granted by `LANES.md` |
 | Food Pilot Operations | Gated next outcome; Dr. Dyrane until a Food operator is appointed | Activates after the truth gate; dissolves or resets at bounded-pilot disposition | Food Operations, Seller/Community Operations, Data/Truth Platform, Growth/Analytics, Security/Privacy/Legal | Fresh operational and release refuters; Release Controller; coverage, correction, seller, successful-errand, and operator-load evidence | No implementation paths until separately activated in `LANES.md` |
 | Aboki FX | Launch parked; Codex Controller leads portfolio discovery only | Next explicit Founder portfolio disposition, otherwise remains parked | Product & Portfolio, Human Interface, Data/Truth Platform, Security/Privacy/Legal | Fresh refuter for any authorized prototype; Release Controller if promotion is separately authorized; no Food launch metric credit | No lane or launch authority implied |
-| Nearby Presence | Safety containment only; Codex Controller acting as Trust & Safety chief | Until an exact containment verdict and Founder disposition | Maps/Location, Trust & Safety, Security/Privacy/Legal, Quality/Release | Fresh privacy/abuse refuter; Release Controller; lifecycle, exposure, abuse, and deletion evidence | `LANES.md` alone determines whether containment paths are active |
+| Nearby Presence | Containment completed; accepted-architecture implementation design is active read-only under the Presence Platform Engineer | Until the bounded design is reviewed and the Founder separately authorizes or declines a next stage | Maps/Location, Trust & Safety, Security/Privacy/Legal, Platform/Database/SRE, Quality/Release | Fresh privacy/abuse refuter and Release Controller remain required; counsel, safety responder, rate budgets, retention, exact-target compatibility, lifecycle, exposure, abuse, and deletion evidence remain gates | Current design owns no paths. ADR acceptance authorizes no shared migration, deployment, pilot traffic, or public rollout; any later work requires exact lanes, the default-off app flag, database kill switch, two-account Festac allowlist, forward `0012`, independent refutation, and separate target-migration/pilot authorization |
 | Reviews | Launch parked and integrity containment only; Codex Controller acting as Trust & Safety chief | Until Stage 4 prerequisites receive a new Founder review | Trust & Safety, Seller/Community Operations, Security/Privacy/Legal, Quality/Release | Fresh identity/moderation/abuse refuter; Release Controller; no community field launch before gates | No lane or launch authority implied |
 
 This roster creates operating accountability, not repository ownership. `LANES.md` alone
