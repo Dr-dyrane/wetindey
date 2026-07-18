@@ -51,21 +51,35 @@ type RateState =
   | { kind: "unavailable" }
   | { kind: "error" };
 
+type AmountField = "foreign" | "ngn";
+
+interface AmountState {
+  foreign: string;
+  ngn: string;
+  lastEdited: AmountField;
+}
+
 const CACHE_PREFIX = "wetindey:reference-rate:v2:";
 const LAST_CURRENCY_KEY = "wetindey:reference-rate:last-currency:v1";
-const SESSION_AMOUNT_KEY = "wetindey:reference-amount:v1";
+const LEGACY_SESSION_AMOUNT_KEY = "wetindey:reference-amount:v1";
+const SESSION_AMOUNT_KEY = "wetindey:reference-amounts:v2";
 const MAX_SESSION_AMOUNT_CHARACTERS = 32;
 const MAX_AMOUNT = 1_000_000_000;
-
-const NAIRA = new Intl.NumberFormat("en-NG", {
-  style: "currency",
-  currency: "NGN",
-  maximumFractionDigits: 0,
-});
+const EMPTY_AMOUNTS: AmountState = { foreign: "", ngn: "", lastEdited: "foreign" };
 
 const RATE = new Intl.NumberFormat("en-NG", {
   minimumFractionDigits: 2,
   maximumFractionDigits: 4,
+});
+
+const EDITABLE_FOREIGN = new Intl.NumberFormat("en-NG", {
+  useGrouping: false,
+  maximumFractionDigits: 4,
+});
+
+const EDITABLE_NGN = new Intl.NumberFormat("en-NG", {
+  useGrouping: false,
+  maximumFractionDigits: 2,
 });
 
 const EFFECTIVE_DATE = new Intl.DateTimeFormat("en-NG", {
@@ -152,21 +166,52 @@ function parseAmount(value: string): { value: number | null; error: string | nul
   return { value: amount, error: null };
 }
 
-function readSessionAmount(): string {
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null;
+}
+
+function amountStateFrom(field: AmountField, value: string): AmountState {
+  return field === "foreign"
+    ? { foreign: value, ngn: "", lastEdited: field }
+    : { foreign: "", ngn: value, lastEdited: field };
+}
+
+function readSessionAmounts(): AmountState {
   try {
-    const value = window.sessionStorage.getItem(SESSION_AMOUNT_KEY);
-    if (!value || value.length > MAX_SESSION_AMOUNT_CHARACTERS) return "";
-    const parsed = parseAmount(value);
-    return parsed.value !== null && parsed.error === null ? value : "";
+    const raw = window.sessionStorage.getItem(SESSION_AMOUNT_KEY);
+    if (raw) {
+      const stored: unknown = JSON.parse(raw);
+      if (
+        isRecord(stored) &&
+        (stored.lastEdited === "foreign" || stored.lastEdited === "ngn") &&
+        typeof stored.value === "string" &&
+        stored.value.length <= MAX_SESSION_AMOUNT_CHARACTERS
+      ) {
+        const parsed = parseAmount(stored.value);
+        if (parsed.value !== null && parsed.error === null) {
+          return amountStateFrom(stored.lastEdited, stored.value);
+        }
+      }
+    }
+
+    const legacy = window.sessionStorage.getItem(LEGACY_SESSION_AMOUNT_KEY);
+    if (legacy && legacy.length <= MAX_SESSION_AMOUNT_CHARACTERS) {
+      const parsed = parseAmount(legacy);
+      if (parsed.value !== null && parsed.error === null) {
+        return amountStateFrom("foreign", legacy);
+      }
+    }
+    return EMPTY_AMOUNTS;
   } catch {
-    return "";
+    return EMPTY_AMOUNTS;
   }
 }
 
-function writeSessionAmount(value: string) {
+function writeSessionAmount(field: AmountField, value: string) {
   try {
     if (value.trim() === "") {
       window.sessionStorage.removeItem(SESSION_AMOUNT_KEY);
+      window.sessionStorage.removeItem(LEGACY_SESSION_AMOUNT_KEY);
       return;
     }
 
@@ -176,14 +221,42 @@ function writeSessionAmount(value: string) {
       parsed.value !== null &&
       parsed.error === null
     ) {
-      window.sessionStorage.setItem(SESSION_AMOUNT_KEY, value);
+      window.sessionStorage.setItem(
+        SESSION_AMOUNT_KEY,
+        JSON.stringify({ lastEdited: field, value })
+      );
+      window.sessionStorage.removeItem(LEGACY_SESSION_AMOUNT_KEY);
       return;
     }
 
     window.sessionStorage.removeItem(SESSION_AMOUNT_KEY);
+    window.sessionStorage.removeItem(LEGACY_SESSION_AMOUNT_KEY);
   } catch {
-    // The amount remains usable in this mount when tab storage is unavailable.
+    // Both amounts remain usable in this mount when tab storage is unavailable.
   }
+}
+
+function deriveAmount(state: AmountState, rate: ReferenceRate): AmountState {
+  const edited = state[state.lastEdited];
+  const parsed = parseAmount(edited);
+  const other: AmountField = state.lastEdited === "foreign" ? "ngn" : "foreign";
+  if (parsed.value === null || parsed.error !== null) {
+    return { ...state, [other]: "" };
+  }
+
+  const converted =
+    state.lastEdited === "foreign" ? parsed.value * rate.rate : parsed.value / rate.rate;
+  if (!Number.isFinite(converted) || converted <= 0) {
+    return { ...state, [other]: "" };
+  }
+
+  return {
+    ...state,
+    [other]:
+      state.lastEdited === "foreign"
+        ? EDITABLE_NGN.format(converted)
+        : EDITABLE_FOREIGN.format(converted),
+  };
 }
 
 export function ExchangePanel({
@@ -195,29 +268,37 @@ export function ExchangePanel({
   onSelectLocation,
 }: ExchangePanelProps) {
   const amountId = useId();
-  const amountErrorId = useId();
+  const foreignErrorId = useId();
+  const ngnAmountId = useId();
+  const ngnErrorId = useId();
   const currencyRef = useRef<ReferenceCurrencyCode | null>(null);
+  const amountsRef = useRef<AmountState>(EMPTY_AMOUNTS);
   const [currency, setCurrency] = useState<ReferenceCurrencyCode | null>(null);
-  const [amount, setAmount] = useState("");
+  const [amounts, setAmounts] = useState<AmountState>(EMPTY_AMOUNTS);
   const [catalogRetry, setCatalogRetry] = useState(0);
   const [rateRetry, setRateRetry] = useState(0);
   const [offline, setOffline] = useState(false);
   const [catalogState, setCatalogState] = useState<CatalogState>({ kind: "loading" });
   const [rateState, setRateState] = useState<RateState>({ kind: "idle" });
+  const commitAmounts = useCallback((next: AmountState) => {
+    amountsRef.current = next;
+    setAmounts(next);
+  }, []);
   const enterCurrency = useCallback((nextCurrency: ReferenceCurrencyCode) => {
     currencyRef.current = nextCurrency;
     setCurrency(nextCurrency);
     setRateState({ kind: "loading", cached: readCachedRate(nextCurrency) });
-  }, []);
-  const updateAmount = useCallback((nextAmount: string) => {
-    setAmount(nextAmount);
-    writeSessionAmount(nextAmount);
-  }, []);
+    const current = amountsRef.current;
+    const other: AmountField = current.lastEdited === "foreign" ? "ngn" : "foreign";
+    commitAmounts({ ...current, [other]: "" });
+  }, [commitAmounts]);
 
   useEffect(() => {
-    const savedAmount = readSessionAmount();
-    if (savedAmount) setAmount(savedAmount);
-  }, []);
+    const savedAmounts = readSessionAmounts();
+    commitAmounts(savedAmounts);
+    const edited = savedAmounts[savedAmounts.lastEdited];
+    if (edited) writeSessionAmount(savedAmounts.lastEdited, edited);
+  }, [commitAmounts]);
 
   useEffect(() => {
     let cancelled = false;
@@ -315,7 +396,6 @@ export function ExchangePanel({
     };
   }, []);
 
-  const parsedAmount = useMemo(() => parseAmount(amount), [amount]);
   const candidateVisibleRate =
     rateState.kind === "ready"
       ? rateState.rate
@@ -324,18 +404,45 @@ export function ExchangePanel({
         : null;
   const visibleRate =
     candidateVisibleRate && candidateVisibleRate.base === currency ? candidateVisibleRate : null;
+  const visibleRateBase = visibleRate?.base;
+  const visibleRateValue = visibleRate?.rate;
+  useEffect(() => {
+    if (!visibleRate) return;
+    const current = amountsRef.current;
+    const next = deriveAmount(current, visibleRate);
+    if (next.foreign !== current.foreign || next.ngn !== current.ngn) {
+      commitAmounts(next);
+    }
+  }, [commitAmounts, visibleRateBase, visibleRateValue]);
+
+  const editAmount = (field: AmountField, value: string) => {
+    const edited = amountStateFrom(field, value);
+    const next = visibleRate ? deriveAmount(edited, visibleRate) : edited;
+    commitAmounts(next);
+    writeSessionAmount(field, value);
+  };
+  const foreignParsed = useMemo(() => parseAmount(amounts.foreign), [amounts.foreign]);
+  const ngnParsed = useMemo(() => parseAmount(amounts.ngn), [amounts.ngn]);
+  const foreignError = amounts.lastEdited === "foreign" ? foreignParsed.error : null;
+  const ngnError = amounts.lastEdited === "ngn" ? ngnParsed.error : null;
   const usingSavedRate =
     (rateState.kind === "loading" && rateState.cached !== null) ||
     (rateState.kind === "ready" && rateState.saved) ||
     (offline && visibleRate !== null);
-  const converted =
-    visibleRate && parsedAmount.value !== null ? visibleRate.rate * parsedAmount.value : null;
   const availableCurrencies =
     catalogState.kind === "ready" ? catalogState.entries.map((entry) => entry.code) : [];
   const selectedMeta = currency ? REFERENCE_CURRENCY_META[currency] : null;
   const selectedLocation = locations.find((location) => location.id === selectedLocationId) ?? null;
   const retryCatalog = () => setCatalogRetry((value) => value + 1);
   const retryRate = () => setRateRetry((value) => value + 1);
+  const conversionAnnouncement =
+    visibleRate && currency
+      ? amounts.lastEdited === "foreign" && amounts.ngn
+        ? `Estimated ${amounts.ngn} Nigerian naira`
+        : amounts.lastEdited === "ngn" && amounts.foreign
+          ? `Estimated ${amounts.foreign} ${REFERENCE_CURRENCY_META[currency].name}`
+          : ""
+      : "";
 
   return (
     <div className="space-y-4 px-3 pb-[calc(max(var(--sheet-hidden,0px),var(--safe-area-bottom))+20px)]">
@@ -362,15 +469,15 @@ export function ExchangePanel({
             >
               <input
                 id={amountId}
-                value={amount}
-                onChange={(event) => updateAmount(event.target.value)}
+                value={amounts.foreign}
+                onChange={(event) => editAmount("foreign", event.target.value)}
                 inputMode="decimal"
                 autoComplete="off"
                 placeholder="100"
-                aria-invalid={parsedAmount.error ? true : undefined}
+                aria-invalid={foreignError ? true : undefined}
                 aria-describedby={
-                  parsedAmount.error
-                    ? `${amountErrorId} exchange-reference-note`
+                  foreignError
+                    ? `${foreignErrorId} exchange-reference-note`
                     : "exchange-reference-note"
                 }
                 data-autofocus
@@ -387,28 +494,67 @@ export function ExchangePanel({
                 />
               )}
             </div>
-            {parsedAmount.error && (
+            {foreignError && (
               <p
-                id={amountErrorId}
+                id={foreignErrorId}
                 role="alert"
                 className="mt-1.5 px-1 text-footnote text-status-danger-fg"
               >
-                {parsedAmount.error}
+                {foreignError}
               </p>
             )}
           </div>
 
+          <div>
+            <label
+              htmlFor={ngnAmountId}
+              className="mb-1.5 block text-footnote font-semibold text-text-secondary"
+            >
+              Naira amount
+            </label>
+            <div
+              className={`squircle flex min-h-[64px] items-center gap-2 bg-controlFill px-3 ${transition.focus} focus-within:bg-surface-card focus-within:outline focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-focusRing`}
+            >
+              <input
+                id={ngnAmountId}
+                value={amounts.ngn}
+                onChange={(event) => editAmount("ngn", event.target.value)}
+                inputMode="decimal"
+                autoComplete="off"
+                placeholder="100000"
+                aria-invalid={ngnError ? true : undefined}
+                aria-describedby={
+                  ngnError ? `${ngnErrorId} exchange-reference-note` : "exchange-reference-note"
+                }
+                className="min-w-0 flex-1 bg-transparent text-title-1 font-semibold tabular-nums text-text-primary placeholder:text-text-tertiary"
+              />
+              <span className="squircle flex h-11 shrink-0 items-center gap-2 bg-surface-card px-3 text-body font-semibold text-text-primary">
+                <CurrencyFlag code="NGN" />
+                NGN
+              </span>
+            </div>
+            {ngnError && (
+              <p
+                id={ngnErrorId}
+                role="alert"
+                className="mt-1.5 px-1 text-footnote text-status-danger-fg"
+              >
+                {ngnError}
+              </p>
+            )}
+          </div>
+
+          <p className="sr-only" aria-live="polite" aria-atomic="true">
+            {conversionAnnouncement}
+          </p>
+
           <div
-            className="squircle min-h-[132px] bg-fillTertiary p-3"
+            className="squircle min-h-[104px] bg-fillTertiary p-3"
             aria-live="polite"
             aria-atomic="true"
           >
             <div className="flex items-center justify-between gap-3">
-              <p className="text-footnote font-semibold text-text-secondary">Naira estimate</p>
-              <span className="flex items-center gap-1.5 text-footnote font-semibold text-text-secondary">
-                <CurrencyFlag code="NGN" />
-                NGN
-              </span>
+              <p className="text-footnote font-semibold text-text-secondary">Reference rate</p>
             </div>
 
             {catalogState.kind === "loading" && !visibleRate ? (
@@ -490,8 +636,8 @@ export function ExchangePanel({
             ) : visibleRate && selectedMeta ? (
               <div className="mt-1">
                 <div className="flex items-start justify-between gap-3">
-                  <p className="break-words text-title-1 font-semibold tabular-nums text-text-primary">
-                    {converted === null ? "Enter an amount" : NAIRA.format(converted)}
+                  <p className="text-body font-semibold text-text-primary">
+                    {providerLabel(visibleRate)}
                   </p>
                   {usingSavedRate && (
                     <span className="shrink-0 text-caption-1 font-semibold text-status-caution-fg">
@@ -500,8 +646,7 @@ export function ExchangePanel({
                   )}
                 </div>
                 <p className="mt-2 text-caption-1 leading-snug tabular-nums text-text-secondary">
-                  {providerLabel(visibleRate)} · {selectedMeta.symbol}1 = ₦
-                  {RATE.format(visibleRate.rate)} · Effective{" "}
+                  {selectedMeta.symbol}1 = ₦{RATE.format(visibleRate.rate)} · Effective{" "}
                   {formatEffectiveDate(visibleRate.effectiveDate)}
                 </p>
                 {(rateState.kind === "loading" ||
