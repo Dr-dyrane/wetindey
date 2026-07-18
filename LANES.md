@@ -52,7 +52,7 @@ to idle rather than creating a replacement task.
 | Food Source Authenticity & Attribution Refuter | Idle refuter | Independently verify each staged source artifact against original evidence and terms |
 | Search & Ranking Engineer | Available, no active claim | The deployed-current-main `97b74af` disposable SQL evidence gate passed and is released; remain persistent for the next bounded Search/Ranking assignment |
 | Iconography & Visual Systems Lead | Active, exact five-path visual foundation | With ADR-018 correction `0ab0d5b` landed, deliver dimensional circular orbs with contextual named colours and independent focused/static plus reused-tab light/dark visual acceptance |
-| Maps Engineering Lead | Active, exact two-path place-marker slice | Wire the accepted dimensional contextual iconography into placeType-aware marker orbs and make `selectedPlaceId` drive truthful selected glow without widening into self, peer, Presence, page, actions, location, or camera work |
+| Maps Engineering Lead | Active place-marker owner; named queued self-location owner | Finish the exact two-path contextual place-marker slice, then begin the queued self-location/avatar vertical immediately after both Maps and Contribution release its intended paths; no queued edit authority exists yet |
 | Client Reliability & Offline Engineer | Prepared, unclaimed | One-file rejected-search containment only after `src/app/page.tsx` is explicitly released and claimed |
 | Security & Privacy Engineering Lead | Active, disjoint source lanes | Preserve the collector claim and correct the production nonce P1 over only `src/middleware.ts`, `src/lib/seo.tsx`, and `scripts/csp-policy-contracts.test.ts`; keep CSP report-only and prohibit enforcement |
 | Motion & Interaction Engineer | Active, exact two-path candidate | Complete and hand off `src/design-system/components/ModalSheet.tsx` plus `scripts/motion-contracts.test.ts` for independent focus/accessibility refutation; no caller or layout widening |
@@ -211,6 +211,40 @@ Acceptance requires a focused map-marker contract, path-scoped lint and TypeScri
 independent static refuter, and one reused-tab compact/regular light/dark visual refutation
 before any push. No implementation authority exists outside the two exact paths.
 
+### Queued lane: self-location avatar marker — signed-in and guest
+
+The persistent Maps Engineering Lead is the named implementation owner. The Iconography &
+Visual Systems Lead is the visual reviewer, and a fresh independent Privacy refuter is
+required. This assignment reserves responsibility and start order only; it claims no path
+and authorizes no edit while Contribution owns `src/app/page.tsx` or the contextual
+place-marker lane owns the two current Maps paths.
+
+Implementation begins immediately after both current owners release. The exact intended
+post-release vertical slice is:
+
+- `src/app/page.tsx`
+- `src/design-system/components/MapboxCanvas.tsx`
+- `src/integrations/maps/MapboxAdapter.ts`
+- new `src/design-system/components/SelfLocationMarker.tsx` only if implementation proves
+  the component useful
+- new `scripts/map-self-location-contract.test.ts`
+
+Contract:
+
+- A signed-in self marker uses the uploaded avatar or a local initials fallback.
+- A guest self marker uses a bundled or locally generated “me” fallback; no external
+  avatar-generator request is permitted.
+- Precise GPS receives bounded precise treatment. Approximate or area location retains a
+  recognizable identity orb plus a diffuse accuracy halo; blur must never replace identity
+  or imply false precision.
+- Screen-reader labels must state truthful self/location semantics. The marker must remain
+  legible in light, dark, and grayscale and must not obstruct the map experience.
+- The slice must not publish the guest or self marker to peers, authorize Presence rollout,
+  or touch database, schema, or migrations.
+
+Peer presence remains a separate future slice. No push, deployment, browser, or database
+authority follows from this queued responsibility.
+
 ### Active lane: Semantic iconography visual foundation
 
 The persistent Iconography & Visual Systems Lead reserves exactly:
@@ -263,7 +297,7 @@ yet represented as explicit lanes:
 | **Iconography solid-glyph adoption — Item Detail/Get-It** | ⚪ pending, no path claim until foundation acceptance | future persistent Iconography & Visual Systems Lead handoff | Intended future paths: `src/app/_components/ItemDetailSheet.tsx`; `src/app/_components/GetItSheet.tsx` | First live `SolidIcon` adoption and semantic unavailable `IconOrb` remain intended acceptance work, but no ownership or edit authority exists before the five-path foundation is independently refuted and visually accepted |
 | **Iconography intent corrections — remaining sheets** | ⚪ pending, no path claim | future Iconography & Visual Systems handoff | Intended future paths: `src/app/_components/SettingsSheet.tsx`; `src/design-system/components/SheetPicker.tsx`; `src/app/_components/CurrencyPickerSheet.tsx`; `src/app/_components/ExchangePanel.tsx` | Preserve Settings/SheetPicker/CurrencyPicker/Exchange intent corrections as a separate future lane. No ownership or edit authority exists yet |
 | **Contextual place-marker orbs and selected glow** | 🟢 active exact two-path claim; historical H37 semantics preserved | persistent Maps Engineering Lead; fresh static and visual refuters | `src/design-system/components/MapboxCanvas.tsx`; `src/integrations/maps/MapboxAdapter.ts` | Apply dimensional contextual `placeType` orbs and truthful `selectedPlaceId` glow while preserving semantic symbols, accessible names, marker separation, sheet-aware camera, fallback, and reduced motion. Focused contract, path lint/TypeScript, static PASS, then reused-tab compact/regular light/dark proof before push |
-| **Self-location avatar marker — signed-in and guest** | 🟡 separate future pathless slice; no implementation claim while corrected `0012` and the active place-marker lane are unresolved | Nearby Presence Platform Engineer owns map/privacy/runtime semantics; Maps Engineering Lead will own a later disjoint rendering handoff; Iconography & Visual Systems Lead is visual reviewer only | No current path. The active place-marker claim grants no self/avatar ownership; a future audit must prefer a dedicated self-marker component and avoid `page.tsx` if modular extraction removes the conflict | Signed-in self sees the uploaded avatar or a local fallback. Guest self sees a locally generated or bundled fallback on their own map with no external avatar-generator request and no peer publication. Signed-in opt-out remains self-only; peer visibility requires the separate reciprocal-presence contract. No path, implementation, publication, or rollout authority exists yet |
+| **Self-location avatar marker — signed-in and guest** | 🟡 named queued vertical; responsibility assigned, paths unclaimed until both current owners release | persistent Maps Engineering Lead implementation owner; Iconography & Visual Systems Lead visual reviewer; independent Privacy refuter | Intended post-release paths: `src/app/page.tsx`; `src/design-system/components/MapboxCanvas.tsx`; `src/integrations/maps/MapboxAdapter.ts`; conditional new `src/design-system/components/SelfLocationMarker.tsx` only if implementation proves it useful; new `scripts/map-self-location-contract.test.ts` | Signed-in self uses uploaded avatar or local initials fallback; guest self uses a bundled/local “me” fallback. Precise GPS gets bounded precise treatment; approximate/area uses an identity orb plus diffuse accuracy halo, never blur instead of identity. Require truthful screen-reader labels, light/dark/grayscale, non-obstruction, no external avatar generator, peer publication, Presence rollout, false precision, DB/schema/migration. No edit authority until Contribution and the active Maps lane both release |
 | **Market Details — Place Offer Surface Redesign** | 🟡 canonical blocked lane; unclaimed until Contribution explicitly releases both live paths | Human Interface implementation with Iconography support; independent visual/accessibility and source/data refuters | `src/app/page.tsx`; `src/app/actions.ts`; new `src/design-system/components/PlaceOfferRow.tsx` | Repair the actual place/market detail shown in the Founder’s screenshot: remove the artificial `max-h-[40vh]` dead zone, preserve a pinned `Get it`, add licensed item imagery or deterministic Food fallback, and carry truthful price range/unit/availability/freshness/last-observed/provenance through loading/empty/error states. The three-path slice is atomic; do not create disconnected presentation code before handoff |
 
 The active five-path foundation row above is the only Iconography ownership created by
@@ -689,7 +723,7 @@ in either one will conflict. **Never edit these without holding the lane that ow
 | `src/lib/validation.ts` | — | **released** after presence containment `4e25b8c7`. |
 | `src/app/_components/CategorySelectorSheet.tsx` | — | **released** after `69737de` exact-scope independent NOT REFUTED with no P1/P2 and focused contract PASS |
 | `src/app/_components/ExchangePanel.tsx` | — | **released** after provider-aware implementation `ed9483c`, forward fix `a4eaed3`, independent static PASS, and narrow localhost Safari runtime PASS |
-| `src/app/page.tsx` | ~1300 | **Contribution containment and integrity** — `495750a` runtime REFUTED on focus escape; retained pending the current Motion correction and independent runtime verdict; H38 remains pathless and blocked |
+| `src/app/page.tsx` | ~1300 | **Contribution containment and integrity** — `495750a` runtime REFUTED on focus escape; retained pending the current Motion correction and independent runtime verdict; H38 remains pathless and blocked. The named self-location/avatar vertical is a queued successor only and has no claim until release |
 | `src/design-system/components/ModalSheet.tsx`, `scripts/motion-contracts.test.ts` | Motion & Interaction Engineer | **Modal zero-focusable focus containment** — active exact two-path candidate; no caller/layout widening; independent focus/accessibility refutation required |
 | `src/app/_components/ReportPriceSheet.tsx`, `src/app/_components/ConfirmVisitSheet.tsx` | — | **Contribution containment and integrity** — UI safety passed but runtime REFUTED on background focus escape; retained |
 | `src/core/i18n/strings.ts` | — | **Contribution containment and integrity** — untranslated no-promise maintenance copy passed; retained with REFUTED lane pending the current Motion correction and independent runtime verdict |
@@ -719,7 +753,7 @@ in either one will conflict. **Never edit these without holding the lane that ow
 | `src/app/_components/ItemDetailSheet.tsx`, `src/app/_components/GetItSheet.tsx` | — | **Iconography solid-glyph adoption — Item Detail/Get-It** — pending and unclaimed until independent foundation refutation and visual acceptance |
 | `src/app/_components/SettingsSheet.tsx`, `src/design-system/components/SheetPicker.tsx`, `src/app/_components/CurrencyPickerSheet.tsx`, `src/app/_components/ExchangePanel.tsx` | — | **Iconography intent corrections — remaining sheets** — pending only; no claim or edit authority |
 | `src/design-system/components/MapLoader.tsx` | — | **MapLoader iconography adoption** — pending and unclaimed; no edit authority before foundation acceptance and a fresh exact handoff |
-| `src/design-system/components/MapboxCanvas.tsx`, `src/integrations/maps/MapboxAdapter.ts` | Maps Engineering Lead | **Contextual place-marker orbs and selected glow** — active exact two-path claim; preserve H37 semantics and all exclusions recorded above |
+| `src/design-system/components/MapboxCanvas.tsx`, `src/integrations/maps/MapboxAdapter.ts` | Maps Engineering Lead | **Contextual place-marker orbs and selected glow** — active exact two-path claim; preserve H37 semantics and all exclusions recorded above. The self-location/avatar vertical is the named immediate successor after release, not a concurrent claim |
 | `src/app/_components/ProfileSheet.tsx`, `src/app/_components/AboutSheet.tsx`, `src/app/_components/LocationSheet.tsx`, `src/app/_components/ReportProblemSheet.tsx` | — | **released** after `69737de` exact-scope independent NOT REFUTED with no P1/P2 and focused contract PASS |
 | `scripts/iconography-contracts.test.ts` | Iconography & Visual Systems Lead `019f75cf-4d8f-7263-822b-06e846fce7ac` | Historical `69737de` release is superseded by the active five-path visual foundation claim after ADR-018 correction `0ab0d5b` |
 | `src/app/currency-actions.ts`, `src/app/_data/reference-currencies.ts`, `src/app/_components/CurrencyPickerSheet.tsx`, `src/app/_components/CurrencyFlag.tsx` | — | **released** after provider-aware implementation `ed9483c`, forward fix `a4eaed3`, independent static PASS, and narrow localhost Safari runtime PASS |
@@ -1186,7 +1220,7 @@ refuter.
 | Executive Leadership / Product Management | Founder feedback triage, product direction, phase order, and scope decisions | Active |
 | Program Management / Release Control | Convert feedback into bounded lanes, prevent duplicate tasks, coordinate dependencies, and release evidenced commits | Active |
 | Human Interface / Iconography | Solid semantic icon orbs, sheet hierarchy, category trigger, market-detail visual system, and light/dark accessibility refutation | Exact five-path foundation active after ADR-018 correction `0ab0d5b`; all adoption paths unclaimed |
-| Maps Engineering | Place/market symbols, selected marker state, map visual language, and map-specific runtime refutation | Persistent Lead active on exact `MapboxCanvas.tsx` + `MapboxAdapter.ts` contextual-orb/selected-glow slice; self and peer work remain future |
+| Maps Engineering | Place/market symbols, selected marker state, map visual language, and map-specific runtime refutation | Persistent Lead active on exact `MapboxCanvas.tsx` + `MapboxAdapter.ts` contextual-orb/selected-glow slice; named self-location/avatar vertical queued immediately after Maps and Contribution release; peer work remains separate |
 | Presence / Safety Engineering | Consent-based nearby presence, trusted people, blocks, reports, leases, and pilot gates | Corrected-unapplied `0012` active on exact four paths; fresh blank+upgrade/new-cluster proof required; shared DB and seven app/UI/map paths untouched |
 | Catalog Stewardship | Item CRUD, aliases, variants, units, category mapping, reference imagery, attribution, and duplicate merging | Unassigned |
 | Observation Evidence Media | Report attachments, receipts, EXIF removal, privacy, hashing, size limits, moderation, retention, and offline uploads | Unassigned |
@@ -1211,10 +1245,12 @@ refuter.
    persistent Iconography & Visual Systems Lead after ADR-018 correction `0ab0d5b`.
    Item Detail/Get-It and all remaining adoption paths stay
    pending and unclaimed until independent foundation refutation and visual acceptance.
-3. **Map Symbols and Nearby Presence**: Maps Engineering actively owns only the two
-   place-marker rendering paths for contextual orbs and selected glow. Presence / Safety
-   owns its separate backend/privacy lane. Self provenance/avatar, peer UI, and camera
-   changes remain future slices; never use simulated centres to unlock real peers.
+3. **Map Symbols, self location, and Nearby Presence**: Maps Engineering actively owns
+   only the two place-marker rendering paths for contextual orbs and selected glow. Its
+   named self-location/avatar vertical starts immediately after that lane and Contribution
+   release, but claims nothing yet. Presence / Safety owns its separate backend/privacy
+   lane; peer UI and camera changes remain separate. Never use simulated centres to unlock
+   real peers.
 4. **Seller Onboarding and Reusable RBAC**: Seller Platform / Identity & Access;
    architecture first, then exact server/UI/schema claims with security and
    privacy refutation.
