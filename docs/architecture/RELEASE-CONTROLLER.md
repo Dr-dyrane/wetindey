@@ -314,11 +314,20 @@ safety/integrity lanes until their separate gates are independently satisfied.
   outside this claim because the ownership table retains them for auth; they require an
   explicit release/handoff only if a reviewed web-licensed solid-icon dependency is
   selected. Foundation must commit and receive independent review before Sheet Adoption.
-- Sheet Adoption owns exactly `src/design-system/components/ListRow.tsx`,
-  `src/design-system/components/SheetPicker.tsx`,
+- The Founder-directed Market Details Sheet Visual Systems lane is a separate bounded
+  implementation/refutation unit after Foundation. Iconography & Visual Systems Lead owns
+  exactly `src/app/_components/ItemDetailSheet.tsx`,
+  `src/design-system/components/ListRow.tsx`,
+  `src/design-system/components/SheetPicker.tsx`, and
+  `src/app/_components/GetItSheet.tsx`. Its objective is a context-aware,
+  Apple-HIG-inspired market detail sheet with useful already-licensed/available item
+  imagery, solid semantic icon orbs, comfortable use of available vertical space, clear
+  light/dark surfaces, and a stable bottom action. It must preserve existing truth
+  semantics, item/offer counts, trust/provenance labels, accessibility, and
+  fulfilment-out-of-scope.
+- Remaining Sheet Adoption owns exactly
   `src/design-system/components/MapLoader.tsx`,
   `src/app/_components/SettingsSheet.tsx`,
-  `src/app/_components/ItemDetailSheet.tsx`, `src/app/_components/GetItSheet.tsx`,
   `src/app/_components/CurrencyPickerSheet.tsx`, and
   `src/app/_components/ExchangePanel.tsx`. The separate Map Symbols unit owns exactly
   `src/design-system/components/MapboxCanvas.tsx` and
@@ -333,6 +342,11 @@ safety/integrity lanes until their separate gates are independently satisfied.
   paths. Independent light/dark reused-state visual/accessibility refutation must cover
   accessible names/text, >=44px parent targets, reduced motion, and semantic-tone use
   before release. No push or deployment is authorized.
+- Market Details additionally excludes `src/app/page.tsx`, `src/app/actions.ts`,
+  schema/migrations, map adapter/canvas, BottomSheet motion behavior, Contribution paths,
+  currency data/actions, and new remote media/licensing. Its independent refutation must
+  cover light/dark, accessibility, reduced motion, stable action placement, and absence of
+  truth/count/trust/provenance regressions before the four paths can be released.
 - Reserve ADR-019 as `019-contribution-integrity-and-moderation.md` for later
   post-containment migration `0013` policy. ADR-018 released `WETINDEY_BIBLE.md`, but
   ADR-019 remains pathless until Contribution runtime evidence passes and a new exclusive
