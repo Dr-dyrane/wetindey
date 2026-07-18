@@ -26,6 +26,7 @@ const ENV_KEYS = [
 ] as const;
 
 type EnvironmentOverrides = Partial<Record<(typeof ENV_KEYS)[number], string>>;
+type EnvironmentKey = (typeof ENV_KEYS)[number];
 
 function read(path: string): string {
   return readFileSync(join(ROOT, path), "utf8");
@@ -46,23 +47,28 @@ function directive(policy: string, name: string): string {
   return value;
 }
 
+function setEnvironmentValue(key: EnvironmentKey, value: string | undefined): void {
+  const changed =
+    value === undefined
+      ? Reflect.deleteProperty(process.env, key)
+      : Reflect.set(process.env, key, value);
+  assert.equal(changed, true, `unable to override ${key}`);
+}
+
 function withEnvironment<T>(overrides: EnvironmentOverrides, run: () => T): T {
   const original = new Map(
     ENV_KEYS.map((key) => [key, process.env[key]] as const),
   );
 
   for (const key of ENV_KEYS) {
-    const value = overrides[key];
-    if (value === undefined) delete process.env[key];
-    else process.env[key] = value;
+    setEnvironmentValue(key, overrides[key]);
   }
 
   try {
     return run();
   } finally {
     for (const [key, value] of original) {
-      if (value === undefined) delete process.env[key];
-      else process.env[key] = value;
+      setEnvironmentValue(key, value);
     }
   }
 }
