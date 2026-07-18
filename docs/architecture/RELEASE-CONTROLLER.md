@@ -305,6 +305,34 @@ safety/integrity lanes until their separate gates are independently satisfied.
   residuals. Broader future call-site coverage stays queued and unclaimed until exact
   disjoint paths are proposed. The completed scope excludes all seven Aboki paths,
   `page.tsx`, `MapboxAdapter`, and DB; no build, browser, DB, push, or deploy occurred.
+- Founder authorization activates three bounded ADR-018 expansion units for Iconography &
+  Visual Systems Lead `019f75cf-4d8f-7263-822b-06e846fce7ac`. Foundation owns exactly
+  `src/app/globals.css`, `tailwind.config.ts`,
+  `src/design-system/components/IconOrb.tsx`, new
+  `src/design-system/icons/SolidIcon.tsx`, and
+  `scripts/iconography-contracts.test.ts`. `package.json` and `package-lock.json` remain
+  outside this claim because the ownership table retains them for auth; they require an
+  explicit release/handoff only if a reviewed web-licensed solid-icon dependency is
+  selected. Foundation must commit and receive independent review before Sheet Adoption.
+- Sheet Adoption owns exactly `src/design-system/components/ListRow.tsx`,
+  `src/design-system/components/SheetPicker.tsx`,
+  `src/design-system/components/MapLoader.tsx`,
+  `src/app/_components/SettingsSheet.tsx`,
+  `src/app/_components/ItemDetailSheet.tsx`, `src/app/_components/GetItSheet.tsx`,
+  `src/app/_components/CurrencyPickerSheet.tsx`, and
+  `src/app/_components/ExchangePanel.tsx`. The separate Map Symbols unit owns exactly
+  `src/design-system/components/MapboxCanvas.tsx` and
+  `src/integrations/maps/MapboxAdapter.ts`, preserving H37 place-type forwarding and all
+  existing marker contracts.
+- All three units preserve ADR-018: ordinary controls remain neutral; Food, Money, rating,
+  and actual status states retain distinct semantic ownership; no blanket colour, direct
+  Apple SF Symbols licensing assumption, generic/translucent-outline regression, or
+  authentic flag/photo/avatar treatment is permitted. Exact exclusions are
+  `src/app/page.tsx`, `src/app/actions.ts`, every Contribution-owned path, currency
+  actions/data, `CurrencyFlag`, flag sprite/licence assets, and all DB/schema/migration
+  paths. Independent light/dark reused-state visual/accessibility refutation must cover
+  accessible names/text, >=44px parent targets, reduced motion, and semantic-tone use
+  before release. No push or deployment is authorized.
 - Reserve ADR-019 as `019-contribution-integrity-and-moderation.md` for later
   post-containment migration `0013` policy. ADR-018 released `WETINDEY_BIBLE.md`, but
   ADR-019 remains pathless until Contribution runtime evidence passes and a new exclusive
