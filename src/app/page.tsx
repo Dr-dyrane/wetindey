@@ -1230,14 +1230,16 @@ export default function HomePage() {
             <NigeriaLogo className="h-7 w-7" />
             <button
               onClick={() => setIsCategoryOpen(true)}
-              className="flex min-h-tap items-center gap-1 px-2.5 py-1 rounded-[14px] bg-fillSecondary text-text-primary active:scale-98 transition-all duration-instant text-[14px] font-medium"
+              className="flex h-11 items-center text-text-primary active:scale-98 transition-all duration-instant text-[14px] font-medium"
             >
-              <span>
-                {activeCategory === "money"
-                  ? "Aboki FX"
-                  : (t as Record<string, string>).category_food || "Food"}
+              <span className="flex h-8 items-center gap-0.5 rounded-[14px] bg-fillSecondary px-2">
+                <span>
+                  {activeCategory === "money"
+                    ? "Aboki FX"
+                    : (t as Record<string, string>).category_food || "Food"}
+                </span>
+                <ChevronDown className="h-3 w-3 text-text-secondary" />
               </span>
-              <ChevronDown className="h-3 w-3 text-text-secondary" />
             </button>
           </div>
 
