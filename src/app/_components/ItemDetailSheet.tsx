@@ -114,11 +114,22 @@ function formatAge(ageHours: number | null): string {
  * Get-It, and map markers.
  */
 export function offerSignal(offer: NarrowedOffer) {
-  const kind: StatusKind = offer.trust.status;
+  const observed = offer.trust.origin === "observed";
+  const kind: StatusKind = observed ? offer.trust.status : "caution";
+  const sold = offer.trust.availability === "unavailable";
+
+  if (!observed) {
+    return {
+      kind,
+      label: offer.trust.provenanceLabel,
+      short: offer.trust.provenanceLabel,
+      sold,
+    };
+  }
+
   const short =
     kind === "unavailable" ? "E no dey" : kind === "confirmed" ? "E sure" : "Check am";
   const age = formatAge(offer.trust.ageHours);
-  const sold = offer.trust.availability === "unavailable";
   const label = kind === "confirmed" ? `${short} ${age}` : `${short} · ${age}`;
 
   return { kind, label, short, sold };
@@ -140,12 +151,21 @@ const FRESH_FG: Record<StatusKind, string> = {
  */
 function confidenceFor(offer: NarrowedOffer) {
   const { band, distinctSourceCount: sources, observationCount: reports } = offer.trust;
+  if (offer.trust.origin !== "observed") {
+    return {
+      bars: 0,
+      showMeter: false,
+      word: "No",
+      label: `${reports} observed ${reports === 1 ? "report" : "reports"}`,
+    };
+  }
+
   const bars = band === "high" ? 3 : band === "medium" ? 2 : band === "low" ? 1 : 0;
   const word = band === "high" ? "High" : band === "medium" ? "Medium" : band === "low" ? "Low" : "No";
   const label =
     `${reports} ${reports === 1 ? "report" : "reports"}` +
     ` · ${sources} ${sources === 1 ? "source" : "sources"}`;
-  return { bars, word, label };
+  return { bars, showMeter: true, word, label };
 }
 
 /** Neutral by design — confidence is secondary, so it never spends colour. */
@@ -587,9 +607,11 @@ export function ItemDetailSheet({
                       className="flex min-w-0 flex-1 items-center gap-1"
                       title={`${confidence.word} confidence`}
                     >
-                      <span className="shrink-0">
-                        <ConfidenceMeter bars={confidence.bars} />
-                      </span>
+                      {confidence.showMeter && (
+                        <span className="shrink-0">
+                          <ConfidenceMeter bars={confidence.bars} />
+                        </span>
+                      )}
                       <span className="min-w-0 truncate text-caption-1 text-text-secondary">
                         {confidence.label}
                       </span>

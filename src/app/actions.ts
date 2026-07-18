@@ -33,30 +33,70 @@ export interface ReadTrust {
   confidenceScore: number;
   band: TrustAssessment["band"];
   freshness: TrustAssessment["freshness"];
-  availability: TrustAssessment["availability"];
+  availability: TrustAssessment["availability"] | null;
   ageHours: number | null;
   distinctSourceCount: number;
   observationCount: number;
+  provenanceSummary: TrustAssessment["provenanceSummary"];
   explanation: string;
   status: "confirmed" | "caution" | "unavailable";
+  origin: "observed" | "synthetic" | "inadmissible" | "empty";
+  provenanceLabel: string;
 }
 
-function toReadTrust(assessment: TrustAssessment): ReadTrust {
+function toReadTrust(
+  assessment: TrustAssessment,
+  fallbackAvailability: string | null
+): ReadTrust {
+  const { provenanceSummary } = assessment;
+  const origin: ReadTrust["origin"] =
+    provenanceSummary.observed > 0
+      ? "observed"
+      : provenanceSummary.synthetic > 0
+        ? "synthetic"
+        : provenanceSummary.partner +
+              provenanceSummary.reference +
+              provenanceSummary.inferred >
+            0
+          ? "inadmissible"
+          : "empty";
+
+  let availability: ReadTrust["availability"] =
+    origin === "observed" ? assessment.availability : null;
+  if (origin !== "observed" && fallbackAvailability !== null) {
+    if (fallbackAvailability !== "available" && fallbackAvailability !== "unavailable") {
+      throw new Error(
+        `Trust DTO: unknown fallback availability ${JSON.stringify(fallbackAvailability)}`
+      );
+    }
+    availability = fallbackAvailability;
+  }
+
   return {
     confidenceScore: assessment.confidenceScore,
     band: assessment.band,
     freshness: assessment.freshness,
-    availability: assessment.availability,
+    availability,
     ageHours: Number.isFinite(assessment.ageHours) ? assessment.ageHours : null,
     distinctSourceCount: assessment.distinctSourceCount,
     observationCount: assessment.observationCount,
+    provenanceSummary,
     explanation: assessment.explanation,
+    origin,
+    provenanceLabel:
+      origin === "observed"
+        ? "Observed reports"
+        : origin === "synthetic"
+          ? "Demo data"
+          : "No observed reports",
     status:
-      assessment.availability === "unavailable"
-        ? "unavailable"
-        : assessment.freshness === "fresh"
-          ? "confirmed"
-          : "caution",
+      origin !== "observed"
+        ? "caution"
+        : assessment.availability === "unavailable"
+          ? "unavailable"
+          : assessment.freshness === "fresh"
+            ? "confirmed"
+            : "caution",
   };
 }
 
@@ -75,11 +115,12 @@ function nullableOfferKey(row: {
 
 function readTrustForKey(
   assessments: Record<string, TrustAssessment>,
-  key: OfferKey | null
+  key: OfferKey | null,
+  fallbackAvailability: string | null
 ): ReadTrust | null {
-  if (!key) return null;
+  if (!key) return toReadTrust(assessTrust([]), fallbackAvailability);
   const assessment = assessments[offerKeyOf(key)];
-  return assessment ? toReadTrust(assessment) : null;
+  return assessment ? toReadTrust(assessment, fallbackAvailability) : null;
 }
 
 /** Shape shared by every item the UI renders in a list or grid. */
@@ -184,6 +225,7 @@ export async function searchItems(
       (array_agg(o.item_variant_id ORDER BY o.last_observed_at DESC NULLS LAST, o.id ASC))[1] AS "trustVariantId",
       (array_agg(o.unit_id ORDER BY o.last_observed_at DESC NULLS LAST, o.id ASC))[1] AS "trustUnitId",
       (array_agg(o.place_id ORDER BY o.last_observed_at DESC NULLS LAST, o.id ASC))[1] AS "trustPlaceId",
+      (array_agg(o.availability_state ORDER BY o.last_observed_at DESC NULLS LAST, o.id ASC))[1] AS "trustAvailabilityState",
       MAX(o.last_observed_at)                          AS "lastObservedAt"
     FROM matched_items mi
     JOIN ${items} i ON i.id = mi.id
@@ -203,6 +245,7 @@ export async function searchItems(
     unitLabel: string; offerCount: number; placeCount: number;
     priceFrom: number | null; priceTo: number | null;
     trustVariantId: string | null; trustUnitId: string | null; trustPlaceId: string | null;
+    trustAvailabilityState: string | null;
     lastObservedAt: Date | null;
   };
 
@@ -229,7 +272,7 @@ export async function searchItems(
       placeCount: r.placeCount,
       priceFrom: r.priceFrom ?? null,
       priceTo: r.priceTo ?? null,
-      trust: readTrustForKey(trustByKey, trustKey),
+      trust: readTrustForKey(trustByKey, trustKey, r.trustAvailabilityState),
       lastObservedAt: r.lastObservedAt ? new Date(r.lastObservedAt).toISOString() : null,
     };
   });
@@ -391,6 +434,7 @@ export async function getPopularItems(input: {
       (array_agg(o.item_variant_id ORDER BY o.last_observed_at DESC, o.id ASC))[1] AS "trustVariantId",
       (array_agg(o.unit_id ORDER BY o.last_observed_at DESC, o.id ASC))[1] AS "trustUnitId",
       (array_agg(o.place_id ORDER BY o.last_observed_at DESC, o.id ASC))[1] AS "trustPlaceId",
+      (array_agg(o.availability_state ORDER BY o.last_observed_at DESC, o.id ASC))[1] AS "trustAvailabilityState",
       MAX(o.last_observed_at)                          AS "lastObservedAt"
     FROM ${items} i
     JOIN modal_unit  mu ON mu.item_id = i.id
@@ -411,6 +455,7 @@ export async function getPopularItems(input: {
     unitLabel: string; offerCount: number; placeCount: number;
     priceFrom: number | null; priceTo: number | null;
     trustVariantId: string; trustUnitId: string; trustPlaceId: string;
+    trustAvailabilityState: string;
     lastObservedAt: Date | null;
   };
 
@@ -436,7 +481,7 @@ export async function getPopularItems(input: {
       placeCount: r.placeCount,
       priceFrom: r.priceFrom ?? null,
       priceTo: r.priceTo ?? null,
-      trust: readTrustForKey(trustByKey, trustKey),
+      trust: readTrustForKey(trustByKey, trustKey, r.trustAvailabilityState),
       lastObservedAt: r.lastObservedAt ? new Date(r.lastObservedAt).toISOString() : null,
     };
   });
@@ -657,6 +702,7 @@ async function offerEvidence(key: OfferKey): Promise<TrustObservation[]> {
       sourceReliability: sources.reliabilityScoreInternal,
       collectionMethod: observations.collectionMethod,
       availabilityState: observations.availabilityState,
+      provenance: observations.provenance,
     })
     .from(observations)
     .innerJoin(sources, eq(observations.sourceId, sources.id))
@@ -1460,7 +1506,7 @@ export async function getOffersNarrowed(input: NarrowingInput): Promise<Narrowed
       unitId: r.unitId,
       placeId: r.placeId,
     };
-    const trust = readTrustForKey(trustByKey, trustKey);
+    const trust = readTrustForKey(trustByKey, trustKey, r.availabilityState);
     if (!trust) {
       throw new Error(`Discovery: no trust assessment for offer ${r.id}`);
     }
@@ -1852,6 +1898,7 @@ export async function getOfferTrustBatch(
       sourceReliability: sources.reliabilityScoreInternal,
       collectionMethod: observations.collectionMethod,
       availabilityState: observations.availabilityState,
+      provenance: observations.provenance,
     })
     .from(observations)
     .innerJoin(sources, eq(observations.sourceId, sources.id))
@@ -1880,6 +1927,7 @@ export async function getOfferTrustBatch(
       sourceReliability: r.sourceReliability,
       collectionMethod: r.collectionMethod,
       availabilityState: r.availabilityState,
+      provenance: r.provenance,
     };
     if (bucket) bucket.push(observation);
     else grouped.set(key, [observation]);

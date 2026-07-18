@@ -21,6 +21,8 @@ export interface ItemCardData {
   /** Server-derived assessment of the freshest nearby offer represented here. */
   trust?: {
     status: Exclude<StatusKind, "info">;
+    origin: "observed" | "synthetic" | "inadmissible" | "empty";
+    provenanceLabel: string;
   } | null;
   /** The unit the price range is quoted in. A price without its unit can lie. */
   unitLabel?: string | null;
@@ -116,6 +118,10 @@ export function ItemCard({
   const statusLabel = useStatusLabel();
   const [broken, setBroken] = useState(false);
   const status: StatusKind = item.trust?.status ?? "caution";
+  const displayedStatusLabel =
+    item.trust && item.trust.origin !== "observed"
+      ? item.trust.provenanceLabel
+      : statusLabel[status];
   const showImage = item.imageUrl && !broken;
 
   const priceLabel =
@@ -192,7 +198,7 @@ export function ItemCard({
           )}
         </p>
         <div className="mt-1 flex items-center gap-1.5">
-          <StatusBadge kind={status}>{statusLabel[status]}</StatusBadge>
+          <StatusBadge kind={status}>{displayedStatusLabel}</StatusBadge>
           {item.placeCount ? (
             <span className="truncate text-caption-1 text-text-secondary">
               {item.placeCount} {item.placeCount === 1 ? "place" : "places"}

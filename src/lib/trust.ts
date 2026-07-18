@@ -136,7 +136,18 @@ export interface TrustObservation {
   collectionMethod: string;
   /** observations.availability_state — 'available' | 'unavailable'. */
   availabilityState: string;
+  /** observations.provenance — enforced before this row may carry confidence. */
+  provenance: ObservationProvenance;
 }
+
+export type ObservationProvenance =
+  | "synthetic"
+  | "observed"
+  | "partner"
+  | "reference"
+  | "inferred";
+
+export type ProvenanceSummary = Readonly<Record<ObservationProvenance, number>>;
 
 /** How recently we heard. Nothing to do with what we heard. */
 export type Freshness = "fresh" | "stale" | "expired";
@@ -159,12 +170,14 @@ export interface TrustAssessment {
   freshness: Freshness;
   /** What we heard, per the newest report. */
   availability: Availability;
-  /** Age of the newest report, in hours. */
-  ageHours: number;
+  /** Age of the newest admissible report, in hours; null when there is none. */
+  ageHours: number | null;
   /** People, not reports. This is the number that carries trust. */
   distinctSourceCount: number;
-  /** Raw tally, for comparison against offers_current.supporting_observation_count. */
+  /** Raw tally of admissible observed rows. */
   observationCount: number;
+  /** Raw rows by epistemic origin, including classes inadmissible to confidence. */
+  provenanceSummary: ProvenanceSummary;
   /** Summed per-source contribution, each capped at PER_SOURCE_CAP. Unbounded above. */
   evidence: number;
   /** Human-readable, in the app's voice. */
@@ -179,6 +192,46 @@ const MS_PER_HOUR = 3_600_000;
 
 /** Tolerance for client clock skew before a future timestamp is a data fault. */
 const FUTURE_SKEW_TOLERANCE_HOURS = 1;
+
+function enforcedProvenance(value: unknown): ObservationProvenance {
+  switch (value) {
+    case "synthetic":
+    case "observed":
+    case "partner":
+    case "reference":
+    case "inferred":
+      return value;
+    default:
+      throw new Error(`trust: unknown provenance ${JSON.stringify(value)}`);
+  }
+}
+
+/**
+ * The V1 admission boundary. Callers supply every row that passes their
+ * moderation policy; this function alone decides which epistemic origins may
+ * influence confidence, source independence, freshness, or availability.
+ */
+function admitObservations(observations: TrustObservation[]): {
+  admitted: TrustObservation[];
+  provenanceSummary: ProvenanceSummary;
+} {
+  const provenanceSummary: Record<ObservationProvenance, number> = {
+    synthetic: 0,
+    observed: 0,
+    partner: 0,
+    reference: 0,
+    inferred: 0,
+  };
+  const admitted: TrustObservation[] = [];
+
+  for (const observation of observations) {
+    const provenance = enforcedProvenance(observation.provenance);
+    provenanceSummary[provenance] += 1;
+    if (provenance === "observed") admitted.push(observation);
+  }
+
+  return { admitted, provenanceSummary };
+}
 
 function clamp01(n: number): number {
   return Math.min(1, Math.max(0, n));
@@ -460,13 +513,13 @@ function describe(
  * `supportingObservationCount * 10` and is the last holdout; see the module
  * docblock.
  *
- * Callers must pass only observations they consider admissible; this module does
- * not know about moderation. The two paths do not currently agree on what
- * admissible means — the write path admits `moderation_status = 'approved'`,
- * `getOfferTrustBatch` admits `<> 'rejected'`. Identical today (every row in the
- * live table is 'approved'), divergent the day anything writes 'pending'. That
- * is a moderation-policy decision with no moderator to make it, and it is
- * escalated rather than settled by whichever function was edited last.
+ * Callers pass every observation admitted by their existing moderation policy.
+ * Provenance admission is deliberately not delegated to them: `observed` is the
+ * only V1 class that may influence the assessment, while all five classes are
+ * retained in `provenanceSummary`. The write path admits
+ * `moderation_status = 'approved'`; `getOfferTrustBatch` admits `<> 'rejected'`.
+ * That moderation difference predates this boundary and remains a separate
+ * policy decision.
  *
  * The reliability weighting ADR-003 asked for is not new code — `observationWeight`
  * has multiplied by `reliabilityWeight(sourceReliability)` since this module was
@@ -479,15 +532,18 @@ export function assessTrust(
   now: number = Date.now(),
   policy: FreshnessPolicy = FRESHNESS_POLICY
 ): TrustAssessment {
-  if (observations.length === 0) {
+  const { admitted, provenanceSummary } = admitObservations(observations);
+
+  if (admitted.length === 0) {
     return {
       confidenceScore: 0,
       band: "none",
       freshness: "expired",
       availability: "unavailable",
-      ageHours: Infinity,
+      ageHours: null,
       distinctSourceCount: 0,
       observationCount: 0,
+      provenanceSummary,
       evidence: 0,
       explanation: "Nobody has reported this yet.",
     };
@@ -496,9 +552,9 @@ export function assessTrust(
   // Newest report drives freshness AND availability — the same rule the seed
   // writes by: only the newest report carries current availability; older ones
   // are history.
-  let newest = observations[0];
+  let newest = admitted[0];
   let newestMs = toMillis(newest.observedAt);
-  for (const observation of observations) {
+  for (const observation of admitted) {
     const ms = toMillis(observation.observedAt);
     if (ms > newestMs) {
       newest = observation;
@@ -519,7 +575,7 @@ export function assessTrust(
   // Group by source, then cap each source. This is the whole point: the unit of
   // trust is a person, not a row.
   const weightsBySource = new Map<string, number[]>();
-  for (const observation of observations) {
+  for (const observation of admitted) {
     if (!observation.sourceId) {
       throw new Error("trust: observation without a sourceId cannot be attributed");
     }
@@ -544,7 +600,8 @@ export function assessTrust(
     availability,
     ageHours,
     distinctSourceCount,
-    observationCount: observations.length,
+    observationCount: admitted.length,
+    provenanceSummary,
     evidence,
     explanation: describe(ageHours, distinctSourceCount, freshness, availability),
   };
@@ -596,7 +653,9 @@ export function rankByConfidence<T>(
     if (right.confidenceScore !== left.confidenceScore) {
       return right.confidenceScore - left.confidenceScore;
     }
-    if (left.ageHours !== right.ageHours) return left.ageHours - right.ageHours;
+    const leftAge = left.ageHours ?? Number.POSITIVE_INFINITY;
+    const rightAge = right.ageHours ?? Number.POSITIVE_INFINITY;
+    if (leftAge !== rightAge) return leftAge - rightAge;
     return right.distinctSourceCount - left.distinctSourceCount;
   });
 }
