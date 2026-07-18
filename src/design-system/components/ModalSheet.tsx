@@ -108,9 +108,13 @@ function focusInitial(panel: HTMLElement | null) {
 
   const isEnabledVisible = (element: HTMLElement) =>
     !element.matches("[disabled]") &&
+    !element.matches("[aria-disabled='true']") &&
+    !element.hidden &&
     !isDisabledByAncestorFieldset(element) &&
     !element.closest("[inert], [aria-hidden='true']") &&
-    element.offsetParent !== null;
+    element.offsetParent !== null &&
+    getComputedStyle(element).display !== "none" &&
+    getComputedStyle(element).visibility !== "hidden";
   const preferred = Array.from(panel.querySelectorAll<HTMLElement>("[data-autofocus]"))
     .filter((element) => element.matches(FOCUSABLE_SELECTOR) && isEnabledVisible(element))[0];
   const fallback = Array.from(panel.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR)).find(
