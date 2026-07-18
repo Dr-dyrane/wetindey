@@ -1,13 +1,12 @@
 "use client";
 
-import React, { useCallback, useEffect, useRef, useState } from "react";
-import { AlertTriangle, CheckCircle2, CloudOff } from "lucide-react";
+import React, { useEffect, useState } from "react";
+import { AlertTriangle } from "lucide-react";
 import { ModalSheet } from "@/design-system/components/ModalSheet";
 import { Button } from "@/design-system/components/Button";
 import { Input } from "@/design-system/components/Input";
-import { submitVisitConfirmation } from "@/app/actions";
-import { haptics } from "@/lib/haptics";
 import { formatNaira } from "@/lib/money";
+import { useT } from "@/core/i18n";
 
 /**
  * The visit being asked about.
@@ -41,123 +40,7 @@ interface ConfirmVisitSheetProps {
   /** Null renders nothing — the sheet is inert without a visit to ask about. */
   visit: VisitContext | null;
   onClose: () => void;
-  /**
-   * Fired once the answer is safely somewhere — on the server, or in the
-   * offline queue. `queued` says which, so the caller knows whether refreshing
-   * offers would show anything new.
-   */
-  onConfirmed?: (result: { queued: boolean }) => void;
   lang?: Lang;
-}
-
-/* ── Offline queue ────────────────────────────────────────────────────────────
-
-   Separate from `pending_observations` on purpose: that queue's entries are
-   price reports and its replay path (in page.tsx) calls submitObservation
-   directly. A visit confirmation carries answers that queue cannot express.  */
-
-const QUEUE_KEY = "pending_visit_confirmations";
-
-/**
- * How long a queued confirmation stays worth sending.
- *
- * `submitObservation` timestamps every observation with the moment it runs, so
- * a confirmation replayed after a long offline stretch would be recorded as if
- * the user were standing in the market right now. Freshness is the product's
- * central claim; inflating it is worse than losing one datum. So an entry that
- * has aged past this window is dropped rather than replayed as fresh.
- *
- * Thirty minutes is chosen to sit below the resolution anyone reads — "confirmed
- * 18 minutes ago" is the same answer whether the error is zero or twenty. It is
- * a workaround, not a design: see the note in the department blockers about
- * giving submitObservation a real `observedAt`.
- */
-const STALE_AFTER_MS = 30 * 60 * 1000;
-
-/** A poisoned entry — one the server will reject every time — must not retry forever. */
-const MAX_ATTEMPTS = 3;
-
-type VisitAnswerPayload = {
-  placeId: string;
-  itemVariantId: string;
-  unitId: string;
-  wasAvailable: boolean;
-  priceWasRight?: boolean;
-  actualPrice?: number;
-  didBuy?: boolean;
-};
-
-type QueuedConfirmation = VisitAnswerPayload & {
-  queuedAt: string;
-  attempts: number;
-};
-
-function readQueue(): QueuedConfirmation[] {
-  if (typeof window === "undefined") return [];
-  const raw = window.localStorage.getItem(QUEUE_KEY);
-  if (!raw) return [];
-  try {
-    const parsed: unknown = JSON.parse(raw);
-    return Array.isArray(parsed) ? (parsed as QueuedConfirmation[]) : [];
-  } catch {
-    // A corrupt queue is unrecoverable and silently retrying it would spin
-    // forever. Drop it and say so, rather than pretend it was never there.
-    console.error("ConfirmVisitSheet: pending confirmations were unreadable and have been discarded.");
-    window.localStorage.removeItem(QUEUE_KEY);
-    return [];
-  }
-}
-
-function writeQueue(queue: QueuedConfirmation[]) {
-  if (queue.length === 0) window.localStorage.removeItem(QUEUE_KEY);
-  else window.localStorage.setItem(QUEUE_KEY, JSON.stringify(queue));
-}
-
-function enqueue(payload: VisitAnswerPayload) {
-  const queue = readQueue();
-  queue.push({ ...payload, queuedAt: new Date().toISOString(), attempts: 0 });
-  writeQueue(queue);
-}
-
-/**
- * Replay whatever was answered offline.
- *
- * Wire this to the `online` event and to mount, next to the existing
- * `pending_observations` sync. Returns what happened so the caller can decide
- * whether to refetch offers.
- */
-export async function flushPendingVisitConfirmations(): Promise<{ sent: number; dropped: number }> {
-  if (typeof window === "undefined" || !navigator.onLine) return { sent: 0, dropped: 0 };
-
-  const queue = readQueue();
-  if (queue.length === 0) return { sent: 0, dropped: 0 };
-
-  const now = Date.now();
-  const keep: QueuedConfirmation[] = [];
-  let sent = 0;
-  let dropped = 0;
-
-  for (const entry of queue) {
-    const age = now - new Date(entry.queuedAt).getTime();
-    if (!Number.isFinite(age) || age > STALE_AFTER_MS) {
-      dropped++;
-      continue;
-    }
-
-    try {
-      const { queuedAt: _q, attempts: _a, ...payload } = entry;
-      await submitVisitConfirmation(payload);
-      sent++;
-    } catch (err) {
-      console.error("ConfirmVisitSheet: replaying a queued confirmation failed.", err);
-      const attempts = entry.attempts + 1;
-      if (attempts >= MAX_ATTEMPTS) dropped++;
-      else keep.push({ ...entry, attempts });
-    }
-  }
-
-  writeQueue(keep);
-  return { sent, dropped };
 }
 
 /* ── Arming ───────────────────────────────────────────────────────────────────
@@ -293,12 +176,6 @@ interface Copy {
   qBuy: string;
   buyYes: string;
   buyNo: string;
-  send: string;
-  sending: string;
-  thanks: string;
-  queued: string;
-  failed: string;
-  retry: string;
 }
 
 const COPY: Record<Lang, Copy> = {
@@ -316,12 +193,6 @@ const COPY: Record<Lang, Copy> = {
     qBuy: "Did you buy it?",
     buyYes: "Yes, I bought it",
     buyNo: "No, I didn't",
-    send: "Send",
-    sending: "Sending…",
-    thanks: "Thank you. The next person gets a better answer.",
-    queued: "Saved. We'll send it when you're back online.",
-    failed: "That didn't send. Try again.",
-    retry: "Try again",
   },
   pidgin: {
     title: "How e go?",
@@ -337,12 +208,6 @@ const COPY: Record<Lang, Copy> = {
     qBuy: "You buy am?",
     buyYes: "Yes, I buy am",
     buyNo: "No, I no buy",
-    send: "Send am",
-    sending: "Dey send…",
-    thanks: "Thank you! You don help the next person.",
-    queued: "Network bad. We save am, we go send later.",
-    failed: "E no send. Try again.",
-    retry: "Try again",
   },
   yoruba: {
     title: "Báwo ni ó ṣe lọ?",
@@ -358,12 +223,6 @@ const COPY: Record<Lang, Copy> = {
     qBuy: "Ṣé o rà á?",
     buyYes: "Bẹ́ẹ̀ni, mo rà á",
     buyNo: "Rárá, n kò rà á",
-    send: "Firanṣẹ́",
-    sending: "Ń firanṣẹ́…",
-    thanks: "A dúpẹ́. Ẹni tó bá tẹ̀lé e yóò rí ìdáhùn tó dára.",
-    queued: "A ti fipamọ́. A ó firanṣẹ́ nígbà tí netiwọọki bá dé.",
-    failed: "Kò lọ. Gbìyànjú lẹ́ẹ̀kansí.",
-    retry: "Gbìyànjú lẹ́ẹ̀kansí",
   },
 };
 
@@ -448,135 +307,33 @@ function Choice<T extends string>({
 
 /* ── The sheet ────────────────────────────────────────────────────────────── */
 
-type Phase = "asking" | "sending" | "done" | "queued" | "failed";
-
 /**
- * The loop that closes.
- *
- * Everything before this is a price lookup. This is the part that asks the one
- * person who actually knows — the one who went — whether the answer we gave was
- * true, and feeds it back so the next lookup is better.
- *
- * Three questions, one tap each. The common path (it was there, the price was
- * right, I bought it) is three taps and submits itself; "it wasn't there" is one
- * tap and submits itself, because the other two questions stop meaning anything
- * the moment the answer is no. Only the price-correction path asks for a fourth
- * interaction, and only that path shows a Send button — auto-submitting while
- * someone is halfway through typing "3500" would file "₦35".
+ * The visit context remains readable during containment, but every answer and
+ * send control is disabled. Keeping the sheet reachable explains the pause
+ * without collecting, queueing, or transmitting an answer.
  */
-export function ConfirmVisitSheet({ open, visit, onClose, onConfirmed, lang = "en" }: ConfirmVisitSheetProps) {
+export function ConfirmVisitSheet({ open, visit, onClose, lang = "en" }: ConfirmVisitSheetProps) {
   const t = COPY[lang];
+  const translate = useT();
 
   const [wasThere, setWasThere] = useState<"yes" | "no" | null>(null);
   const [priceRight, setPriceRight] = useState<"yes" | "no" | null>(null);
   const [didBuy, setDidBuy] = useState<"yes" | "no" | null>(null);
   const [realPrice, setRealPrice] = useState("");
-  const [phase, setPhase] = useState<Phase>("asking");
-  const [errorMsg, setErrorMsg] = useState("");
-
-  /** Guards the auto-submit effect against firing twice for one answer set. */
-  const sentRef = useRef(false);
-
-  // A new visit is a new question. Reset everything, including the guard, or
-  // the second market of the day silently inherits the first one's answers.
+  // A new visit is a new question. Reset the read-only form so stale answers
+  // never appear behind the containment notice.
   useEffect(() => {
     if (!open) return;
-    sentRef.current = false;
     setWasThere(null);
     setPriceRight(null);
     setDidBuy(null);
     setRealPrice("");
-    setPhase("asking");
-    setErrorMsg("");
   }, [open, visit?.offerId]);
 
-  const priceNum = Number.parseFloat(realPrice);
-  const priceValid = Number.isFinite(priceNum) && priceNum > 0;
   const needsPrice = wasThere === "yes" && priceRight === "no";
-
-  const complete =
-    wasThere === "no" ||
-    (wasThere === "yes" && priceRight !== null && didBuy !== null && (!needsPrice || priceValid));
-
-  const send = useCallback(async () => {
-    if (!visit || sentRef.current) return;
-
-    const payload: VisitAnswerPayload =
-      wasThere === "no"
-        ? {
-            placeId: visit.placeId,
-            itemVariantId: visit.itemVariantId,
-            unitId: visit.unitId,
-            wasAvailable: false,
-          }
-        : {
-            placeId: visit.placeId,
-            itemVariantId: visit.itemVariantId,
-            unitId: visit.unitId,
-            wasAvailable: true,
-            priceWasRight: priceRight === "yes",
-            ...(priceRight === "no" ? { actualPrice: priceNum } : {}),
-            didBuy: didBuy === "yes",
-          };
-
-    sentRef.current = true;
-    setErrorMsg("");
-
-    // Offline is the expected case, not the exception. Take the answer, say so
-    // plainly, and get out of the way — the queue is drained on reconnect.
-    if (typeof window !== "undefined" && !navigator.onLine) {
-      try {
-        enqueue(payload);
-        setPhase("queued");
-        haptics.success();
-        onConfirmed?.({ queued: true });
-        return;
-      } catch (err) {
-        console.error("ConfirmVisitSheet: could not queue the confirmation.", err);
-        sentRef.current = false;
-        setPhase("failed");
-        haptics.error();
-        setErrorMsg(t.failed);
-        return;
-      }
-    }
-
-    setPhase("sending");
-    try {
-      await submitVisitConfirmation(payload);
-      setPhase("done");
-      haptics.success();
-      onConfirmed?.({ queued: false });
-    } catch (err) {
-      console.error("ConfirmVisitSheet: submitting the confirmation failed.", err);
-      // Do not queue this. Being online and rejected means the server had an
-      // opinion about the answer, and replaying it later would only collect the
-      // same rejection. Show it and let the user decide.
-      sentRef.current = false;
-      setPhase("failed");
-      haptics.error();
-      setErrorMsg(t.failed);
-    }
-  }, [visit, wasThere, priceRight, didBuy, priceNum, onConfirmed, t.failed]);
-
-  // Auto-submit the tap-only paths. Nobody should have to find a button after
-  // answering the last question; the answer set itself is the commit.
-  useEffect(() => {
-    if (phase !== "asking" || !complete || needsPrice) return;
-    void send();
-  }, [phase, complete, needsPrice, send]);
-
-  // Hand the sheet back once the answer has landed. Short: there is nothing
-  // left to read, and the map is what they want to see.
-  useEffect(() => {
-    if (phase !== "done" && phase !== "queued") return;
-    const id = window.setTimeout(onClose, 1400);
-    return () => window.clearTimeout(id);
-  }, [phase, onClose]);
 
   if (!visit) return null;
 
-  const busy = phase === "sending" || phase === "done" || phase === "queued";
   const quoted =
     visit.quotedPriceMax && visit.quotedPriceMax > visit.quotedPriceMin
       ? `${formatNaira(visit.quotedPriceMin)}–${formatNaira(visit.quotedPriceMax)}`
@@ -585,15 +342,12 @@ export function ConfirmVisitSheet({ open, visit, onClose, onConfirmed, lang = "e
   return (
     <ModalSheet open={open} onClose={onClose} title={t.title} size="form">
       <div className="space-y-5 px-4 py-4">
-        {phase === "done" && (
-          <Banner kind="confirmed" icon={<CheckCircle2 className="h-4 w-4" />}>{t.thanks}</Banner>
-        )}
-        {phase === "queued" && (
-          <Banner kind="caution" icon={<CloudOff className="h-4 w-4" />}>{t.queued}</Banner>
-        )}
-        {phase === "failed" && errorMsg && (
-          <Banner kind="unavailable" icon={<AlertTriangle className="h-4 w-4" />}>{errorMsg}</Banner>
-        )}
+        <Banner kind="caution" icon={<AlertTriangle className="h-4 w-4" />}>
+          <span>
+            <span className="block font-semibold">{translate("contribution.paused_title")}</span>
+            <span className="mt-0.5 block font-normal">{translate("contribution.paused_body")}</span>
+          </span>
+        </Banner>
 
         {/* What is being asked about. Stated once, plainly, so the questions
             below can stay short enough to answer without reading. */}
@@ -611,7 +365,7 @@ export function ConfirmVisitSheet({ open, visit, onClose, onConfirmed, lang = "e
           legend={t.qThere}
           value={wasThere}
           onSelect={setWasThere}
-          disabled={busy}
+          disabled
           options={[
             { id: "yes", label: t.thereYes, kind: "confirmed" },
             { id: "no", label: t.thereNo, kind: "unavailable" },
@@ -627,7 +381,7 @@ export function ConfirmVisitSheet({ open, visit, onClose, onConfirmed, lang = "e
               legend={t.qPrice(quoted)}
               value={priceRight}
               onSelect={setPriceRight}
-              disabled={busy}
+              disabled
               options={[
                 { id: "yes", label: t.priceYes, kind: "confirmed" },
                 { id: "no", label: t.priceNo, kind: "unavailable" },
@@ -648,7 +402,7 @@ export function ConfirmVisitSheet({ open, visit, onClose, onConfirmed, lang = "e
                   value={realPrice}
                   onChange={(e) => setRealPrice(e.target.value)}
                   placeholder={t.pricePlaceholder}
-                  disabled={busy}
+                  disabled
                 />
               </div>
             )}
@@ -657,7 +411,7 @@ export function ConfirmVisitSheet({ open, visit, onClose, onConfirmed, lang = "e
               legend={t.qBuy}
               value={didBuy}
               onSelect={setDidBuy}
-              disabled={busy}
+              disabled
               options={[
                 { id: "yes", label: t.buyYes, kind: "confirmed" },
                 { id: "no", label: t.buyNo, kind: "unavailable" },
@@ -666,24 +420,17 @@ export function ConfirmVisitSheet({ open, visit, onClose, onConfirmed, lang = "e
           </div>
         )}
 
-        {/* Only the typed path gets a button, and only once it can succeed. */}
-        {needsPrice && phase !== "done" && phase !== "queued" && (
+        {/* Retained as a visible affordance only on the typed-price branch;
+            containment keeps it non-activatable in every input modality. */}
+        {needsPrice && (
           <Button
             type="button"
             variant="primary"
             size="md"
             className="w-full"
-            disabled={!complete || phase === "sending"}
-            isLoading={phase === "sending"}
-            onClick={() => void send()}
+            disabled
           >
-            {phase === "sending" ? t.sending : t.send}
-          </Button>
-        )}
-
-        {phase === "failed" && !needsPrice && (
-          <Button type="button" variant="secondary" size="md" className="w-full" onClick={() => void send()}>
-            {t.retry}
+            {translate("contribution.paused_action")}
           </Button>
         )}
       </div>

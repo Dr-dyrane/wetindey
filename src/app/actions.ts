@@ -1099,6 +1099,15 @@ export async function submitObservation(data: {
   availabilityState: "available" | "unavailable";
 }) {
   /**
+   * Fail closed before validation, session resolution, source lookup, or any
+   * database statement. Public contribution remains paused until the later
+   * integrity migration can make idempotency, moderation and projection writes
+   * atomic. Do not move this below `parseSubmitObservation` or
+   * `contributorSourceId`: both are deliberately outside the containment door.
+   */
+  throw new Error("Food reports are temporarily unavailable while safety checks are added.");
+
+  /**
    * A Next.js server action is a PUBLIC HTTP ENDPOINT. Anyone can POST to it.
    *
    * That sentence used to end ", there is no auth in this app", and the second
@@ -1449,6 +1458,14 @@ export async function submitVisitConfirmation(data: {
   /** Required when wasAvailable. Meaningless otherwise, you cannot buy what is not there. */
   didBuy?: boolean;
 }) {
+  /**
+   * Same fail-closed boundary as `submitObservation`, and intentionally the
+   * first executable statement. This blocks both the priced delegation below
+   * and the direct unavailable branch before either can resolve a source or
+   * touch the database.
+   */
+  throw new Error("Visit reports are temporarily unavailable while safety checks are added.");
+
   /**
    * The back door. This action checks `actualPrice` is finite and positive but
    * had NO CEILING, and it delegates to submitObservation, so it could push

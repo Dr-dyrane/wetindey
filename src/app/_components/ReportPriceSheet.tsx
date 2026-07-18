@@ -1,13 +1,11 @@
 "use client";
 
 import React from "react";
-import { AlertTriangle, CheckCircle2, CloudOff } from "lucide-react";
+import { AlertTriangle } from "lucide-react";
 import { ModalSheet } from "@/design-system/components/ModalSheet";
 import { SheetPicker } from "@/design-system/components/SheetPicker";
 import { Button } from "@/design-system/components/Button";
 import { Input } from "@/design-system/components/Input";
-import { haptics } from "@/lib/haptics";
-import { useEffect } from "react";
 
 interface Option {
   id: string;
@@ -38,11 +36,6 @@ interface ReportPriceSheetProps {
   onPrice: (v: string) => void;
   onAvailable: (v: "available" | "unavailable") => void;
 
-  onSubmit: (e: React.FormEvent) => void;
-  submitting: boolean;
-  error: string;
-  success: boolean;
-  offlineSaved: boolean;
 }
 
 /** Inline result banner. Uses the status ramp so meaning is carried by colour + icon + text. */
@@ -62,30 +55,15 @@ function Banner({ kind, icon, children }: { kind: "confirmed" | "caution" | "una
 
 export function ReportPriceSheet(p: ReportPriceSheetProps) {
   const variantsForItem = p.variants.filter((v) => v.itemId === p.itemId);
-  const disabled = p.submitting || p.success || p.offlineSaved;
-  useEffect(() => {
-    if (p.success || p.offlineSaved) {
-      haptics.success();
-    }
-  }, [p.success, p.offlineSaved]);
-
-  useEffect(() => {
-    if (p.error) {
-      haptics.error();
-    }
-  }, [p.error]);
   return (
     <ModalSheet open={p.open} onClose={p.onClose} title={p.t.report_price} size="page">
-      <form onSubmit={p.onSubmit} className="space-y-5 py-4">
-        {p.success && (
-          <Banner kind="confirmed" icon={<CheckCircle2 className="h-4 w-4" />}>{p.t.success_msg}</Banner>
-        )}
-        {p.offlineSaved && (
-          <Banner kind="caution" icon={<CloudOff className="h-4 w-4" />}>{p.t.offline_msg}</Banner>
-        )}
-        {p.error && (
-          <Banner kind="unavailable" icon={<AlertTriangle className="h-4 w-4" />}>{p.error}</Banner>
-        )}
+      <form onSubmit={(event) => event.preventDefault()} className="space-y-5 py-4">
+        <Banner kind="caution" icon={<AlertTriangle className="h-4 w-4" />}>
+          <span>
+            <span className="block font-semibold">{p.t["contribution.paused_title"]}</span>
+            <span className="mt-0.5 block font-normal">{p.t["contribution.paused_body"]}</span>
+          </span>
+        </Banner>
 
         {/* Pull-down menus rather than horizontal pill rails. With 15 markets and
             11 items, a rail hid most options off-screen behind a swipe and gave
@@ -98,6 +76,7 @@ export function ReportPriceSheet(p: ReportPriceSheetProps) {
             value={p.placeId}
             onSelect={p.onPlaceId}
             placeholder="Choose market"
+            disabled
           />
 
           <SheetPicker
@@ -107,6 +86,7 @@ export function ReportPriceSheet(p: ReportPriceSheetProps) {
             value={p.itemId}
             onSelect={p.onItemId}
             placeholder="Choose item"
+            disabled
           />
 
           <SheetPicker
@@ -116,7 +96,7 @@ export function ReportPriceSheet(p: ReportPriceSheetProps) {
             value={p.variantId}
             onSelect={p.onVariantId}
             placeholder={variantsForItem.length ? "Choose quality" : "Pick an item first"}
-            disabled={variantsForItem.length === 0}
+            disabled
           />
 
           <SheetPicker
@@ -126,6 +106,7 @@ export function ReportPriceSheet(p: ReportPriceSheetProps) {
             value={p.unitId}
             onSelect={p.onUnitId}
             placeholder="Choose unit"
+            disabled
           />
 
           <div className="space-y-1.5">
@@ -140,6 +121,7 @@ export function ReportPriceSheet(p: ReportPriceSheetProps) {
               onChange={(e) => p.onPrice(e.target.value)}
               placeholder="₦ e.g. 3500"
               className="px-4"
+              disabled
             />
           </div>
 
@@ -158,6 +140,8 @@ export function ReportPriceSheet(p: ReportPriceSheetProps) {
                     key={o.id}
                     type="button"
                     aria-pressed={active}
+                    aria-disabled="true"
+                    disabled
                     onClick={() => p.onAvailable(o.id)}
                     className={`flex items-center justify-center gap-1.5 squircle py-2 text-[13px] font-medium transition duration-micro
                       ${active ? "bg-surface shadow-card" : "text-text-secondary"}`}
@@ -174,8 +158,8 @@ export function ReportPriceSheet(p: ReportPriceSheetProps) {
             </div>
           </div>
 
-          <Button type="submit" variant="primary" size="md" className="w-full" disabled={disabled}>
-            {p.submitting ? "Submitting…" : p.t.submit}
+          <Button type="submit" variant="primary" size="md" className="w-full" disabled>
+            {p.t["contribution.paused_action"]}
           </Button>
         </div>
       </form>

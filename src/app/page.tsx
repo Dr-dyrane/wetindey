@@ -46,7 +46,6 @@ import {
   ConfirmVisitSheet,
   armVisit,
   takeDueVisit,
-  flushPendingVisitConfirmations,
   type VisitContext
 } from "@/app/_components/ConfirmVisitSheet";
 
@@ -65,32 +64,10 @@ import {
   getPlaceOffers,
   getInitialSubmissionData,
   getVisitContext,
-  submitObservation,
   type NarrowedOffer
 } from "@/app/actions";
 import { getHaversineDistance, formatDistance } from "@/lib/geospatial";
 import { fetchRoute } from "@/lib/directions";
-
-/**
- * A price report typed while offline, waiting for a connection.
- *
- * `attempts` is what stops a payload the server will never accept from replaying
- * on every reconnect for the life of the install. Optional because entries
- * queued by an older build carry none, `?? 0` reads those as fresh rather than
- * dropping someone's report for having been queued yesterday.
- */
-interface PendingObservation {
-  placeId: string;
-  itemVariantId: string;
-  unitId: string;
-  priceAmount: number;
-  availabilityState: "available" | "unavailable";
-  attempts?: number;
-}
-
-/** Matches ConfirmVisitSheet's MAX_ATTEMPTS. The two queues drain together in one
- *  function; they should give up together too. */
-const MAX_OBSERVATION_ATTEMPTS = 3;
 
 interface PlaceData {
   id: string;
@@ -351,12 +328,6 @@ export default function HomePage() {
   const [formPrice, setFormPrice] = useState("");
   const [formAvailable, setFormAvailable] = useState<"available" | "unavailable">("available");
 
-  // Submission statuses
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitError, setSubmitError] = useState("");
-  const [submitSuccess, setSubmitSuccess] = useState(false);
-  const [isOfflineSaved, setIsOfflineSaved] = useState(false);
-
   /**
    * The persisted position is the source of truth for the camera. This runs
    * after rehydration and on every location change, so a reload reopens where
@@ -599,103 +570,11 @@ export default function HomePage() {
   }, [popularError, loadError, loadPopular, loadBaseline]);
 
   /**
-   * Drain both offline queues once a connection is back.
-   *
-   * Two queues, one drain: `pending_observations` holds price reports typed into
-   * the form, `pending_visit_confirmations` holds answers about trips people
-   * actually made. They are replayed together because they refresh the same
-   * thing, and refreshing it twice would be two round-trips for one event.
+   * Contribution containment deliberately has no offline drain. In particular,
+   * do not read, parse, rewrite, increment attempts on, or delete
+   * `pending_observations` or `pending_visit_confirmations`: their existing
+   * bytes remain on-device until durable server idempotency exists.
    */
-  useEffect(() => {
-    const drain = async () => {
-      if (typeof window === "undefined" || !navigator.onLine) return;
-
-      let changed = false;
-
-      const cached = localStorage.getItem("pending_observations");
-      if (cached) {
-        try {
-          const queue = JSON.parse(cached) as PendingObservation[];
-
-          if (queue.length > 0) {
-            /**
-             * PER-ENTRY, and the whole bug was where `removeItem` used to sit.
-             *
-             * It was AFTER the loop, with the loop inside one try/catch. So entry
-             * 3 of 5 throwing skipped it, while entries 1 and 2 had already
-             * COMMITTED. The queue survived intact and replayed both on the next
-             * reconnect, and every reconnect after that, because the poisoned
-             * entry never drained. `observations` is append-only, so each replay
-             * is permanent: it inflates the evidence behind a price with copies of
-             * a single report, which is exactly what the trust model cannot see.
-             *
-             * A network blip was enough to start it. With accounts it stops being
-             * a blip, tokens expire on a schedule, so a 401 mid-queue is the
-             * routine case, and the duplicates would carry an author.
-             *
-             * This is not a new mechanism. `flushPendingVisitConfirmations`
-             * (ConfirmVisitSheet.tsx) has done it correctly since it was written:
-             * per-entry try/catch, a keep list, an attempts counter, a ceiling.
-             * The two queues drain side by side in this same function, one right,
-             * one wrong. Ported, not reinvented.
-             */
-            const keep: PendingObservation[] = [];
-            let sent = 0;
-
-            for (const item of queue) {
-              try {
-                const { attempts: _a, ...payload } = item;
-                await submitObservation(payload);
-                sent++;
-              } catch (err) {
-                const attempts = (item.attempts ?? 0) + 1;
-                if (attempts >= MAX_OBSERVATION_ATTEMPTS) {
-                  // Dropped, and said out loud. An entry the server refuses three
-                  // times is not a network problem, it is a bad payload, and
-                  // retrying it forever costs a round-trip per reconnect forever.
-                  // Silence here is how a lost price report becomes invisible by
-                  // construction.
-                  console.error(
-                    `Dropping a queued price report after ${attempts} attempts; the server refused it.`,
-                    err
-                  );
-                } else {
-                  keep.push({ ...item, attempts });
-                }
-              }
-            }
-
-            if (keep.length > 0) {
-              localStorage.setItem("pending_observations", JSON.stringify(keep));
-            } else {
-              localStorage.removeItem("pending_observations");
-            }
-            changed = sent > 0;
-          }
-        } catch (err) {
-          // Only the parse and the storage write reach here now, a failing
-          // submit is handled per entry above.
-          console.error("Failed to read the offline price report queue:", err);
-        }
-      }
-
-      try {
-        const { sent } = await flushPendingVisitConfirmations();
-        if (sent > 0) changed = true;
-      } catch (err) {
-        console.error("Failed to flush queued visit confirmations:", err);
-      }
-
-      // One refetch, and a real one. The old code called `getPlaces()` here,
-      // which carries no price data at all, so nothing the user could see ever
-      // changed after a sync.
-      if (changed) loadBaseline();
-    };
-
-    window.addEventListener("online", drain);
-    void drain();
-    return () => window.removeEventListener("online", drain);
-  }, [loadBaseline]);
 
   /**
    * The loop closes here.
@@ -944,81 +823,6 @@ export default function HomePage() {
     setDetailItem(null);
     setItemOffers([]);
     setDetailPlaceId(null);
-  };
-
-  const handlePriceSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setSubmitError("");
-    setSubmitSuccess(false);
-    setIsOfflineSaved(false);
-
-    if (!formPlaceId || !formVariantId || !formUnitId || !formPrice) {
-      setSubmitError("Please fill out all fields.");
-      return;
-    }
-
-    const priceNum = parseFloat(formPrice);
-    if (isNaN(priceNum) || priceNum <= 0) {
-      setSubmitError("Please enter a valid price amount.");
-      return;
-    }
-
-    setIsSubmitting(true);
-
-    const payload = {
-      placeId: formPlaceId,
-      itemVariantId: formVariantId,
-      unitId: formUnitId,
-      priceAmount: priceNum,
-      availabilityState: formAvailable
-    };
-
-    // Offline queueing
-    if (typeof window !== "undefined" && !navigator.onLine) {
-      try {
-        const cached = localStorage.getItem("pending_observations");
-        const queue: PendingObservation[] = cached ? JSON.parse(cached) : [];
-        // Stamped at ENQUEUE, or the counter the drain reads never starts.
-        queue.push({ ...payload, attempts: 0 });
-        localStorage.setItem("pending_observations", JSON.stringify(queue));
-
-        setIsOfflineSaved(true);
-        setFormPrice("");
-        setIsSubmitting(false);
-
-        setTimeout(() => {
-          setIsReportOpen(false);
-          setIsOfflineSaved(false);
-        }, 2000);
-      } catch (_err) {
-        setSubmitError("Failed to store offline entry.");
-        setIsSubmitting(false);
-      }
-      return;
-    }
-
-    try {
-      const res = await submitObservation(payload);
-      if (res.success) {
-        setSubmitSuccess(true);
-        setFormPrice("");
-        setIsSubmitting(false);
-
-        // Refetch what the user can actually see. The old code called
-        // `getPlaces()`, which returns no price data, and never re-fetched
-        // `popularItems` at all, so reporting a price from the landing screen,
-        // the common case, changed nothing on screen.
-        loadBaseline();
-
-        setTimeout(() => {
-          setIsReportOpen(false);
-          setSubmitSuccess(false);
-        }, 2000);
-      }
-    } catch (_err) {
-      setSubmitError("Submission failed. Try again.");
-      setIsSubmitting(false);
-    }
   };
 
   /** The place whose detail level is pushed, NOT "the selected place". Nothing
@@ -1568,11 +1372,6 @@ export default function HomePage() {
         open={activeCategory === "food" && Boolean(pendingVisit)}
         visit={pendingVisit}
         onClose={() => setPendingVisit(null)}
-        onConfirmed={({ queued }) => {
-          // A queued answer has changed nothing on the server yet, so refetching
-          // would only redraw the same rows.
-          if (!queued) loadBaseline();
-        }}
         lang={locale}
       />
 
@@ -1642,11 +1441,6 @@ export default function HomePage() {
         onUnitId={setFormUnitId}
         onPrice={setFormPrice}
         onAvailable={setFormAvailable}
-        onSubmit={handlePriceSubmit}
-        submitting={isSubmitting}
-        error={submitError}
-        success={submitSuccess}
-        offlineSaved={isOfflineSaved}
       />
 
       <CategorySelectorSheet

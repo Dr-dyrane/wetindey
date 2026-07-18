@@ -587,6 +587,9 @@ export const en = {
   "report.choose_unit": "Choose unit",
   "report.price_placeholder": "₦ e.g. 3500",
   "report.submitting": "Submitting…",
+  "contribution.paused_title": "Reports temporarily unavailable",
+  "contribution.paused_body": "We are adding safety checks before accepting food or visit reports.",
+  "contribution.paused_action": "Reporting unavailable",
 
   /* Confirm visit, lifted verbatim from ConfirmVisitSheet.tsx:185-249, which
      already ships all three languages. The `at`/`qPrice` closures become
@@ -974,6 +977,9 @@ const pidgin: LocaleTable = {
   "report.choose_unit": "Pick how dem pack am",
   "report.price_placeholder": "₦ like 3500",
   "report.submitting": "We dey send…",
+  "contribution.paused_title": UNTRANSLATED,
+  "contribution.paused_body": UNTRANSLATED,
+  "contribution.paused_action": UNTRANSLATED,
 
   // Verbatim from ConfirmVisitSheet.tsx:207-227.
   "confirm.title": "How e go?",
@@ -1293,6 +1299,9 @@ const yoruba: LocaleTable = {
   "report.choose_unit": UNTRANSLATED,
   "report.price_placeholder": UNTRANSLATED,
   "report.submitting": UNTRANSLATED,
+  "contribution.paused_title": UNTRANSLATED,
+  "contribution.paused_body": UNTRANSLATED,
+  "contribution.paused_action": UNTRANSLATED,
 
   // Verbatim from ConfirmVisitSheet.tsx:228-248, the good Yorùbá in this repo.
   "confirm.title": "Báwo ni ó ṣe lọ?",
