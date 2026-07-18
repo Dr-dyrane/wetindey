@@ -246,16 +246,22 @@ function deriveAmount(state: AmountState, rate: ReferenceRate): AmountState {
 
   const converted =
     state.lastEdited === "foreign" ? parsed.value * rate.rate : parsed.value / rate.rate;
-  if (!Number.isFinite(converted) || converted <= 0) {
+  if (!Number.isFinite(converted) || converted <= 0 || converted > MAX_AMOUNT) {
+    return { ...state, [other]: "" };
+  }
+
+  const formatted =
+    state.lastEdited === "foreign"
+      ? EDITABLE_NGN.format(converted)
+      : EDITABLE_FOREIGN.format(converted);
+  const formattedParsed = parseAmount(formatted);
+  if (formattedParsed.value === null || formattedParsed.error !== null) {
     return { ...state, [other]: "" };
   }
 
   return {
     ...state,
-    [other]:
-      state.lastEdited === "foreign"
-        ? EDITABLE_NGN.format(converted)
-        : EDITABLE_FOREIGN.format(converted),
+    [other]: formatted,
   };
 }
 
@@ -284,14 +290,17 @@ export function ExchangePanel({
     amountsRef.current = next;
     setAmounts(next);
   }, []);
-  const enterCurrency = useCallback((nextCurrency: ReferenceCurrencyCode) => {
-    currencyRef.current = nextCurrency;
-    setCurrency(nextCurrency);
-    setRateState({ kind: "loading", cached: readCachedRate(nextCurrency) });
-    const current = amountsRef.current;
-    const other: AmountField = current.lastEdited === "foreign" ? "ngn" : "foreign";
-    commitAmounts({ ...current, [other]: "" });
-  }, [commitAmounts]);
+  const enterCurrency = useCallback(
+    (nextCurrency: ReferenceCurrencyCode) => {
+      currencyRef.current = nextCurrency;
+      setCurrency(nextCurrency);
+      setRateState({ kind: "loading", cached: readCachedRate(nextCurrency) });
+      const current = amountsRef.current;
+      const other: AmountField = current.lastEdited === "foreign" ? "ngn" : "foreign";
+      commitAmounts({ ...current, [other]: "" });
+    },
+    [commitAmounts]
+  );
 
   useEffect(() => {
     const savedAmounts = readSessionAmounts();
@@ -328,7 +337,7 @@ export function ExchangePanel({
         const nextCurrency =
           current && entries.some((entry) => entry.code === current)
             ? current
-            : entries.find((entry) => entry.code === "USD")?.code ?? entries[0]!.code;
+            : (entries.find((entry) => entry.code === "USD")?.code ?? entries[0]!.code);
         enterCurrency(nextCurrency);
       })
       .catch(() => {
@@ -498,7 +507,7 @@ export function ExchangePanel({
               <p
                 id={foreignErrorId}
                 role="alert"
-                className="mt-1.5 px-1 text-footnote text-status-danger-fg"
+                className="text-status-danger-fg mt-1.5 px-1 text-footnote"
               >
                 {foreignError}
               </p>
@@ -537,7 +546,7 @@ export function ExchangePanel({
               <p
                 id={ngnErrorId}
                 role="alert"
-                className="mt-1.5 px-1 text-footnote text-status-danger-fg"
+                className="text-status-danger-fg mt-1.5 px-1 text-footnote"
               >
                 {ngnError}
               </p>
@@ -645,7 +654,7 @@ export function ExchangePanel({
                     </span>
                   )}
                 </div>
-                <p className="mt-2 text-caption-1 leading-snug tabular-nums text-text-secondary">
+                <p className="mt-2 text-caption-1 tabular-nums leading-snug text-text-secondary">
                   {selectedMeta.symbol}1 = ₦{RATE.format(visibleRate.rate)} · Effective{" "}
                   {formatEffectiveDate(visibleRate.effectiveDate)}
                 </p>
@@ -662,7 +671,7 @@ export function ExchangePanel({
                           ? "Using the saved reference; the currency list is unavailable."
                           : catalogState.kind === "loading"
                             ? "Using the saved reference while currencies refresh."
-                          : "Using the saved reference while the latest rate refreshes."}
+                            : "Using the saved reference while the latest rate refreshes."}
                     </p>
                     {!offline && catalogState.kind !== "loading" && (
                       <button
@@ -679,9 +688,12 @@ export function ExchangePanel({
             ) : null}
           </div>
 
-          <p id="exchange-reference-note" className="text-caption-1 leading-snug text-text-tertiary">
-            WetinDey does not exchange money. This is a reference estimate; banks and
-            currency exchangers may offer different rates.
+          <p
+            id="exchange-reference-note"
+            className="text-caption-1 leading-snug text-text-tertiary"
+          >
+            WetinDey does not exchange money. This is a reference estimate; banks and currency
+            exchangers may offer different rates.
           </p>
         </div>
       </section>
@@ -689,15 +701,10 @@ export function ExchangePanel({
       <section className="space-y-2.5" aria-labelledby="sample-nearby-heading">
         <div className="px-1">
           <div className="flex items-center justify-between gap-3">
-            <h2
-              id="sample-nearby-heading"
-              className="text-title-3 font-semibold text-text-primary"
-            >
+            <h2 id="sample-nearby-heading" className="text-title-3 font-semibold text-text-primary">
               Nearby locations
             </h2>
-            <span className="shrink-0 text-caption-1 font-semibold text-text-tertiary">
-              Sample
-            </span>
+            <span className="shrink-0 text-caption-1 font-semibold text-text-tertiary">Sample</span>
           </div>
           <p className="mt-0.5 text-caption-1 leading-snug text-text-tertiary">
             Map pins and places are demonstration data, not verified businesses or live rates.
