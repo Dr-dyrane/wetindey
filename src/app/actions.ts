@@ -2378,6 +2378,29 @@ export async function getMyProfile(): Promise<MyProfile | null> {
  * both-or-neither rule. It is folded into the write only when it was sent; a brand
  * new row falls back to the column default of false.
  */
+/**
+ * Coarsens latitude/longitude to the centroid of a fixed 500m grid cell
+ * to preserve user privacy and comply with ADR-016.
+ */
+export function coarsenCoordinates(lat: number, lng: number): { latitude: number; longitude: number } {
+  // 500 meters is approximately 0.0045 degrees of latitude
+  const LAT_STEP = 0.0045;
+  const gridLat = Math.round(lat / LAT_STEP) * LAT_STEP;
+
+  // Degrees of longitude per 500 meters varies by latitude
+  const latRad = (gridLat * Math.PI) / 180;
+  const cosLat = Math.cos(latRad);
+  // Prevent division by zero at poles
+  const safeCosLat = Math.max(cosLat, 0.0001);
+  const lonStep = 0.0045 / safeCosLat;
+  const gridLng = Math.round(lng / lonStep) * lonStep;
+
+  return {
+    latitude: parseFloat(gridLat.toFixed(6)),
+    longitude: parseFloat(gridLng.toFixed(6)),
+  };
+}
+
 export async function updateMyProfile(data: {
   contactChannelKind?: "phone" | "whatsapp" | "sms" | null;
   contactChannelValue?: string | null;
@@ -2395,6 +2418,16 @@ export async function updateMyProfile(data: {
 
   const contactChannelKind = input.contactChannelKind ?? null;
   const contactChannelValue = input.contactChannelValue ?? null;
+
+  let latitude = input.latitude;
+  let longitude = input.longitude;
+
+  if (latitude != null && longitude != null) {
+    const coarse = coarsenCoordinates(latitude, longitude);
+    latitude = coarse.latitude;
+    longitude = coarse.longitude;
+  }
+
   // Only touch the flag/coordinates when the caller actually sent them.
   const sharing: {
     locationSharing?: boolean;
@@ -2402,8 +2435,8 @@ export async function updateMyProfile(data: {
     longitude?: number | null;
   } = {
     ...(input.locationSharing === undefined ? {} : { locationSharing: input.locationSharing }),
-    ...(input.latitude === undefined ? {} : { latitude: input.latitude }),
-    ...(input.longitude === undefined ? {} : { longitude: input.longitude }),
+    ...(input.latitude === undefined ? {} : { latitude }),
+    ...(input.longitude === undefined ? {} : { longitude }),
   };
 
   await db

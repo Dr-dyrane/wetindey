@@ -572,7 +572,9 @@ export function GetItSheet({ open, onClose, target, origin, onGoThere }: GetItSh
                       onClick={() => setRating(starVal)}
                       onMouseEnter={() => setHoverRating(starVal)}
                       onMouseLeave={() => setHoverRating(0)}
-                      className="text-amber-500 active:scale-90 transition-transform duration-instant focus:outline-none"
+                      className={`text-amber-500 focus:outline-none transition-all duration-150 ease-out 
+                        active:scale-75 hover:scale-125
+                        ${active ? "scale-105" : "scale-100 opacity-60 hover:opacity-100"}`}
                     >
                       <Star
                         className={`h-8 w-8 ${active ? "fill-current" : "text-neutral-300 dark:text-neutral-800"}`}
@@ -744,9 +746,12 @@ export function GetItSheet({ open, onClose, target, origin, onGoThere }: GetItSh
               {loadingReviews ? (
                 <p className="text-footnote text-text-secondary py-2">Loading reviews...</p>
               ) : reviewsList.length === 0 ? (
-                <div className="py-4 text-center">
-                  <p className="text-footnote text-text-secondary">No reviews yet.</p>
-                  <p className="text-caption-1 text-text-tertiary mt-1">Be the first to confirm prices and share your experience!</p>
+                <div className="py-8 px-4 text-center bg-fillSecondary dark:bg-fillTertiary/20 rounded-[20px] border border-dashed border-fillTertiary/40">
+                  <Star className="h-7 w-7 mx-auto text-text-tertiary mb-2 opacity-40 animate-pulse" />
+                  <p className="text-subhead font-semibold text-text-secondary">No reviews yet</p>
+                  <p className="text-caption-1 text-text-tertiary mt-1 max-w-[240px] mx-auto leading-relaxed">
+                    Be the first to confirm prices, availability, and share your experience!
+                  </p>
                 </div>
               ) : (
                 <div className="space-y-4 pb-4">
@@ -759,10 +764,10 @@ export function GetItSheet({ open, onClose, target, origin, onGoThere }: GetItSh
                       .toUpperCase() || "?";
                     
                     return (
-                      <div key={review.id} className="squircle-card bg-fillSecondary p-3 space-y-2">
+                      <div key={review.id} className="rounded-[20px] bg-fillSecondary p-3.5 space-y-2">
                         <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <div className="w-8 h-8 rounded-full bg-status-info-bg text-status-info flex items-center justify-center text-footnote font-bold">
+                          <div className="flex items-center gap-2.5">
+                            <div className="w-9 h-9 rounded-full bg-status-info-bg text-status-info flex items-center justify-center text-footnote font-bold relative overflow-hidden">
                               {review.reviewerAvatarUrl ? (
                                 <img
                                   src={review.reviewerAvatarUrl}
