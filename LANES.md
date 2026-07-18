@@ -739,3 +739,7 @@ Huygens (`019f7642-a739-7382-9af8-4b631085b775`) inspected only `src/design-syst
 ### H31 deterministic coverage tie-break
 
 Descartes (`019f7644-8b2a-7910-8221-533a6d7afac1`) confirmed `getCoverageForPoint` still orders only by distance, so coincident active LGA/neighbourhood centroids rely on unspecified PostgreSQL row order. The bounded correction is one query-only change in `src/app/actions.ts`: retain distance first, prefer `areas.type = 'neighborhood'`, then `areas.slug ASC`. Implementation is blocked by retained Contribution ownership of `actions.ts`; no seed, live DB, migration, UI, push, or deployment change is authorized. Acceptance requires static SQL refutation plus a controlled coincident-area fixture when the path is released.
+
+### Market detail offer surface handoff
+
+Hegel (`019f7645-cc25-7d42-b537-5a0eb37cda69`) confirmed the current market detail at `src/app/page.tsx` drops price range, availability, freshness, last-observed, image, and provenance semantics, and uses the artificial `max-h-[40vh]` dead zone. Future implementation requires a coordinated claim over `src/app/page.tsx`, `src/app/actions.ts`, and a new `src/design-system/components/PlaceOfferRow.tsx`; do not modify `ItemCard`, `ListRow`, or `IconOrb`. Preserve the pinned `Get it` region, truthful read-side provenance, image fallback, and empty/loading/error states. Implementation is blocked while page/actions remain retained by Contribution containment; no new generic category contract, DB, migration, push, or deployment work is authorized.
