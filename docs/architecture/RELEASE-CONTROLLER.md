@@ -336,6 +336,45 @@ safety/integrity lanes until their separate gates are independently satisfied.
   SQL/role/PostGIS/RLS/lineage/restore proof remains separately unauthorized. Shared
   migration, pilot traffic, and public rollout remain blocked. Contribution integrity
   follows as `0013` or later.
+- Founder browsing policy now requires real GPS outside Lagos to keep browsing/search
+  context inside Lagos using the default Festac area, unless the user explicitly selects a
+  Lagos area such as Yaba. Fallback or selected area must show truthful area context and
+  never “You are here.” This remains separate from presence: only a fresh in-Lagos
+  foreground GPS fix may activate nearby presence; manual/selected area, the default
+  centroid, stale persisted fixes, and simulated/demo coordinates never may. The current
+  self marker represents position, not an avatar. If a user explicitly approves sharing
+  while their real device location is outside Lagos, peers may receive only coarse
+  country/region text such as `United States`; never coordinates, address, exact movement,
+  a false Lagos presence, or nearby-presence status. Browsing context may still be Festac
+  or a selected Lagos area, but presence remains absent outside the real Lagos area. Peer
+  presence currently fails closed because `src/app/page.tsx` passes `sharedUsers={[]}`.
+  Any coarse-label implementation requires exact ownership and counsel/privacy review. The
+  Founder wants a private two-account Festac pilot, but this intent authorizes no shared
+  migration, `0012` application, deployment, pilot traffic, or public rollout. The Presence
+  Platform Engineer returned an exact seven-path first-slice proposal, but it is not
+  active: `src/app/page.tsx` remains exclusively owned by Contribution. The proposed new
+  `src/app/presence-actions.ts`,
+  `src/app/_components/NearbyPresenceControl.tsx`,
+  `src/app/_components/PresenceTapCard.tsx`, and
+  `scripts/presence/presence-private-pilot-contract.test.ts` are unclaimed;
+  `src/design-system/components/MapboxCanvas.tsx` and
+  `src/integrations/maps/MapboxAdapter.ts` are released/unowned; and `src/app/page.tsx`
+  conflicts. Presence must wait and later request a fresh atomic claim over those same
+  seven paths. It may not widen into `src/app/actions.ts`, `locationStore`, profile/auth
+  internals, or committed `0012` paths.
+- Disposable proof is separately unauthorized. A future exact authorization must name a
+  guarded disposable target; reproduce exact lineage through `0012`; prove roles/PostGIS,
+  forced RLS, no `PUBLIC`, least privilege, default-off and empty allowlist; exercise the
+  exact two-account Festac allowlist, reciprocal opt-in, lease expiry/nonrenewal, rates,
+  block/report, kill purge, and restore/cleanup; and prove fallback/selected/stale/simulated
+  coordinates never activate presence. A named safety responder and approved legal/privacy
+  notice are mandatory before pilot traffic.
+- Fail-closed privacy correction: manual, AI-selected, or default centers—including a
+  selected Badagry center—may drive browsing only and never unlock real peers. Badagry may
+  show local information or explicitly labelled Sample users. Real presence requires each
+  viewer’s fresh foreground GPS in the same area, reciprocal opt-in, and coarse
+  lease-scoped markers. Contact or interaction must never automatically reveal true
+  location. Optional coarse country/region sharing remains explicit and counsel-gated.
 - Catalog Stewardship Engineer task
   `019f75a3-f38d-7893-9b82-2d6871a2563c` completed in path-scoped commit `32b15ae` over
   exactly `src/db/seed.ts` and `src/db/seedContent.ts`; an independent static refuter
@@ -365,9 +404,14 @@ safety/integrity lanes until their separate gates are independently satisfied.
   or implementation authority. Do not activate it until containment runtime evidence and
   Presence/shared-migration gates pass, followed by a fresh exact exclusive handoff. No
   tests, DB, push, or deploy is authorized.
-- Motion & Interaction Engineer task `019f75e9-880d-7b41-880c-736a3150e406` is active
-  read-only/pathless on shared `ModalSheet` focus diagnosis. It owns no implementation
-  path and has no edit, build, test, or browser authority until an exact future handoff.
+- Shared `ModalSheet` focus hardening completed at `3e28c63` and independent refutation
+  returned **NOT REFUTED**. Shared `isEnabledVisible` is used by initial focus and Tab
+  trapping, covering native/ARIA disabled, hidden, disabled fieldsets, inert/ARIA-hidden,
+  absent layout, and computed display/visibility. Panel fallback, Escape, trapping,
+  nesting, restoration, animations, and reduced motion are preserved.
+  `src/design-system/components/ModalSheet.tsx` is released. Browser/runtime focus,
+  `visibility:collapse`, and restoration when the prior target becomes hidden remain
+  unproven. Contribution retains its separate five paths; no push or deploy is authorized.
 - H38 offline search assessment is complete, but correction remains pathless and blocked
   while Contribution exclusively owns `src/app/page.tsx`. Catastrophic error-boundary
   escape is refuted in the current tree: search rejection is caught and `AsyncList`
