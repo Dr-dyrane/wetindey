@@ -50,6 +50,14 @@ this sequence:
    candidate commit. Re-read the remote ref immediately before push; if it changed,
    discard the decision and wait for a later explicit checkpoint assignment.
 
+### Browser refutation tab discipline
+
+HI Quality and every future browser refuter must reuse one dedicated localhost QA tab.
+Navigate or reset that tab in place for each flow, preserve all unrelated user tabs, and
+close any unavoidable temporary duplicate before reporting. Never create a fresh tab or
+window per test. A report must confirm this discipline; repeated tab/window creation or an
+unclosed duplicate leaves the browser gate incomplete and therefore fail-closed.
+
 The controller never force-pushes, amends, rebases, resets, stashes, deploys manually, or
 absorbs another lane's dirty work. It never runs `next build` against a live development
 `.next`.
@@ -208,8 +216,8 @@ safety/integrity lanes until their separate gates are independently satisfied.
   combined release verdict remains **REFUTED** only because Safari keyboard focus and
   artificial loading/error/cache/empty states were not proven. Those remain residual
   evidence gaps, not retained ownership. Exact screenshot paths remain in the HI report.
-  `ExchangePanel.tsx` is reserved for a future ADR-017-backed currency lane only after
-  governance commits; no Exchange/currency implementation path is currently claimed.
+  That completed flattening lane released `ExchangePanel.tsx`; the path is now separately
+  claimed by the later ADR-017 provider-aware implementation lane recorded below.
 - A later Founder-directed HI slim-category-trigger lane now owns exactly
   `src/app/page.tsx` for the category trigger only: preserve a >=44px outer target while
   making the visible surface a slim 30–32px rounded rectangle. Evidence is
@@ -224,18 +232,29 @@ safety/integrity lanes until their separate gates are independently satisfied.
   All writes remain excluded. The prior `c6f304b` static correction was not runtime
   closure.
 - Product & Data Governance Architect task
-  `019f7599-0eaa-7423-9ebf-a1bfea8efe37` owns the active two-path governance-only Aboki
-  FX provider-policy correction lane over exactly
-  `docs/adr/017-cbn-reference-rate-converter.md` and `WETINDEY_BIBLE.md`. Scope replaces
-  CBN-only policy with a truthful Frankfurter reference model while preserving
-  provider/date attribution, the Aboki FX category name, and a clear non-transaction
-  boundary. No rate may be labelled CBN unless actually CBN-backed; blended corridors use
-  `Frankfurter reference`. Curated USD, GBP, EUR, CAD, AUD, GHS, KES, ZAR, AED, CNY, INR,
-  BRL, CHF, JPY, and SAR corridors remain subject to live server catalog availability.
-  Local SVG flags and a searchable picker direction are approved without emoji or remote
-  flags. No code, assets, tests, DB, ExchangePanel, currency path, push, or deploy is
-  authorized. Require one path-scoped governance commit and independent read-only
-  refutation before release; implementation paths remain unclaimed until governance lands.
+  `019f7599-0eaa-7423-9ebf-a1bfea8efe37` completed the two-path ADR-017 governance
+  correction at `0bf641d7784edfa512ab54bf13a15c3ac0c72ce1`. Independent refutation
+  passed with no P1/P2/P3, so `docs/adr/017-cbn-reference-rate-converter.md` and
+  `WETINDEY_BIBLE.md` are released. Governance now requires truthful provider/date
+  attribution, permits CBN labelling only for explicit CBN backing, otherwise uses
+  `Frankfurter reference`, preserves the Aboki FX name and non-transaction boundary, and
+  authorizes a searchable picker with bundled non-emoji SVG flags.
+- Human Interface Design Engineer task `019f75a5-0fc6-7f40-9a0f-8097ead3b45d` now owns
+  the exclusive ADR-017 implementation lane over exactly `src/app/currency-actions.ts`,
+  `src/app/_data/reference-currencies.ts`, `src/app/_components/ExchangePanel.tsx`,
+  `src/app/_components/CurrencyPickerSheet.tsx`, `src/app/_components/CurrencyFlag.tsx`,
+  `public/icons/currency-flags.svg`, and `public/icons/currency-flags.LICENSE.md`. The
+  claim is active but implementation is sequenced after that employee's one-file
+  slim-header commit. Scope is a fail-closed live-catalog intersection for at most USD,
+  GBP, EUR, CAD, AUD, GHS, KES, ZAR, AED, CNY, INR, BRL, CHF, JPY, and SAR; typed
+  provider/effective-date data; truthful CBN/Frankfurter labels; amount-first calculation;
+  a searchable deduplicated Recent/Popular/All picker with device-local recents; bundled
+  licensed flags; 44px targets; reduced motion; and honest loading, catalog-empty,
+  pair-unavailable, error, offline, and attribution states. Amount egress, Sample leakage,
+  transaction/wallet/fee/recipient copy, remote flags, page/actions/general-validation
+  edits, DB/schema/migration work, tests, push, and deploy remain excluded. Require one
+  path-scoped commit, independent static refutation, then HI Quality runtime refutation
+  using the single dedicated localhost QA tab before release.
 - Nearby Presence governance completed in path-scoped commit
   `c96086007e6f379c1b686b8203deef2c7c5559c2` with independent PASS. Its exact paths were
   `WETINDEY_BIBLE.md` and `docs/adr/016-nearby-user-presence.md`, now released. ADR-016 is
