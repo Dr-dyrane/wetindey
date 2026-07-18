@@ -252,8 +252,13 @@ safety/integrity lanes until their separate gates are independently satisfied.
   orbs, pair-keyed rate state, a typed catalog/rate call chain, and truthful
   provider/effective-date data. HI Quality runtime refutation **REFUTED** the candidate:
   amount `100` JPY clears when the same Safari window crosses desktop→compact. All other
-  tested core flows, circular orbs, and provider labels passed. Retain all seven paths for
-  a forward fix and repeated reused-tab verdict. The Founder-reaffirmed
+  tested core flows, circular orbs, and provider labels passed. Forward fix
+  `a4eaed3b41f19162bc89e4f07100dc23a0285001` changed only `ExchangePanel.tsx` and
+  received independent static PASS with no P1/P2/P3. It uses bounded validated current-tab
+  `sessionStorage` to preserve amount across responsive remount, clears invalid or blank
+  state, and changes no egress/provider behavior. Retain all seven paths pending the newly
+  assigned narrow HI Quality same-tab desktop→compact→desktop and clear/no-resurrection
+  verdict. The Founder-reaffirmed
   visual-system rule binds this lane: primary surfaces stay monochrome/neutral so
   controlled color lives in iconography and photography; currency flags are circular local
   SVG orbs, never emoji or rectangular flag badges. No tests, DB, push, or deploy occurred.
