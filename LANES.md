@@ -97,6 +97,7 @@ source ownership; only rows with exact paths grant edit authority.
 | Modal zero-focusable/focus restoration | **Active, exact two paths** | Motion owns only `ModalSheet.tsx` and `scripts/motion-contracts.test.ts`; independent runtime verdict is pending |
 | Production nonce CSP (`97b74af`) | **Active, exact three-path P1 correction** | Production has one enforcing and one report-only CSP, but Next bootstrap/Flight/webpack/polyfill/app chunks and two JSON-LD scripts lack nonces because Next reads the static enforcing CSP before the report-only policy. Security owns only `src/middleware.ts`, `src/lib/seo.tsx`, and `scripts/csp-policy-contracts.test.ts`; report-only remains the only allowed mode and enforcement is prohibited |
 | Contextual place-marker orbs and selected glow | **Active, exact two-path implementation** | Maps Engineering Lead owns only `src/design-system/components/MapboxCanvas.tsx` and `src/integrations/maps/MapboxAdapter.ts`; self-location provenance/avatar, peers, Presence, page/actions/location state, and camera changes remain separate and unclaimed |
+| Identity & Email Delivery — branded Neon Auth OTP | **REFUTED; active exact six-path correction** | Hostinger SMTP is the selected provider. Open P1/P2 evidence covers provider timeout versus Neon attempt budget, remaining-expiry semantics, executable contract coverage, bounded unknown-`kid` JWKS refresh, bounded streaming body handling, and negative route contracts. Source and activation remain inert pending correction and Preview-first configuration/refutation |
 | Nearby Presence forward `0012` | **Active, exact four-path corrected-unapplied lane** | Presence owns only both presence pillars, `0012_guarded_presence.sql`, and the focused migration contract. Five executable SQL failures are enumerated below; schema declarations, migration metadata, all `0011` bytes, app/UI/map paths, and the shared database remain frozen |
 | Search/provenance disposable SQL (`97b74af`) | **Closed / released with PASS** | Deployed-current-main proof passed strengthened unavailable and contradictory cases with exact cleanup. Search & Ranking remains persistent and available; no path or execution gate remains claimed |
 | HI category/Aboki plus Add/Profile | **Pathless release evidence** | Scoped UI changes passed. Reopen only combined Safari keyboard and artificial loading/error/cache/empty-state evidence; implementation paths remain released |
@@ -170,25 +171,48 @@ The current controller owns exactly:
 - `src/lib/auth-email.ts`
 - `scripts/auth-email-contracts.test.ts`
 - `docs/operations/AUTH-EMAIL-DELIVERY.md`
+- `package.json` solely for direct `nodemailer` plus its types dependency
+- `package-lock.json` solely for the matching dependency lock changes
 
 `public/logo.png` is a read-only asset dependency and is not claimed for editing.
 
 The current managed Neon Auth / Better Auth service exposes no dashboard email-template
 editor. Fully branded OTP content therefore requires the signed `send.otp` webhook and a
-custom delivery provider. Custom SMTP alone may change sender and delivery configuration,
-but it does not replace the managed message body.
+custom delivery provider. Configuring custom SMTP directly in Neon changes sender/delivery
+but retains the default managed body; it does not produce branded HTML.
 
-Implementation must remain inert until all three external conditions are proven:
-`RESEND_API_KEY`, a verified sender environment value, and the Neon branch webhook
-configuration. Source completion must not claim that webhook delivery, sender
-verification, branded rendering, or OTP email delivery is live.
+The Founder selected Hostinger Email. Delivery uses `smtp.hostinger.com` with either port
+`465` plus SSL or port `587` plus STARTTLS. Authentication requires a real backing mailbox
+address and that mailbox password; an alias has no independent API key or password.
+Required runtime configuration is `AUTH_SMTP_USER`, `AUTH_SMTP_PASSWORD`, and
+`AUTH_EMAIL_FROM`. Host, port, and reply-to may be overridden with optional
+`AUTH_SMTP_HOST`, `AUTH_SMTP_PORT`, and `AUTH_EMAIL_REPLY_TO`, without editing any `.env`
+file.
+
+Implementation and activation must remain inert until the backing mailbox credentials,
+From identity, Preview environment configuration, and the Neon Preview branch signed
+`send.otp` webhook are proven. Activation is Preview-first; Production remains disabled
+until Preview delivery and refutation pass. Source completion must not claim that webhook
+delivery, mailbox verification, branded rendering, or OTP email delivery is live.
+
+The current independent refuter verdict is **REFUTED** with open P1/P2:
+
+- provider timeout must fit within the Neon webhook attempt budget;
+- OTP rendering must preserve truthful remaining-expiry semantics;
+- the webhook/email behavior needs an executable contract;
+- unknown-`kid` JWKS refresh must be explicitly bounded;
+- request-body streaming must be bounded;
+- negative route contracts must prove fail-closed behavior.
 
 Explicitly exclude the existing auth proxy/client and `ProfileSheet` flow, Neon OTP
-generation or verification semantics, package files, `.env` files, database, schema,
-migrations, Account Deletion paths, Security CSP paths, Motion, and Maps.
+generation or verification semantics, package changes beyond direct `nodemailer` and its
+types, `.env` files, database, schema, migrations, Account Deletion paths, Security CSP
+paths, Motion, and Maps.
 
 Acceptance requires an independent security/static refutation and an independent
-rendered-email refutation. No push or deployment authority follows from this source lane.
+rendered-email refutation after the P1/P2 corrections, with Preview delivery evidence
+before any Production consideration. No push or deployment authority follows from this
+source lane.
 
 ### Active lane: contextual place-marker orbs and selected glow
 
@@ -322,7 +346,8 @@ employee handoffs in exactly these two standing documentation paths:
 
 The controller does not own product implementation by default. The explicit
 **Identity & Email Delivery — branded Neon Auth OTP** lane above is the sole current
-exception and grants only its four exact paths; it does not widen the controller's
+exception and grants only its six exact paths; package ownership is dependency-only and
+it does not widen the controller's
 standing role. The controller may make a path-scoped local documentation commit after an
 explicit handoff, but may not push, deploy, migrate, seed, or run a release test without
 separate authorization. A push is a Production deployment and requires an explicit
@@ -504,7 +529,7 @@ paths; after they are claimed, Sol's next step is implementation.
 
 | Planned lane | Status | Owner/model | Scope | Dependencies and exclusions |
 |---|---|---|---|---|
-| **G0 governance reconciliation** | event-driven employee upkeep, docs by default | Quality & Release Controller | Reconcile checkpoint evidence, ownership, gates, and employee handoffs only when explicitly assigned | Standing ownership remains `LANES.md` and `docs/architecture/RELEASE-CONTROLLER.md`; the separately explicit branded Neon Auth OTP lane is the sole current four-path implementation exception and grants no broader app/schema/migration authority |
+| **G0 governance reconciliation** | event-driven employee upkeep, docs by default | Quality & Release Controller | Reconcile checkpoint evidence, ownership, gates, and employee handoffs only when explicitly assigned | Standing ownership remains `LANES.md` and `docs/architecture/RELEASE-CONTROLLER.md`; the separately explicit branded Neon Auth OTP lane is the sole current six-path implementation exception, with package files limited to direct Nodemailer dependencies and no broader app/schema/migration authority |
 | **D1 database lineage** | completed, released | Terra session *Harvey*, independently refuted by Luna | Restored the exact applied `0006`-`0008` lineage artifacts and proved disposable bootstrap | Exact SQL preserved; blank migration, seed, second-pass idempotence, clean-`HEAD` failure, and cleanup were independently reproduced |
 | **D2 provenance boundary** | disposable execution 2/2 complete; shared rollout unapplied and unauthorized | controller / Sol decision, Terra implementation, independent refutation | Added one enforced provenance class at the immutable observation boundary; source, blank-lineage, seed/idempotence, and `0008` sentinel-upgrade evidence passed | No shared or production migration and no deployment occurred; no reputation, media, partner ingest, reference CRUD, inferred-data engine, or Trust Graph storage |
 | **Avatar upload transport envelope** | completed, released | Iconography / Sol | Commit `14ee051` gives Server Actions multipart headroom above the existing strict 2 MiB avatar validator; owns no paths | Independent refutation and local HTTP check passed; Vercel Development Blob/OIDC remains an external blocker; no push or deploy |
@@ -518,7 +543,7 @@ paths; after they are claimed, Sol's next step is implementation.
 | **H6 ADR-020 nonce-CSP governance** | complete at `14aff35` + `6c74c147`; re-refutation NOT REFUTED with no P1/P2/P3; four docs released | H6 governance workers and independent refuter `019f7692-d254-7e43-a687-154876274927` | One enforcing nonce policy, request/response CSP parity, explicit `x-nonce`-alone rejection, no duplicate enforcement, dynamic/private/no-store, environment, Blob, report-only, and later-boundary contracts | Governance acceptance authorizes architecture only. No middleware/layout/Vercel implementation, Preview enforcement, Production deployment, push, or release authority follows |
 | **H6 CSP report collector and retention** | **ACTIVE exact source claim**; owner operating decisions complete; deployment still gated | Security & Privacy Engineering Lead; fresh independent privacy/retention refuter | `src/app/reports/security/csp/route.ts`; `src/app/reports/security/csp/cleanup/route.ts`; `src/lib/security/csp-report.ts`; `src/lib/security/csp-report-store.ts`; `.env.example`; `vercel.json` (Cron addition only); `scripts/csp-report-contracts.test.ts` | Implement the approved first-party public POST collector, pre-persistence sanitization, private Blob namespaces, 14/30/90-day retention, authenticated cleanup, bounded payloads, fail-open storage, and exact focused contracts. `CRON_SECRET` owner is the repository owner/platform maintainer for Production and Preview. Approved WAF is exactly `POST /reports/security/csp`, 60 requests/IP/minute, enforce `429`; platform maintainer owns rollback. Keep the existing static CSP byte-for-byte. No push/deploy/WAF/provider mutation follows from source completion |
 | **Production nonce CSP P1 correction** | ACTIVE exact three-path source claim from deployed `97b74af` runtime REFUTATION | Security & Privacy Engineering Lead; fresh independent static refuter followed by production browser/report refuter | `src/middleware.ts`; `src/lib/seo.tsx`; `scripts/csp-policy-contracts.test.ts` | Next bootstrap/Flight/webpack/polyfill/app chunks and two JSON-LD scripts lack nonces because Next reads the static enforcing CSP before report-only. Keep report-only only; enforcement prohibited. Require deterministic production HTML/source, focused contract, TypeScript/lint, independent static PASS, push/deploy, then production nonce census and browser/report refutation. No other paths |
-| **Identity & Email Delivery — branded Neon Auth OTP** | ACTIVE exact four-path source lane; inert pending provider/environment proof | current controller; independent security/static and rendered-email refuters | `src/app/api/webhooks/neon-auth/route.ts`; `src/lib/auth-email.ts`; `scripts/auth-email-contracts.test.ts`; `docs/operations/AUTH-EMAIL-DELIVERY.md`; read-only `public/logo.png` | Managed Neon Auth has no dashboard template editor; branded body requires signed `send.otp` webhook plus custom provider, while custom SMTP alone changes sender/delivery only. Keep inert until `RESEND_API_KEY`, verified sender env, and Neon branch webhook configuration are proven. Excludes existing auth flows, OTP semantics, package/env, DB/schema/migrations, deletion, CSP, Motion, and Maps. No push/deploy |
+| **Identity & Email Delivery — branded Neon Auth OTP** | REFUTED; ACTIVE exact six-path correction; inert and Preview-first | current controller; independent security/static and rendered-email refuters | `src/app/api/webhooks/neon-auth/route.ts`; `src/lib/auth-email.ts`; `scripts/auth-email-contracts.test.ts`; `docs/operations/AUTH-EMAIL-DELIVERY.md`; `package.json`; `package-lock.json`; read-only `public/logo.png` | Hostinger `smtp.hostinger.com` uses 465/SSL or 587/STARTTLS with a real mailbox address/password; aliases have no independent credential. Required env: `AUTH_SMTP_USER`, `AUTH_SMTP_PASSWORD`, `AUTH_EMAIL_FROM`; optional `AUTH_SMTP_HOST`, `AUTH_SMTP_PORT`, `AUTH_EMAIL_REPLY_TO`. Direct Neon SMTP remains sender/default-body only; branded HTML uses signed `send.otp`. Keep inert until Preview credentials/from/webhook proof. Correct timeout budget, expiry semantics, executable contract, bounded unknown-`kid` refresh/body streaming, and negative routes; then security/static plus rendered-email refutation. Package changes are Nodemailer/types only; all prior exclusions remain. No push/deploy |
 | **Release verification + Q1 refutation** | planned Stage 0, owns no paths | controller / Sol plus fresh independent refuter | One adversarial release gate for migration, provenance, trust, Server Actions, category/filter context, map/sheet, browser, accessibility, PWA, legal, and production-build claims | Defaults to refuted when evidence is thin; must not run `next build` against the live dev `.next`; no shared DB or deployment by implication |
 | **Food pilot operations** | planned Stage 1, owns no paths | unassigned operator/product lane | Source review, field entry, catalog/unit mapping, place correction/merge, dispute handling, freshness coverage, moderator audit | Begins only after Stage 0 truth gate; bounded geography and catalog |
 | **Seller contact and stewardship** | planned Stage 1, owns no paths | unassigned | Claim/onboard seller, consented contact publication, safe contact resolution, hours, corrections, and response state | No delivery, checkout, payment, dispatch, or inferred consent |
@@ -728,7 +753,7 @@ in either one will conflict. **Never edit these without holding the lane that ow
 | `src/app/_components/ReportPriceSheet.tsx`, `src/app/_components/ConfirmVisitSheet.tsx` | — | **Contribution containment and integrity** — UI safety passed but runtime REFUTED on background focus escape; retained |
 | `src/core/i18n/strings.ts` | — | **Contribution containment and integrity** — untranslated no-promise maintenance copy passed; retained with REFUTED lane pending the current Motion correction and independent runtime verdict |
 | `src/app/_components/ManageProfileSheet.tsx` | — | **released** after presence containment `4e25b8c7`. |
-| `src/app/api/webhooks/neon-auth/route.ts`, `src/lib/auth-email.ts`, `scripts/auth-email-contracts.test.ts`, `docs/operations/AUTH-EMAIL-DELIVERY.md` | current controller | **Identity & Email Delivery — branded Neon Auth OTP** — active exact four-path claim; source must remain inert pending provider/environment/webhook proof; independent security/static and rendered-email refutation required |
+| `src/app/api/webhooks/neon-auth/route.ts`, `src/lib/auth-email.ts`, `scripts/auth-email-contracts.test.ts`, `docs/operations/AUTH-EMAIL-DELIVERY.md` | current controller | **Identity & Email Delivery — branded Neon Auth OTP** — REFUTED active correction; inert and Preview-first pending Hostinger mailbox/from plus Neon branch webhook proof; security/static and rendered-email refutation required |
 | `public/logo.png` | — | **read-only dependency** for branded OTP email rendering; no edit claim |
 | `src/db/seed.ts` | — | **released** after `32b15ae` catalog determinism PASS; H27 trust defect remains separately open/unclaimed because that commit preserves the hardcoded freshness-to-trust assignment |
 | `src/db/seedContent.ts` | — | **released** after `32b15ae` and independent static PASS; catalog 48/85, slugs/content, Spaghetti contract, and synthetic provenance preserved |
@@ -737,7 +762,7 @@ in either one will conflict. **Never edit these without holding the lane that ow
 | `src/db/migrations/0012_guarded_presence.sql` | Nearby Presence Platform Engineer `019f759f-3521-7ee1-90a3-5af3539d757e` | **Corrected-unapplied `0012`** — active exact claim; fresh blank+upgrade/new-cluster proof required before any shared action |
 | `src/db/migrations/meta/0012_snapshot.json`, `src/db/migrations/meta/_journal.json` | — | **frozen**; no claim unless corrected SQL provably changes stored objects/signatures and the controller records a new exact handoff |
 | `scripts/presence/presence-migration-contract.test.ts` | Nearby Presence Platform Engineer `019f759f-3521-7ee1-90a3-5af3539d757e` | **Corrected-unapplied `0012`** — active exact contract claim covering nine RPCs, lifecycle/security/cleanup/idempotence, deterministic idle retention, and account-deletion purge/anonymization |
-| `package.json` / `package-lock.json` | — | **auth** |
+| `package.json` / `package-lock.json` | current controller | **Identity & Email Delivery — branded Neon Auth OTP** — active dependency-only claim for direct `nodemailer` plus its types; no scripts, unrelated packages, or broader package ownership |
 | `LANES.md`, `docs/architecture/RELEASE-CONTROLLER.md` | — | **Quality & Release Controller employee** — event-driven lane reconciliation and checkpoint review; no timer, automation, child task, or push without a separately authorized passing checkpoint |
 | `docs/operations/WETINDEY-OPERATING-SYSTEM.md`, `docs/operations/PORTFOLIO-AND-IDEA-REGISTER.md` | — | **released** after independently `NOT_REFUTED` operating-model commit `611ad9c63c4e80e7a824ee2ebf5539149650832c`. |
 | `docs/adr/016-nearby-user-presence.md` | — | **released** after path-scoped `c96086007e6f379c1b686b8203deef2c7c5559c2` and independent PASS; ADR-016 acceptance is implementation architecture only |
@@ -1224,7 +1249,7 @@ refuter.
 | Presence / Safety Engineering | Consent-based nearby presence, trusted people, blocks, reports, leases, and pilot gates | Corrected-unapplied `0012` active on exact four paths; fresh blank+upgrade/new-cluster proof required; shared DB and seven app/UI/map paths untouched |
 | Catalog Stewardship | Item CRUD, aliases, variants, units, category mapping, reference imagery, attribution, and duplicate merging | Unassigned |
 | Observation Evidence Media | Report attachments, receipts, EXIF removal, privacy, hashing, size limits, moderation, retention, and offline uploads | Unassigned |
-| Seller Platform / Identity & Access / Email Delivery | Seller onboarding, scoped RBAC, verification, consented contact, seller operations, and auth-message delivery | Seller architecture remains unassigned; separate branded Neon Auth OTP source lane active under current controller and inert pending provider/environment proof |
+| Seller Platform / Identity & Access / Email Delivery | Seller onboarding, scoped RBAC, verification, consented contact, seller operations, and auth-message delivery | Seller architecture remains unassigned; branded Neon OTP Hostinger correction is active/REFUTED under current controller, inert and Preview-first pending provider/environment/security/rendered evidence |
 | Currency / Money Experience | Aboki FX provider-aware catalog, flags, reverse conversion, attribution, and offline states | Awaiting exact implementation claim |
 | Trust / Data Governance | Provenance admissibility, observed-only confidence, sample labelling, reputation, and source review | Stage 0 dependencies remain |
 | Security & Privacy | CSP reporting, privacy disclosures, account deletion, presence safety, redaction, retention, and independent refutation | Collector source and exact three-path production nonce P1 correction active; deletion provider proof REFUTED/pathless; enforcement prohibited and release gates remain |
