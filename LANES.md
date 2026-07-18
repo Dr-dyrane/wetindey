@@ -101,6 +101,22 @@ inheritance, 44px enclosing targets, decorative accessibility, reduced motion, l
 geometry, and all existing call-site behavior. One path-scoped forward commit and an
 independent no-P1/P2 visual/accessibility refutation are required before any adoption lane.
 
+### Active lane: Modal zero-focusable focus containment
+
+The pinned Motion & Interaction Engineer owns exactly:
+
+- `src/design-system/components/ModalSheet.tsx`
+- `scripts/motion-contracts.test.ts`
+
+Correct the shared ModalSheet case where all body controls are disabled and Safari Tab can
+reach the background map while the dialog stays open. Initial focus, Tab, and Shift+Tab
+must remain inside the dialog even with zero ordinarily focusable body controls; Escape and
+Close must work; focus must restore to the trigger; nested/pushed sheets, motion, stacking,
+and visual layout must remain unchanged. Add executable gesture/focus-boundary coverage to
+the existing focused contract. One path-scoped commit plus independent keyboard, screen-
+reader, nested-sheet, and reduced-motion refutation is required. No caller, page, action,
+database, map, or iconography path is included.
+
 ## Controller reconciliation — semantic UI and market-detail follow-up
 
 The latest consumer-surface review identified two queued workstreams that were not
