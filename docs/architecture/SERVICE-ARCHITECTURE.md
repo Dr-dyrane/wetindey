@@ -142,9 +142,35 @@ Presented sheets (ModalSheet): ItemDetail · GetIt · ConfirmVisit ·
 
 ### Existing UI/UX patterns
 
-Apple HIG is law here and the discipline is real: **zero borders, sheets not dropdowns, carets not arrows, less copy.**
+Apple HIG is law here and the discipline is real: **no routine decorative borders,
+sheets not dropdowns, carets not arrows, less copy.** Focus outlines, forced-colors
+outlines, information-bearing strokes, and a control outline required to preserve
+affordance are not decorative borders.
 
-`AdaptiveShell` mounts exactly one shell at 768px and renders the map alone on SSR rather than guessing at hydration. `BottomSheet` translates, never resizes, and publishes `--sheet-hidden` that the map and nav stack consume. `NavigationStack` uses **presence as depth** — no depth state — and keeps L0 mounted so scroll survives. `AsyncList` is the best component in the repo: it owns the fifth state nobody names, *refreshing while data is shown*, and degrades an error-with-data to a strip **above live rows** rather than destroying them. `SheetPicker` refuses to render a picker for ≤1 option, because a picker with one undeselectable row is a control that lies about having an outcome. `StatusBadge` is the only saturated colour in the product and is always paired with a label so meaning survives greyscale.
+`AdaptiveShell` mounts exactly one shell at 768px and renders the map alone on SSR rather than guessing at hydration. `BottomSheet` translates, never resizes, and publishes `--sheet-hidden` that the map and nav stack consume. `NavigationStack` uses **presence as depth** — no depth state — and keeps L0 mounted so scroll survives. `AsyncList` is the best component in the repo: it owns the fifth state nobody names, *refreshing while data is shown*, and degrades an error-with-data to a strip **above live rows** rather than destroying them. `SheetPicker` refuses to render a picker for ≤1 option, because a picker with one undeselectable row is a control that lies about having an outcome. `StatusBadge` may use a saturated status tone only for an actual asserted state and is always paired with a label so meaning survives greyscale. Authentic licensed/media color and separately owned domain and rating tones follow ADR-018; they do not make an ordinary control a status.
+
+**Accepted visual architecture correction — [ADR-018](../adr/018-controlled-semantic-iconography.md).**
+Primary surfaces and ordinary destinations, actions, navigation, inputs, and system
+controls are monochrome or neutral. Authentic color remains valid for licensed flags,
+attributed photography, and user-chosen avatars. A complete enabled domain may own a
+domain tone, but domain, rating, and status are separate token families. Only an actual
+asserted state may use `confirmed`, `caution`, `unavailable`, or `info`; disabled future
+categories remain neutral, and rating has its own token.
+
+The accepted `IconOrb` contract is circular and borderless at 28, 32, or 48 px,
+decorative by default, paired with redundant text, and contained by an interactive parent
+of at least 44 × 44 px when actionable. It must remain understandable in grayscale and
+forced-colors and remove nonessential motion under reduced-motion preferences. It is not
+a blanket wrapper or color rule for pills, cards, inputs, status badges, flags,
+photography, avatars, or map markers.
+
+This correction explicitly supersedes provisional universal green-accent, routine
+separator, and border-as-containment guidance. Spacing, neutral surface contrast,
+material, and restrained elevation establish hierarchy; accessibility-required focus
+outlines and information-bearing strokes remain valid. ADR-017 continues to govern
+Aboki FX's licensed local non-emoji SVG flag sprite and prohibition on remote flag
+requests. These are accepted architecture rules, not evidence that the current runtime
+implements them. The implementation lane is separate and unclaimed.
 
 **Where the patterns break:** two of five lists ignore `AsyncList` and hand-roll their states (`ItemDetailSheet`'s error card has no retry at all). The search list has **no error path** while the popular list directly above it does — a database outage renders as *"Try a local name like 'ewa' or 'dodo'"*, the app blaming the user's vocabulary. The language picker is a lie: 215 i18n keys, one consumer; every dotted key has zero consumers; `ConfirmVisitSheet` forked its own dictionary; distance formatting hardcodes English `"away"` on the three surfaces where distance is read. `MapboxCanvas` declares `selectedPlaceId` as a **required** prop and destructures it as `_selectedPlaceId`, never using it — **no pin has ever rendered as selected.** The popular list ships `PhotoCredits`; the search list renders the same Wikimedia images with none — a licence breach by the codebase's own stated standard. Escape in a nested picker discards the whole form, because `ModalSheet` renders inline with no portal and both handlers sit on `document` where `stopPropagation` does not stop siblings.
 

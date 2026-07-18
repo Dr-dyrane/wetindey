@@ -1743,53 +1743,45 @@ Avoid:
 --green-button
 ```
 
-## 17.3 Provisional color system
+## 17.3 Accepted semantic color and iconography architecture
 
-The following is a starting proposal, not finalized brand artwork.
+[ADR-018](docs/adr/018-controlled-semantic-iconography.md) supersedes this section's
+provisional universal green accent, separator tokens, and any routine border-as-
+containment interpretation. It accepts visual architecture only; it does not claim that
+the current runtime conforms.
 
-### Light appearance
+Primary surfaces and ordinary destinations, actions, navigation, inputs, disclosures,
+and system controls are monochrome or neutral. Color has a named semantic owner:
 
-```text
-Background          #F7F7F5
-Surface             #FFFFFF
-Surface elevated    #FFFFFF
-Text primary        #111113
-Text secondary      #626268
-Text tertiary       #85858C
-Separator           rgba(60, 60, 67, 0.18)
-Accent              #087A50
-Accent pressed      #066540
-Confirmed           #248A3D
-Caution             #A96500
-Unavailable         #C9342F
-Information         #2678D9
-Focus ring          #0A84FF
-```
+| Family | Meaning |
+|---|---|
+| Authentic content | Licensed flags, attributed photography, and user-chosen avatars may retain authentic color without implying status or trust |
+| Domain | A complete enabled category may use a documented domain tone; disabled future categories remain neutral |
+| Status | `confirmed`, `caution`, `unavailable`, and `info` apply only to an actual asserted state |
+| Rating | Rating uses its own token and never borrows caution, confirmation, domain, trust, or verification meaning |
+| Neutral | Ordinary destinations, actions, navigation, system controls, and unavailable future capabilities |
 
-### Dark appearance
+Domain, status, and rating are separate token families even when provisional values look
+similar. Color never carries meaning alone. State requires redundant text, shape, icon,
+or position. All text and icon combinations must meet applicable contrast requirements,
+tertiary text cannot contain essential information, and map colors require separate
+surface testing.
 
-```text
-Background          #0B0B0C
-Surface             #1C1C1E
-Surface elevated    #252528
-Text primary        #F5F5F7
-Text secondary      #B1B1B7
-Text tertiary       #85858C
-Separator           rgba(84, 84, 88, 0.60)
-Accent              #35B57B
-Confirmed           #45B85B
-Caution             #E1A23A
-Unavailable         #F06A64
-Information         #64A8FF
-Focus ring          #64A8FF
-```
+`IconOrb` is circular and borderless at exactly 28, 32, or 48 px. It is decorative by
+default; the containing row, button, link, or control owns the accessible name and state.
+An interactive parent is at least 44 × 44 CSS pixels, supplies visible focus, and pairs
+the icon with redundant text. Grayscale and forced-colors must preserve meaning and
+focus; reduced motion removes nonessential icon animation.
 
-Rules:
+There is no blanket orb, circle, color, or border-removal rule for pills, cards, inputs,
+status badges, flags, photographs, avatars, map markers, or every glyph. Those components
+retain their own semantic contracts. Accessibility-required focus outlines,
+forced-colors outlines, and information-bearing visualization strokes are not decorative
+borders.
 
-- Color never carries meaning alone.
-- All text combinations must meet WCAG AA contrast at minimum.
-- Tertiary text must not contain essential information.
-- Map colors must be tested separately from UI surfaces.
+ADR-017 remains authoritative for Aboki FX: flags come from a licensed bundled SVG sprite,
+currency text carries accessible meaning, emoji is not the marker system, and remote flag
+requests are prohibited.
 
 ## 17.4 Typography
 
@@ -1855,8 +1847,8 @@ Avoid giving every nested element a large radius.
 Elevation should communicate layering, not luxury decoration.
 
 - Map controls: subtle shadow and opaque surface.
-- Sheet: strong separation from map using material, border, or shadow.
-- Cards inside sheet: minimal or no shadow; use separators and surfaces.
+- Sheet: strong separation from map using material, surface contrast, or shadow.
+- Cards inside sheet: minimal or no shadow; use spacing and surface contrast.
 - Modals: reserved for interruption or confirmation.
 
 ## 17.8 Materials and blur
@@ -3989,6 +3981,15 @@ direction. WetinDey does not exchange money, and this roadmap authorizes no wall
 recipient, send, transfer, fee, rate lock, payment, remote flag request, code, asset,
 deployment, or provider-availability claim.
 
+**Accepted controlled semantic iconography roadmap gate.**
+[ADR-018](docs/adr/018-controlled-semantic-iconography.md) accepts neutral primary
+surfaces, authentic licensed/media color, separate domain/status/rating token families,
+neutral disabled future categories, and the 28/32/48 px borderless `IconOrb` contract.
+Status tones remain exclusive to actual asserted `confirmed`, `caution`, `unavailable`,
+or `info` states. The implementation lane is separate and unclaimed; this roadmap makes
+no runtime-conformance, token-value, asset-licence, accessibility-evidence, code, asset,
+test, deployment, or launch claim.
+
 ---
 
 # 34. Departments and responsibilities
@@ -4488,6 +4489,7 @@ The team should consider pivoting the mechanism or problem when:
 | Live confidence admits observed evidence; synthetic data stays labelled demo | Accepted — see [ADR-015](docs/adr/015-observation-provenance-admissibility.md) | Observed is the only V1 provenance class admissible to current-state confidence. Synthetic remains visible only as zero-confidence labelled demo fallback; partner, reference, and inferred remain quarantined. No provenance-aware deployment may precede authorized target-database application of `0009` |
 | Privacy-safe nearby-user presence implementation architecture | Accepted — see [ADR-016](docs/adr/016-nearby-user-presence.md); rollout disabled | Signed-in reciprocal opt-in uses a fixed 500 m centroid and an explicit foreground lease of no more than 15 minutes. Separate consent may expose only a chosen display name/avatar to reciprocal active sharers. The accessible presence card permits ephemeral rate-limited `Wave`, Block, Report, and Close. `0011` is frozen; presence owns forward `0012`, and contribution integrity begins at `0013` or later. This acceptance does not authorize shared migration, deployment, pilot traffic, or public rollout |
 | Provider-aware Money & Exchange reference and Sample discovery prototype | Accepted — see [ADR-017](docs/adr/017-cbn-reference-rate-converter.md) | Aboki FX may consider the curated maximum set USD, GBP, EUR, CAD, AUD, GHS, KES, ZAR, AED, CNY, INR, BRL, CHF, JPY, and SAR, while showing only NGN pairs admitted by the validated server catalog. CBN labels require explicit CBN attribution; blended corridors say Frankfurter reference, with accessible provider/date attribution. The amount-first calculator and searchable picker do not exchange money or imply wallet, recipient, send, transfer, fee, or payment. Generic bank/BDC points remain unmistakably Sample and are not businesses, licences, directions, contacts, hours, or outlet rates. |
+| Controlled semantic iconography visual architecture | Accepted — see [ADR-018](docs/adr/018-controlled-semantic-iconography.md); runtime completion unverified | Primary surfaces and ordinary actions are neutral; licensed flags, photography, and avatars may retain authentic color. Domain, status, and rating tokens are separate, disabled future categories stay neutral, and only actual asserted states use confirmed/caution/unavailable/info. `IconOrb` is circular and borderless at 28/32/48 px, decorative by default, with a ≥44 px interactive parent and redundant accessible text. This supersedes provisional universal green-accent, separator, and routine border language without authorizing implementation |
 
 > **Section 25 and Section 26 describe a TARGET, not the current system.** Verified 16 July 2026:
 > `WetinDeyModule` has zero live implementations, `src/modules/food/` is orphaned, and
@@ -4526,7 +4528,9 @@ The team should consider pivoting the mechanism or problem when:
 - Vendor/contact model. **Promoted to blocking by [ADR-001](docs/adr/001-fulfilment-is-out-of-scope.md).** Handing fulfilment to the buyer and seller makes Contact seller the terminal step of the core journey, and it currently resolves for no place at all: `contact_visibility` defaults to `private`, and the `contact_channel_kind` / `contact_channel_value` columns are read by nothing and written by nothing. Trader consent capture (Section 24) is the unbuilt precondition.
 - Contributor compensation.
 - Public-versus-private evidence policy.
-- Final visual identity and accent color.
+- Final brand identity and exact neutral/domain/status/rating/focus token values remain
+  open. ADR-018 closes universal green accent and routine separators as defaults; it does
+  not choose production token values or prove runtime conformance.
 - Trademark and domain strategy.
 
 ## 40.3 ADR template
@@ -4584,6 +4588,7 @@ Deliver a polished, production-capable PWA prototype and pilot product for one q
 - buttons;
 - inputs;
 - status badges;
+- controlled semantic iconography and `IconOrb` per ADR-018;
 - cards;
 - skeletons;
 - banners;
