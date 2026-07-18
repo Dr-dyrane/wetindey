@@ -33,7 +33,7 @@ export function CategorySelectorSheet({
     { id: "health", label: t.category_health || "Health & Beauty", detail: t.category_health_desc || "Medicine, pharmacy, beauty" },
     {
       id: "money",
-      label: t.category_money || "Money & Exchange",
+      label: "Aboki FX",
       detail: "Official CBN reference and Sample places",
     },
     { id: "transport", label: t.category_transport || "Transport", detail: t.category_transport_desc || "Bus fares, ride prices, ferry" },

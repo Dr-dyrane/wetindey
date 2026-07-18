@@ -302,7 +302,6 @@ export default function HomePage() {
   const [selectedExchangeLocationId, setSelectedExchangeLocationId] = useState<string | null>(
     null
   );
-  const [exchangeNoticeVisible, setExchangeNoticeVisible] = useState(true);
   const [userProfile, setUserProfile] = useState<MyProfile | null>(null);
   const [sharedUsers, setSharedUsers] = useState<SharedUserLocation[]>([]);
   /** The item ItemDetailSheet is resolving down to a unit. Non-null = presented. */
@@ -976,7 +975,6 @@ export default function HomePage() {
     setDetailPlaceId(null);
     setGetItTarget(null);
     setSelectedExchangeLocationId(null);
-    if (category === "money") setExchangeNoticeVisible(true);
     setIsReportOpen(false);
     setActiveDetent("medium");
   });
@@ -1237,12 +1235,6 @@ export default function HomePage() {
         </div>
 
         {locateError && <MapNotice message={locateError} onDismiss={dismissLocateError} />}
-        {activeCategory === "money" && !locateError && exchangeNoticeVisible && (
-          <MapNotice
-            message="Sample locations—these pins are not real businesses."
-            onDismiss={() => setExchangeNoticeVisible(false)}
-          />
-        )}
       </div>
 
       {/* Recenter. Parked above the peek detent so the sheet never covers it ,
@@ -1279,11 +1271,11 @@ export default function HomePage() {
             <NigeriaLogo className="h-7 w-7" />
             <button
               onClick={() => setIsCategoryOpen(true)}
-              className="flex items-center gap-1 px-2.5 py-1 rounded-[14px] bg-fillSecondary text-text-primary active:scale-98 transition-all duration-instant text-[14px] font-medium"
+              className="flex min-h-tap items-center gap-1 px-2.5 py-1 rounded-[14px] bg-fillSecondary text-text-primary active:scale-98 transition-all duration-instant text-[14px] font-medium"
             >
               <span>
                 {activeCategory === "money"
-                  ? (t as Record<string, string>).category_money || "Money & Exchange"
+                  ? "Aboki FX"
                   : (t as Record<string, string>).category_food || "Food"}
               </span>
               <ChevronDown className="h-3 w-3 text-text-secondary" />
@@ -1318,9 +1310,15 @@ export default function HomePage() {
               <Avatar name={sessionUser ? sessionUser.name || sessionUser.email : undefined} url={userProfile?.avatarUrl} size={32} />
             </button>
           </div>
-        </div>
+          </div>
 
-        {activeCategory === "food" && (
+          {activeCategory === "money" && (
+            <p className="squircle bg-fillTertiary px-3 py-2 text-caption-1 text-text-secondary">
+              Map pins are Sample, not verified outlets.
+            </p>
+          )}
+
+          {activeCategory === "food" && (
           <SearchField
             value={searchQuery}
             onChange={handleSearchChange}

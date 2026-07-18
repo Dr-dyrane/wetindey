@@ -195,32 +195,20 @@ export function ExchangePanel({
     <div className="space-y-5 px-3 pb-[calc(max(var(--sheet-hidden,0px),var(--safe-area-bottom))+20px)]">
       <section className="space-y-3" aria-labelledby="cbn-reference-heading">
         <div className="px-1">
-          <h2 id="cbn-reference-heading" className="text-title-3 font-semibold text-text-primary">
-            Official CBN reference
+          <p className="text-caption-1 font-semibold uppercase tracking-[0.12em] text-text-tertiary">
+            CBN reference
+          </p>
+          <h2 id="cbn-reference-heading" className="mt-1 text-title-2 font-semibold text-text-primary">
+            How much in Naira?
           </h2>
           <p className="mt-0.5 text-footnote text-text-secondary">
-            Choose a currency and enter an amount.
+            Start with what you have and see a Naira reference estimate.
           </p>
         </div>
 
-        <div className="squircle-card space-y-3 bg-surface-card p-4 shadow-card">
-          <SheetPicker
-            options={CBN_REFERENCE_CURRENCIES.map((code) => ({
-              id: code,
-              label: CURRENCY_META[code].label,
-            }))}
-            value={currency}
-            onSelect={(value) => {
-              if (CBN_REFERENCE_CURRENCIES.some((code) => code === value)) {
-                setCurrency(value as CbnReferenceCurrency);
-              }
-            }}
-            title="Choose currency"
-            label="Currency"
-          />
-
+        <div className="squircle-card space-y-4 bg-surface-card p-4 shadow-card">
           <label className="block space-y-1.5">
-            <span className="block text-footnote text-text-secondary">Amount</span>
+            <span className="block text-footnote font-semibold text-text-secondary">You have</span>
             <Input
               value={amount}
               onChange={(event) => setAmount(event.target.value)}
@@ -237,6 +225,21 @@ export function ExchangePanel({
               data-autofocus
             />
           </label>
+
+          <SheetPicker
+            options={CBN_REFERENCE_CURRENCIES.map((code) => ({
+              id: code,
+              label: CURRENCY_META[code].label,
+            }))}
+            value={currency}
+            onSelect={(value) => {
+              if (CBN_REFERENCE_CURRENCIES.some((code) => code === value)) {
+                setCurrency(value as CbnReferenceCurrency);
+              }
+            }}
+            title="Choose currency"
+            label="Currency you have"
+          />
 
           <div
             className="squircle-card min-h-[132px] bg-fillTertiary p-4"
@@ -271,7 +274,7 @@ export function ExchangePanel({
             ) : visibleRate ? (
               <div>
                 <div className="flex items-start justify-between gap-3">
-                  <p className="text-footnote text-text-secondary">Estimated value</p>
+                  <p className="text-footnote font-semibold text-text-secondary">CBN reference gives</p>
                   {(rateState.kind === "loading" ||
                     (rateState.kind === "ready" && rateState.saved)) && (
                     <span className="shrink-0 text-caption-1 font-medium text-status-caution-fg">
@@ -284,6 +287,9 @@ export function ExchangePanel({
                 </p>
                 <p className="mt-2 text-footnote tabular-nums text-text-secondary">
                   {CURRENCY_META[currency].symbol}1 = ₦{RATE.format(visibleRate.rate)}
+                </p>
+                <p className="mt-0.5 text-caption-1 text-text-tertiary">
+                  CBN reference rate · data relay: Frankfurter
                 </p>
                 <p className="mt-0.5 text-caption-1 text-text-tertiary">
                   Published {formatPublishedDate(visibleRate.publishedDate)}
@@ -307,8 +313,8 @@ export function ExchangePanel({
           </div>
 
           <p id="exchange-reference-note" className="text-caption-1 text-text-tertiary">
-            CBN data via Frankfurter. Reference estimate only. Banks and currency exchangers may
-            offer different rates.
+            WetinDey no dey exchange money. CBN reference-rate data is relayed by Frankfurter;
+            this is an estimate, and banks and currency exchangers may offer different rates.
           </p>
         </div>
       </section>
@@ -321,10 +327,10 @@ export function ExchangePanel({
                 id="sample-nearby-heading"
                 className="text-title-3 font-semibold text-text-primary"
               >
-                Nearby exchange places
+                Sample locations
               </h2>
               <p className="mt-0.5 text-footnote text-text-secondary">
-                Prototype map and list behavior.
+                Prototype map points, not businesses, licensed outlets, directions, or outlet rates.
               </p>
             </div>
             <span className="squircle bg-fillTertiary px-2 py-1 text-caption-1 font-semibold text-text-secondary">
@@ -335,7 +341,7 @@ export function ExchangePanel({
 
         <div
           className="squircle grid grid-cols-3 gap-1 bg-fillTertiary p-1"
-          aria-label="Filter Sample exchange places"
+          aria-label="Filter Sample locations"
         >
           {(
             [
@@ -369,8 +375,7 @@ export function ExchangePanel({
                   {selectedLocation.name}
                 </p>
                 <p className="mt-1 text-footnote text-status-caution-fg">
-                  Sample location only—no licence, directions, contact, opening hours, or outlet
-                  rate.
+                  Sample map point selected. No business or outlet details are available.
                 </p>
               </div>
             </div>
@@ -421,6 +426,11 @@ export function ExchangePanel({
           })}
         </div>
 
+        <p className="px-1 text-caption-1 text-text-tertiary">
+          Every pin and place is Sample test data, not a verified business, licensed outlet, or
+          live rate.
+        </p>
+
         {locations.length === 0 && (
           <div className="squircle-card bg-fillTertiary px-4 py-6 text-center">
             <p className="text-body font-semibold text-text-primary">
@@ -430,10 +440,6 @@ export function ExchangePanel({
           </div>
         )}
 
-        <p className="px-1 text-caption-1 text-text-tertiary">
-          All locations shown here are simulated for interface testing. They are not public
-          businesses or CBN licence records.
-        </p>
       </section>
     </div>
   );
