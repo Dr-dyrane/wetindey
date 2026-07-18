@@ -13,14 +13,15 @@ yet represented as explicit lanes:
 
 | Lane | Status | Required ownership | Scope and gate |
 |---|---|---|---|
-| **Semantic iconography coverage** | 🟡 queued for Human Interface assignment | Human Interface Design employee with independent visual/accessibility refuter | Audit and wire semantic icons across Settings, About, Privacy, Location, Report Problem, pickers, detail surfaces, map entities, and repeated status concepts. Preserve neutral utility controls, use intent accents only, forbid generic location pins for non-location entities, and keep each icon paired with accessible text. No implementation path is claimed by this note. |
-| **Market detail offer surface** | 🟡 queued for Human Interface + data-contract assignment | Human Interface owner, with Search/Data owner for the `PlaceOffer` image/icon metadata contract | Replace the plain market offer inventory with a reusable, icon-aware offer surface; remove the artificial `max-h-[40vh]` dead zone; keep the action region pinned; add item imagery or a semantic Food fallback; preserve price/unit/freshness/provenance semantics. Exact `page.tsx`, query-contract, and shared-row paths must be claimed together before editing. |
+| **Semantic iconography coverage** | 🟡 documented, unclaimed; blocked pending exact disjoint-path proposal | Iconography & Visual Systems Lead proposes paths first; a bounded Human Interface owner and independent visual/accessibility refuter may be recorded only afterward | Audit and wire semantic icons across Settings, About, Privacy, Location, Report Problem, pickers, detail surfaces, map entities, and repeated status concepts. Preserve neutral utility controls, use intent accents only, forbid generic location pins for non-location entities, and keep each icon paired with accessible text. No implementation path is claimed by this note. |
+| **Market detail offer surface** | 🟡 documented, unclaimed; blocked pending exact disjoint-path proposal | Iconography & Visual Systems Lead proposes non-overlapping visual paths first; later bounded Human Interface ownership must exclude paths already held by Contribution | Replace the plain market offer inventory with a reusable, icon-aware offer surface; remove the artificial `max-h-[40vh]` dead zone; keep the action region pinned; add item imagery or a semantic Food fallback; preserve price/unit/freshness/provenance semantics. Do not claim or edit active `src/app/page.tsx` or `src/app/actions.ts`; any later data-contract handoff remains separately gated. |
 
 These findings are accepted as roadmap/triage direction only. They do not authorize
-edits beneath the active Iconography, Aboki FX, Mapbox, contribution, or auth lanes.
-The Quality & Release Controller must record the exact worker/path handoff before
-either implementation begins, and a reused-tab visual refuter must review both light
-and dark states before release integration.
+implementation or claim any path. The Iconography & Visual Systems Lead must first return
+exact disjoint paths. Only then may the Quality & Release Controller record a bounded
+Human Interface claim, and that claim must not widen into `src/app/page.tsx` or
+`src/app/actions.ts` while Contribution retains them. A reused-tab visual refuter must
+review both light and dark states before release integration.
 
 ## Persistent employee controller
 
@@ -743,6 +744,13 @@ Descartes (`019f7644-8b2a-7910-8221-533a6d7afac1`) confirmed `getCoverageForPoin
 ### Market detail offer surface handoff
 
 Hegel (`019f7645-cc25-7d42-b537-5a0eb37cda69`) confirmed the current market detail at `src/app/page.tsx` drops price range, availability, freshness, last-observed, image, and provenance semantics, and uses the artificial `max-h-[40vh]` dead zone. Future implementation requires a coordinated claim over `src/app/page.tsx`, `src/app/actions.ts`, and a new `src/design-system/components/PlaceOfferRow.tsx`; do not modify `ItemCard`, `ListRow`, or `IconOrb`. Preserve the pinned `Get it` region, truthful read-side provenance, image fallback, and empty/loading/error states. Implementation is blocked while page/actions remain retained by Contribution containment; no new generic category contract, DB, migration, push, or deployment work is authorized.
+
+CEO sequencing checkpoint: semantic iconography coverage and this market-detail offer
+surface remain documented but unclaimed. Before any implementation claim, the Iconography
+& Visual Systems Lead must return exact disjoint paths. The controller may then record a
+bounded Human Interface claim only over those non-overlapping paths; it must not absorb or
+edit Contribution-owned `src/app/page.tsx` or `src/app/actions.ts`. Any later query/data
+contract claim requires its own explicit handoff after those active owners release it.
 
 ### Architecture-document drift handoff
 
