@@ -346,6 +346,7 @@ export const MapboxCanvas = forwardRef<MapCameraHandle, MapboxCanvasProps>(funct
         lat: candidate.lat,
         lng: candidate.lng,
         label: candidate.placeName,
+        placeType: candidate.placeType,
         status: candidate.detail
           ? (candidate.detail.confidenceLevel === "confirmed"
               ? "confirmed"

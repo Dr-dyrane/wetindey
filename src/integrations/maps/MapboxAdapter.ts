@@ -5,6 +5,7 @@ export interface MapMarkerOptions {
   lat: number;
   lng: number;
   label: string;
+  placeType?: string | null;
   status: "confirmed" | "caution" | "unavailable" | "neutral";
   onClick?: () => void;
 }
@@ -200,6 +201,22 @@ const ROUTE_TINT_TOKEN: Record<RouteTint, string> = {
   confirmed: "--color-status-confirmed",
   caution: "--color-status-caution",
   unavailable: "--color-status-unavailable"
+};
+
+const PLACE_TYPE_SYMBOLS: Record<string, string> = {
+  open_market: '<path d="M4 10h16l-1-5H5l-1 5Z"/><path d="M5 10v9h14v-9"/><path d="M9 19v-5h6v5"/>',
+  supermarket: '<path d="M4 5h2l2 10h9l2-7H7"/><circle cx="9" cy="19" r="1"/><circle cx="17" cy="19" r="1"/>',
+  kiosk: '<path d="M5 10h14v9H5z"/><path d="M4 10 6 5h12l2 5M8 14h3M13 14h3"/>',
+  bank: '<path d="m3 9 9-5 9 5"/><path d="M5 10v7M9 10v7M15 10v7M19 10v7M3 19h18"/>',
+  bureau_de_change: '<path d="M7 5h10v14H7z"/><path d="M10 9h4M10 12h4M10 15h4"/>'
+};
+
+const PLACE_TYPE_LABELS: Record<string, string> = {
+  open_market: "open market",
+  supermarket: "supermarket",
+  kiosk: "kiosk",
+  bank: "bank",
+  bureau_de_change: "bureau de change"
 };
 
 /**
@@ -1150,13 +1167,17 @@ export class MapboxAdapter implements MapProviderAdapter {
       el.className += " bg-fillSecondary text-accent";
     }
 
-    // Hairline marker pin svg
+    const placeType = options.placeType ?? "";
+    const symbol = PLACE_TYPE_SYMBOLS[placeType];
+    const symbolLabel = PLACE_TYPE_LABELS[placeType];
+
+    // Use a deterministic semantic symbol where the domain provides one.
     el.innerHTML = `
-      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/>
-        <circle cx="12" cy="10" r="3"/>
+      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        ${symbol ?? '<path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/>'}
       </svg>
     `;
+    el.setAttribute("aria-label", symbolLabel ? `${options.label}, ${symbolLabel}` : options.label);
 
     if (options.onClick) {
       el.addEventListener("click", () => {
