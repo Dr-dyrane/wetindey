@@ -375,6 +375,13 @@ safety/integrity lanes until their separate gates are independently satisfied.
   viewer’s fresh foreground GPS in the same area, reciprocal opt-in, and coarse
   lease-scoped markers. Contact or interaction must never automatically reveal true
   location. Optional coarse country/region sharing remains explicit and counsel-gated.
+- Consent to share with someone outside the physical area must be a separate future Remote
+  Sharing mode, never an override of Nearby Presence. Nearby Presence remains fresh-GPS,
+  reciprocal, and area-bound. The safe Remote Sharing default is explicit trusted-audience
+  selection, coarse area/country label only, short expiry, immediate revoke, no background
+  tracking, and no automatic exact-location disclosure on interaction. Global visibility
+  to “any signed-in user” is a separate high-risk privacy/legal gate and is not authorized.
+  No Remote Sharing path is claimed.
 - Catalog Stewardship Engineer task
   `019f75a3-f38d-7893-9b82-2d6871a2563c` completed in path-scoped commit `32b15ae` over
   exactly `src/db/seed.ts` and `src/db/seedContent.ts`; an independent static refuter
@@ -435,6 +442,18 @@ safety/integrity lanes until their separate gates are independently satisfied.
   report-endpoint call sites. Dynamic/no-store HTML, environment-specific policies, Blob
   CSP, and report-only rollout remain P1/P2 dependencies. The assessment claims no path,
   authorizes no implementation, and involved no edits, tests, browser, or DB access.
+- The next conflict-free lane is H6 ADR-020 governance. Product & Data Governance
+  Architect `019f7599-0eaa-7423-9ebf-a1bfea8efe37` exclusively owns
+  `docs/adr/020-per-request-nonce-content-security-policy.md`, `DECISIONS.md`,
+  `WETINDEY_BIBLE.md`, and `docs/architecture/SERVICE-ARCHITECTURE.md`. Security & Privacy
+  Engineering Lead `019f75e5-8c04-74c0-9392-d9f741a7a131` is the independent refuter.
+  Acceptance requires one enforcing nonce policy; later same-change removal of the static
+  Vercel CSP; nonce coverage for all three raw layout scripts and the parser-inserted
+  Mapbox script; the identical Next 15.5.20 policy on cloned request headers and response;
+  explicit dynamic/no-store, environment-specific, Blob CSP, and report-only consequences;
+  and exact boundaries for the later code handoff. Require one path-scoped docs commit and
+  independent source refutation with no P1/P2. This lane authorizes no code, test, build,
+  browser, DB, push, or deploy.
 - H37 place iconography is complete at `6611068`, and current HEAD corrects a stale final
   audit description: `MapboxCanvas` forwards `candidate.placeType`, `MapMarkerOptions`
   declares `placeType`, and the adapter selects semantic place symbols. Those two
