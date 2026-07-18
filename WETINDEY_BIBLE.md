@@ -3964,6 +3964,13 @@ Outputs:
 - user interviews;
 - and documented go/no-go decision.
 
+**Proposed nearby-user presence roadmap gate.**
+[ADR-016](docs/adr/016-nearby-user-presence.md) remains Proposed. Commit `4e25b8c7`
+contains the unsafe current implementation, and rollout remains disabled. A private,
+exactly two-account Festac pilot and any public rollout have separate Founder, migration,
+safety, authorization, kill-switch, lifecycle, and independent-refutation gates; neither
+is authorized by the roadmap.
+
 ---
 
 # 34. Departments and responsibilities
@@ -4471,6 +4478,16 @@ The team should consider pivoting the mechanism or problem when:
 
 ## 40.2 Open decisions
 
+- [ADR-016](docs/adr/016-nearby-user-presence.md): Founder decision remains open. Commit
+  `4e25b8c7` contains the unsafe current implementation and rollout remains disabled. The
+  recommended target is explicit foreground activation, a fixed 500 m centroid, a maximum
+  15-minute nonrenewing reciprocal lease, signed-in self-excluding reads within a
+  server-owned 5 km radius, maximum 50 opaque no-identity results, bidirectional block,
+  private report, private/no-store snapshots, default-off flag, database kill switch, and
+  immediate stale clearing. An exactly two-account Festac pilot is gated separately from
+  public rollout; `0011` may be repaired in place only with authoritative proof that its
+  current bytes never reached a shared target, otherwise preserve it and repair forward
+  with `0012`.
 - [ADR-010](docs/adr/010-typed-live-local-information-platform.md): detailed ontology for
   the owner-directed correction that WetinDey is a live local information platform rather
   than a universal price app. The proposal separates pillars, selectable capabilities,
