@@ -331,6 +331,11 @@ safety/integrity lanes until their separate gates are independently satisfied.
   that failure clears prior trustworthy rows and no `onRetry` is supplied. The future
   one-file proposal is a retry token, retaining prior rows, and wiring the existing retry;
   it requires a separate exact claim after `page.tsx` releases.
+- Security & Privacy Engineering Lead task
+  `019f75e5-8c04-74c0-9392-d9f741a7a131` is active read-only/pathless on H6 CSP
+  architecture assessment. It owns no file and has no authority to build, test, use
+  browser verification, edit, or implement until an exact future handoff. This employee
+  assignment introduces no implementation claim and changes no release state.
 - Preview schema/ledger drift remains proven and quarantined. Production identity, ledger,
   schema/RPC/RLS/grant fingerprint, migration state, compatibility, restore evidence, and
   deployment ordering remain unknown.
