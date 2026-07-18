@@ -53,7 +53,17 @@ const config: Config = {
         onStatus: "var(--color-on-status)",
         scrim: "var(--color-scrim)",
         dim: "var(--color-dim)",
-        monogramInk: "var(--color-monogram-ink)",
+        domain: {
+          food: "var(--color-domain-food)",
+          "food-bg": "var(--color-domain-food-bg)",
+          money: "var(--color-domain-money)",
+          "money-bg": "var(--color-domain-money-bg)",
+        },
+        rating: {
+          DEFAULT: "var(--color-rating)",
+          bg: "var(--color-rating-bg)",
+          muted: "var(--color-rating-muted)",
+        },
         status: {
           confirmed: "var(--color-status-confirmed)",
           "confirmed-bg": "var(--color-status-confirmed-bg)",

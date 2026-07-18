@@ -5,6 +5,7 @@ import { AlertTriangle, CheckCircle2 } from "lucide-react";
 import { ModalSheet } from "@/design-system/components/ModalSheet";
 import { SheetPicker } from "@/design-system/components/SheetPicker";
 import { Button } from "@/design-system/components/Button";
+import { IconOrb } from "@/design-system/components/IconOrb";
 import { useT, useLocaleControl } from "@/core/i18n";
 import { submitProblemReport } from "@/app/actions";
 
@@ -96,9 +97,9 @@ export function ReportProblemSheet({ open, onClose }: { open: boolean; onClose: 
            because this presents inside a ModalSheet where bare bg-surface IS the
            panel colour in dark. */
         <div className="flex flex-col items-center gap-3 px-6 py-8 text-center">
-          <span className="grid h-12 w-12 place-items-center squircle bg-status-confirmed-bg text-status-confirmed-fg">
-            <CheckCircle2 className="h-6 w-6" />
-          </span>
+          <IconOrb size={48} tone="status-confirmed">
+            <CheckCircle2 />
+          </IconOrb>
           <h3 className="text-headline text-text-primary">{t("problem.success_title")}</h3>
           <p className="max-w-xs text-body text-text-secondary">{t("problem.success_body")}</p>
           <Button variant="primary" size="md" className="mt-2 w-full" onClick={dismiss}>

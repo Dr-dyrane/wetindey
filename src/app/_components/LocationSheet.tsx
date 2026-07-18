@@ -8,6 +8,7 @@ import { NavigationStack } from "@/design-system/components/NavigationStack";
 import { ListGroup } from "@/design-system/components/ListRow";
 import { Skeleton } from "@/design-system/components/Skeleton";
 import { StatusBadge } from "@/design-system/components/StatusBadge";
+import { IconOrb } from "@/design-system/components/IconOrb";
 import { getAreaTree, getCoverageForPoint } from "@/app/actions";
 import type { AreaGroup, AreaSummary, AreaTree } from "@/app/actions";
 import { getHaversineDistance, formatDistance } from "@/lib/geospatial";
@@ -352,9 +353,9 @@ export function LocationSheet({ open, onClose, radiusKm, onCommit }: LocationShe
         className="flex min-h-tap w-full items-center gap-3 px-4 py-2.5 text-left
                    active:bg-fillTertiary transition-colors duration-instant"
       >
-        <span className="grid h-7 w-7 shrink-0 place-items-center squircle bg-fillTertiary">
-          <MapPin className="h-4 w-4 text-text-secondary" />
-        </span>
+        <IconOrb>
+          <MapPin />
+        </IconOrb>
         <span className="min-w-0 flex-1">
           <span className="block truncate text-body text-text-primary">{area.name}</span>
           <span className="mt-0.5 block truncate text-footnote text-text-secondary tabular-nums">
@@ -364,7 +365,7 @@ export function LocationSheet({ open, onClose, radiusKm, onCommit }: LocationShe
         {isSelected && position.provenance === "manual" && (
           <StatusBadge kind="caution">Area centre</StatusBadge>
         )}
-        {isSelected && <Check className="h-5 w-5 shrink-0 text-status-info" strokeWidth={2.5} />}
+        {isSelected && <Check className="h-5 w-5 shrink-0 text-accent" strokeWidth={2.5} />}
       </button>
     );
   };
@@ -393,16 +394,16 @@ export function LocationSheet({ open, onClose, radiusKm, onCommit }: LocationShe
         className="flex min-h-tap w-full items-center gap-3 px-4 py-2.5 text-left
                    active:bg-fillTertiary transition-colors duration-instant"
       >
-        <span className="grid h-7 w-7 shrink-0 place-items-center squircle bg-fillTertiary">
-          <MapIcon className="h-4 w-4 text-text-secondary" />
-        </span>
+        <IconOrb>
+          <MapIcon />
+        </IconOrb>
         <span className="min-w-0 flex-1">
           <span className="block truncate text-body text-text-primary">{group.lgaName}</span>
           <span className="mt-0.5 block truncate text-footnote text-text-secondary tabular-nums">
             {detail}
           </span>
         </span>
-        {selected && <Check className="h-5 w-5 shrink-0 text-status-info" strokeWidth={2.5} />}
+        {selected && <Check className="h-5 w-5 shrink-0 text-accent" strokeWidth={2.5} />}
         <ChevronRight className="h-4 w-4 shrink-0 text-text-tertiary" strokeWidth={2.5} />
       </button>
     );
@@ -425,16 +426,16 @@ export function LocationSheet({ open, onClose, radiusKm, onCommit }: LocationShe
           className="flex min-h-tap w-full items-center gap-3 px-4 py-2 text-left
                      disabled:opacity-40 active:bg-fillTertiary transition-colors duration-instant"
         >
-          <span className="grid h-7 w-7 shrink-0 place-items-center squircle bg-status-info-bg">
-            <LocateFixed className={`h-4 w-4 text-status-info-fg ${locating ? "animate-pulse" : ""}`} />
-          </span>
+          <IconOrb>
+            <LocateFixed />
+          </IconOrb>
           <span className="min-w-0 flex-1">
             <span className="block truncate text-body text-text-primary">
               {locating ? "Finding you…" : "Use my location"}
             </span>
           </span>
           {position.provenance === "device" && (
-            <Check className="h-5 w-5 shrink-0 text-status-info" strokeWidth={2.5} />
+            <Check className="h-5 w-5 shrink-0 text-accent" strokeWidth={2.5} />
           )}
         </button>
       </ListGroup>
@@ -450,7 +451,7 @@ export function LocationSheet({ open, onClose, radiusKm, onCommit }: LocationShe
             <button
               type="button"
               onClick={handleUseMyLocation}
-              className="min-h-tap text-subhead text-status-info active:opacity-60"
+              className="min-h-tap text-subhead text-accent active:opacity-60"
             >
               Try again
             </button>
@@ -479,7 +480,7 @@ export function LocationSheet({ open, onClose, radiusKm, onCommit }: LocationShe
             <button
               type="button"
               onClick={() => handlePickArea(locate.nearest!)}
-              className="min-h-tap text-subhead text-status-info active:opacity-60"
+              className="min-h-tap text-subhead text-accent active:opacity-60"
             >
               Use {locate.nearest.name} instead
             </button>
@@ -495,7 +496,7 @@ export function LocationSheet({ open, onClose, radiusKm, onCommit }: LocationShe
           <button
             type="button"
             onClick={() => void loadTree()}
-            className="min-h-tap text-subhead text-status-info active:opacity-60"
+            className="min-h-tap text-subhead text-accent active:opacity-60"
           >
             Try again
           </button>

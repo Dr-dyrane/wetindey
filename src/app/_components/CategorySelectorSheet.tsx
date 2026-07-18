@@ -13,6 +13,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { ModalSheet } from "@/design-system/components/ModalSheet";
+import { IconOrb, type IconOrbTone } from "@/design-system/components/IconOrb";
 import { haptics } from "@/lib/haptics";
 
 export type CategoryPillar = "food" | "home" | "health" | "money" | "transport" | "community";
@@ -38,19 +39,51 @@ export function CategorySelectorSheet({
     label: string;
     icon: LucideIcon;
     supported: boolean;
+    tone: Extract<IconOrbTone, "neutral" | "domain-food" | "domain-money">;
   }[] = [
-    { id: "food", label: t.category_food || "Food", icon: Utensils, supported: true },
-    { id: "fuel", label: "Fuel prices", icon: Fuel, supported: false },
-    { id: "home", label: t.category_home || "Home & Living", icon: House, supported: false },
+    {
+      id: "food",
+      label: t.category_food || "Food",
+      icon: Utensils,
+      supported: true,
+      tone: "domain-food",
+    },
+    { id: "fuel", label: "Fuel prices", icon: Fuel, supported: false, tone: "neutral" },
+    {
+      id: "home",
+      label: t.category_home || "Home & Living",
+      icon: House,
+      supported: false,
+      tone: "neutral",
+    },
     {
       id: "health",
       label: t.category_health || "Health & Beauty",
       icon: HeartPulse,
       supported: false,
+      tone: "neutral",
     },
-    { id: "money", label: "Aboki FX", icon: CircleDollarSign, supported: true },
-    { id: "transport", label: t.category_transport || "Transport", icon: Bus, supported: false },
-    { id: "community", label: t.category_community || "Community", icon: Users, supported: false },
+    {
+      id: "money",
+      label: "Aboki FX",
+      icon: CircleDollarSign,
+      supported: true,
+      tone: "domain-money",
+    },
+    {
+      id: "transport",
+      label: t.category_transport || "Transport",
+      icon: Bus,
+      supported: false,
+      tone: "neutral",
+    },
+    {
+      id: "community",
+      label: t.category_community || "Community",
+      icon: Users,
+      supported: false,
+      tone: "neutral",
+    },
   ];
 
   const handleSelect = (category: CategoryPillar) => {
@@ -94,16 +127,12 @@ export function CategorySelectorSheet({
                                   : "text-text-tertiary"
                             }`}
               >
-                <span
-                  className={`grid h-8 w-8 place-items-center rounded-[14px] bg-fillSecondary ${
-                    active ? "text-info" : "text-text-secondary"
-                  }`}
-                >
-                  <Icon className="h-[18px] w-[18px]" strokeWidth={2} aria-hidden />
-                </span>
+                <IconOrb size={32} tone={category.supported ? category.tone : "neutral"}>
+                  <Icon strokeWidth={2} />
+                </IconOrb>
                 <span className="truncate text-body font-semibold">{category.label}</span>
                 {active ? (
-                  <Check className="h-5 w-5 text-info" strokeWidth={2.5} aria-hidden />
+                  <Check className="h-5 w-5 text-accent" strokeWidth={2.5} aria-hidden />
                 ) : !category.supported ? (
                   <span className="text-caption-1 font-medium text-text-tertiary">Soon</span>
                 ) : null}

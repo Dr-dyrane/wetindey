@@ -16,6 +16,7 @@ import {
 import { ModalSheet } from "@/design-system/components/ModalSheet";
 import { NavigationStack } from "@/design-system/components/NavigationStack";
 import { ListGroup } from "@/design-system/components/ListRow";
+import { IconOrb } from "@/design-system/components/IconOrb";
 import { useT } from "@/core/i18n";
 import { ITEM_IMAGES } from "@/db/itemImages";
 
@@ -145,12 +146,12 @@ function AboutHub({ onSelect }: { onSelect: (page: AboutPage) => void }) {
           credits it owes. */}
       <ListGroup>
         <AboutRow
-          icon={<BookOpen className="h-4 w-4 text-text-secondary" />}
+          icon={<BookOpen />}
           label={t("about.how")}
           onClick={() => onSelect("how-it-works")}
         />
         <AboutRow
-          icon={<Accessibility className="h-4 w-4 text-text-secondary" />}
+          icon={<Accessibility />}
           label={t("about.accessibility")}
           onClick={() => onSelect("accessibility")}
         />
@@ -158,17 +159,17 @@ function AboutHub({ onSelect }: { onSelect: (page: AboutPage) => void }) {
 
       <ListGroup>
         <AboutRow
-          icon={<ScrollText className="h-4 w-4 text-text-secondary" />}
+          icon={<ScrollText />}
           label={t("about.terms")}
           onClick={() => onSelect("terms")}
         />
         <AboutRow
-          icon={<ShieldCheck className="h-4 w-4 text-text-secondary" />}
+          icon={<ShieldCheck />}
           label={t("about.privacy")}
           onClick={() => onSelect("privacy")}
         />
         <AboutRow
-          icon={<LifeBuoy className="h-4 w-4 text-text-secondary" />}
+          icon={<LifeBuoy />}
           label={t("about.support")}
           onClick={() => onSelect("support")}
         />
@@ -176,12 +177,12 @@ function AboutHub({ onSelect }: { onSelect: (page: AboutPage) => void }) {
 
       <ListGroup>
         <AboutRow
-          icon={<Scale className="h-4 w-4 text-text-secondary" />}
+          icon={<Scale />}
           label={t("about.licenses")}
           onClick={() => onSelect("licenses")}
         />
         <AboutRow
-          icon={<Camera className="h-4 w-4 text-text-secondary" />}
+          icon={<Camera />}
           label={t("about.attributions")}
           onClick={() => onSelect("attributions")}
         />
@@ -211,9 +212,7 @@ function AboutRow({
       onClick={onClick}
       className="flex min-h-tap w-full items-center gap-3 px-4 py-2 text-left transition-colors duration-instant active:bg-fillTertiary"
     >
-      <span className="squircle grid h-7 w-7 shrink-0 place-items-center bg-fillTertiary">
-        {icon}
-      </span>
+      <IconOrb>{icon}</IconOrb>
       <span className="min-w-0 flex-1 truncate text-body text-text-primary">{label}</span>
       <ChevronRight className="h-4 w-4 shrink-0 text-text-tertiary" strokeWidth={2.5} />
     </button>
@@ -299,11 +298,11 @@ function SupportPage() {
           rather than sinking into it in dark. */}
       <a
         href={`mailto:${SUPPORT_EMAIL}`}
-        className="squircle-card flex items-center gap-3 bg-surface px-4 py-3 shadow-card transition-colors duration-instant active:bg-fillTertiary dark:bg-surface-elevated"
+        className="squircle-card flex min-h-tap items-center gap-3 bg-surface px-4 py-3 shadow-card transition-colors duration-instant active:bg-fillTertiary dark:bg-surface-elevated"
       >
-        <span className="squircle grid h-7 w-7 shrink-0 place-items-center bg-status-info-bg">
-          <Mail className="h-4 w-4 text-status-info-fg" aria-hidden />
-        </span>
+        <IconOrb>
+          <Mail />
+        </IconOrb>
         <span className="min-w-0 flex-1">
           <span className="block text-body text-accent">{t("about.support_cta")}</span>
           <span className="block truncate text-footnote text-text-secondary">{SUPPORT_EMAIL}</span>

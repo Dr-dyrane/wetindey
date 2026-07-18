@@ -3,11 +3,12 @@
 import React from "react";
 import { ChevronRight } from "lucide-react";
 import { haptics } from "@/lib/haptics";
+import { IconOrb, type IconOrbTone } from "./IconOrb";
 
 interface ListRowProps {
   icon?: React.ReactNode;
-  /** Tint behind the icon — pass a status token, never a raw colour. */
-  iconTint?: string;
+  /** Ordinary rows stay neutral. Use a semantic tone only for its actual claim. */
+  iconTone?: IconOrbTone;
   label: string;
   detail?: React.ReactNode;
   /** Exposes the selected state when this row is an interactive picker option. */
@@ -28,7 +29,16 @@ interface ListRowProps {
  * content is shorter, which also means the row grows gracefully rather than
  * clipping when Dynamic Type scales the label.
  */
-export function ListRow({ icon, iconTint, label, detail, pressed, onClick, chevron = true, disabled }: ListRowProps) {
+export function ListRow({
+  icon,
+  iconTone = "neutral",
+  label,
+  detail,
+  pressed,
+  onClick,
+  chevron = true,
+  disabled,
+}: ListRowProps) {
   const Tag = onClick ? "button" : "div";
   return (
     <Tag
@@ -44,13 +54,7 @@ export function ListRow({ icon, iconTint, label, detail, pressed, onClick, chevr
                   disabled:opacity-40
                   ${onClick ? "active:bg-fillTertiary transition-colors duration-instant" : ""}`}
     >
-      {icon && (
-        <span
-          className={`grid h-7 w-7 shrink-0 place-items-center squircle ${iconTint ?? "bg-fillTertiary"}`}
-        >
-          {icon}
-        </span>
-      )}
+      {icon && <IconOrb tone={iconTone}>{icon}</IconOrb>}
       <span className="min-w-0 flex-1 truncate text-body text-text-primary">{label}</span>
       {detail && <span className="shrink-0 text-body text-text-secondary">{detail}</span>}
       {onClick && chevron && (

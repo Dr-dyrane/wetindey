@@ -499,14 +499,14 @@ export function GetItSheet({ open, onClose, target, origin, onGoThere }: GetItSh
 
               {aggregate && aggregate.ratingCount > 0 && (
                 <div className="mt-1.5 flex items-center gap-1.5">
-                  <div className="flex items-center text-amber-500">
+                  <div className="flex items-center text-rating">
                     {Array.from({ length: 5 }).map((_, i) => (
                       <Star
                         key={i}
                         className={`h-3.5 w-3.5 ${
                           i < Math.round(aggregate.ratingAverage)
                             ? "fill-current"
-                            : "text-neutral-300 dark:text-neutral-700"
+                            : "text-rating-muted"
                         }`}
                       />
                     ))}
@@ -538,8 +538,7 @@ export function GetItSheet({ open, onClose, target, origin, onGoThere }: GetItSh
 
             <ListGroup>
               <ListRow
-                icon={<Navigation className="h-4 w-4 text-status-info-fg" />}
-                iconTint="bg-status-info-bg"
+                icon={<Navigation />}
                 label="Go there"
                 detail={platform ? mapsAppName(platform) : undefined}
                 onClick={handleGoThere}
@@ -547,12 +546,11 @@ export function GetItSheet({ open, onClose, target, origin, onGoThere }: GetItSh
               <ListRow
                 icon={
                   canShare ? (
-                    <Share2 className="h-4 w-4 text-status-confirmed-fg" />
+                    <Share2 />
                   ) : (
-                    <Copy className="h-4 w-4 text-status-confirmed-fg" />
+                    <Copy />
                   )
                 }
-                iconTint="bg-status-confirmed-bg"
                 label={shareLabel}
                 detail={shareResult.kind === "copied" ? "Copied" : undefined}
                 onClick={() => {
@@ -580,7 +578,7 @@ export function GetItSheet({ open, onClose, target, origin, onGoThere }: GetItSh
                 dial. The row states the fact and the footer gives the reason. */}
             <ListGroup footer={contactText.footer ?? undefined}>
               <ListRow
-                icon={<Phone className="h-4 w-4 text-text-secondary" />}
+                icon={<Phone />}
                 label="Contact seller"
                 detail={contactText.detail}
                 chevron={false}
@@ -588,7 +586,7 @@ export function GetItSheet({ open, onClose, target, origin, onGoThere }: GetItSh
             </ListGroup>
 
             {/* Reviews Section */}
-            <div className="border-t border-fillTertiary/50 pt-5 px-4 space-y-4">
+            <div className="px-4 pt-5 space-y-4">
               <div>
                 <h3 className="text-headline text-text-primary font-bold">Reviews</h3>
                 <p className="mt-1 text-footnote text-text-secondary">
@@ -599,8 +597,8 @@ export function GetItSheet({ open, onClose, target, origin, onGoThere }: GetItSh
               {loadingReviews ? (
                 <p className="text-footnote text-text-secondary py-2">Loading reviews...</p>
               ) : reviewsList.length === 0 ? (
-                <div className="py-8 px-4 text-center bg-fillSecondary dark:bg-fillTertiary/20 rounded-[20px] border border-dashed border-fillTertiary/40">
-                  <Star className="h-7 w-7 mx-auto text-text-tertiary mb-2 opacity-40 animate-pulse" />
+                <div className="rounded-[20px] bg-fillSecondary px-4 py-8 text-center">
+                  <Star className="mx-auto mb-2 h-7 w-7 text-text-tertiary opacity-40" />
                   <p className="text-subhead font-semibold text-text-secondary">Reviews unavailable</p>
                   <p className="text-caption-1 text-text-tertiary mt-1 max-w-[240px] mx-auto leading-relaxed">
                     We are preparing this feature with safety and moderation in mind.
@@ -620,11 +618,11 @@ export function GetItSheet({ open, onClose, target, origin, onGoThere }: GetItSh
                       <div key={review.id} className="rounded-[20px] bg-fillSecondary p-3.5 space-y-2">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2.5">
-                            <div className="w-9 h-9 rounded-full bg-status-info-bg text-status-info flex items-center justify-center text-footnote font-bold relative overflow-hidden">
+                            <div className="relative flex h-9 w-9 items-center justify-center overflow-hidden rounded-full bg-fillPrimary text-footnote font-bold text-text-primary">
                               {review.reviewerAvatarUrl ? (
                                 <img
                                   src={review.reviewerAvatarUrl}
-                                  alt={review.reviewerName}
+                                  alt=""
                                   className="w-full h-full rounded-full object-cover"
                                 />
                               ) : (
@@ -635,11 +633,11 @@ export function GetItSheet({ open, onClose, target, origin, onGoThere }: GetItSh
                               <p className="text-footnote font-semibold text-text-primary leading-tight">
                                 {review.reviewerName}
                               </p>
-                              <div className="flex items-center text-amber-500 mt-0.5">
+                              <div className="mt-0.5 flex items-center text-rating">
                                 {Array.from({ length: 5 }).map((_, idx) => (
                                   <Star
                                     key={idx}
-                                    className={`h-3 w-3 ${idx < review.rating ? "fill-current" : "text-neutral-300 dark:text-neutral-700"}`}
+                                    className={`h-3 w-3 ${idx < review.rating ? "fill-current" : "text-rating-muted"}`}
                                   />
                                 ))}
                               </div>

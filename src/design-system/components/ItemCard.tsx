@@ -67,29 +67,11 @@ function useStatusLabel(): Record<StatusKind, string> {
   };
 }
 
-/**
- * Monogram for an item with no photo. Hue is derived from the slug so the same
- * item always gets the same tile; a fallback that reshuffles reads as a glitch.
- * Kept desaturated so it can never be mistaken for a status signal.
- *
- * The hsl() below is computed per-slug, so it cannot come from a token — a
- * token is a fixed value and this is a function of the input. Its ink DOES come
- * from a token (--color-monogram-ink), which is deliberately theme-invariant:
- * the tile is light in both themes, so ink that followed text-primary would go
- * white-on-light in dark mode.
- */
-function Monogram({ name, slug }: { name: string; slug: string }) {
-  let h = 0;
-  for (let i = 0; i < slug.length; i++) h = (h * 31 + slug.charCodeAt(i)) % 360;
+/** A missing photograph carries no invented category, status, or identity hue. */
+function Monogram({ name }: { name: string }) {
   return (
-    <div
-      className="grid h-full w-full place-items-center"
-      style={{
-        background: `linear-gradient(145deg, hsl(${h} 20% 80%), hsl(${(h + 40) % 360} 18% 68%))`,
-      }}
-      aria-hidden
-    >
-      <span className="text-title-2 font-semibold text-monogramInk">
+    <div className="grid h-full w-full place-items-center bg-fillSecondary" aria-hidden>
+      <span className="text-title-2 font-semibold text-text-secondary">
         {name.slice(0, 1).toUpperCase()}
       </span>
     </div>
@@ -157,7 +139,7 @@ export function ItemCard({
             onError={() => setBroken(true)}
           />
         ) : (
-          <Monogram name={item.name} slug={item.slug} />
+          <Monogram name={item.name} />
         )}
       </div>
 

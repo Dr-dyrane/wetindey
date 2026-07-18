@@ -623,14 +623,14 @@ export function ProfileSheet({
                     type="button"
                     onClick={() => void resendCode()}
                     disabled={cooling}
-                    className="min-h-tap text-subhead font-semibold text-status-info active:opacity-60 disabled:text-text-tertiary"
+                    className="min-h-tap text-subhead font-semibold text-accent active:opacity-60 disabled:text-text-tertiary"
                   >
                     {cooling ? t("auth.resend_in", { seconds: cooldown }) : t("auth.resend")}
                   </button>
                   <button
                     type="button"
                     onClick={() => setSignIn({ kind: "email", sending: false, error: null })}
-                    className="min-h-tap text-subhead font-semibold text-status-info active:opacity-60"
+                    className="min-h-tap text-subhead font-semibold text-accent active:opacity-60"
                   >
                     {t("auth.different_email")}
                   </button>
@@ -648,7 +648,7 @@ export function ProfileSheet({
         {signedIn && (
           <ListGroup>
             <ListRow
-              icon={<UserRound className="h-4 w-4 text-text-secondary" />}
+              icon={<UserRound />}
               label={t("profile.manage")}
               onClick={() => {
                 // Dismiss first, like every other row here: two stacked sheets
@@ -669,8 +669,7 @@ export function ProfileSheet({
               muted" complaint that opened this work, permanently, for the app's
               default state (ADR-003: reading is anonymous, forever). */}
           <ListRow
-            icon={<TrendingUp className="h-4 w-4 text-status-info-fg" />}
-            iconTint="bg-status-info-bg"
+            icon={<TrendingUp />}
             label={t("profile.my_reports")}
             onClick={() => {
               // Dismiss first, like Change area and Settings: two stacked sheets
@@ -680,8 +679,7 @@ export function ProfileSheet({
             }}
           />
           <ListRow
-            icon={<Bookmark className="h-4 w-4 text-status-caution-fg" />}
-            iconTint="bg-status-caution-bg"
+            icon={<Bookmark />}
             label={t("profile.saved_markets")}
             disabled
             onClick={() => {}}
@@ -690,8 +688,7 @@ export function ProfileSheet({
               of the map's location pill, same store, same label, so reaching
               it from the navigation hub and from the map lands on one sheet. */}
           <ListRow
-            icon={<MapPin className="h-4 w-4 text-status-confirmed-fg" />}
-            iconTint="bg-status-confirmed-bg"
+            icon={<MapPin />}
             label={t("profile.change_area")}
             detail={currentAreaName}
             onClick={() => {
@@ -705,7 +702,7 @@ export function ProfileSheet({
 
         <ListGroup>
           <ListRow
-            icon={<Settings className="h-4 w-4 text-text-secondary" />}
+            icon={<Settings />}
             label={t("profile.settings")}
             onClick={() => {
               onClose();
@@ -713,7 +710,7 @@ export function ProfileSheet({
             }}
           />
           <ListRow
-            icon={<Flag className="h-4 w-4 text-text-secondary" />}
+            icon={<Flag />}
             label={t("profile.report_problem")}
             onClick={() => {
               // Dismiss first, like Settings and Change area above: two stacked
@@ -723,7 +720,7 @@ export function ProfileSheet({
             }}
           />
           <ListRow
-            icon={<CircleHelp className="h-4 w-4 text-text-secondary" />}
+            icon={<CircleHelp />}
             label={t("profile.about")}
             onClick={() => {
               // Dismiss first, like Settings and Report a problem above: two

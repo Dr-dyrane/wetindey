@@ -82,13 +82,29 @@
   --color-fill-tertiary: rgba(118, 118, 128, 0.12);
   --color-fill-quaternary: rgba(116, 116, 128, 0.08);
 
-  /* ── Accent — neutral by design, so signal colour is the only saturated hue ──
+  /* ── Accent — neutral by design, so named semantic owners control colour ──
      accent-contrast is the ink that goes ON accent. It is NOT interchangeable
      with white: accent inverts between themes, so anything hardcoding white on
      an accent fill turns invisible in dark mode. Always pair the two. */
   --color-accent: #000000;
   --color-accent-pressed: #333333;
   --color-accent-contrast: #ffffff;
+
+  /* ── Domain identity — category recognition, never evidence or status ──
+     Food uses warm terracotta and Money uses teal. They deliberately do not
+     alias caution orange or confirmed green, even when a future palette tuning
+     brings two values visually closer. Disabled capabilities never consume
+     these tokens. */
+  --color-domain-food: #8a3d00;
+  --color-domain-food-bg: rgba(191, 90, 20, 0.14);
+  --color-domain-money: #006b57;
+  --color-domain-money-bg: rgba(0, 143, 117, 0.13);
+
+  /* Rating is neither caution nor confirmation. The muted star is supporting
+     geometry only; the adjacent numeric rating remains the accessible fact. */
+  --color-rating: #805600;
+  --color-rating-bg: rgba(214, 164, 0, 0.16);
+  --color-rating-muted: rgba(60, 60, 67, 0.24);
 
   /* Ink on a saturated status fill. Stays white in both themes because the
      status hues are saturated mid-tones in both — unlike accent, which flips. */
@@ -100,10 +116,6 @@
      the alpha-carrying token there would multiply the two and halve the dim. */
   --color-scrim: rgba(0, 0, 0, 0.35);
   --color-dim: #000000;
-
-  /* Ink on the item monogram. That tile is a light gradient in BOTH themes, so
-     its ink is dark in both and must not follow text-primary. */
-  --color-monogram-ink: rgba(0, 0, 0, 0.42);
 
   /* ── Signal — Apple system colours, light values ── */
   --color-status-confirmed: #34c759; /* systemGreen */
@@ -239,14 +251,20 @@
   --color-accent-pressed: #d1d1d6;
   --color-accent-contrast: #000000;
 
+  --color-domain-food: #ff9f5a;
+  --color-domain-food-bg: rgba(255, 159, 90, 0.18);
+  --color-domain-money: #64d9bf;
+  --color-domain-money-bg: rgba(100, 217, 191, 0.18);
+
+  --color-rating: #ffd60a;
+  --color-rating-bg: rgba(255, 214, 10, 0.18);
+  --color-rating-muted: rgba(235, 235, 245, 0.28);
+
   /* Unchanged from light: status hues stay saturated, so their ink stays white. */
   --color-on-status: #ffffff;
   /* Heavier in dark — a 35% dim reads as almost nothing over a dark map. */
   --color-scrim: rgba(0, 0, 0, 0.55);
   --color-dim: #000000;
-  /* Unchanged: the monogram tile is light in both themes. */
-  --color-monogram-ink: rgba(0, 0, 0, 0.42);
-
   /* Apple's dark variants: brighter, less saturated, to hold against black. */
   --color-status-confirmed: #30d158;
   --color-status-caution: #ff9f0a;
@@ -588,6 +606,19 @@
   .motion-modal-panel,
   .motion-modal-panel[data-motion-state="hidden"] {
     transform: none !important;
+  }
+}
+
+/* Authored colour may disappear in Windows High Contrast. Preserve the circle
+   with system colours and the only border ADR-018 permits here: an accessibility
+   outline that is absent from ordinary rendering. Meaning remains in adjacent
+   visible text, so no semantic color survives by force. */
+@media (forced-colors: active) {
+  .icon-orb {
+    color: CanvasText;
+    background-color: Canvas;
+    outline: 1px solid CanvasText;
+    outline-offset: -1px;
   }
 }
 
