@@ -48,22 +48,33 @@ export type RouteGeometry = [number, number][];
  * tree, whereas an unusable route should simply be absent.
  */
 function isRenderableRoute(coords: unknown): coords is RouteGeometry {
-  return (
-    Array.isArray(coords) &&
-    coords.length >= 2 &&
-    coords.every(
-      (point) =>
-        Array.isArray(point) &&
-        point.length === 2 &&
-        typeof point[0] === "number" &&
-        typeof point[1] === "number" &&
-        Number.isFinite(point[0]) &&
-        Number.isFinite(point[1]) &&
-        point[0] >= -180 &&
-        point[0] <= 180 &&
-        point[1] >= -90 &&
-        point[1] <= 90
-    )
+  if (!Array.isArray(coords) || coords.length < 2) return false;
+
+  const points: unknown[] = coords;
+  for (let index = 0; index < points.length; index += 1) {
+    const point = points[index];
+    if (
+      !Array.isArray(point) ||
+      point.length !== 2 ||
+      typeof point[0] !== "number" ||
+      typeof point[1] !== "number" ||
+      !Number.isFinite(point[0]) ||
+      !Number.isFinite(point[1]) ||
+      point[0] < -180 ||
+      point[0] > 180 ||
+      point[1] < -90 ||
+      point[1] > 90
+    ) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+function isRenderablePadding(padding: MapPadding): boolean {
+  return [padding.top, padding.right, padding.bottom, padding.left].every(
+    (value) => Number.isFinite(value) && value >= 0
   );
 }
 
@@ -1014,31 +1025,74 @@ export class MapboxAdapter implements MapProviderAdapter {
    * zoom computed from a distance either — the projection is Mapbox's business.
    */
   public fitRoute(coords: RouteGeometry, options?: { maxZoom?: number }): void {
-    if (!this.mapInstance || !isRenderableRoute(coords)) return;
+    if (!this.mapInstance) return;
 
-    let west = coords[0][0];
-    let east = coords[0][0];
-    let south = coords[0][1];
-    let north = coords[0][1];
-    for (const [lng, lat] of coords) {
+    // Snapshot before validation and reduction. RouteGeometry is an array
+    // supplied by a caller; if that array is mutated or exposes changing
+    // coordinate accessors, Mapbox must still never see a partial/NaN bounds.
+    let safeCoords: unknown;
+    try {
+      if (!Array.isArray(coords)) return;
+      const snapshot: unknown[] = [];
+      for (let index = 0; index < coords.length; index += 1) {
+        const point: unknown = coords[index];
+        if (!Array.isArray(point)) {
+          snapshot.push(point);
+          continue;
+        }
+
+        const snapshotPoint: unknown[] = [];
+        for (let coordinate = 0; coordinate < point.length; coordinate += 1) {
+          snapshotPoint.push(point[coordinate]);
+        }
+        snapshot.push(snapshotPoint);
+      }
+      safeCoords = snapshot;
+    } catch {
+      return;
+    }
+    if (!isRenderableRoute(safeCoords)) return;
+
+    let west = safeCoords[0][0];
+    let east = safeCoords[0][0];
+    let south = safeCoords[0][1];
+    let north = safeCoords[0][1];
+    for (const [lng, lat] of safeCoords) {
       if (lng < west) west = lng;
       if (lng > east) east = lng;
       if (lat < south) south = lat;
       if (lat > north) north = lat;
     }
 
-    this.mapInstance.fitBounds(
-      [
-        [west, south],
-        [east, north]
-      ],
-      {
-        padding: this.padding,
-        maxZoom: options?.maxZoom ?? FIT_MAX_ZOOM,
-        essential: true,
-        duration: duration(FLY_DURATION_MS)
-      }
-    );
+    // Keep the provider boundary fail-closed. Mapbox throws an uncaught
+    // "Invalid LngLat object" for NaN bounds; a bad route should disappear,
+    // not take down the whole React tree. Padding is checked too because it is
+    // part of the same camera request and can come from measured layout state.
+    if (
+      ![west, east, south, north].every(Number.isFinite) ||
+      !isRenderablePadding(this.padding)
+    ) {
+      return;
+    }
+
+    try {
+      this.mapInstance.fitBounds(
+        [
+          [west, south],
+          [east, north]
+        ],
+        {
+          padding: this.padding,
+          maxZoom: options?.maxZoom ?? FIT_MAX_ZOOM,
+          essential: true,
+          duration: duration(FLY_DURATION_MS)
+        }
+      );
+    } catch {
+      // Mapbox can reject a camera request at runtime even after local
+      // validation (for example while the map is being torn down). Route
+      // framing is optional; keeping the map mounted is the required outcome.
+    }
   }
 
   /**
