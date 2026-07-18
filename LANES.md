@@ -34,6 +34,33 @@ Completed iconography foundation correction `89482fb` remains accepted by indepe
 refutation with no P1/P2/P3; its runtime high-contrast/accessibility checks remain a
 separate validation residual, not a release authorization.
 
+### Pinned persistent employee roster
+
+Pinned employee tasks are durable department seats, not active path claims and not cleanup
+candidates. They remain pinned and idle between bounded controller assignments. A seat may
+edit only after this file records an exact non-overlapping lane; completion returns the seat
+to idle rather than creating a replacement task.
+
+| Pinned employee | Current state | Next bounded deliverable |
+|---|---|---|
+| Nearby Presence Platform Engineer | Blocked, idle | Resume only after frozen `0011`, forward `0012`, safety, consent, kill-switch, exact-target, and pilot gates clear |
+| Program Management & Functional Organization Lead | Idle | Reconcile portfolio proposals into CEO-reviewable lane candidates without editing product paths |
+| Contribution Integrity & Moderation Engineer | Prepared, unclaimed | Fail-closed contribution containment, then `0013+` transaction/idempotency/moderation architecture after migration ordering clears |
+| Human Interface Design Engineer | Idle | Take the next controller-approved disjoint HI slice; no shared hot-file claim by implication |
+| Food Evidence Provenance & Source Governance Lead | Standing review authorization | Classify recurring NBS/current Food evidence; no live promotion or shared migration |
+| Development Food Evidence Fixture Engineer | Idle | Append-only development evidence fixture after exact artifact-path claim; never mutate recurring seed data |
+| Food Source Authenticity & Attribution Refuter | Idle refuter | Independently verify each staged source artifact against original evidence and terms |
+| Search & Ranking Engineer | Next active evidence owner | Execute the RC-138 disposable Search proof; no code edit or shared database access |
+| Iconography & Visual Systems Lead | Foundation complete, idle | Market Details, remaining sheet adoption, and map-symbol slices only after exact claim and runtime refuter pairing |
+| Client Reliability & Offline Engineer | Prepared, unclaimed | One-file rejected-search containment only after `src/app/page.tsx` is explicitly released and claimed |
+| Security & Privacy Engineering Lead | Blocked, idle | CSP report-only implementation only after collector/origin/privacy/provider gates are exact |
+| Motion & Interaction Engineer | Prepared, unclaimed | Modal zero-focusable focus-trap correction after exact `ModalSheet` lane claim |
+
+The Quality & Release Controller is this orchestrator thread. It is not a separate pinned
+employee task. `wetindey-orchestrator-recovery` remains the sole recovery automation;
+Portfolio auditing and Lagos Food ingestion keep their distinct scheduled scopes and may
+not create controller clones.
+
 ## Controller reconciliation — semantic UI and market-detail follow-up
 
 The latest consumer-surface review identified two queued workstreams that were not
