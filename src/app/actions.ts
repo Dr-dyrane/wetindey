@@ -2382,7 +2382,7 @@ export async function getMyProfile(): Promise<MyProfile | null> {
  * Coarsens latitude/longitude to the centroid of a fixed 500m grid cell
  * to preserve user privacy and comply with ADR-016.
  */
-export function coarsenCoordinates(lat: number, lng: number): { latitude: number; longitude: number } {
+function coarsenCoordinates(lat: number, lng: number): { latitude: number; longitude: number } {
   // 500 meters is approximately 0.0045 degrees of latitude
   const LAT_STEP = 0.0045;
   const gridLat = Math.round(lat / LAT_STEP) * LAT_STEP;
