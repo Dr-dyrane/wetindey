@@ -118,10 +118,12 @@ export function ItemCard({
   const statusLabel = useStatusLabel();
   const [broken, setBroken] = useState(false);
   const status: StatusKind = item.trust?.status ?? "caution";
-  const displayedStatusLabel =
-    item.trust && item.trust.origin !== "observed"
-      ? item.trust.provenanceLabel
-      : statusLabel[status];
+  const originLabel =
+    item.trust?.origin === "synthetic"
+      ? "Sample"
+      : item.trust && item.trust.origin !== "observed"
+        ? item.trust.provenanceLabel
+        : null;
   const showImage = item.imageUrl && !broken;
 
   const priceLabel =
@@ -174,12 +176,17 @@ export function ItemCard({
        * No tier-two element has a taller line box than the tier it serves —
        * the ramp is rem-based, so that holds at every Dynamic Type size. Row
        * height is the price's alone and never gains a step from this.
-       */}
+      */}
       <div className="min-w-0 flex-1 py-2 pr-3">
-        <div className="flex items-baseline justify-between gap-2">
+        <div className="flex items-start justify-between gap-2">
           <span className="min-w-0 truncate text-subhead font-semibold text-text-primary">
             {item.name}
           </span>
+          {originLabel ? (
+            <span className="inline-flex h-5 shrink-0 items-center rounded-[14px] bg-surface-sunken px-2 text-caption-2 font-semibold text-text-secondary">
+              {originLabel}
+            </span>
+          ) : null}
         </div>
         <p className="truncate text-subhead font-semibold tabular-nums text-text-primary">
           {priceLabel}
@@ -198,7 +205,7 @@ export function ItemCard({
           )}
         </p>
         <div className="mt-1 flex items-center gap-1.5">
-          <StatusBadge kind={status}>{displayedStatusLabel}</StatusBadge>
+          <StatusBadge kind={status}>{statusLabel[status]}</StatusBadge>
           {item.placeCount ? (
             <span className="truncate text-caption-1 text-text-secondary">
               {item.placeCount} {item.placeCount === 1 ? "place" : "places"}
