@@ -135,6 +135,11 @@ const config: Config = {
         tap: "44px",
         /** Root side margin at compact width (community-measured, not published). */
         margin: "16px",
+        /** ADR-018 glyph sizes. The containing control, never the glyph, owns
+         * the 44px interaction target. */
+        "icon-compact": "16px",
+        "icon-standard": "18px",
+        "icon-prominent": "24px",
       },
 
       boxShadow: {

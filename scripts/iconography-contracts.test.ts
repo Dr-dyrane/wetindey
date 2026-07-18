@@ -8,6 +8,7 @@ const PATHS = {
   globals: "src/app/globals.css",
   tailwind: "tailwind.config.ts",
   orb: "src/design-system/components/IconOrb.tsx",
+  solid: "src/design-system/icons/SolidIcon.tsx",
   listRow: "src/design-system/components/ListRow.tsx",
   itemCard: "src/design-system/components/ItemCard.tsx",
   category: "src/app/_components/CategorySelectorSheet.tsx",
@@ -42,6 +43,7 @@ const implementationSources = [
   sources.globals,
   sources.tailwind,
   sources.orb,
+  sources.solid,
   sources.listRow,
   sources.itemCard,
   sources.category,
@@ -73,8 +75,20 @@ for (const tone of [
 assert.match(sources.orb, /aria-hidden="true"/);
 assert.match(sources.orb, /squircle-full/);
 assert.doesNotMatch(sources.orb, /\bborder(?:-|")|\bshadow-|\banimate-|\bonClick\b|<button\b/);
+assert.match(sources.solid, /export type SolidIconSize = 16 \| 18 \| 24;/);
+assert.match(sources.solid, /aria-hidden="true"/);
+assert.match(sources.solid, /focusable="false"/);
+assert.match(sources.solid, /not copied from[\s\S]*Apple SF Symbols/);
+assert.doesNotMatch(sources.solid, /\bonClick\b|<button\b|https?:\/\//);
+assert.match(sources.globals, /\.solid-icon\s*\{[\s\S]*fill:\s*currentColor;[\s\S]*stroke:\s*none;/);
 assert.match(sources.globals, /@media \(prefers-reduced-motion: reduce\)/);
-assert.match(sources.globals, /@media \(forced-colors: active\)[\s\S]*?\.icon-orb/);
+assert.match(
+  sources.globals,
+  /@media \(forced-colors: active\)[\s\S]*?\.icon-orb[\s\S]*?\.solid-icon/
+);
+for (const size of ["icon-compact", "icon-standard", "icon-prominent"]) {
+  assert.ok(sources.tailwind.includes(`"${size}"`), size);
+}
 
 // Token families remain separate even if later palette work changes values.
 for (const token of [

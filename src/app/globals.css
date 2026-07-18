@@ -407,6 +407,16 @@
     border-radius: 9999px;
   }
 
+  /* Dependency-free solid glyph primitive. Geometry is authored locally in
+     SolidIcon.tsx; colour remains inherited so the semantic owner is the
+     surrounding neutral/domain/rating/status component, never the glyph. */
+  .solid-icon {
+    display: block;
+    flex: none;
+    fill: currentColor;
+    stroke: none;
+  }
+
   @supports (corner-shape: squircle) {
     .squircle,
     .squircle-card,
@@ -619,6 +629,9 @@
     background-color: Canvas;
     outline: 1px solid CanvasText;
     outline-offset: -1px;
+  }
+  .solid-icon {
+    color: CanvasText;
   }
 }
 

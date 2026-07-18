@@ -15,9 +15,9 @@ export type IconOrbTone =
   | "rating";
 
 const SIZE_STYLES: Record<IconOrbSize, string> = {
-  28: "h-7 w-7 [&>svg]:h-4 [&>svg]:w-4",
-  32: "h-8 w-8 [&>svg]:h-[18px] [&>svg]:w-[18px]",
-  48: "h-12 w-12 [&>svg]:h-6 [&>svg]:w-6",
+  28: "h-7 w-7 [&>svg]:h-icon-compact [&>svg]:w-icon-compact",
+  32: "h-8 w-8 [&>svg]:h-icon-standard [&>svg]:w-icon-standard",
+  48: "h-12 w-12 [&>svg]:h-icon-prominent [&>svg]:w-icon-prominent",
 };
 
 const TONE_STYLES: Record<IconOrbTone, string> = {
