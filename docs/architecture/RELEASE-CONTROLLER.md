@@ -223,8 +223,8 @@ safety/integrity lanes until their separate gates are independently satisfied.
   `9f7b2c74d3395c687c91338fe475b8d3872cbcb1`. It preserves a 44px outer target
   around a 32px visible surface with 8px horizontal padding and a 2px label-chevron gap.
   No tests, browser, push, or deploy occurred during implementation. HI Quality reused-tab
-  visual refutation is active, so `src/app/page.tsx` remains exclusively claimed until
-  verdict.
+  visual refutation passed across desktop/compact, light/dark, Food↔Aboki switching, and
+  the 44px outer/32px visible geometry. `src/app/page.tsx` is released.
 - Search & Ranking Engineer task `019f75b7-6c59-7952-bf14-b01cfbfd2793` committed
   `48fac46` over `src/app/actions.ts` `searchItems()` only. Independent static/diff
   refutation passed with no P1/P2/P3, but HI Quality runtime refutation **REFUTED** the
@@ -237,10 +237,11 @@ safety/integrity lanes until their separate gates are independently satisfied.
   `offers_current` aggregation for pure-synthetic fallback while preserving observed
   precedence, synthetic/observed separation, the provenance firewall, location/radius/
   query behavior, all write paths, and exclusion from `getOfferTrustBatch`. Require a
-  fresh path-scoped commit and repeat HI Quality refutation in the same dedicated QA tab.
-  Contribution Integrity remains blocked until PASS and path release. No DB, tests, build,
-  push, or deploy is authorized. The prior `c6f304b` static correction was not runtime
-  closure.
+  forward commits `2ebaf54` and `75a1fd1` now exist without amend. A final HI Quality
+  reused-tab browser verdict is newly assigned, so `src/app/actions.ts` remains exclusively
+  claimed by Search and Contribution Integrity remains blocked until PASS and path release.
+  No DB, tests, build, push, or deploy is authorized. The prior `c6f304b` static correction
+  was not runtime closure.
 - Product & Data Governance Architect task
   `019f7599-0eaa-7423-9ebf-a1bfea8efe37` completed the two-path ADR-017 governance
   correction at `0bf641d7784edfa512ab54bf13a15c3ac0c72ce1`. Independent refutation
@@ -268,9 +269,11 @@ safety/integrity lanes until their separate gates are independently satisfied.
   visual-system rule binds this lane: primary surfaces stay monochrome/neutral so
   controlled color lives in iconography and photography; currency flags are circular local
   SVG orbs, never emoji or rectangular flag badges.
-- A separate `Iconography & Visual Systems` wrapper-consistency audit is queued
-  read-only/pathless. It owns no code until its employee proposes exact paths that do not
-  overlap the active seven-path Aboki lane and the controller records an exclusive claim.
+- Iconography & Visual Systems Lead employee
+  `019f75cf-4d8f-7263-822b-06e846fce7ac` now performs the separate active read-only/
+  pathless wrapper-consistency audit. It owns no code until it proposes exact paths that
+  do not overlap the active seven-path Aboki lane and the controller records an exclusive
+  claim.
   This visual refinement changes no release authority: unresolved shared migration state
   keeps the decision strictly **NO PUSH / NO DEPLOY**.
 - Nearby Presence governance completed in path-scoped commit
@@ -310,9 +313,9 @@ safety/integrity lanes until their separate gates are independently satisfied.
   remains a separate explicit gate.
 - Contribution Integrity & Moderation Engineer task
   `019f75a3-f50d-7180-8e92-0a7aabd8a98c` is queued read-only/pathless pending its exact
-  containment plan. Search runtime refuted `48fac46`; Search must land the forward
-  correction and HI Quality must PASS the repeated same-tab verdict before the controller
-  releases `src/app/actions.ts`. Contribution migration work is `0013` or later, after
+  containment plan. Search forward commits `2ebaf54` and `75a1fd1` exist, but HI Quality
+  must PASS the newly assigned final reused-tab verdict before the controller releases
+  `src/app/actions.ts`. Contribution migration work is `0013` or later, after
   presence-owned forward `0012`. Threat model, disposable integration evidence, and
   independent refutation remain prerequisites to implementation ownership.
 - Preview schema/ledger drift remains proven and quarantined. Production identity, ledger,
@@ -343,9 +346,10 @@ safety/integrity lanes until their separate gates are independently satisfied.
   `2d46ff90f87c7bfe75cc3df30ae35cc10a9641971543243e9d885aa7a97ca466`; exact scope,
   historical hashes, time/geography/unit/availability/attribution, no-Sample, and no-live
   rules passed with no P1/P2. P3 only: intentional Markdown hard-break whitespace. Lane A
-  paths are released. Terra Lane B is now active over its already reserved exact paths;
-  final Luna artifact refutation remains required before release. No fetch, tests, DB,
-  seed, schema, migration, UI, push, or deploy occurred from Lane A.
+  paths are released. Terra Lane B is implementation-complete at `e49782b` over its ten
+  exact reserved paths. Luna final original-source refutation is active, so all ten paths
+  remain claimed until verdict. No live effect, tests, DB, seed, schema, migration, UI,
+  push, or deploy is authorized.
 - Decision: **NO PUSH / NO DEPLOY**. This documentation checkpoint authorizes no test,
   push, deployment, migration, seed, shared-database access, or external change.
 
