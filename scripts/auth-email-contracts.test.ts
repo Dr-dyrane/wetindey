@@ -1,10 +1,12 @@
 import assert from "node:assert/strict";
 import {
+  createHash,
   generateKeyPairSync,
   randomUUID,
   sign,
   type KeyObject,
 } from "node:crypto";
+import { inflateSync } from "node:zlib";
 
 import {
   AuthEmailConfigurationError,
@@ -18,6 +20,9 @@ import {
   verifyNeonOtpWebhook,
   type VerifiedNeonOtpWebhook,
 } from "../src/lib/auth-email";
+import {
+  WETINDEY_EMAIL_LOGO_CID,
+} from "../src/lib/auth-email-logo";
 
 const eventId = "550e8400-e29b-41d4-a716-446655440000";
 const kid = "wetindey-contract-key";
@@ -25,6 +30,8 @@ const eventTimestamp = "2026-07-18T18:00:00.000Z";
 const expiresAt = "2026-07-18T18:10:00.000Z";
 const issuedAtMs = Date.parse(eventTimestamp);
 const webhookTimestamp = issuedAtMs.toString();
+const expectedLogoSha256 =
+  "1ae527ebf982dabdc6fd87b1ffa000b4de4561b8f68386b7e1cfe92f8b39f189";
 
 const basePayload = {
   event_id: eventId,
@@ -105,6 +112,177 @@ function verify(
     resolvePublicKey: async (_kid: string): Promise<KeyObject> =>
       publicKey,
   });
+}
+
+function paethPredictor(left: number, up: number, upLeft: number): number {
+  const estimate = left + up - upLeft;
+  const leftDistance = Math.abs(estimate - left);
+  const upDistance = Math.abs(estimate - up);
+  const upLeftDistance = Math.abs(estimate - upLeft);
+
+  if (leftDistance <= upDistance && leftDistance <= upLeftDistance) {
+    return left;
+  }
+
+  return upDistance <= upLeftDistance ? up : upLeft;
+}
+
+function pngCrc32(content: Buffer): number {
+  let crc = 0xffffffff;
+
+  for (const byte of content) {
+    crc ^= byte;
+    for (let bit = 0; bit < 8; bit += 1) {
+      crc =
+        (crc >>> 1) ^
+        (crc & 1 ? 0xedb88320 : 0);
+    }
+  }
+
+  return (crc ^ 0xffffffff) >>> 0;
+}
+
+function assertMonochromePng(content: Buffer): void {
+  assert.deepEqual(
+    content.subarray(0, 8),
+    Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]),
+  );
+
+  let offset = 8;
+  let width = 0;
+  let height = 0;
+  let sawIhdr = false;
+  let sawIend = false;
+  let idatSequenceEnded = false;
+  let chunkIndex = 0;
+  const compressedRows: Buffer[] = [];
+
+  while (offset + 12 <= content.length) {
+    const length = content.readUInt32BE(offset);
+    const type = content.toString("ascii", offset + 4, offset + 8);
+    const dataStart = offset + 8;
+    const dataEnd = dataStart + length;
+    const chunkEnd = dataEnd + 4;
+    assert.ok(chunkEnd <= content.length, `${type} exceeds PNG bounds`);
+    assert.equal(
+      content.readUInt32BE(dataEnd),
+      pngCrc32(content.subarray(offset + 4, dataEnd)),
+      `${type} has an invalid CRC`,
+    );
+    assert.equal(
+      chunkIndex === 0 ? type : "IHDR",
+      "IHDR",
+      "IHDR must be the first PNG chunk",
+    );
+
+    if (type === "IHDR") {
+      assert.equal(sawIhdr, false, "PNG must contain one IHDR");
+      assert.equal(length, 13);
+      sawIhdr = true;
+      width = content.readUInt32BE(dataStart);
+      height = content.readUInt32BE(dataStart + 4);
+      assert.equal(content[dataStart + 8], 8, "logo must be 8-bit");
+      assert.equal(content[dataStart + 9], 6, "logo must be RGBA");
+      assert.equal(
+        content[dataStart + 10],
+        0,
+        "logo must use PNG compression method 0",
+      );
+      assert.equal(
+        content[dataStart + 11],
+        0,
+        "logo must use PNG filter method 0",
+      );
+      assert.equal(content[dataStart + 12], 0, "logo cannot interlace");
+    } else if (type === "IDAT") {
+      assert.ok(sawIhdr, "IDAT cannot precede IHDR");
+      assert.equal(
+        idatSequenceEnded,
+        false,
+        "PNG IDAT chunks must be consecutive",
+      );
+      compressedRows.push(content.subarray(dataStart, dataEnd));
+    } else if (type === "IEND") {
+      assert.equal(length, 0);
+      assert.equal(chunkEnd, content.length);
+      sawIend = true;
+      break;
+    } else if (compressedRows.length > 0) {
+      idatSequenceEnded = true;
+    }
+
+    offset = chunkEnd;
+    chunkIndex += 1;
+  }
+
+  assert.ok(sawIhdr);
+  assert.equal(width, 96);
+  assert.equal(height, 96);
+  assert.ok(sawIend);
+  assert.ok(compressedRows.length > 0);
+
+  const bytesPerPixel = 4;
+  const rowLength = width * bytesPerPixel;
+  const filteredRows = inflateSync(Buffer.concat(compressedRows));
+  assert.equal(filteredRows.length, height * (rowLength + 1));
+
+  let previousRow = Buffer.alloc(rowLength);
+  let visiblePixels = 0;
+  let darkPixels = 0;
+  let lightPixels = 0;
+
+  for (let rowIndex = 0; rowIndex < height; rowIndex += 1) {
+    const rowOffset = rowIndex * (rowLength + 1);
+    const filter = filteredRows[rowOffset];
+    assert.ok(filter <= 4, `unsupported PNG filter ${filter}`);
+    const row = Buffer.alloc(rowLength);
+
+    for (let index = 0; index < rowLength; index += 1) {
+      const encoded = filteredRows[rowOffset + 1 + index];
+      const left =
+        index >= bytesPerPixel ? row[index - bytesPerPixel] : 0;
+      const up = previousRow[index];
+      const upLeft =
+        index >= bytesPerPixel
+          ? previousRow[index - bytesPerPixel]
+          : 0;
+      let decoded = encoded;
+
+      if (filter === 1) {
+        decoded += left;
+      } else if (filter === 2) {
+        decoded += up;
+      } else if (filter === 3) {
+        decoded += Math.floor((left + up) / 2);
+      } else if (filter === 4) {
+        decoded += paethPredictor(left, up, upLeft);
+      }
+
+      row[index] = decoded & 0xff;
+    }
+
+    for (let index = 0; index < rowLength; index += bytesPerPixel) {
+      const red = row[index];
+      const green = row[index + 1];
+      const blue = row[index + 2];
+      const alpha = row[index + 3];
+      if (alpha === 0) {
+        continue;
+      }
+
+      visiblePixels += 1;
+      assert.equal(red, green, "logo contains a chromatic pixel");
+      assert.equal(green, blue, "logo contains a chromatic pixel");
+      darkPixels += red < 64 ? 1 : 0;
+      lightPixels += red > 191 ? 1 : 0;
+    }
+
+    previousRow = row;
+  }
+
+  assert.ok(visiblePixels > 0);
+  assert.ok(darkPixels > 0);
+  assert.ok(lightPixels > 0);
 }
 
 async function main(): Promise<void> {
@@ -353,7 +531,19 @@ async function main(): Promise<void> {
     /\b(?:hwb|lab|lch|oklab|oklch|color|color-mix)\(/i,
   );
   assert.doesNotMatch(rendered.html, /\burl\(/i);
-  assert.doesNotMatch(rendered.html, /<(?:img|picture|svg)\b/i);
+  const imageTags = rendered.html.match(/<img\b[^>]*>/gi) ?? [];
+  assert.equal(imageTags.length, 1);
+  assert.doesNotMatch(rendered.html, /\bsrcset\s*=/i);
+  assert.doesNotMatch(rendered.html, /https?:\/\//i);
+  const imageSources = imageTags.map((tag) => {
+    const source = tag.match(
+      /\bsrc\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+))/i,
+    );
+    assert.ok(source, "email logo requires an image source");
+    return source[1] ?? source[2] ?? source[3];
+  });
+  assert.deepEqual(imageSources, [`cid:${WETINDEY_EMAIL_LOGO_CID}`]);
+  assert.doesNotMatch(rendered.html, /<(?:picture|svg)\b/i);
   for (const color of declaredColors) {
     assert.match(
       color,
@@ -422,6 +612,25 @@ async function main(): Promise<void> {
   assert.equal(providerMessage?.replyTo, "support@wetindey.live");
   assert.equal(providerMessage?.html, expectedDelivery.html);
   assert.equal(providerMessage?.text, expectedDelivery.text);
+  const attachments = providerMessage?.attachments;
+  assert.ok(Array.isArray(attachments));
+  assert.equal(attachments.length, 1);
+  const logoAttachment = attachments[0] as Record<string, unknown>;
+  assert.equal(logoAttachment.cid, WETINDEY_EMAIL_LOGO_CID);
+  assert.equal(logoAttachment.contentType, "image/png");
+  assert.equal(logoAttachment.contentDisposition, "inline");
+  assert.ok(Buffer.isBuffer(logoAttachment.content));
+  assert.match(
+    WETINDEY_EMAIL_LOGO_CID,
+    /^[a-z0-9._-]+@[a-z0-9.-]+$/i,
+  );
+  assertMonochromePng(logoAttachment.content as Buffer);
+  assert.equal(
+    createHash("sha256")
+      .update(logoAttachment.content as Buffer)
+      .digest("hex"),
+    expectedLogoSha256,
+  );
   assert.equal(
     providerMessage?.messageId,
     `<${eventId}@auth.wetindey.live>`,

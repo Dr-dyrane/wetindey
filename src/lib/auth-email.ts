@@ -7,6 +7,10 @@ import {
 
 import nodemailer from "nodemailer";
 import type { SendMailOptions } from "nodemailer";
+import {
+  WETINDEY_EMAIL_LOGO_CID,
+  WETINDEY_EMAIL_LOGO_PNG_BASE64,
+} from "@/lib/auth-email-logo";
 
 export const WETINDEY_OTP_EMAIL_SUBJECT =
   "Your WetinDey verification code";
@@ -239,8 +243,19 @@ export function renderWetinDeyOtpEmail(
                 <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
                   <tr>
                     <td class="wd-pad" style="padding:32px 32px 10px;">
-                      <div class="wd-copy" style="font-size:22px;line-height:28px;font-weight:750;letter-spacing:-.5px;color:#1d1d1d;">WetinDey</div>
-                      <div class="wd-muted" style="font-size:13px;line-height:18px;color:#595959;">Know before you go.</div>
+                      <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+                        <tr>
+                          <td width="60" valign="middle">
+                            <div style="width:48px;height:48px;border-radius:16px;background:#000000;box-shadow:0 8px 20px rgba(0,0,0,.14);">
+                              <img src="cid:${WETINDEY_EMAIL_LOGO_CID}" width="48" height="48" alt="" style="display:block;width:48px;height:48px;border:0;">
+                            </div>
+                          </td>
+                          <td valign="middle">
+                            <div class="wd-copy" style="font-size:22px;line-height:28px;font-weight:750;letter-spacing:-.5px;color:#1d1d1d;">WetinDey</div>
+                            <div class="wd-muted" style="font-size:13px;line-height:18px;color:#595959;">Know before you go.</div>
+                          </td>
+                        </tr>
+                      </table>
                     </td>
                   </tr>
                   <tr>
@@ -867,6 +882,18 @@ async function deliverWetinDeyOtpEmail(
         subject: message.subject,
         html: message.html,
         text: message.text,
+        attachments: [
+          {
+            filename: "wetindey-logo.png",
+            content: Buffer.from(
+              WETINDEY_EMAIL_LOGO_PNG_BASE64,
+              "base64",
+            ),
+            contentType: "image/png",
+            cid: WETINDEY_EMAIL_LOGO_CID,
+            contentDisposition: "inline",
+          },
+        ],
         messageId: `<${payload.eventId}@auth.wetindey.live>`,
         headers: {
           "X-WetinDey-Message": "authentication",
