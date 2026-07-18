@@ -461,6 +461,17 @@ safety/integrity lanes until their separate gates are independently satisfied.
   and exact boundaries for the later code handoff. Require one path-scoped docs commit and
   independent source refutation with no P1/P2. This lane authorizes no code, test, build,
   browser, DB, push, or deploy.
+- Exact H6 governance commit `14aff35fa98728c4d2c22e61e773254d42186db7`
+  changes only the four claimed documents. Independent refutation remains pending: the
+  named Security & Privacy refuter `019f75e5-8c04-74c0-9392-d9f741a7a131` returned no
+  verdict after repeated bounded prompts and is stale for this checkpoint. The same
+  first replacement `/root/h6_adr020_refuter` inherited the wrong controller prompt,
+  produced no task output, and is retired as an assignment-wiring failure. A fresh refuter
+  `/root/h6_adr020_security_refuter` was created with no inherited turns and only the exact
+  commit/four-file checklist; it must default to REFUTED when evidence is thin. Retain all
+  four governance paths. Do not close H6 or open `src/middleware.ts`,
+  `src/app/layout.tsx`, `vercel.json`, or any dependent implementation lane before a
+  no-P1/P2 verdict covering the full acceptance contract.
 - H37 place iconography is complete at `6611068`, and current HEAD corrects a stale final
   audit description: `MapboxCanvas` forwards `candidate.placeType`, `MapMarkerOptions`
   declares `placeType`, and the adapter selects semantic place symbols. Those two
