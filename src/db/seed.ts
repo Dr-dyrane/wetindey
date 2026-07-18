@@ -461,7 +461,7 @@ const run = async () => {
         priceMin,
         priceMax: priceMax > priceMin ? priceMax : null,
         freshnessState,
-        trustLevel: freshnessState === "confirmed" ? "high" : freshnessState === "caution" ? "medium" : "low",
+        trustLevel: "none",
         lastObservedAt: newest.at,
         expiresAt: new Date(newest.at.getTime() + EXPIRATION_HOURS * 3600 * 1000),
         // The count IS the count.
