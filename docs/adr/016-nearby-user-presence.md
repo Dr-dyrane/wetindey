@@ -41,9 +41,11 @@ this document from Proposed or authorize a deployment, database change, or publi
 
 ### C. Migration path
 
-- [ ] **C1 - Use the evidence-controlled `0011`/`0012` rule (Recommended):** repair
-  `0011` in place only if authoritative evidence proves its current bytes were never
-  applied to any shared target; otherwise preserve it and repair forward with `0012`.
+  - [ ] **C1 - Use the evidence-controlled `0011`/`0012` rule (Recommended):** repair
+    `0011` in place only if authoritative evidence proves that no artifact identified as
+    migration `0011`, under any bytes, checksum, or revision, was ever fully or partially
+    applied to any shared target. Otherwise preserve the applied lineage and repair forward
+    with `0012`.
 - [ ] **C2 - Defer all presence schema work:** retain containment until the migration
   state and target authorization are available.
 
@@ -263,25 +265,35 @@ Migration state is a release fact, not an inference from a local file. No presen
 migration may run against a shared target without exact-target authorization and evidence
 for the applied order and bytes of `0009`, `0010`, and `0011`.
 
-The current `0011` may be repaired in place **only if authoritative evidence proves its
-current bytes were never applied to any shared target**. Evidence must identify every
-shared development, preview, staging, and production target in scope and reconcile the
-migration ledger, exact checksums, deployed revisions, and schema state. Missing access,
-an unknown target, an ambiguous ledger, or conflicting evidence means non-application has
-not been proved.
+  Repair `0011` in place **only if authoritative evidence proves that no artifact identified
+  as migration `0011`, under any bytes, checksum, or revision, was ever fully or partially
+  applied to any shared target**. Otherwise preserve the applied lineage and repair forward
+  with `0012`. Evidence must identify every shared development, preview, staging, and
+  production target in scope and reconcile the migration ledger, exact checksums, deployed
+  revisions, and schema state. Missing access, an unknown target, an ambiguous ledger, or
+  conflicting evidence means universal non-application has not been proved.
+
+  Antigravity evidence records that the shared Preview schema already contains the `0011`
+  latitude/longitude effects while its Drizzle ledger appears to reach only `0010`. That
+  evidence selects the forward-repair branch for Preview and forbids rewriting `0011` in
+  place. Because one shared target is enough to prevent universal non-application, the
+  release lineage must preserve `0011` and repair forward with `0012`. Production remains
+  **UNKNOWN** until it is directly queried under exact-target authorization. This evidence
+  does not authorize ledger repair, establish schema equivalence, authorize a migration, or
+  authorize deployment.
 
 If non-application is proved, regenerate and review `0011` in place under one exclusive
 schema lane before its first shared application. Do not create `0012` merely to repair an
 unapplied `0011`.
 
-If the current bytes were applied anywhere shared, or authoritative non-application cannot
-be proved, preserve `0011` and its ledger evidence byte-for-byte and create forward
-migration `0012`. `0012` must first disable the unsafe presence path, revoke and purge its
-data, and drop unsafe profile-coordinate storage, policies, functions, indexes, and
-grants. Only after that destructive boundary is complete may the same reviewed release
-install the coarse lease, block, private-report, capability, kill-switch, RLS, and least-
-privilege role boundary. No old exact or profile coordinate may be copied or backfilled
-into a lease.
+  If any artifact identified as migration `0011` was fully or partially applied anywhere
+  shared, or universal non-application cannot be proved, preserve `0011` and its ledger
+  evidence byte-for-byte and create forward migration `0012`. `0012` must first disable the
+  unsafe presence path, revoke and purge its data, and drop unsafe profile-coordinate
+  storage, policies, functions, indexes, and grants. Only after that destructive boundary is
+  complete may the same reviewed release install the coarse lease, block, private-report,
+  capability, kill-switch, RLS, and least-privilege role boundary. No old exact or profile
+  coordinate may be copied or backfilled into a lease.
 
 A disposable migration and security harness must prove both the relevant fresh-baseline
 path and the exact existing-lineage path selected above. It must exercise expiry,

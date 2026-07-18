@@ -4485,9 +4485,14 @@ The team should consider pivoting the mechanism or problem when:
   server-owned 5 km radius, maximum 50 opaque no-identity results, bidirectional block,
   private report, private/no-store snapshots, default-off flag, database kill switch, and
   immediate stale clearing. An exactly two-account Festac pilot is gated separately from
-  public rollout; `0011` may be repaired in place only with authoritative proof that its
-  current bytes never reached a shared target, otherwise preserve it and repair forward
-  with `0012`.
+    public rollout. Repair `0011` in place only if authoritative evidence proves that no
+    artifact identified as migration `0011`, under any bytes, checksum, or revision, was
+    ever fully or partially applied to any shared target. Otherwise preserve the applied
+    lineage and repair forward with `0012`. Antigravity evidence selects forward repair for
+    Preview because its shared schema contains the `0011` latitude/longitude effects while
+    its Drizzle ledger appears to reach only `0010`; in-place `0011` rewriting is forbidden.
+    Production remains UNKNOWN until directly queried. This records no ledger-repair,
+    schema-equivalence, migration, or deployment authorization.
 - [ADR-010](docs/adr/010-typed-live-local-information-platform.md): detailed ontology for
   the owner-directed correction that WetinDey is a live local information platform rather
   than a universal price app. The proposal separates pillars, selectable capabilities,
