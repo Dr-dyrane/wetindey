@@ -66,6 +66,37 @@ Presence work must proceed in this dependency order:
 
 `containment -> ADR-016 acceptance/revision -> schema/migration -> server boundary -> consent/lifecycle -> snapshot lifecycle -> map DTO/UI -> independent refutation -> authorized target migration/pilot`
 
+### Founder-directed safe interpretation: Reciprocal Community Presence
+
+The Founder directed: `fix location; I need realtime user interaction where a user can see
+who's nearby on map, tap on them, and interact.` The CEO safe interpretation accepts the
+architecture for a private-pilot **Reciprocal Community Presence** mode while keeping
+rollout disabled:
+
+- Participation is signed-in, reciprocal opt-in, and default off.
+- Shared location is a fixed-grid approximate centroid at 500m resolution under an
+  explicit foreground lease of at most 15 minutes. There is no automatic or background
+  renewal.
+- A second explicit presence-profile consent may expose a chosen display name and avatar
+  only to reciprocal active sharers. Never expose email, phone, WhatsApp, another contact
+  channel, stable auth ID, exact coordinate, verification/reputation claims, or per-user
+  precision.
+- Tapping a marker opens an accessible Community Presence Card with `Wave`, `Block`,
+  `Report`, and `Close`. `Wave` is an ephemeral, rate-limited in-app interaction, not
+  messaging or contact.
+- Snapshots and Waves update near-real-time in the foreground through a bounded transport
+  selected by engineering. Copy must not claim falsely that a person is `live`; there is
+  no background tracking.
+- Preserve B1 full device/account/network disclosure and rate budgets, C1 frozen `0011`
+  plus forward `0012` because of Preview drift, and D1 separate public-rollout
+  authorization.
+- Require both a default-off application flag and database kill switch. The first pilot
+  is allowlisted to two accounts in Festac. Counsel, safety-responder, and retention gates
+  remain prerequisites.
+- ADR-016 may move from Proposed to Accepted for implementation architecture only if it
+  states clearly that acceptance does not authorize a shared migration, deployment, pilot
+  traffic, or public rollout.
+
 The immediate containment slice completed at
 `4e25b8c7ac8a3ad598567e186575defd51113247`. Independent Pauli static refutation passed
 with no P1, P2, or P3 findings, and all four paths are released. At-rest coordinates and
@@ -96,11 +127,14 @@ Antigravity and Nietzsche established the current fail-closed migration record:
 - Current `0011` SQL, snapshot, journal, and hash are frozen. No in-place rewrite and no
   fabricated ledger receipt are permitted.
 - Production is **UNKNOWN**. Deployment commits and documentation are not database proof.
+- Preview remains quarantined from rollout decisions while its unexplained ledger row and
+  schema/ledger drift are unresolved.
 - **NO PUSH / NO DEPLOY** remains.
-- Forward `0012` is planned but blocked on Founder ADR approval, full shared-target
+- Forward `0012` is reserved for the presence repair and remains blocked on the revised
+  ADR decision, full shared-target
   inventory, parent normalization plus quarantine-or-approved-repair, exact
   schema/RPC/RLS/grant fingerprint, coordinate non-null aggregate, restore proof, and
-  separate migration authorization.
+  separate migration authorization. Contribution integrity must follow as `0013` or later.
 
 The active product phase is **WetinDey Food Truth & Pilot Operations**. Its order is:
 search repair, provenance-complete reads/SEO, authorized staging migration, hardened
@@ -117,7 +151,7 @@ then earned reputation, reviews/community, and a first non-price vertical.
 | **P0 search schema + provenance repair** | correction committed and independently statically refuted at `c6f304b`; disposable-SQL execution remains a read-only evidence gate; code paths released | controller / Sol with executable disposable-DB refuter | Preserve evidence that search price/count/time/availability derive from admissible observed context without synthetic/partner/reference/inferred leakage | Owns no code paths; no schema/migration rewrite, shared DB, ranking expansion, category work, push, or deployment |
 | **V1 truth core** | T1/T2A complete; T2C/T2D statically complete; search execution evidence pending | controller / Sol with fresh independent refuter | One Food path from admissible evidence to read, map, share, SEO, offline, and outcome | Search code paths are released; deployment remains blocked until exact shared-target `0009`/`0010`/`0011` compatibility is separately authorized and verified |
 | **Database rollout-status evidence correction** | complete at `164a12c` plus forward correction `bb4dca4`; Lovelace follow-up PASS; path released | CEO controller / DB-status docs worker | Dated fail-closed evidence records Preview ledger through recognized `0010`, unledgered `0011`-like latitude/longitude schema drift, Production unknown, and no authorization implied | Provenance/ingestion object presence is qualified as uncorroborated external reporting; migration policy was not modified |
-| **Contribution integrity** | next code lane; owns no paths while read-only architecture explorer reports | unassigned | Transactional observation/projection write, server idempotency, atomic conflict handling, rate policy, and non-destructive contradictory-report state | Reviews and database-status paths are released, but the read-only explorer owns no path and no contribution path may be claimed until its architecture report is reconciled; then requires exact paths, threat model, disposable integration proof, and no automatic moderation fiction |
+| **Contribution integrity** | next code lane; owns no paths while read-only architecture explorer reports | unassigned | Transactional observation/projection write, server idempotency, atomic conflict handling, rate policy, and non-destructive contradictory-report state | Presence owns forward migration `0012`; contribution integrity must follow as `0013` or later. The read-only explorer owns no path, and no contribution path may be claimed until its architecture report is reconciled; then requires exact paths, threat model, disposable integration proof, and no automatic moderation fiction |
 | **Release verification + Q1 refutation** | planned Stage 0, owns no paths | controller / Sol plus fresh independent refuter | One adversarial release gate for migration, provenance, trust, Server Actions, category/filter context, map/sheet, browser, accessibility, PWA, legal, and production-build claims | Defaults to refuted when evidence is thin; must not run `next build` against the live dev `.next`; no shared DB or deployment by implication |
 | **Food pilot operations** | planned Stage 1, owns no paths | unassigned operator/product lane | Source review, field entry, catalog/unit mapping, place correction/merge, dispute handling, freshness coverage, moderator audit | Begins only after Stage 0 truth gate; bounded geography and catalog |
 | **Seller contact and stewardship** | planned Stage 1, owns no paths | unassigned | Claim/onboard seller, consented contact publication, safe contact resolution, hours, corrections, and response state | No delivery, checkout, payment, dispatch, or inferred consent |
@@ -128,7 +162,7 @@ then earned reputation, reviews/community, and a first non-price vertical.
 | **Catalog Stewardship** | household-size seed correction complete; path released | controller / Sol with bounded worker and independent refuter | Commit `91243c4` makes ordinary household quantities primary in demo variants and removes inappropriate wholesale basket/carton/25L choices | Static refuter PASS: 48 items, 85 valid variants, consumer-first ordering, one 500g Spaghetti pack at ₦900–₦1,400; no schema, migration, seed execution, imagery, report, or live-price claim |
 | **Sample-origin card slot** | complete; path released | controller / Sol with bounded visual workers and independent refuters | Commits `70f6a4b` and `8c28f64` separate synthetic origin from status and render `Sample` as quiet top-right microcopy | Final source refuter PASS: no badge chrome, 4.59:1 light and 4.58:1 dark contrast, status remains separate as `E sure`, `Check am`, or `E no dey`; runtime perception remains unverified |
 | **Nearby-user presence safety containment** | completed at `4e25b8c7`; independent Pauli static refuter PASS with no P1/P2/P3; paths released | CEO controller / bounded presence worker | Removed or failed closed unauthenticated global presence reads, profile coordinate inputs, automatic publish/polling, stale marker retention, and misleading toggle/copy | At-rest coordinates and dormant DTO/renderer remain later schema/map concerns; no runtime, deployment, database, schema, migration, or map-UI expansion proof |
-| **ADR-016 governance decision preparation** | packet complete at `0480182` plus P2 correction `a9a7c60`; Curie follow-up PASS; paths released | CEO controller / ADR-016 governance worker | Founder-reviewable reciprocal, coarse, short-lived, default-off presence decision packet | ADR remains Proposed pending Founder A1/B1/C1/D1 selection; private two-account Festac pilot remains separate from public rollout; no code/schema/migration approval claim |
+| **ADR-016 Founder-decision revision** | active governance revision; rollout disabled | CEO controller / next presence-governance worker | Record the Founder-directed Reciprocal Community Presence architecture and its private-pilot safety boundaries | Owns exactly `docs/adr/016-nearby-user-presence.md` and `WETINDEY_BIBLE.md`; preserve B1/C1/D1, default-off flags, two-account Festac allowlist, counsel/safety/retention gates, and explicit non-authorization of migration, deployment, pilot traffic, or public rollout; no code/schema/migration claims |
 | **T2D SEO provenance firewall** | static implementation/refutation complete; paths released; runtime unverified | controller / Sol with bounded worker and fresh refuter | Commit `a1a82c2` derives observed-only public facts and isolates neutral `Sample` fallback across item/place metadata, JSON-LD, OG, and sitemap paths | Static refuter PASS with documentation-only P3 comments; generated metadata, database decoding, ISR/OG caching, Satori output, and deployed sitemap remain runtime-unverified |
 | **Observation Evidence Media** | deferred, owns no paths | Sol design, Terra implementation | Report attachments, receipts, EXIF removal, privacy, content hashing, size limits, moderation, retention, and offline uploads | Requires D2, a media/privacy ADR, storage decision, moderation actor, and offline threat model; never owns catalog, avatar, or brand media |
 | **R1 reputation calibration** | deferred Stage 3, owns no paths | Sol | Append-only reputation events and scoped projections from real outcomes | No seed-derived reputation, paid status, public leaderboard, or rewards |
@@ -302,7 +336,7 @@ in either one will conflict. **Never edit these without holding the lane that ow
 | `package.json` / `package-lock.json` | — | **auth** |
 | `LANES.md`, `docs/architecture/RELEASE-CONTROLLER.md` | — | **Git Release Controller** — autonomous lane reconciliation, checkpoint review, and governed direct-main push decisions |
 | `docs/operations/WETINDEY-OPERATING-SYSTEM.md`, `docs/operations/PORTFOLIO-AND-IDEA-REGISTER.md` | — | **released** after independently `NOT_REFUTED` operating-model commit `611ad9c63c4e80e7a824ee2ebf5539149650832c`. |
-| `docs/adr/016-nearby-user-presence.md`, `WETINDEY_BIBLE.md` | — | **released** after decision packet `0480182` and P2 correction `a9a7c60ea87246ab607600391f72dc6478914c7b`; ADR remains Proposed pending Founder A1/B1/C1/D1 selection. |
+| `docs/adr/016-nearby-user-presence.md`, `WETINDEY_BIBLE.md` | — | **ADR-016 Founder-decision revision** — CEO controller / next presence-governance worker |
 | `docs/database/README.md` | — | **released** after status correction `164a12c`, forward correction `bb4dca448b177f5a30be168d5dcef25aab28da2a`, and Lovelace follow-up PASS. |
 | `AGENTS.md`, `DECISIONS.md`, `docs/adr/**` except `docs/adr/016-nearby-user-presence.md`, other `docs/architecture/**` | — | **governance**, except the exact `DECISIONS.md` and new `docs/adr/017-cbn-reference-rate-converter.md` micro-lane below, authorized by the owner |
 
@@ -319,6 +353,7 @@ in either one will conflict. **Never edit these without holding the lane that ow
 | **User location sharing** | Antigravity (External Approved Contractor - Product Engineering & UX Department) | 🔴 architecture verdict complete; implementation fail-closed/not rollout-ready — former paths released | — | Render location-sharing users on the map | 2026-07-18 | Commit `46c8c6f` persisted and rendered sharing users and added migration `0011`. Repair `0011` in place only if authoritative evidence proves its exact bytes never reached any shared database; otherwise preserve it and repair forward with `0012`. Rollout must follow containment, ADR-016 acceptance/revision, schema/migration, server boundary, consent/lifecycle, snapshot lifecycle, map DTO/UI, independent refutation, then authorized target migration/pilot. |
 | **Nearby-user presence safety containment** | CEO controller / bounded presence worker; independent Pauli static refuter | ✅ commit `4e25b8c7ac8a3ad598567e186575defd51113247`; PASS with no P1/P2/P3; paths released | — | ADR-016 pre-acceptance fail-closed containment | 2026-07-18 | Completed exactly `src/app/actions.ts`, `src/lib/validation.ts`, `src/app/page.tsx`, and `src/app/_components/ManageProfileSheet.tsx`. At-rest coordinates and dormant DTO/renderer remain later schema/map concerns. No runtime, deployment, database, schema, migration, or map-UI expansion proof was claimed. |
 | **ADR-016 governance decision preparation** | CEO controller / ADR-016 governance worker; Curie follow-up refuter | ✅ packet `0480182` plus P2 correction `a9a7c60ea87246ab607600391f72dc6478914c7b`; PASS; paths released | — | Presence dependency step 2 / Founder review | 2026-07-18 | Founder-reviewable packet covers reciprocal, coarse, short-lived, default-off presence and separates a private two-account Festac pilot from public rollout, including block/report, kill switch, authentication, TTL, audience, rate/abuse, and migration-state gates. ADR-016 remains Proposed pending Founder A1/B1/C1/D1 selection. No code, schema, migration, push, deployment, or approval claim. |
+| **ADR-016 Founder-decision revision** | CEO controller / next presence-governance worker | 🟢 active | `docs/adr/016-nearby-user-presence.md`; `WETINDEY_BIBLE.md` | Founder-directed Reciprocal Community Presence architecture | 2026-07-18 | Prepare the safe Founder decision: signed-in reciprocal opt-in; 500m fixed-grid centroid; explicit foreground lease no longer than 15 minutes with no automatic/background renewal; separate consent for chosen display name/avatar only; no email, phone, WhatsApp/contact channel, stable auth ID, exact coordinate, reputation/verification, or per-user precision; accessible Presence Card with ephemeral rate-limited `Wave`, Block, Report, Close; bounded near-real-time foreground transport without a false `live` claim or background tracking. Preserve B1 disclosure/rate budgets, C1 frozen `0011` plus presence-owned forward `0012`, D1 separate public rollout, default-off app flag, DB kill switch, two-account Festac allowlist, and counsel/safety-responder/retention gates. ADR may become Accepted for implementation architecture only if it expressly authorizes no shared migration, deployment, pilot traffic, or public rollout. No code, schema, migration, push, or deployment claim. |
 | **Reviews public-write containment** | CEO controller / reviews-containment worker; Epicurus independent static refuter | ✅ commit `893f1671ac4db9e57e2489db70818d69893af9ed`; PASS with no P1/P2/P3; paths released | — | ADR-009 pre-integrity fail-closed containment | 2026-07-18 | Completed exactly `src/app/actions.ts` and `src/app/_components/GetItSheet.tsx`. Live submission and actionable UI fail closed. Later review read/aggregate/schema integrity remains planned debt. No runtime, schema, migration, moderation, reputation, helpful-vote, community-feed, push, deployment, or integrity-completion claim. |
 | **Database rollout-status evidence correction** | CEO controller / DB-status docs worker; Lovelace follow-up refuter | ✅ commit `164a12c` plus forward correction `bb4dca448b177f5a30be168d5dcef25aab28da2a`; PASS; path released | — | Fail-closed shared-target status correction | 2026-07-18 | Completed exactly `docs/database/README.md`. Final wording treats provenance/ingestion object presence as uncorroborated external reporting while retaining proven ledger hash/timestamp mapping through recognized `0010` and latitude/longitude schema drift. Frozen `0011`, Production UNKNOWN, and NO PUSH / NO DEPLOY remain. No migration policy, migration, schema, database, push, deployment, or authorization claim. |
 | **Nearby-user Mapbox popup follow-up** | Antigravity (External Approved Contractor - Product Engineering & UX Department) | ⚪ deferred behind presence dependency chain; path released | — | ADR-016 map DTO/UI stage | 2026-07-18 | `src/integrations/maps/MapboxAdapter.ts` is released. Map DTO/UI work cannot resume before containment, ADR-016 acceptance/revision, schema/migration, server boundary, consent/lifecycle, and snapshot lifecycle are complete and separately claimed. Existing public name/avatar/contact, `Live Contributor`, and direct-contact behavior remain unverified and must not ship. |
