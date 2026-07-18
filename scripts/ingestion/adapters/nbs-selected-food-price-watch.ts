@@ -54,6 +54,17 @@ export type NbsCandidateArtifact = {
   };
 };
 
+const NBS_CANDIDATE_ARTIFACT_ID_BY_FINGERPRINT = new Map<string, NbsCandidateArtifactId>([
+  [
+    "6d7093a265763c9443f4e5b82c8b5a840c05a80c7e43cc99482feb87c74e37df",
+    "d8d4467b4acde42f0be4bcfcc00db6b3c84611a6e83e2b24a77d61ffd7b34872",
+  ],
+  [
+    "f0ddf594ddbc6227cb57af0c8209307f49a1a6405ea942df97f6012dfe762ac3",
+    "e0585afafce8ce60c359c1d3758e9410596e2a0dc685aaa5e43bd526fbbf0cc8",
+  ],
+]);
+
 const source = {
   sourceName: "National Bureau of Statistics — Selected Food Price Watch",
   sourceCategory: "government_official" as const,
@@ -165,6 +176,21 @@ export const NBS_CANDIDATES: readonly NbsCandidateArtifact[] = [
 
 export function candidateFingerprint(artifact: NbsCandidateArtifact): string {
   return buildCandidateFingerprint(artifact.candidate);
+}
+
+export function candidateArtifactId(artifact: NbsCandidateArtifact): NbsCandidateArtifactId {
+  const fingerprint = candidateFingerprint(artifact);
+  const artifactId = NBS_CANDIDATE_ARTIFACT_ID_BY_FINGERPRINT.get(fingerprint);
+  if (!artifactId) {
+    throw new Error(`No reserved NBS candidate artifact ID for fingerprint ${fingerprint}`);
+  }
+  return artifactId;
+}
+
+for (const artifact of NBS_CANDIDATES) {
+  if (candidateArtifactId(artifact) !== artifact.candidateArtifactId) {
+    throw new Error("NBS candidate artifact ID does not match its frozen fingerprint");
+  }
 }
 
 export function stableArtifactSha256(value: unknown): string {

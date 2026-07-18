@@ -1,7 +1,6 @@
 import { createHash } from "node:crypto";
 
 import {
-  NBS_CAPTURE_FETCHED_AT,
   NBS_PACKAGE_BYTES,
   NBS_PACKAGE_SHA256,
   NBS_PACKAGE_URL,
@@ -12,6 +11,14 @@ import {
  * captures, candidates, database rows, or live Food projections.
  */
 async function main(): Promise<void> {
+  const recordedAtFlag = process.argv.indexOf("--recorded-at");
+  const recordedAt = recordedAtFlag < 0 ? undefined : process.argv[recordedAtFlag + 1];
+  if (!recordedAt) {
+    throw new Error("--recorded-at requires the UTC instant recorded by the invoking scheduler");
+  }
+  if (Number.isNaN(Date.parse(recordedAt)) || !recordedAt.endsWith("Z")) {
+    throw new Error("--recorded-at must be an ISO-8601 UTC timestamp");
+  }
   const response = await fetch(NBS_PACKAGE_URL, {
     headers: { accept: "application/octet-stream,application/zip;q=0.9,*/*;q=0.1" },
   });
@@ -33,7 +40,7 @@ async function main(): Promise<void> {
       outcome: "unchanged",
       requestUrl: NBS_PACKAGE_URL,
       finalResolvedUrl: response.url,
-      recordedCaptureFetchedAt: NBS_CAPTURE_FETCHED_AT,
+      fetchedAt: recordedAt,
       byteLength: bytes.byteLength,
       hashingAlgorithm: "sha256",
       contentHash,

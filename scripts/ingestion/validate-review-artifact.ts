@@ -4,6 +4,8 @@ import { resolve } from "node:path";
 
 import { validateCandidate } from "../../src/db/ingestion/tooling";
 import {
+  candidateArtifactId,
+  candidateFingerprint,
   NBS_CANDIDATES,
   NBS_CAPTURE_FETCHED_AT,
   NBS_LANDING_URL,
@@ -21,6 +23,10 @@ const capturePath =
 const reviewPath =
   "data/ingestion/reviews/nbs-selected-food-price-watch/2026-05/2d46ff90f87c7bfe75cc3df30ae35cc10a9641971543243e9d885aa7a97ca466.review.json";
 const historicalPilotPath = "data/ingestion/nbs-selected-food-may-2026.review.json";
+const historicalCandidateHashes = [
+  "d58d5f38e17e3b08313dd9bd3feb6ec8294f49970fa9175a53f48ac6f5cda613",
+  "2beffb6d580ac691132cfe9f2d00082cf7132814a695d5bceb3bcecbd777deda",
+] as const;
 
 type CaptureArtifact = {
   artifactVersion: string;
@@ -77,7 +83,19 @@ async function assertHistoricalPilotPreserved(): Promise<void> {
     artifactVersion: string;
     sourcePermissionStatus: string;
     capture: { contentHash: string; fetchedAt: string; byteLength: number };
-    candidates: unknown[];
+    candidates: Array<{
+      rawItemName: string;
+      rawPrice: string;
+      rawQuantity: string;
+      quantityValue: number;
+      rawUnit: string;
+      rawAvailability: null;
+      availability: string;
+      rawPlaceName: string;
+      geographicPrecision: string;
+      rawSurveyPeriod: string;
+      observedAt: null;
+    }>;
   }>(historicalPilotPath);
   if (
     historical.artifactVersion !== "nbs-selected-food-may-2026-v1" ||
@@ -85,16 +103,41 @@ async function assertHistoricalPilotPreserved(): Promise<void> {
     historical.capture.contentHash !== NBS_PACKAGE_SHA256 ||
     historical.capture.fetchedAt !== NBS_CAPTURE_FETCHED_AT ||
     historical.capture.byteLength !== NBS_PACKAGE_BYTES ||
-    historical.candidates.length !== 2
+    historical.candidates.length !== 2 ||
+    JSON.stringify(historical.candidates.map((candidate) => candidate.rawItemName)) !==
+      JSON.stringify(["Tomatoes, fresh", "Semovita, Prepacked (1kg)"]) ||
+    JSON.stringify(historical.candidates.map((candidate) => candidate.rawPrice)) !==
+      JSON.stringify(["₦1,974.81", "₦1,777.15"]) ||
+    historical.candidates.some(
+      (candidate) =>
+        candidate.rawQuantity !== "1kg" ||
+        candidate.quantityValue !== 1 ||
+        candidate.rawUnit !== "kg" ||
+        candidate.rawAvailability !== null ||
+        candidate.availability !== "unknown" ||
+        candidate.rawPlaceName !== "Lagos" ||
+        candidate.geographicPrecision !== "lagos_state" ||
+        candidate.rawSurveyPeriod !== "May 2026" ||
+        candidate.observedAt !== null
+    ) ||
+    JSON.stringify(historical.candidates.map(stableArtifactSha256)) !==
+      JSON.stringify(historicalCandidateHashes)
   ) {
     throw new Error("Historical NBS pilot artifact was altered instead of compensated forward");
   }
 }
 
 async function main(): Promise<void> {
+  const nbsSelected = process.argv.includes("--nbs");
   const packageFlagIndex = process.argv.indexOf("--package");
   const packageArgument = packageFlagIndex < 0 ? undefined : process.argv[packageFlagIndex + 1];
   if (packageFlagIndex >= 0 && !packageArgument) throw new Error("--package requires a local ZIP path");
+  if (!nbsSelected) {
+    await assertHistoricalPilotPreserved();
+    await assertOptionalPackageIdentity(packageArgument);
+    process.stdout.write("historical NBS May 2026 pilot artifact validated\n");
+    return;
+  }
 
   const capture = await readJson<CaptureArtifact>(capturePath);
   const review = await readJson<ReviewArtifact>(reviewPath);
@@ -137,6 +180,8 @@ async function main(): Promise<void> {
     const validation = validateCandidate(artifact.candidate);
     if (
       validation.status !== artifact.candidate.candidateStatus ||
+      candidateFingerprint(artifact) !== candidateFingerprint(expected) ||
+      candidateArtifactId(artifact) !== artifact.candidateArtifactId ||
       artifact.provenanceType !== "public_source" ||
       artifact.publicationMode !== "review_only" ||
       artifact.source.sourceCategory !== "government_official" ||
@@ -181,7 +226,6 @@ async function main(): Promise<void> {
   }
 
   await assertOptionalPackageIdentity(packageArgument);
-  await assertHistoricalPilotPreserved();
   process.stdout.write(`NBS review artifacts validated: ${artifacts.length} source-backed candidates\n`);
 }
 

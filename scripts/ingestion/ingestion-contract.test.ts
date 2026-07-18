@@ -19,6 +19,8 @@ import {
   type CandidateDraft,
 } from "../../src/db/ingestion/tooling";
 import {
+  candidateArtifactId,
+  candidateFingerprint,
   NBS_CANDIDATES,
   NBS_ORIGIN_LABEL,
   NBS_PACKAGE_SHA256,
@@ -292,6 +294,14 @@ test("NBS review artifacts preserve approved external-pointer-only source facts"
     NBS_CANDIDATES.map((candidate) => candidate.candidateArtifactId)
   );
   assert.ok(Object.values(fixture.effectFirewall).every((value) => value === 0 || value === false));
+});
+
+test("NBS candidate artifact IDs are bound to frozen candidate fingerprints", () => {
+  assert.deepEqual(
+    NBS_CANDIDATES.map((candidate) => candidateArtifactId(candidate)),
+    NBS_CANDIDATES.map((candidate) => candidate.candidateArtifactId)
+  );
+  assert.equal(new Set(NBS_CANDIDATES.map(candidateFingerprint)).size, NBS_CANDIDATES.length);
 });
 
 test("pilot preserves demo sources byte-for-byte and asserts the publication firewall", async () => {

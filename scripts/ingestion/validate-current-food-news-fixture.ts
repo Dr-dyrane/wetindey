@@ -1,7 +1,17 @@
 import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
 
-import { NBS_CANDIDATES, NBS_ORIGIN_LABEL, NBS_PACKAGE_SHA256, NBS_PACKAGE_URL } from "./adapters/nbs-selected-food-price-watch";
+import { validateCandidate } from "../../src/db/ingestion/tooling";
+import {
+  candidateArtifactId,
+  candidateFingerprint,
+  NBS_CANDIDATES,
+  NBS_ORIGIN_LABEL,
+  NBS_PACKAGE_SHA256,
+  NBS_PACKAGE_URL,
+  stableArtifactSha256,
+  type NbsCandidateArtifact,
+} from "./adapters/nbs-selected-food-price-watch";
 
 type DevelopmentFixture = {
   fixtureVersion: string;
@@ -39,6 +49,10 @@ function containsSample(value: unknown): boolean {
   return false;
 }
 
+function candidatePath(candidate: NbsCandidateArtifact): string {
+  return `data/ingestion/candidates/nbs-selected-food-price-watch/${candidate.candidateArtifactId}.candidate.json`;
+}
+
 async function main(): Promise<void> {
   const fixturePath = resolve(
     process.cwd(),
@@ -46,6 +60,14 @@ async function main(): Promise<void> {
   );
   const fixture = JSON.parse(await readFile(fixturePath, "utf8")) as DevelopmentFixture;
   const candidateArtifactIds = NBS_CANDIDATES.map((candidate) => candidate.candidateArtifactId);
+  const candidateArtifacts = await Promise.all(
+    NBS_CANDIDATES.map(async (expected) => {
+      const artifact = JSON.parse(
+        await readFile(resolve(process.cwd(), candidatePath(expected)), "utf8")
+      ) as NbsCandidateArtifact;
+      return { artifact, expected };
+    })
+  );
 
   if (
     fixture.fixtureVersion !== "current-food-news-provenance-v1" ||
@@ -79,6 +101,39 @@ async function main(): Promise<void> {
     JSON.stringify(item.candidateArtifactIds) !== JSON.stringify(candidateArtifactIds)
   ) {
     throw new Error("Development fixture misstates NBS provenance or current-state facts");
+  }
+  for (const { artifact, expected } of candidateArtifacts) {
+    const validation = validateCandidate(artifact.candidate);
+    if (
+      stableArtifactSha256(artifact) !== stableArtifactSha256(expected) ||
+      candidateFingerprint(artifact) !== candidateFingerprint(expected) ||
+      candidateArtifactId(artifact) !== artifact.candidateArtifactId ||
+      artifact.candidateArtifactId !== expected.candidateArtifactId ||
+      artifact.source.sourceName !== "National Bureau of Statistics — Selected Food Price Watch" ||
+      artifact.source.sourceCategory !== "government_official" ||
+      artifact.capture.contentHash !== NBS_PACKAGE_SHA256 ||
+      artifact.capture.rawContentPointer !== NBS_PACKAGE_URL ||
+      artifact.originLabel !== NBS_ORIGIN_LABEL ||
+      artifact.candidate.canonicalSourceIdentity !==
+        "National Bureau of Statistics — Selected Food Price Watch" ||
+      artifact.candidate.canonicalUrl !== NBS_PACKAGE_URL ||
+      artifact.candidate.captureContentHash !== NBS_PACKAGE_SHA256 ||
+      artifact.candidate.rawPlaceName !== "Lagos" ||
+      artifact.candidate.geographicPrecision !== "lagos_state" ||
+      artifact.candidate.rawSurveyPeriod !== "May 2026" ||
+      artifact.candidate.surveyPeriodStart !== "2026-05-01T00:00:00.000Z" ||
+      artifact.candidate.surveyPeriodEnd !== "2026-05-31T23:59:59.999Z" ||
+      artifact.candidate.rawQuantity !== "1kg" ||
+      artifact.candidate.quantityValue !== 1 ||
+      artifact.candidate.rawUnit !== "kg" ||
+      artifact.candidate.rawAvailability !== null ||
+      artifact.candidate.availability !== "unknown" ||
+      artifact.candidate.observedAt !== null ||
+      validation.status !== "needs_item_mapping" ||
+      containsSample(artifact)
+    ) {
+      throw new Error(`${expected.candidateArtifactId}: development fixture candidate is not source-faithful`);
+    }
   }
   if (
     containsSample(fixture) ||
