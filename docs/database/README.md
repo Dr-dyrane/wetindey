@@ -33,8 +33,9 @@ These matches prove historical identity only, not exact current schema equivalen
 
 ### Current target status
 
-- **Preview:** `observations.provenance` and the ingestion tables exist, consistent with
-  recognized `0009` and `0010`.
+- **Preview report, not proof:** Antigravity reported `observations.provenance` and the
+  ingestion tables, but supplied no raw catalog output. Treat their presence as
+  uncorroborated until direct target evidence is captured.
 - **Preview:** `user_profiles.latitude` and `user_profiles.longitude` exist, effects
   consistent with `0011`, but the local `0011` ledger identity is absent and one of the 12
   ledger rows remains extra and unmapped. Preview therefore has schema/ledger drift.
