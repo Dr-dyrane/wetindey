@@ -1,9 +1,14 @@
 import type { Metadata, Viewport } from "next";
+import { headers } from "next/headers";
 import { Analytics } from "@vercel/analytics/next";
 import { ThemeProvider } from "@/core/context/ThemeContext";
 import { siteOrigin } from "./sitemap";
+import { CSP_NONCE_HEADER, isCspNonce } from "@/lib/security/csp-policy";
 import { JsonLd, organizationJsonLd, websiteJsonLd } from "@/lib/seo";
 import "./globals.css";
+
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 export const metadata: Metadata = {
   /**
@@ -117,11 +122,16 @@ export const viewport: Viewport = {
   ],
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const nonce = (await headers()).get(CSP_NONCE_HEADER);
+  if (!nonce || !isCspNonce(nonce)) {
+    throw new Error("RootLayout requires the request-boundary CSP nonce.");
+  }
+
   return (
     /**
      * `suppressHydrationWarning` is required by the theme script below, not a
@@ -155,8 +165,9 @@ export default function RootLayout({
          * flash, and every consumer — including a map that reloads — reads a
          * settled value. Wrapped in try/catch because localStorage throws
          * outright in some privacy modes, and a theme is not worth a blank page.
-         */}
+        */}
         <script
+          nonce={nonce}
           dangerouslySetInnerHTML={{
             __html: `(function(){try{
               var t=localStorage.getItem('theme');
@@ -221,8 +232,9 @@ export default function RootLayout({
          * https. A top-level secure-context-only call in a client SDK breaks every
          * plain-http dev origin, which is worth reporting; no agent here can send
          * it. See LANES.md H17. Delete this when that issue closes, not before.
-         */}
+        */}
         <script
+          nonce={nonce}
           dangerouslySetInnerHTML={{
             __html: `(function(){try{
               var c=window.crypto;
@@ -240,7 +252,11 @@ export default function RootLayout({
           }}
         />
         <link href="https://api.mapbox.com/mapbox-gl-js/v3.1.2/mapbox-gl.css" rel="stylesheet" />
-        <script src="https://api.mapbox.com/mapbox-gl-js/v3.1.2/mapbox-gl.js" defer />
+        <script
+          nonce={nonce}
+          src="https://api.mapbox.com/mapbox-gl-js/v3.1.2/mapbox-gl.js"
+          defer
+        />
       </head>
       <body className="h-full min-h-screen selection:bg-accent selection:text-accent-contrast">
         {/* Site-wide structured data. Outside ThemeProvider's visibility gate on
@@ -275,8 +291,9 @@ export default function RootLayout({
          * it, a worker installed by a previous dev session survives this change
          * and keeps serving stale chunks to a developer who no longer registers
          * one.
-         */}
+        */}
         <script
+          nonce={nonce}
           dangerouslySetInnerHTML={{
             __html:
               process.env.NODE_ENV === "production"
