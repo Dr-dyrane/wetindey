@@ -43,7 +43,7 @@ to idle rather than creating a replacement task.
 
 | Pinned employee | Current state | Next bounded deliverable |
 |---|---|---|
-| Nearby Presence Platform Engineer | Active, exact four-path corrected-unapplied-`0012` lane | Correct the five enumerated executable SQL failures, add deterministic idle-retention and account-deletion contracts, and obtain fresh blank+upgrade plus independent new-cluster proof; shared DB and all frozen paths remain untouched |
+| Nearby Presence Platform Engineer | Available, no active path claim | Corrected-unapplied `0012` source and disposable validation completed at `d5991c9`; retain only the pathless shared-rollout gate for exact target identity, role, and scheduler proof |
 | Program Management & Functional Organization Lead | Idle | Reconcile portfolio proposals into CEO-reviewable lane candidates without editing product paths |
 | Contribution Integrity & Moderation Engineer | Active, exact five paths retained | Close the `495750a` runtime refutation without widening; `0013+` remains planning-only until containment and migration ordering clear |
 | Human Interface Design Engineer | Idle | Take the next controller-approved disjoint HI slice; no shared hot-file claim by implication |
@@ -52,10 +52,10 @@ to idle rather than creating a replacement task.
 | Food Source Authenticity & Attribution Refuter | Idle refuter | Independently verify each staged source artifact against original evidence and terms |
 | Search & Ranking Engineer | Available, no active claim | The deployed-current-main `97b74af` disposable SQL evidence gate passed and is released; remain persistent for the next bounded Search/Ranking assignment |
 | Iconography & Visual Systems Lead | Active, exact five-path visual foundation | With ADR-018 correction `0ab0d5b` landed, deliver dimensional circular orbs with contextual named colours and independent focused/static plus reused-tab light/dark visual acceptance |
-| Maps Engineering Lead | Active place-marker owner; named queued self-location owner | Finish the exact two-path contextual place-marker slice, then begin the queued self-location/avatar vertical immediately after both Maps and Contribution release its intended paths; no queued edit authority exists yet |
+| Maps Engineering Lead | Available; named queued self-location owner, no active path claim | H37 semantic place-marker commit `6611068` is independently NOT REFUTED and both Maps paths are released. Self-location/avatar remains unclaimed until Contribution releases `src/app/page.tsx` and a fresh exact handoff is recorded |
 | Client Reliability & Offline Engineer | Prepared, unclaimed | One-file rejected-search containment only after `src/app/page.tsx` is explicitly released and claimed |
 | Security & Privacy Engineering Lead | Active, disjoint source lanes | Preserve the collector claim and correct the production nonce P1 over only `src/middleware.ts`, `src/lib/seo.tsx`, and `scripts/csp-policy-contracts.test.ts`; keep CSP report-only and prohibit enforcement |
-| Motion & Interaction Engineer | Active, exact two-path candidate | Complete and hand off `src/design-system/components/ModalSheet.tsx` plus `scripts/motion-contracts.test.ts` for independent focus/accessibility refutation; no caller or layout widening |
+| Motion & Interaction Engineer | Available, no active path claim | ModalSheet focus containment completed at `f19990b` with Safari refuter PASS; both paths are released |
 
 The Quality & Release Controller is this orchestrator thread. It is not a separate pinned
 employee task. The repeating `wetindey-orchestrator-recovery` automation is deleted and
@@ -74,8 +74,10 @@ independent refutation, release sequencing, push, deployment, or database eviden
   the platform maintainer owns rollback.
 - **Shared database migration:** the deterministic exact-target flow and migration window
   are authorized only after the required guarded disposable proof and independent
-  refutation pass. Exact target fingerprint, ledger/schema/RPC/RLS/grant compatibility,
-  restore evidence, ordered release candidate, and controller go/no-go remain mandatory.
+  refutation pass. For corrected-unapplied Presence `0012`, source/disposable validation
+  has passed at `d5991c9`; its remaining shared-rollout blocker is solely exact target
+  identity, execution role, and scheduler proof. No shared action may occur before that
+  proof is recorded.
 - **Product policy:** Privacy/Terms, Nearby Presence, retention, and account deletion
   product policies are Founder-approved. This does not claim that legal copy, provider
   deletion capability, retention jobs, product behavior, or release evidence exists.
@@ -94,11 +96,11 @@ source ownership; only rows with exact paths grant edit authority.
 |---|---|---|
 | Semantic iconography visual foundation (`284a685`) | **Active** | ADR-018 correction `0ab0d5b` has landed. The persistent Iconography lead owns only the exact five foundation paths recorded below; every adoption path remains unclaimed |
 | Contribution containment/integrity (`495750a`) | **Active, exact five paths retained** | Contribution retains `src/app/actions.ts`, `src/app/page.tsx`, `ReportPriceSheet.tsx`, `ConfirmVisitSheet.tsx`, and `src/core/i18n/strings.ts` until runtime refutation closes |
-| Modal zero-focusable/focus restoration | **Active, exact two paths** | Motion owns only `ModalSheet.tsx` and `scripts/motion-contracts.test.ts`; independent runtime verdict is pending |
+| Modal zero-focusable/focus restoration | **Closed / released with Safari PASS** | Commit `f19990b` is on `origin/main`; Safari refutation passed and both `ModalSheet.tsx` and `scripts/motion-contracts.test.ts` are released |
 | Production nonce CSP (`97b74af`) | **Active, exact three-path P1 correction** | Production has one enforcing and one report-only CSP, but Next bootstrap/Flight/webpack/polyfill/app chunks and two JSON-LD scripts lack nonces because Next reads the static enforcing CSP before the report-only policy. Security owns only `src/middleware.ts`, `src/lib/seo.tsx`, and `scripts/csp-policy-contracts.test.ts`; report-only remains the only allowed mode and enforcement is prohibited |
-| Contextual place-marker orbs and selected glow | **Active, exact two-path implementation** | Maps Engineering Lead owns only `src/design-system/components/MapboxCanvas.tsx` and `src/integrations/maps/MapboxAdapter.ts`; self-location provenance/avatar, peers, Presence, page/actions/location state, and camera changes remain separate and unclaimed |
+| H37 semantic place-marker symbols | **Closed / released with independent NOT REFUTED** | Commit `6611068` is on `origin/main` and both `src/design-system/components/MapboxCanvas.tsx` and `src/integrations/maps/MapboxAdapter.ts` are released. `sharedUsers={[]}` and `getSharedUserLocations()=[]` mean peer avatar markers are not live; self-avatar is a separate unclaimed lane. Further contextual-orb/selected-glow work is not claimed complete and owns no path |
 | Identity & Email Delivery — branded Neon Auth OTP | **Closed / released with VERIFIED monochrome logo production evidence** | After the approved monochrome correction, Founder-requested embedded-logo follow-up `712719f` is pushed on `origin/main` over exactly `src/lib/auth-email.ts`, new `src/lib/auth-email-logo.ts`, and `scripts/auth-email-contracts.test.ts`. The fixed 96×96 monochrome PNG uses CID `wetindey-logo@auth.wetindey.live` with no remote image URL; focused contract PASS and independent final VERIFIED with no P1/P2/P3. Production `dpl_B7QwNqAYTToHsAXsVCM5jh1JXwRM` is Ready/aliased; fresh OTP POST returned `200`, and Gmail confirmed the new unread inline image. Every implementation and follow-up path is released; process-local caches, cross-instance Message-ID limits, provider Beta status, SPF/DKIM/DMARC monitoring, and email-client rendering remain operational follow-up |
-| Nearby Presence forward `0012` | **Active, exact four-path corrected-unapplied lane** | Presence owns only both presence pillars, `0012_guarded_presence.sql`, and the focused migration contract. Five executable SQL failures are enumerated below; schema declarations, migration metadata, all `0011` bytes, app/UI/map paths, and the shared database remain frozen |
+| Nearby Presence forward `0012` | **Closed / exact four source paths released; shared rollout pathless** | Corrected unapplied migration `d5991c9` is on `origin/main`; source and disposable validation are complete. Both presence pillars, `0012_guarded_presence.sql`, and the focused migration contract are released. Shared rollout remains blocked solely on exact target identity, role, and scheduler proof; no database action is authorized |
 | Search/provenance disposable SQL (`97b74af`) | **Closed / released with PASS** | Deployed-current-main proof passed strengthened unavailable and contradictory cases with exact cleanup. Search & Ranking remains persistent and available; no path or execution gate remains claimed |
 | HI category/Aboki plus Add/Profile | **Pathless release evidence** | Scoped UI changes passed. Reopen only combined Safari keyboard and artificial loading/error/cache/empty-state evidence; implementation paths remain released |
 | Historical interaction validation | **Pathless Q1 evidence/refutation** | Recheck category coherence, popular/detail count, route/fallback/handoff only where no newer runtime evidence supersedes the old failure; claim no implementation path |
@@ -106,16 +108,17 @@ source ownership; only rows with exact paths grant edit authority.
 | Account deletion capability | **REFUTED provider capability; pathless** | On the exact current Neon target, authenticated fresh-session `POST /delete-user` returns `404` while unauthenticated returns `401`: the route is mounted but `user.deleteUser.enabled` is false. Emergency SQL cleanup of the disposable identity is not self-delete evidence. Founder policy remains approved; provider configuration/capability and a later app-owned orchestration/UI lane remain, with no app path claimed |
 | Corrected historical refutations | **Closed / superseded** | Do not reopen D1/D2, seed typing/H27, H23, BottomSheet, Mapbox route validation, public-source ingestion, or ADR governance already corrected and independently passed |
 
-### Active lane: corrected-unapplied Nearby Presence `0012`
+### Closed lane: corrected-unapplied Nearby Presence `0012`
 
-The Nearby Presence Platform Engineer owns exactly:
+Completed commit `d5991c9` changed exactly:
 
 - `src/db/pillars/80-presence-services.sql`
 - `src/db/pillars/90-presence-security.sql`
 - `src/db/migrations/0012_guarded_presence.sql`
 - `scripts/presence/presence-migration-contract.test.ts`
 
-Disposable execution REFUTED the candidate with five executable SQL failures:
+The correction closed the five executable SQL failures previously found by disposable
+execution:
 
 1. `presence_activate` has an `expires_at` ambiguity.
 2. Snapshot execution fails on `control_generation`.
@@ -123,18 +126,18 @@ Disposable execution REFUTED the candidate with five executable SQL failures:
 4. Wave execution has an `expires_at` ambiguity.
 5. `review_reports` resolution execution fails.
 
-The correction must also prove deterministic idle-retention cleanup and an
-account-deletion purge/anonymization contract. Acceptance requires fresh Drizzle proof
-from both blank and upgrade lineages, executable coverage for all nine RPCs, lifecycle,
-security, cleanup, and idempotence evidence, plus a fresh independent refuter on a new
-disposable cluster.
+Source and disposable validation are complete, including deterministic idle-retention
+cleanup, account-deletion purge/anonymization, fresh blank and upgrade Drizzle lineages,
+all nine RPCs, lifecycle, security, cleanup, idempotence, and independent new-cluster
+refutation. All four source/contract paths are released.
 
-Freeze `src/db/schema/presence.ts`, `src/db/schema/index.ts`,
-`src/db/migrations/meta/0012_snapshot.json`, `src/db/migrations/meta/_journal.json`, and
-every `0011` byte. They may change only if the corrected SQL provably changes stored
-objects or signatures, in which case the controller must record a new exact claim before
-the edit. The shared database remains untouched until the corrected candidate passes all
-required proof and independent refutation.
+The shared migration remains unapplied. Its only remaining rollout blocker is pathless
+proof of the exact target identity, execution role, and scheduler capability/configuration.
+No shared database action, source edit, push, deployment, or pilot authority follows from
+the completed disposable evidence. `src/db/schema/presence.ts`,
+`src/db/schema/index.ts`, `src/db/migrations/meta/0012_snapshot.json`,
+`src/db/migrations/meta/_journal.json`, and every `0011` byte remain outside this completed
+scope and unclaimed.
 
 ### Closed lane: Search/provenance disposable SQL evidence
 
@@ -244,37 +247,33 @@ Message-ID does not provide exactly-once delivery across serverless instances; t
 provider capability is Beta; and SPF/DKIM/DMARC monitoring plus ongoing email-client
 rendering checks remain required. These residuals do not reopen an implementation path.
 
-### Active lane: contextual place-marker orbs and selected glow
+### Closed lane: H37 semantic place-marker symbols
 
-The persistent Maps Engineering Lead owns exactly:
+Completed commit `6611068` changed exactly:
 
 - `src/design-system/components/MapboxCanvas.tsx`
 - `src/integrations/maps/MapboxAdapter.ts`
 
-Wire the already-passed dimensional contextual iconography into `placeType`-aware
-place-marker orbs. `selectedPlaceId` must produce a truthful selected/active glow without
-changing the underlying place meaning. Preserve the current semantic symbols, accessible
-names, strict self/peer/place marker separation, sheet-aware camera behavior, unknown-type
-fallback, and reduced-motion behavior.
+The implementation carries `placeType` into deterministic semantic symbols, preserves
+accessible names and the generic unknown-type fallback, and received an independent
+**NOT REFUTED** verdict. Both exact paths are released.
 
-Explicitly exclude `src/app/page.tsx`, `src/app/actions.ts`, `src/core/state/locationStore.ts`,
-all Presence paths, avatar/self-marker work, peer UI, camera-contract changes, schema, and
-migrations. Self-location provenance and peer presence remain separate future slices.
-
-Acceptance requires a focused map-marker contract, path-scoped lint and TypeScript, a fresh
-independent static refuter, and one reused-tab compact/regular light/dark visual refutation
-before any push. No implementation authority exists outside the two exact paths.
+Runtime scope remains honest: `src/app/page.tsx` supplies `sharedUsers={[]}` and
+`getSharedUserLocations()=[]`, so peer avatar markers are not live. Self-avatar behavior
+is a separate unclaimed lane. The later contextual-orb/selected-glow concept is not
+claimed completed by `6611068` and owns no path. No Presence, page/actions/location-state,
+camera-contract, schema, or migration authority follows.
 
 ### Queued lane: self-location avatar marker — signed-in and guest
 
 The persistent Maps Engineering Lead is the named implementation owner. The Iconography &
 Visual Systems Lead is the visual reviewer, and a fresh independent Privacy refuter is
 required. This assignment reserves responsibility and start order only; it claims no path
-and authorizes no edit while Contribution owns `src/app/page.tsx` or the contextual
-place-marker lane owns the two current Maps paths.
+and authorizes no edit while Contribution owns `src/app/page.tsx`. The H37 Maps paths are
+released, but they do not transfer into this queued lane without a fresh exact handoff.
 
-Implementation begins immediately after both current owners release. The exact intended
-post-release vertical slice is:
+Implementation begins only after Contribution releases `src/app/page.tsx` and the
+controller records a fresh exact claim. The intended vertical slice remains:
 
 - `src/app/page.tsx`
 - `src/design-system/components/MapboxCanvas.tsx`
@@ -324,21 +323,18 @@ Item Detail/Get-It and Settings/`SheetPicker`/`CurrencyPickerSheet`/`ExchangePan
 adoption paths remain pending and unclaimed until the foundation is independently refuted
 and visually accepted.
 
-### Active lane: Modal zero-focusable focus containment
+### Closed lane: Modal zero-focusable focus containment
 
-The pinned Motion & Interaction Engineer owns exactly:
+Completed commit `f19990b` changed exactly:
 
 - `src/design-system/components/ModalSheet.tsx`
 - `scripts/motion-contracts.test.ts`
 
-Correct the shared ModalSheet case where all body controls are disabled and Safari Tab can
-reach the background map while the dialog stays open. Initial focus, Tab, and Shift+Tab
-must remain inside the dialog even with zero ordinarily focusable body controls; Escape and
-Close must work; focus must restore to the trigger; nested/pushed sheets, motion, stacking,
-and visual layout must remain unchanged. Add executable gesture/focus-boundary coverage to
-the existing focused contract. One path-scoped commit plus independent keyboard, screen-
-reader, nested-sheet, and reduced-motion refutation is required. No caller, page, action,
-database, map, or iconography path is included.
+The correction contains initial focus, Tab, and Shift+Tab inside the dialog even when all
+body controls are disabled, while preserving Escape, Close, trigger restoration,
+nested/pushed sheets, motion, stacking, and visual layout. The Safari refuter returned
+**PASS**. Both exact paths are released; no caller, page, action, database, map, or
+iconography ownership was created.
 
 ## Controller reconciliation — semantic UI and market-detail follow-up
 
@@ -350,8 +346,8 @@ yet represented as explicit lanes:
 | **Semantic iconography visual foundation** | 🟢 active exact five-path lane; `284a685` technically accessible but visually NOT ACCEPTED; ADR-018 correction `0ab0d5b` landed | persistent Iconography & Visual Systems Lead; independent visual/accessibility refuter | `src/app/globals.css`; `tailwind.config.ts`; `src/design-system/components/IconOrb.tsx`; `src/design-system/icons/SolidIcon.tsx`; `scripts/iconography-contracts.test.ts` | Deliver dimensional circular orbs with contextual named colours; Close/Search/Settings and disabled/future remain neutral; no blanket rainbow; authentic flags/photos/avatars excluded. Focused/static refutation then reused-tab light/dark proof and Founder-target visual acceptance |
 | **Iconography solid-glyph adoption — Item Detail/Get-It** | ⚪ pending, no path claim until foundation acceptance | future persistent Iconography & Visual Systems Lead handoff | Intended future paths: `src/app/_components/ItemDetailSheet.tsx`; `src/app/_components/GetItSheet.tsx` | First live `SolidIcon` adoption and semantic unavailable `IconOrb` remain intended acceptance work, but no ownership or edit authority exists before the five-path foundation is independently refuted and visually accepted |
 | **Iconography intent corrections — remaining sheets** | ⚪ pending, no path claim | future Iconography & Visual Systems handoff | Intended future paths: `src/app/_components/SettingsSheet.tsx`; `src/design-system/components/SheetPicker.tsx`; `src/app/_components/CurrencyPickerSheet.tsx`; `src/app/_components/ExchangePanel.tsx` | Preserve Settings/SheetPicker/CurrencyPicker/Exchange intent corrections as a separate future lane. No ownership or edit authority exists yet |
-| **Contextual place-marker orbs and selected glow** | 🟢 active exact two-path claim; historical H37 semantics preserved | persistent Maps Engineering Lead; fresh static and visual refuters | `src/design-system/components/MapboxCanvas.tsx`; `src/integrations/maps/MapboxAdapter.ts` | Apply dimensional contextual `placeType` orbs and truthful `selectedPlaceId` glow while preserving semantic symbols, accessible names, marker separation, sheet-aware camera, fallback, and reduced motion. Focused contract, path lint/TypeScript, static PASS, then reused-tab compact/regular light/dark proof before push |
-| **Self-location avatar marker — signed-in and guest** | 🟡 named queued vertical; responsibility assigned, paths unclaimed until both current owners release | persistent Maps Engineering Lead implementation owner; Iconography & Visual Systems Lead visual reviewer; independent Privacy refuter | Intended post-release paths: `src/app/page.tsx`; `src/design-system/components/MapboxCanvas.tsx`; `src/integrations/maps/MapboxAdapter.ts`; conditional new `src/design-system/components/SelfLocationMarker.tsx` only if implementation proves it useful; new `scripts/map-self-location-contract.test.ts` | Signed-in self uses uploaded avatar or local initials fallback; guest self uses a bundled/local “me” fallback. Precise GPS gets bounded precise treatment; approximate/area uses an identity orb plus diffuse accuracy halo, never blur instead of identity. Require truthful screen-reader labels, light/dark/grayscale, non-obstruction, no external avatar generator, peer publication, Presence rollout, false precision, DB/schema/migration. No edit authority until Contribution and the active Maps lane both release |
+| **H37 semantic place-marker symbols** | ✅ complete at `6611068`; independent NOT REFUTED; exact two paths released | persistent Maps Engineering Lead; independent refuter | Released: `src/design-system/components/MapboxCanvas.tsx`; `src/integrations/maps/MapboxAdapter.ts` | `placeType` now selects deterministic semantic symbols with accessible labels and generic fallback. Peer markers remain non-live because `sharedUsers={[]}` / `getSharedUserLocations()=[]`; self-avatar is separate and unclaimed. Contextual-orb/selected-glow follow-up is not claimed complete |
+| **Self-location avatar marker — signed-in and guest** | 🟡 named queued vertical; responsibility assigned, paths unclaimed until Contribution releases `page.tsx` and a fresh handoff lands | persistent Maps Engineering Lead implementation owner; Iconography & Visual Systems Lead visual reviewer; independent Privacy refuter | Intended post-release paths: `src/app/page.tsx`; `src/design-system/components/MapboxCanvas.tsx`; `src/integrations/maps/MapboxAdapter.ts`; conditional new `src/design-system/components/SelfLocationMarker.tsx` only if implementation proves it useful; new `scripts/map-self-location-contract.test.ts` | Signed-in self uses uploaded avatar or local initials fallback; guest self uses a bundled/local “me” fallback. Precise GPS gets bounded precise treatment; approximate/area uses an identity orb plus diffuse accuracy halo, never blur instead of identity. Require truthful screen-reader labels, light/dark/grayscale, non-obstruction, no external avatar generator, peer publication, Presence rollout, false precision, DB/schema/migration. Released Maps paths remain unclaimed until the fresh post-Contribution handoff |
 | **Market Details — Place Offer Surface Redesign** | 🟡 canonical blocked lane; unclaimed until Contribution explicitly releases both live paths | Human Interface implementation with Iconography support; independent visual/accessibility and source/data refuters | `src/app/page.tsx`; `src/app/actions.ts`; new `src/design-system/components/PlaceOfferRow.tsx` | Repair the actual place/market detail shown in the Founder’s screenshot: remove the artificial `max-h-[40vh]` dead zone, preserve a pinned `Get it`, add licensed item imagery or deterministic Food fallback, and carry truthful price range/unit/availability/freshness/last-observed/provenance through loading/empty/error states. The three-path slice is atomic; do not create disconnected presentation code before handoff |
 
 The active five-path foundation row above is the only Iconography ownership created by
@@ -435,12 +431,12 @@ with these corrections:
 The architecture review is complete, but the current nearby-presence implementation
 remains **fail-closed and not rollout-ready**. Preview forensics prove schema/ledger drift:
 freeze the current `0011` SQL, snapshot, journal, and hash. Do not rewrite `0011` in place
-and do not fabricate a ledger receipt. Any repair is forward `0012`, subject to the gates
-below.
+and do not fabricate a ledger receipt. Forward repair `0012` is source/disposable complete
+at `d5991c9`; its pathless shared-rollout gate is recorded below.
 
 Presence work must proceed in this dependency order:
 
-`containment [complete] -> ADR-016 acceptance [complete] -> corrected-unapplied 0012 exact four-path lane [active] -> blank+upgrade/new-cluster PASS -> exact-target schema/migration gate -> server boundary -> consent/lifecycle -> snapshot lifecycle -> map DTO/UI -> independent refutation -> separately released target migration/pilot`
+`containment [complete] -> ADR-016 acceptance [complete] -> corrected-unapplied 0012 source/disposable validation [complete; paths released] -> exact-target identity/role/scheduler proof [sole pathless blocker] -> shared rollout under recorded approval -> server boundary -> consent/lifecycle -> snapshot lifecycle -> map DTO/UI -> independent refutation -> separately released pilot`
 
 ### Founder-directed safe interpretation: Reciprocal Community Presence
 
@@ -479,9 +475,10 @@ with no P1, P2, or P3 findings, and all four paths are released. At-rest coordin
 the dormant presence DTO/renderer remain later schema/map concerns; this result claims no
 runtime or deployment proof. The Founder-reviewable ADR-016 packet is complete at
 `0480182` plus correction `a9a7c60`, and its former Founder-selection step was superseded
-by accepted `c960860`. The current dependency is the active exact four-path
-corrected-unapplied `0012` lane and its blank+upgrade/new-cluster proof, not app/UI/map
-implementation or shared-target execution.
+by accepted `c960860`. Corrected-unapplied `0012` source and disposable proof completed at
+`d5991c9`, and all four paths are released. The remaining dependency is pathless exact
+target identity, role, and scheduler proof before shared rollout under the recorded
+approval, not app/UI/map implementation authority.
 
 ### Localhost operational evidence - no repository lane
 
@@ -519,14 +516,11 @@ Antigravity and Nietzsche established the current fail-closed migration record:
 - Preview remains quarantined from rollout decisions while its unexplained ledger row and
   schema/ledger drift are unresolved.
 - **NO PUSH / NO DEPLOY** remains.
-- Forward `0012` is reserved for the presence repair. The corrected-unapplied lane is
-  active only over the two presence pillars, `0012_guarded_presence.sql`, and its focused
-  contract. Shared execution remains gated on fresh blank+upgrade Drizzle proof, all nine
-  RPCs, lifecycle/security/cleanup/idempotence evidence, a fresh independent new-cluster
-  NOT_REFUTED verdict, full shared-target inventory, parent normalization plus
-  quarantine-or-approved-repair, exact schema/RPC/RLS/grant fingerprint, coordinate
-  non-null aggregate, restore proof, and ordered release go/no-go. The shared database
-  remains untouched until PASS. Contribution integrity must follow as `0013` or later.
+- Forward `0012` source and disposable validation completed at `d5991c9`; both presence
+  pillars, `0012_guarded_presence.sql`, and its focused contract are released. The shared
+  database remains untouched. Shared rollout is blocked solely on pathless proof of exact
+  target identity, execution role, and scheduler capability/configuration. Contribution
+  integrity must follow as `0013` or later.
 
 The active product phase is **WetinDey Food Truth & Pilot Operations**. Its order is:
 search repair, provenance-complete reads/SEO, authorized staging migration, hardened
@@ -590,7 +584,7 @@ paths; after they are claimed, Sol's next step is implementation.
 | **Controlled Semantic Iconography bounded expansion** | active exact five-path foundation after ADR-018 correction `0ab0d5b`; `284a685` technically accessible but visually NOT ACCEPTED; all adoption unclaimed | Iconography & Visual Systems Lead `019f75cf-4d8f-7263-822b-06e846fce7ac`; independent static and visual/accessibility refuters | Active foundation paths are `globals.css`, `tailwind.config.ts`, `IconOrb.tsx`, `SolidIcon.tsx`, and `iconography-contracts.test.ts`. Item Detail/Get-It and remaining-sheet adoption paths have no claim | Require dimensional circular orbs with contextual named colours; universal Close/Search/Settings and disabled/future neutral; no blanket rainbow; authentic flags/photos/avatars excluded; focused/static evidence then reused-tab light/dark Founder-target acceptance. No DB, push, or deploy |
 | **H23 ADR-006 citation repair** | complete at `18b9b09`; independent static PASS with no P1/P2/P3; path released | Product & Data Governance Architect `019f7599-0eaa-7423-9ebf-a1bfea8efe37` | One-file citation/reference repair with all freshness and trust decisions preserved | `docs/adr/006-freshness-windows.md` is released. No code or policy change occurred |
 | **ADR-019 Contribution governance** | `0013+` planning packet complete but pathless and unauthorized | Product & Data Governance Architect `019f7599-0eaa-7423-9ebf-a1bfea8efe37` | Packet covers ADR-019, schema/migration/manifest, app/ops paths, and dependency ordering for later contribution integrity/moderation | Do not activate or claim any packet path until `495750a` containment receives sufficient runtime PASS and Presence/shared-migration gates pass; then record a fresh exact exclusive handoff |
-| **Shared ModalSheet focus hardening** | historical `3e28c63` independently NOT REFUTED; former path release superseded by the current active two-path Motion candidate | Motion & Interaction Engineer / independent refuter | Shared `isEnabledVisible` is used by initial focus and Tab trapping for native/ARIA disabled, hidden, disabled-fieldset, inert/ARIA-hidden, absent-layout, and computed display/visibility cases | This row is historical and grants no current ownership. The current Modal zero-focusable/focus-restoration correction and runtime verdict govern `ModalSheet.tsx` plus its focused contract; Contribution retains its separate five paths |
+| **Shared ModalSheet focus hardening** | completed at `f19990b`; Safari refuter PASS; exact two paths released | Motion & Interaction Engineer / independent Safari refuter | `src/design-system/components/ModalSheet.tsx`; `scripts/motion-contracts.test.ts` | Zero-focusable initial/Tab/Shift+Tab containment now passes Safari refutation while preserving Escape, Close, restoration, nested/pushed sheets, motion, stacking, and layout. No current ownership; Contribution retains its separate five paths |
 | **contextual category capability vertical** | deferred Phase 5A, owns no paths | Sol | One non-price vertical plus typed capability extracted from two live implementations | ADR-002 Phases 0-4, accepted ADR-010/011, V1 exit, clean migrations; no EAV/registry before then |
 | **`page.tsx` modularisation and reusable core engines** | future pathless architecture lane; no transfer or implementation authority | future architecture owner with independent boundary/refutation reviewer | Map the live dependency graph and incremental extraction boundaries for discovery/search, location, map/presence, sheet/presentation, contribution, exchange, seller, trust/confidence, and legal/analytics | Preserve ADR-002 correctness-before-boundaries and Contribution ownership of `src/app/page.tsx`. Extract only live vertical slices with callers in the same change; no dead `src/modules` shells. Require typed contracts/configuration, domain logic outside UI, incremental strangler sequence, no behavior regression, exact per-step paths, and independent refutation |
 | **Catalog Stewardship** | household-size seed correction complete; path released | controller / Sol with bounded worker and independent refuter | Commit `91243c4` makes ordinary household quantities primary in demo variants and removes inappropriate wholesale basket/carton/25L choices | Static refuter PASS: 48 items, 85 valid variants, consumer-first ordering, one 500g Spaghetti pack at ₦900–₦1,400; no schema, migration, seed execution, imagery, report, or live-price claim |
@@ -601,7 +595,7 @@ paths; after they are claimed, Sol's next step is implementation.
 | **Sample-origin card slot** | complete; path released | controller / Sol with bounded visual workers and independent refuters | Commits `70f6a4b` and `8c28f64` separate synthetic origin from status and render `Sample` as quiet top-right microcopy | Final source refuter PASS: no badge chrome, 4.59:1 light and 4.58:1 dark contrast, status remains separate as `E sure`, `Check am`, or `E no dey`; runtime perception remains unverified |
 | **Nearby-user presence safety containment** | completed at `4e25b8c7`; independent Pauli static refuter PASS with no P1/P2/P3; paths released | CEO controller / bounded presence worker | Removed or failed closed unauthenticated global presence reads, profile coordinate inputs, automatic publish/polling, stale marker retention, and misleading toggle/copy | At-rest coordinates and dormant DTO/renderer remain later schema/map concerns; no runtime, deployment, database, schema, migration, or map-UI expansion proof |
 | **ADR-016 Founder-decision revision** | completed at `c960860`; independent PASS; paths released; rollout disabled | presence-governance employee | ADR-016 is Accepted for implementation architecture only | Exact paths were `docs/adr/016-nearby-user-presence.md` and `WETINDEY_BIBLE.md`. Acceptance authorizes no shared migration, deployment, pilot traffic, or public rollout. Frozen `0011` remains untouched; presence repair is forward `0012`; contribution integrity is `0013` or later |
-| **Corrected-unapplied Nearby Presence `0012`** | active exact four-path correction after executable disposable REFUTATION | Presence Platform Engineer `019f759f-3521-7ee1-90a3-5af3539d757e`; fresh independent new-cluster refuter | `src/db/pillars/80-presence-services.sql`; `src/db/pillars/90-presence-security.sql`; `src/db/migrations/0012_guarded_presence.sql`; `scripts/presence/presence-migration-contract.test.ts` | Correct activation `expires_at`, snapshot `control_generation`, marker+Wave varchar/text casts, Wave `expires_at`, and `review_reports` resolution; prove deterministic idle cleanup and account-deletion purge/anonymization. Require fresh blank+upgrade Drizzle, all nine RPCs, lifecycle/security/cleanup/idempotence, and new-cluster NOT_REFUTED evidence. Freeze schema declarations, `0012` snapshot/journal, every `0011` byte, app/UI/map paths, and shared DB unless stored objects/signatures provably change and a new exact claim is recorded |
+| **Corrected-unapplied Nearby Presence `0012`** | source/disposable validation complete at `d5991c9`; exact four paths released; shared rollout pathless/blocked | Presence Platform Engineer `019f759f-3521-7ee1-90a3-5af3539d757e`; independent new-cluster refuter | Released: `src/db/pillars/80-presence-services.sql`; `src/db/pillars/90-presence-security.sql`; `src/db/migrations/0012_guarded_presence.sql`; `scripts/presence/presence-migration-contract.test.ts` | The five SQL failures, deterministic idle cleanup, deletion purge/anonymization, blank+upgrade lineages, nine RPCs, lifecycle/security/cleanup/idempotence, and new-cluster validation are complete. Shared rollout remains blocked solely on exact target identity, execution role, and scheduler proof; no DB action or source claim follows |
 | **Nearby Presence / Remote Sharing privacy policy** | Presence seven-path proposal wholly unclaimed behind Contribution; Remote Sharing policy-only and unclaimed | Presence Platform Engineer `019f759f-3521-7ee1-90a3-5af3539d757e` waiting | Nearby Presence stays fresh-GPS, reciprocal, and area-bound. Consent to share with someone outside the physical area is a separate Remote Sharing mode, never an override. Safe default: explicit trusted audience, coarse area/country label, short expiry, immediate revoke, no background tracking, and no automatic exact-location disclosure | Global “any signed-in user” visibility is a separate high-risk privacy/legal gate and is not authorized. Peer presence remains fail-closed through `sharedUsers={[]}`. Exact Presence path statuses and proof gates are recorded below; no product path claimed |
 | **Trusted Circle / Remote Sharing** | future pathless governance lane; unclaimed and unauthorized | future product/privacy governance owner plus independent privacy refuter | Invite/QR-based trusted audience with mutual acceptance, coarse sharing scope, short expiry, and immediate revoke; no contact sync or global directory | Separate from Nearby Presence and cannot weaken its fresh-GPS/reciprocal/area-bound rules. Requires counsel/privacy approval and an exact future path claim before any implementation |
 | **T2D SEO provenance firewall** | static implementation/refutation complete; paths released; runtime unverified | controller / Sol with bounded worker and fresh refuter | Commit `a1a82c2` derives observed-only public facts and isolates neutral `Sample` fallback across item/place metadata, JSON-LD, OG, and sitemap paths | Static refuter PASS with documentation-only P3 comments; generated metadata, database decoding, ISR/OG caching, Satori output, and deployed sitemap remain runtime-unverified |
@@ -772,25 +766,25 @@ in either one will conflict. **Never edit these without holding the lane that ow
 
 | File | Lines | Currently owned by |
 |---|---:|---|
-| `src/app/actions.ts` | ~1358 | **Contribution containment and integrity** — `495750a` runtime REFUTED on background-Map focus escape; retained pending the current Motion correction and independent runtime verdict |
+| `src/app/actions.ts` | ~1358 | **Contribution containment and integrity** — `495750a` runtime REFUTED on background-Map focus escape; retained pending Contribution's own post-`f19990b` runtime re-refutation and closure |
 | `src/app/_components/ItemDetailSheet.tsx`, `src/app/_components/GetItSheet.tsx` | — | **Iconography solid-glyph adoption — Item Detail/Get-It** — pending and unclaimed until the five-path visual foundation is independently refuted and visually accepted |
 | `src/lib/validation.ts` | — | **released** after presence containment `4e25b8c7`. |
 | `src/app/_components/CategorySelectorSheet.tsx` | — | **released** after `69737de` exact-scope independent NOT REFUTED with no P1/P2 and focused contract PASS |
 | `src/app/_components/ExchangePanel.tsx` | — | **released** after provider-aware implementation `ed9483c`, forward fix `a4eaed3`, independent static PASS, and narrow localhost Safari runtime PASS |
-| `src/app/page.tsx` | ~1300 | **Contribution containment and integrity** — `495750a` runtime REFUTED on focus escape; retained pending the current Motion correction and independent runtime verdict; H38 remains pathless and blocked. The named self-location/avatar vertical is a queued successor only and has no claim until release |
-| `src/design-system/components/ModalSheet.tsx`, `scripts/motion-contracts.test.ts` | Motion & Interaction Engineer | **Modal zero-focusable focus containment** — active exact two-path candidate; no caller/layout widening; independent focus/accessibility refutation required |
+| `src/app/page.tsx` | ~1300 | **Contribution containment and integrity** — `495750a` runtime REFUTED on focus escape; retained pending Contribution's own post-`f19990b` runtime re-refutation and closure; H38 remains pathless and blocked. The named self-location/avatar vertical is a queued successor only and has no claim until release |
+| `src/design-system/components/ModalSheet.tsx`, `scripts/motion-contracts.test.ts` | — | **released** after `f19990b` and Safari refuter PASS for zero-focusable focus containment |
 | `src/app/_components/ReportPriceSheet.tsx`, `src/app/_components/ConfirmVisitSheet.tsx` | — | **Contribution containment and integrity** — UI safety passed but runtime REFUTED on background focus escape; retained |
-| `src/core/i18n/strings.ts` | — | **Contribution containment and integrity** — untranslated no-promise maintenance copy passed; retained with REFUTED lane pending the current Motion correction and independent runtime verdict |
+| `src/core/i18n/strings.ts` | — | **Contribution containment and integrity** — untranslated no-promise maintenance copy passed; retained with the REFUTED lane pending Contribution's own post-`f19990b` runtime re-refutation and closure |
 | `src/app/_components/ManageProfileSheet.tsx` | — | **released** after presence containment `4e25b8c7`. |
 | `src/app/api/webhooks/neon-auth/route.ts`, `src/lib/auth-email.ts`, `src/lib/auth-email-logo.ts`, `scripts/auth-email-contracts.test.ts`, `docs/operations/AUTH-EMAIL-DELIVERY.md` | — | **released** after branded Neon Auth OTP implementation `64d3519`, type correction `8583495`, monochrome correction `d549d42`, and embedded-logo follow-up `712719f`; all review rounds VERIFIED with no P1/P2/P3, latest Production deployment is Ready/aliased, and fresh OTP/Gmail inline-CID evidence passed |
 | `public/logo.png` | — | **unclaimed**; the released OTP email uses the embedded monochrome PNG from `src/lib/auth-email-logo.ts`, not this path or a remote URL |
 | `src/db/seed.ts` | — | **released** after `32b15ae` catalog determinism PASS; H27 trust defect remains separately open/unclaimed because that commit preserves the hardcoded freshness-to-trust assignment |
 | `src/db/seedContent.ts` | — | **released** after `32b15ae` and independent static PASS; catalog 48/85, slugs/content, Spaghetti contract, and synthetic provenance preserved |
 | `src/db/schema/presence.ts`, `src/db/schema/index.ts` | — | **frozen** during corrected-unapplied `0012`; no claim unless stored objects/signatures provably change and the controller records a new exact handoff |
-| `src/db/pillars/80-presence-services.sql`, `src/db/pillars/90-presence-security.sql` | Nearby Presence Platform Engineer `019f759f-3521-7ee1-90a3-5af3539d757e` | **Corrected-unapplied `0012`** — active exact claim for the five enumerated executable SQL failures plus cleanup and deletion contracts; no shared application |
-| `src/db/migrations/0012_guarded_presence.sql` | Nearby Presence Platform Engineer `019f759f-3521-7ee1-90a3-5af3539d757e` | **Corrected-unapplied `0012`** — active exact claim; fresh blank+upgrade/new-cluster proof required before any shared action |
+| `src/db/pillars/80-presence-services.sql`, `src/db/pillars/90-presence-security.sql` | — | **released** after corrected-unapplied `0012` commit `d5991c9` and complete source/disposable validation; shared rollout remains pathless |
+| `src/db/migrations/0012_guarded_presence.sql` | — | **released** after corrected-unapplied `0012` commit `d5991c9`; still unapplied to the shared target, whose identity/role/scheduler proof remains the sole rollout blocker |
 | `src/db/migrations/meta/0012_snapshot.json`, `src/db/migrations/meta/_journal.json` | — | **frozen**; no claim unless corrected SQL provably changes stored objects/signatures and the controller records a new exact handoff |
-| `scripts/presence/presence-migration-contract.test.ts` | Nearby Presence Platform Engineer `019f759f-3521-7ee1-90a3-5af3539d757e` | **Corrected-unapplied `0012`** — active exact contract claim covering nine RPCs, lifecycle/security/cleanup/idempotence, deterministic idle retention, and account-deletion purge/anonymization |
+| `scripts/presence/presence-migration-contract.test.ts` | — | **released** after `d5991c9`; disposable validation covers nine RPCs, lifecycle/security/cleanup/idempotence, deterministic idle retention, and account-deletion purge/anonymization |
 | `package.json` / `package-lock.json` | — | **released** after the direct `nodemailer` plus types dependency changes in branded Neon Auth OTP commit `64d3519`; no continuing package ownership |
 | `LANES.md`, `docs/architecture/RELEASE-CONTROLLER.md` | — | **Quality & Release Controller employee** — event-driven lane reconciliation and checkpoint review; no timer, automation, child task, or push without a separately authorized passing checkpoint |
 | `docs/operations/WETINDEY-OPERATING-SYSTEM.md`, `docs/operations/PORTFOLIO-AND-IDEA-REGISTER.md` | — | **released** after independently `NOT_REFUTED` operating-model commit `611ad9c63c4e80e7a824ee2ebf5539149650832c`. |
@@ -807,7 +801,7 @@ in either one will conflict. **Never edit these without holding the lane that ow
 | `src/app/_components/ItemDetailSheet.tsx`, `src/app/_components/GetItSheet.tsx` | — | **Iconography solid-glyph adoption — Item Detail/Get-It** — pending and unclaimed until independent foundation refutation and visual acceptance |
 | `src/app/_components/SettingsSheet.tsx`, `src/design-system/components/SheetPicker.tsx`, `src/app/_components/CurrencyPickerSheet.tsx`, `src/app/_components/ExchangePanel.tsx` | — | **Iconography intent corrections — remaining sheets** — pending only; no claim or edit authority |
 | `src/design-system/components/MapLoader.tsx` | — | **MapLoader iconography adoption** — pending and unclaimed; no edit authority before foundation acceptance and a fresh exact handoff |
-| `src/design-system/components/MapboxCanvas.tsx`, `src/integrations/maps/MapboxAdapter.ts` | Maps Engineering Lead | **Contextual place-marker orbs and selected glow** — active exact two-path claim; preserve H37 semantics and all exclusions recorded above. The self-location/avatar vertical is the named immediate successor after release, not a concurrent claim |
+| `src/design-system/components/MapboxCanvas.tsx`, `src/integrations/maps/MapboxAdapter.ts` | — | **released** after H37 semantic place-marker commit `6611068` and independent NOT REFUTED. Peer markers are not live because the page/action boundary returns empty shared users; self-avatar and any contextual-orb/selected-glow follow-up remain separate and unclaimed |
 | `src/app/_components/ProfileSheet.tsx`, `src/app/_components/AboutSheet.tsx`, `src/app/_components/LocationSheet.tsx`, `src/app/_components/ReportProblemSheet.tsx` | — | **released** after `69737de` exact-scope independent NOT REFUTED with no P1/P2 and focused contract PASS |
 | `scripts/iconography-contracts.test.ts` | Iconography & Visual Systems Lead `019f75cf-4d8f-7263-822b-06e846fce7ac` | Historical `69737de` release is superseded by the active five-path visual foundation claim after ADR-018 correction `0ab0d5b` |
 | `src/app/currency-actions.ts`, `src/app/_data/reference-currencies.ts`, `src/app/_components/CurrencyPickerSheet.tsx`, `src/app/_components/CurrencyFlag.tsx` | — | **released** after provider-aware implementation `ed9483c`, forward fix `a4eaed3`, independent static PASS, and narrow localhost Safari runtime PASS |
@@ -839,7 +833,7 @@ in either one will conflict. **Never edit these without holding the lane that ow
 | **NBS deterministic review artifacts + development fixture (Lane B)** | Terra fixture engineer `019f75a8-7d3b-7482-b7e2-ce8ed35b9491`; Luna original-source refuter | ✅ exact `e49782b + 6ae4df9 + 449cb82`; PASS no P1/P2/P3; paths released | — | Founder-authorized NBS review artifacts / development fixture | 2026-07-18 | Final candidate proves strict canonical injected retrieval timestamp, full candidate validation, restored historical/default CLI, and fingerprint/ID enforcement. All ten formerly claimed implementation paths are released. Standing recurring retrieval/review authorization remains, but artifacts are review/development-only. No shared `0010`, seed, publication/promotion, push, or deployment occurred or is authorized. |
 | **NBS original-source refutation** | Luna source refuter `019f75a8-8062-7330-93ee-1fb0d8d4fbc5` | ✅ final PASS no P1/P2/P3; pathless | — | Original-source/evidence refutation | 2026-07-18 | Exact combined candidate `e49782b + 6ae4df9 + 449cb82` passed. Source facts, package evidence, grounded rows, no-Sample/no-live boundaries, strict UTC, validators, CLI compatibility, and fingerprint/ID contract are closed. Historical pilot files remain immutable and unowned. |
 | **Contribution containment plan** | Contribution Integrity & Moderation Engineer `019f75a3-f50d-7180-8e92-0a7aabd8a98c`; independent static/source refuter; HI Quality browser refuter | 🔴 `495750aaa0730dcd35b4e7a6dbeba24caef1caf3` remains runtime REFUTED in breadth; exact five paths retained | `src/app/actions.ts`; `src/app/page.tsx`; `src/app/_components/ReportPriceSheet.tsx`; `src/app/_components/ConfirmVisitSheet.tsx`; `src/core/i18n/strings.ts` | Immediate contribution safety containment | 2026-07-18 | UI safety/readability, disabled controls, and no-promise copy passed, but breadth-level runtime evidence remains insufficient; storage/network/visit residuals remain unproven. The `0013+` ADR/schema/migration/manifest/app/ops packet is complete planning evidence only and is unauthorized. Retain all five paths. Do not activate `0013+` until containment runtime and Presence/shared-migration gates pass. H38 remains pathless behind `page.tsx`. |
-| **Shared ModalSheet focus hardening** | Motion & Interaction Engineer; independent refuter | ✅ `3e28c63`; NOT REFUTED; path released | — | Shared modal accessibility | 2026-07-18 | Shared `isEnabledVisible` serves initial focus and `trapTab`, covering native/ARIA disabled, hidden, disabled fieldsets, inert/ARIA-hidden, absent layout, and computed display/visibility. Panel fallback, Escape, trapping, nesting, restoration, animations, and reduced motion are preserved. Browser/runtime focus proof, `visibility:collapse`, and restoration when the prior target becomes hidden remain unproven. No push/deploy. |
+| **Shared ModalSheet focus hardening** | Motion & Interaction Engineer; independent Safari refuter | ✅ final `f19990b`; Safari PASS; both paths released | — | Shared modal accessibility | 2026-07-18 | Zero-focusable initial/Tab/Shift+Tab containment passed Safari refutation while preserving Escape, Close, restoration, nested/pushed sheets, motion, stacking, and layout. Completed exactly `src/design-system/components/ModalSheet.tsx` and `scripts/motion-contracts.test.ts`; no current ownership. |
 | **H38 offline search** | unassigned | 🟡 assessment complete; narrow correction queued pathless behind Contribution | — | Offline search resilience | 2026-07-18 | Catastrophic error-boundary escape is refuted: search rejection is caught and `AsyncList` has an error prop. Confirmed residual is limited to `page.tsx` clearing prior trustworthy rows and supplying no `onRetry`. Smallest future one-file patch adds retry-token state, removes the clear, adds the dependency token and `onRetry`, and preserves cancellation/finally. Browser-refuter criteria are ready. No path claim until Contribution releases `page.tsx`; no edits/tests occurred. |
 | **H6 ADR-020 nonce-CSP governance** | governance commits `14aff35fa98728c4d2c22e61e773254d42186db7` + `6c74c147678eefbda8e5b5030c0ab51c13a6a952`; refuter `019f7692-d254-7e43-a687-154876274927` | ✅ NOT REFUTED, no P1/P2/P3; four docs released | — | Security/privacy architecture | 2026-07-18 | One-file correction explicitly rejects `x-nonce` alone and requires cloned request headers with raw nonce plus exact CSP, `NextResponse.next({request:{headers}})`, and byte-identical response CSP. All original contracts remain. Governance closure grants no implementation, Preview/Production enforcement, push, or deployment authority. |
 | **H6 CSP collector and retention** | Security & Privacy Engineering Lead `019f75e5-8c04-74c0-9392-d9f741a7a131`; fresh privacy/retention refuter | 🟢 active exact source claim | collector, cleanup, sanitizer/store, `.env.example`, Cron-only `vercel.json`, focused contract | ADR-020 report collection | 2026-07-18 | Founder-approved collector policy plus a cleaned private-Blob probe now prove source feasibility: private upload accepted, anonymous read denied, deletion and prefix cleanup confirmed. Implement 14/30/90 retention and authenticated Cron without exposing token, host, store ID, paths, raw payloads, identifiers, cookies, or auth headers. Rollout remains gated on exact-environment token/`CRON_SECRET`, Cron evidence, WAF rate rule, and independent refutation. |
@@ -850,7 +844,7 @@ in either one will conflict. **Never edit these without holding the lane that ow
 | **Nearby-user presence safety containment** | CEO controller / bounded presence worker; independent Pauli static refuter | ✅ commit `4e25b8c7ac8a3ad598567e186575defd51113247`; PASS with no P1/P2/P3; paths released | — | ADR-016 pre-acceptance fail-closed containment | 2026-07-18 | Completed exactly `src/app/actions.ts`, `src/lib/validation.ts`, `src/app/page.tsx`, and `src/app/_components/ManageProfileSheet.tsx`. At-rest coordinates and dormant DTO/renderer remain later schema/map concerns. No runtime, deployment, database, schema, migration, or map-UI expansion proof was claimed. |
 | **ADR-016 governance decision preparation** | CEO controller / ADR-016 governance worker; Curie follow-up refuter | ✅ packet `0480182` plus P2 correction `a9a7c60ea87246ab607600391f72dc6478914c7b`; PASS; historical preparation paths released | — | Presence dependency step 2 / Founder review | 2026-07-18 | The packet captured reciprocal, coarse, short-lived, default-off presence and separated the two-account Festac pilot from public rollout. Its former Proposed/pending-selection status was superseded by accepted `c960860` and the Founder approvals recorded above. This historical row grants no code, schema, migration, push, deployment, or rollout authority. |
 | **ADR-016 Founder-decision revision** | presence-governance employee; independent refuter | ✅ `c96086007e6f379c1b686b8203deef2c7c5559c2`; PASS; paths released | — | Founder-directed Reciprocal Community Presence architecture | 2026-07-18 | ADR-016 is Accepted for implementation architecture only. It authorizes no shared migration, deployment, pilot traffic, or public rollout. Frozen `0011` was untouched. Presence repair remains forward `0012`; contribution integrity remains `0013` or later. Founder product policy, two-account allowlist, and repository owner/platform maintainer safety-responder decisions are complete. Exact-target compatibility, disposable/refutation evidence, rate enforcement, default-off flag, database kill switch, retention implementation, qualified legal review where required, and rollout sequencing remain open. |
-| **Corrected-unapplied Nearby Presence `0012`** | Presence Platform Engineer `019f759f-3521-7ee1-90a3-5af3539d757e`; fresh independent new-cluster refuter | 🔴 executable disposable proof REFUTED; exact four-path source correction active | `src/db/pillars/80-presence-services.sql`; `src/db/pillars/90-presence-security.sql`; `src/db/migrations/0012_guarded_presence.sql`; `scripts/presence/presence-migration-contract.test.ts` | ADR-016 schema / forward `0012` | 2026-07-18 | Five failures are activation `expires_at`, snapshot `control_generation`, snapshot marker+Wave varchar/text casts, Wave `expires_at`, and `review_reports` resolution. Add deterministic idle-retention cleanup and account-deletion purge/anonymization contracts. Require fresh blank+upgrade Drizzle proof, all nine RPCs, lifecycle/security/cleanup/idempotence, and new-cluster independent NOT_REFUTED. Schema declarations, `0012` snapshot/journal, all `0011` bytes, seven app/UI/map paths, and shared DB remain frozen unless stored objects/signatures provably change and a new exact handoff is recorded. |
+| **Corrected-unapplied Nearby Presence `0012`** | Presence Platform Engineer `019f759f-3521-7ee1-90a3-5af3539d757e`; independent new-cluster refuter | ✅ source/disposable validation complete at `d5991c9`; exact four paths released; shared rollout pathless | — | ADR-016 schema / forward `0012` | 2026-07-18 | The five SQL defects, blank+upgrade lineages, all nine RPCs, lifecycle/security/cleanup/idempotence, deterministic idle retention, account-deletion purge/anonymization, and independent disposable evidence are complete. The shared database remains untouched; rollout is blocked solely on exact target identity, execution role, and scheduler proof. |
 | **Nearby Presence first-slice / Remote Sharing privacy policy** | Presence Platform Engineer `019f759f-3521-7ee1-90a3-5af3539d757e` | 🟡 Presence proposal unclaimed due `page.tsx`; Remote Sharing pathless and unauthorized | — | ADR-016 private-pilot preparation / separate remote-sharing governance | 2026-07-18 | Manual/AI/default centers never authorize real peers. Nearby Presence remains fresh-GPS, reciprocal, area-bound, coarse, and lease-scoped. Sharing with someone outside the physical area must be a separate Remote Sharing mode with explicit trusted-audience selection, coarse area/country only, short expiry, immediate revoke, no background tracking, and no automatic exact disclosure. Global any-signed-in visibility is a high-risk privacy/legal gate and is not authorized. |
 | **Trusted Circle / Remote Sharing** | future product/privacy governance owner; independent privacy refuter required | ⚪ pathless concept only; no implementation authority | — | Separate future remote-sharing governance | 2026-07-18 | Trusted audience is invite/QR-based with mutual acceptance, coarse scope, expiry, and immediate revoke. No contact sync, global directory, background tracking, automatic exact-location disclosure, or Nearby Presence override. Counsel/privacy approval and a fresh exact path claim are mandatory before implementation. |
 | **Seller Identity, reusable RBAC & Onboarding architecture** | future governance owner; independent identity/moderation refuter required | 🟡 Founder-approved architecture/planning only; pathless | — | Seller onboarding first vertical / reusable governed RBAC | 2026-07-18 | Reusable deny-by-default server-side authorization must cover seller owner/manager/staff, moderator, field operator, support, and community roles with scoped permissions and audit. Identity verification, business verification, reputation, confidence, and rewards remain separate. Suspension/revocation, appeals, non-purchasable badges, and seller-data isolation from automatic observation trust are mandatory. No provider/schema/RLS/code/deploy authority; exact paths and dependencies require later claims. |
@@ -858,7 +852,7 @@ in either one will conflict. **Never edit these without holding the lane that ow
 | **`page.tsx` modularisation and reusable core engines** | future architecture owner; independent boundary/refutation reviewer required | ⚪ pathless architecture plan only; Contribution retains `src/app/page.tsx` | — | ADR-002 correctness-before-boundaries | 2026-07-18 | Deliverables are a current code tree, live caller/dependency graph, ownership-boundary matrix for discovery/search, location, map/presence, sheet/presentation, contribution, exchange, seller, trust/confidence, and legal/analytics, plus an incremental strangler sequence and documentation updates. Each extraction needs exact paths, live wiring in the same change, no behavior regression, and independent refutation. Prefer shared typed contracts/configuration and reusable core engines; keep domain logic out of UI. `src/modules` remains aspirational until wired to live callers in the same change. |
 | **Reviews public-write containment** | CEO controller / reviews-containment worker; Epicurus independent static refuter | ✅ commit `893f1671ac4db9e57e2489db70818d69893af9ed`; PASS with no P1/P2/P3; paths released | — | ADR-009 pre-integrity fail-closed containment | 2026-07-18 | Completed exactly `src/app/actions.ts` and `src/app/_components/GetItSheet.tsx`. Live submission and actionable UI fail closed. Later review read/aggregate/schema integrity remains planned debt. No runtime, schema, migration, moderation, reputation, helpful-vote, community-feed, push, deployment, or integrity-completion claim. |
 | **Database rollout-status evidence correction** | CEO controller / DB-status docs worker; Lovelace follow-up refuter | ✅ commit `164a12c` plus forward correction `bb4dca448b177f5a30be168d5dcef25aab28da2a`; PASS; path released | — | Fail-closed shared-target status correction | 2026-07-18 | Completed exactly `docs/database/README.md`. Final wording treats provenance/ingestion object presence as uncorroborated external reporting while retaining proven ledger hash/timestamp mapping through recognized `0010` and latitude/longitude schema drift. Frozen `0011`, Production UNKNOWN, and NO PUSH / NO DEPLOY remain. No migration policy, migration, schema, database, push, deployment, or authorization claim. |
-| **Nearby-user Mapbox popup follow-up** | Antigravity (External Approved Contractor - Product Engineering & UX Department) | ⚪ deferred behind presence dependency chain; no popup/peer claim | — | ADR-016 map DTO/UI stage | 2026-07-18 | The historical release of `src/integrations/maps/MapboxAdapter.ts` is superseded only by the active contextual place-marker slice; that claim grants no popup/peer authority. Nearby-user UI cannot resume before the Presence dependency chain is complete and separately claimed. Existing public name/avatar/contact, `Live Contributor`, and direct-contact behavior remain unverified and must not ship. |
+| **Nearby-user Mapbox popup follow-up** | Antigravity (External Approved Contractor - Product Engineering & UX Department) | ⚪ deferred behind presence dependency chain; no popup/peer claim | — | ADR-016 map DTO/UI stage | 2026-07-18 | `src/integrations/maps/MapboxAdapter.ts` is released after H37 `6611068`, but that creates no popup/peer claim. Nearby-user UI requires a fresh exact handoff after its dependencies. Existing public name/avatar/contact, `Live Contributor`, and direct-contact behavior remain unverified and must not ship. |
 | **auth/UI (former Claude session)** | controller custody; implementation unassigned | ⚪ **orphaned claim retired — paths released** | — | [ADR-003](docs/adr/003-identity-for-contribution-trust.md) | 2026-07-16 | Human owner confirmed the former session no longer owns these paths. The narrow category-emoji handoff to Iconography completed in `1aec02c`; every other former auth/UI path is released and must be claimed narrowly before a future edit. This retirement does not declare ADR-003 complete. |
 | **D2 provenance boundary** | controller / Sol, Terra implementation, independent reproducibility refutation | ✅ execution gate 2/2 complete — paths released; shared rollout unauthorized | — | D2 / DATA-01 | 2026-07-17 | Final PASS: compiler exited `0`; a blank real `0000`-`0009` lineage produced ten exact SQL hashes and one snapshot chain; the enum has exactly `synthetic`, `observed`, `partner`, `reference`, and `inferred`; provenance is `NOT NULL` with default `synthetic`; disposable seed rows were all synthetic and non-null; and a second migrate left ledger and schema byte-identical. A separate `0008` sentinel was backfilled to synthetic and a new row omitting provenance defaulted to synthetic. Primary and independent disposable databases were removed exactly. Evidence manifests: `/tmp/wetindey_d2_validation_20260718T002043Z_74e9c4/SHA256SUMS` and `/tmp/wetindey_d2_refuter_X9q3Ls/SHA256SUMS`. Random seed counts `968` versus `974` are non-semantic. No shared or production migration and no deployment occurred or is authorized by this result. |
 | **D2 seed provenance typing** | Popper implementation with independent static refutation | ✅ source correction/refutation complete — path released | — | D2 static execution gate | 2026-07-17 | `f3954b1` completed the one-file source correction with independent STATIC SOURCE PASS and no divergence. Compiler acceptance is now proven by exit `0`, and the independently reproduced disposable D2 gate is recorded in the D2 provenance row above. No shared or production database migration or deployment occurred. |
@@ -913,10 +907,11 @@ someone knows.
 ### Known, routed, unfixed
 
 **P0-4 — Unfocusable map markers (SC 2.1.1)**: H37 `6611068` added current
-place-marker accessible names, which the active Maps lane must preserve. The remaining
+place-marker accessible names and is independently NOT REFUTED; both Maps paths are
+released. The remaining
 routed defect is narrower: adapter marker elements still need an independently evidenced
 keyboard-focus/role contract rather than the stale claim that names are absent. It belongs
-to the **map** lane but does not widen the current two-path scope.
+to a future freshly claimed **map** lane and creates no current path ownership.
 
 **The badges honour no locale at all.** `ItemCard.tsx`'s `STATUS_LABEL` (`:52`) is a
 hardcoded `Record`, and `ItemDetailSheet.tsx:147` does the same. Found by the map lane,
@@ -1081,7 +1076,7 @@ Add a row. Be specific about paths — a lane like `src/**` is not a claim, it i
 ```md
 | **H28 follow-up: Logo Geometry cleanup** | controller with Gibbs and Bernoulli independent evidence | ✅ implementation `7678e9d`; targeted ESLint PASS; path released | `src/design-system/brand/logoGeometry.ts` | knip cleanup without deleting derivation geometry | 2026-07-18 | Four dead derivation declarations are absent; `QUESTION_TRANSFORM` and live consumers remain intact. Bernoulli found repository-wide Knip exit `1` from unrelated unused files/exports/types, with no H28 symbols reported. Historical centroid wording is comment-only. |
 | **H28 refutation correction** | controller with Gibbs independent refuter | ✅ forward correction `7678e9d`; independent evidence reconciled | `src/design-system/brand/logoGeometry.ts` | Remove dead private declarations while preserving measured geometry in comments | Gibbs's unused-symbol finding was corrected by removing the declarations while preserving the frozen live transform and derivation notes. Targeted ESLint passed; unrelated repository-wide Knip debt remains separately recorded. |
-| **H37 semantic market-marker handoff** | Linnaeus read-only audit; superseded by completed `6611068` | ✅ historical implementation/refutation complete; former release superseded by current contextual-orb claim | — | Historical design handoff only | Current HEAD carries `placeType` through the canvas and adapter and renders the semantic symbols. H37 itself owns no path; the persistent Maps Engineering Lead now owns the same two paths only for contextual place-marker orbs and truthful selected glow. Peer presence and self-location/avatar remain separate future gated slices. |
+| **H37 semantic market-marker handoff** | Linnaeus read-only audit; completed by `6611068` | ✅ implementation independently NOT REFUTED; both paths released | — | Historical design handoff only | Current HEAD carries `placeType` through the canvas and adapter and renders semantic symbols with accessible labels and fallback. `sharedUsers={[]}` / `getSharedUserLocations()=[]` leave peer avatars non-live; self-avatar and any contextual-orb/selected-glow follow-up are separate unclaimed slices. |
 | **my-lane** | session name or your name | 🟢 active | `src/lib/foo.ts`, `src/app/_components/Bar.tsx` | Phase N | 2026-07-16 | one line on what and why |
 ```
 
@@ -1131,9 +1126,9 @@ defines a self-avatar contract. Any future self-avatar/profile work is a separat
 location/profile lane. Peer presence requires an exact adapter/canvas/page plus
 presence-data/schema/action handoff and remains gated by ADR-016, unapplied `0012`,
 privacy, consent, leases, rate controls, block/report, and kill-switch evidence. No path is
-claimed for self or peers. The current Maps Engineering Lead claim is limited to the two
-place-marker paths and the contextual-orb/selected-glow scope above; this historical H37
-record grants no additional edit, browser, or DB authority.
+claimed for self or peers. Independent review returned NOT REFUTED for `6611068`, and both
+place-marker paths are released. Contextual-orb/selected-glow follow-up is not claimed
+complete; this historical H37 record grants no edit, browser, or DB authority.
 
 ### Nearby Presence first-slice path reconciliation
 
@@ -1145,26 +1140,22 @@ The Presence Platform Engineer’s exact seven-path proposal is recorded but not
 | `src/app/_components/NearbyPresenceControl.tsx` | New/unclaimed; available in isolation, but no edit authority while the atomic proposal is blocked. |
 | `src/app/_components/PresenceTapCard.tsx` | New/unclaimed; available in isolation, but no edit authority while the atomic proposal is blocked. |
 | `src/app/page.tsx` | **Conflict:** exclusively retained by Contribution Integrity & Moderation Engineer `019f75a3-f50d-7180-8e92-0a7aabd8a98c`. |
-| `src/design-system/components/MapboxCanvas.tsx` | **Conflict for Presence:** actively owned by Maps Engineering Lead for contextual place-marker orbs/selected glow; self and peer work remain separate and unclaimed. |
-| `src/integrations/maps/MapboxAdapter.ts` | **Conflict for Presence:** actively owned by Maps Engineering Lead for the same exact place-marker slice; no Presence, self/avatar, peer, or camera authority transfers. |
+| `src/design-system/components/MapboxCanvas.tsx` | Released after H37 `6611068`; available only through a fresh atomic claim. Self and peer work remain separate and unclaimed. |
+| `src/integrations/maps/MapboxAdapter.ts` | Released after H37 `6611068`; available only through a fresh atomic claim. No Presence, self/avatar, peer, or camera authority transfers. |
 | `scripts/presence/presence-private-pilot-contract.test.ts` | New/unclaimed; available in isolation, but no edit or execution authority while the atomic proposal is blocked. |
 
 Presence must wait until Contribution releases `src/app/page.tsx`, then request a fresh
 atomic claim over the same seven paths. Do not widen into `src/app/actions.ts`,
 `locationStore`, profile/auth internals, or committed `0012` paths.
 
-The corrected-unapplied `0012` lane is active over exactly the two presence pillars,
-`0012_guarded_presence.sql`, and the focused migration contract. It must reproduce exact
-migration lineage through `0012` on fresh blank and upgrade Drizzle paths; execute all nine
-RPCs; prove lifecycle, security, deterministic idle-retention cleanup, account-deletion
-purge/anonymization, and idempotence; and receive independent NOT_REFUTED evidence on a
-fresh disposable cluster. Required security evidence still includes roles/PostGIS, forced
-RLS, no `PUBLIC`, least privilege, default-off control, empty then exact two-account
-allowlist, reciprocity, lease creation/expiry/nonrenewal, rate limits, block/report, kill
-purge, restore/cleanup, and rejection of fallback/selected/stale/simulated coordinates.
-Schema declarations, `0012` snapshot/journal, every `0011` byte, and the seven app/UI/map
-paths remain frozen. The shared database remains untouched until PASS; no migration, pilot
-traffic, push, or deployment authority follows from this correction lane.
+Corrected-unapplied `0012` source and disposable validation completed at `d5991c9`.
+The two presence pillars, `0012_guarded_presence.sql`, and the focused contract are
+released. Blank and upgrade lineages, all nine RPCs, lifecycle/security,
+idle-retention cleanup, account-deletion purge/anonymization, idempotence, and independent
+new-cluster evidence are complete. The shared database remains untouched; rollout is
+blocked solely on pathless exact target identity, execution role, and scheduler
+capability/configuration proof. No migration, pilot traffic, source ownership, push, or
+deployment authority follows.
 
 Fail-closed privacy correction: a manual, AI-selected, or default center point—including a
 selected Badagry center—may drive browsing only and must never unlock real nearby users.
@@ -1223,7 +1214,7 @@ change.
 
 ### Contribution containment: refreshed ModalSheet diagnosis
 
-The former Motion diagnosis worker is no longer addressable. Mendel (`019f7638-4f36-7952-b775-e9b141f0fd7d`) diagnosed the shared lifecycle defect; Carver implemented `f7cddba`, Leibniz refuted disabled-fieldset ancestry, and Godel corrected it in `9fe9d4e`. Candidate `3e28c63` uses shared `isEnabledVisible` for initial focus and Tab trapping and independently returned NOT REFUTED. It covers native/ARIA disabled, hidden, disabled fieldsets, inert/ARIA-hidden, absent layout, and computed display/visibility while preserving panel fallback, Escape, trapping, nesting, restoration, animations, and reduced motion. That historical path release is superseded by the current exact two-path Modal zero-focusable candidate recorded above. Browser/runtime focus, `visibility:collapse`, and restoration when the prior target becomes hidden remain residuals; the five Contribution paths remain protected.
+The former Motion diagnosis worker is no longer addressable. Mendel (`019f7638-4f36-7952-b775-e9b141f0fd7d`) diagnosed the shared lifecycle defect; Carver implemented `f7cddba`, Leibniz refuted disabled-fieldset ancestry, and Godel corrected it in `9fe9d4e`. Candidate `3e28c63` established the shared visibility predicate. Final correction `f19990b` completed the zero-focusable containment over `ModalSheet.tsx` and its focused contract; the Safari refuter returned PASS. Both Motion paths are released. The five Contribution paths remain protected.
 
 ### H20 Button color-feedback correction
 
@@ -1274,8 +1265,8 @@ refuter.
 | Executive Leadership / Product Management | Founder feedback triage, product direction, phase order, and scope decisions | Active |
 | Program Management / Release Control | Convert feedback into bounded lanes, prevent duplicate tasks, coordinate dependencies, and release evidenced commits | Active |
 | Human Interface / Iconography | Solid semantic icon orbs, sheet hierarchy, category trigger, market-detail visual system, and light/dark accessibility refutation | Exact five-path foundation active after ADR-018 correction `0ab0d5b`; all adoption paths unclaimed |
-| Maps Engineering | Place/market symbols, selected marker state, map visual language, and map-specific runtime refutation | Persistent Lead active on exact `MapboxCanvas.tsx` + `MapboxAdapter.ts` contextual-orb/selected-glow slice; named self-location/avatar vertical queued immediately after Maps and Contribution release; peer work remains separate |
-| Presence / Safety Engineering | Consent-based nearby presence, trusted people, blocks, reports, leases, and pilot gates | Corrected-unapplied `0012` active on exact four paths; fresh blank+upgrade/new-cluster proof required; shared DB and seven app/UI/map paths untouched |
+| Maps Engineering | Place/market symbols, selected marker state, map visual language, and map-specific runtime refutation | H37 semantic place markers completed at `6611068`, independently NOT REFUTED, and both paths released. Peer avatars remain non-live; self-avatar and contextual-orb/selected-glow follow-ups are separate unclaimed work |
+| Presence / Safety Engineering | Consent-based nearby presence, trusted people, blocks, reports, leases, and pilot gates | Corrected-unapplied `0012` source/disposable validation completed at `d5991c9`; four paths released. Shared DB untouched and rollout blocked solely on exact target identity/role/scheduler proof; seven app/UI/map paths remain unclaimed |
 | Catalog Stewardship | Item CRUD, aliases, variants, units, category mapping, reference imagery, attribution, and duplicate merging | Unassigned |
 | Observation Evidence Media | Report attachments, receipts, EXIF removal, privacy, hashing, size limits, moderation, retention, and offline uploads | Unassigned |
 | Seller Platform / Identity & Access / Email Delivery | Seller onboarding, scoped RBAC, verification, consented contact, seller operations, and auth-message delivery | Seller architecture remains unassigned; branded Neon OTP via Hostinger is completed/released through embedded-logo follow-up `712719f`, independently VERIFIED and live at Ready deployment `dpl_B7QwNqAYTToHsAXsVCM5jh1JXwRM` with fresh OTP/Gmail inline-CID proof; operational deliverability monitoring remains |
@@ -1299,12 +1290,13 @@ refuter.
    persistent Iconography & Visual Systems Lead after ADR-018 correction `0ab0d5b`.
    Item Detail/Get-It and all remaining adoption paths stay
    pending and unclaimed until independent foundation refutation and visual acceptance.
-3. **Map Symbols, self location, and Nearby Presence**: Maps Engineering actively owns
-   only the two place-marker rendering paths for contextual orbs and selected glow. Its
-   named self-location/avatar vertical starts immediately after that lane and Contribution
-   release, but claims nothing yet. Presence / Safety owns its separate backend/privacy
-   lane; peer UI and camera changes remain separate. Never use simulated centres to unlock
-   real peers.
+3. **Map Symbols, self location, and Nearby Presence**: H37 semantic symbols are complete
+   and both Maps paths are released. The named self-location/avatar vertical remains
+   unclaimed until Contribution releases `src/app/page.tsx` and a fresh handoff lands.
+   Peer UI, contextual-orb/selected-glow follow-up, and camera changes remain separate and
+   unclaimed. Presence `0012` source/disposable work is complete; shared rollout remains
+   pathless behind exact target identity/role/scheduler proof. Never use simulated centres
+   to unlock real peers.
 4. **Seller Onboarding and Reusable RBAC**: Seller Platform / Identity & Access;
    architecture first, then exact server/UI/schema claims with security and
    privacy refutation.
