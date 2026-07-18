@@ -1,102 +1,92 @@
 # WetinDey database bootstrap and lineage runbook
 
 **Date:** 2026-07-17  
-**Status:** Operational requirement  
-**Scope:** Blank-database migration and disposable seed validation
+**Status:** Operational requirement under [ADR-014](../adr/014-pillar-baselines-and-release-migrations.md)  
+**Scope:** Blank-database reconstruction, disposable validation, and lineage evidence
 
-## Purpose
+## Current truth
 
-WetinDey migration `0000` creates PostGIS `geography` columns. A newly created database
-must therefore have PostGIS before Drizzle applies the migration lineage.
+- `0000` through `0008` are the preserved applied lineage.
+- `0009` has independent compiler, blank-lineage, seed, idempotence, provenance, and
+  cleanup evidence. No shared or production database rollout occurred.
+- final ingestion migration `0010` is unapplied. It does not make ingestion live.
 
-This bootstrap requirement is outside the applied migration history. Do not rewrite
-`0000`, delete Drizzle ledger rows, or add a compensating migration merely to provision an
-extension.
+Do not describe `0009` or `0010` as live until exact-target rollout evidence says so.
+Until the first pillar baseline is deliberately cut, the complete numbered lineage remains
+the fresh-install reconstruction path. Cutting a baseline must not rewrite these artifacts
+or the ledger of an existing database.
+
+## Foundation requirement
+
+Migration `0000` creates PostGIS `geography` columns. A blank database must have PostGIS
+before Drizzle applies that lineage. Extension provisioning belongs to the
+foundation/extensions desired-state pillar; it is not a reason to rewrite `0000`, delete
+ledger rows, or invent a compensating release.
 
 ## Safety boundary
 
-`src/db/seed.ts` is destructive. It provisions PostGIS, runs migrations, and truncates
-application tables before inserting demonstration data. The seed has no built-in
-disposable-database guard.
+`src/db/seed.ts` is destructive. It provisions PostGIS, runs migrations, truncates
+application tables, and inserts demonstration data. It has no built-in
+disposable-database guard. Never run it against production, a shared database, or the
+normal configured database.
 
-Never run it against production, a shared database, or the normal configured database.
+Before authorized disposable validation:
 
-Before any migration or seed validation:
+1. Generate a unique disposable database name.
+2. Build its URL by replacing only the database-name path in the authorized source URL.
+3. Neutralize ambient environment precedence and assert `current_database()`, Neon
+   project/branch identity, and expected role before DDL.
+4. Verify extension privileges and required PostGIS version.
+5. Stop when target identity, privilege, parent ledger, or restore ownership is uncertain.
 
-1. Create a uniquely named disposable database.
-2. Construct its connection URL by replacing only the database-name path.
-3. Connect and assert that `current_database()` exactly equals the generated disposable
-   name.
-4. Verify that the target role may create extensions.
-5. Do not proceed when any identity or privilege check is uncertain.
+`CREATEDB` permission does not prove PostGIS can be installed. A schema inside a shared
+database is not an acceptable disposable boundary because the seed truncates tables.
 
-`CREATEDB` permission alone does not prove that PostGIS can be installed.
+## Reconstruction paths
 
-## Blank migration
+### Fresh database
 
-Provision PostGIS in the confirmed disposable target:
+Today, an authorized disposable fresh database replays the preserved lineage because no
+new pillar baseline has been published. After an ADR-014 baseline cut, a fresh database
+executes the exact baseline identified by the repository `LATEST` manifest, records that
+real execution, then applies only later release deltas.
 
-```sql
-CREATE EXTENSION IF NOT EXISTS postgis;
-```
+### Existing database
 
-Then run:
+An existing database never executes a baseline. A read-only preflight must match its
+complete Drizzle ledger to an archived recognized lineage and match its schema, RPC, RLS,
+and grant fingerprint to the expected state at its last release. It then receives only
+pending deltas.
 
-```bash
-DATABASE_URL="$D1_DISPOSABLE_DATABASE_URL" npm run db:migrate
-```
+## Disposable proof
 
-Confirm:
+An authorized reconstruction must prove:
 
-- migrations `0000` through `0008` appear once and in order;
-- SQL fingerprints match the expected Drizzle ledger;
-- journal entries and snapshots form one chain;
-- tables, columns, and explicit indexes match the current TypeScript schema and final
-  snapshot;
-- and the only expected PostGIS-owned public table outside the application snapshot is
-  `spatial_ref_sys`.
+- expected SQL checksums, journal ordering, breakpoints, and snapshot chain;
+- one ledger row per executed migration in order;
+- schema, extension, enum, constraint, index, function, policy, and grant fingerprint;
+- release-specific backfill and data invariants;
+- second-run ledger and schema idempotence;
+- destructive seed behavior only when separately authorized;
+- and exact cleanup by both primary executor and independent refuter.
 
-Run migration a second time and prove the ledger and schema are unchanged:
-
-```bash
-DATABASE_URL="$D1_DISPOSABLE_DATABASE_URL" npm run db:migrate
-```
-
-## Disposable seed validation
-
-Only after the disposable database identity assertion succeeds:
-
-```bash
-DATABASE_URL="$D1_DISPOSABLE_DATABASE_URL" npm run db:seed
-```
-
-Seed counts are not a reproducibility guarantee because the current seed uses randomness.
-The required proof is that the seed completes against the recreated schema without an
-undocumented manual database edit.
+Random seed counts are non-semantic. A successful seed proves compatibility with the
+recreated schema, not deterministic data identity or permission to seed a shared target.
 
 ## Cleanup
 
-Disconnect every client, drop the disposable database, and query database names by the
-generated prefix to prove that none remain.
+Disconnect every client, drop every generated disposable database, and query the exact
+generated prefix to prove none remain. Preserve redacted manifests before removing
+temporary working directories.
 
-Do not use a schema inside a shared database as a substitute. The seed's truncation
-behavior makes that boundary insufficient.
+## Historical evidence
 
-## D1 evidence
+D1 proved exact configured-ledger correspondence and disposable reconstruction for applied
+`0000` through `0008`. D2 independently proved the complete candidate `0000` through
+`0009` path, provenance invariants, seed compatibility, second-run idempotence, the
+separate `0008` sentinel upgrade, and exact cleanup. These are reproducibility proofs, not
+shared rollout records.
 
-The D1 lineage reconciliation on 2026-07-17 established:
-
-- all applied SQL fingerprints from `0000` through `0008` matched repository SQL;
-- a guarded blank disposable database migrated through `0008`;
-- catalog, journal, snapshots, and TypeScript schema agreed at the checked table, column,
-  nullability, type, and explicit-index level;
-- the destructive seed completed only on the disposable target;
-- a second migration pass was idempotent;
-- and a clean pre-repair `HEAD` reproduced the missing `items.category` seed failure.
-
-An independent refuter repeated the migration, seed, idempotence, and clean-`HEAD` failure
-checks. Every generated disposable database was dropped and the final prefix query returned
-no remaining names.
-
-Full foreign-key and default-expression equivalence was not exhaustively compared. Treat
-that as a stated residual risk, not as inferred proof.
+The D2 session manifests were written under `/tmp`; they are evidence references, not the
+durable archive required for a release. See [Database migrations](../database/MIGRATIONS.md)
+and [Neon rollout](../database/NEON.md).

@@ -201,9 +201,30 @@ npm run format
 There is no test suite. `npm run build` passing does not mean it works; open the
 app and drive the flow you changed.
 
-If you touched the schema: `npm run db:generate`, then commit the generated SQL
-**and** the `meta/` snapshot together. Re-seed with `npm run db:seed` (it
-truncates — see the README).
+### Database contributions
+
+Read [ADR-014](./adr/014-pillar-baselines-and-release-migrations.md) and the
+[database guide](./database/README.md) before claiming a schema lane. A database
+change updates one canonical desired-state pillar and produces one reviewed
+release delta from the exact current parent state.
+
+The current boundary is precise:
+
+- `0000` through `0008` are preserved applied lineage.
+- `0009` passed independent disposable validation but has not been rolled out to
+  a shared database.
+- final ingestion migration `0010` has not been applied.
+
+If review finds a defect in unapplied `0010`, regenerate and replace `0010` SQL,
+snapshot, and journal metadata together under its exclusive lane. Do not create
+`0011` or `0012` to compensate for a migration no shared database has executed.
+After any shared application, never rewrite the migration; repair forward.
+
+Generation is not rollout. Do not access Neon, run a migration or destructive
+seed, or alter `drizzle.__drizzle_migrations` without separate exact-target
+authorization. Every release requires a manifest, schema/RPC/RLS fingerprint,
+restore evidence, and independent refutation. The seed truncates application
+tables and is disposable-only.
 
 Real code only. No TODOs, no stubs. If something can't be done properly, say so
 plainly in the PR rather than leaving a placeholder that reads as finished — the

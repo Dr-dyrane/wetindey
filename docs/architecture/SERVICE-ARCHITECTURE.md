@@ -15,7 +15,7 @@ Written against the working tree at `main` / `019f3f3`, which was dirty at autho
 
 ## Read this first
 
-Six things. If you read nothing else, read these.
+Seven things. If you read nothing else, read these.
 
 1. **`AGENTS.md` documents an architecture that does not exist.** It mandates that every capability implement `WetinDeyModule` (`src/core/module-contract.ts`). The contract has exactly one importer — its own orphaned implementation, `src/modules/food/application/FoodModule.ts`, which is backed by a five-item mock array. Capabilities implementing it: **zero**. The real application is `src/app/page.tsx` (~1,241 lines) plus `src/app/actions.ts` (~1,358 lines) doing everything directly. `src/db/queries/` — where the data layer is documented to live — contains one `.gitkeep`. Treat the docs in `docs/` as archaeology, not specification. `docs/APP-MAP.md` is confidently wrong about its own headline finding and cites files that are not on disk.
 
@@ -35,6 +35,15 @@ and much of the copy remain Food/price-shaped. Proposed
 [ADR-011](../adr/011-earned-trust-graph-and-reputation.md) define the requested evolution.
 Their detailed model is not accepted implementation scope. See
 [LIVE-INFORMATION-AND-TRUST-EVOLUTION.md](LIVE-INFORMATION-AND-TRUST-EVOLUTION.md).
+
+7. **Database desired state and rollout history are different artifacts.**
+[ADR-014](../adr/014-pillar-baselines-and-release-migrations.md) is the decision authority:
+canonical pillars describe the intended schema, while numbered Drizzle migrations record
+forward release deltas. The exact applied `0000`-`0008` lineage is preserved. `0009` is
+independently validated but has not been applied to a shared database; final ingestion
+`0010` is also unapplied. A baseline is for an empty database only. Existing databases
+receive pending deltas, and their remote ledger is never edited merely because repository
+files changed. Operational guidance starts at [docs/database/README.md](../database/README.md).
 
 ---
 

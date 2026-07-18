@@ -54,6 +54,20 @@ claim-specific confidence, verification assertions, lifecycle status, authorizat
 and rewards are separate. None may be purchased. Current migration, provenance, and
 read-side trust blockers come first.
 
+**Database evolution is governed by
+[ADR-014](docs/adr/014-pillar-baselines-and-release-migrations.md).** Drizzle schema
+declarations and reviewed SQL are organised as canonical desired-state pillars; numbered
+migrations are release deltas, not the permanent desired-state authoring model. Preserve
+the exact applied `0000`-`0008` lineage. `0009` is independently validated but has not
+been applied to a shared database; final ingestion migration `0010` is also unapplied.
+Before `0010` is first applied to a shared database, defects in it MUST be folded back
+into regenerated `0010` SQL, snapshot, and journal metadata under one exclusive schema
+lane; do not create `0011` or `0012` to repair an unapplied migration. Once a migration
+has been applied to any shared environment, its bytes and ledger evidence are immutable:
+repair forward. Never run a baseline against an existing database, edit a remote ledger
+to imitate deployment, or access a database without exact-target authorization. Start at
+[docs/database/README.md](docs/database/README.md).
+
 For the verified state of the system, read the architecture of record,
 [docs/architecture/SERVICE-ARCHITECTURE.md](docs/architecture/SERVICE-ARCHITECTURE.md),
 ratified by [ADR-002](docs/adr/002-service-architecture-of-record.md). Start with its
