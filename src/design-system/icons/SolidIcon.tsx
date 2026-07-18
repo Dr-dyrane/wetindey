@@ -104,18 +104,16 @@ const PATHS: Record<SolidIconName, React.ReactNode> = {
 export function SolidIcon({
   name,
   size = 18,
-  className = "",
 }: {
   name: SolidIconName;
   size?: SolidIconSize;
-  className?: string;
 }) {
   return (
     <svg
       aria-hidden="true"
       data-solid-icon={name}
       viewBox="0 0 24 24"
-      className={`solid-icon ${SIZE_STYLES[size]} ${className}`}
+      className={`solid-icon ${SIZE_STYLES[size]}`}
       focusable="false"
     >
       {PATHS[name]}

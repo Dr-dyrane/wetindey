@@ -21,14 +21,14 @@ const SIZE_STYLES: Record<IconOrbSize, string> = {
 };
 
 const TONE_STYLES: Record<IconOrbTone, string> = {
-  neutral: "bg-fillTertiary text-text-secondary",
-  "domain-food": "bg-domain-food-bg text-domain-food",
-  "domain-money": "bg-domain-money-bg text-domain-money",
-  "status-confirmed": "bg-status-confirmed-bg text-status-confirmed-fg",
-  "status-caution": "bg-status-caution-bg text-status-caution-fg",
-  "status-unavailable": "bg-status-unavailable-bg text-status-unavailable-fg",
-  "status-info": "bg-status-info-bg text-status-info-fg",
-  rating: "bg-rating-bg text-rating",
+  neutral: "bg-iconOrb text-iconOrb-ink",
+  "domain-food": "bg-domain-food-orb text-domain-food-orb-ink",
+  "domain-money": "bg-domain-money-orb text-domain-money-orb-ink",
+  "status-confirmed": "bg-status-confirmed-orb text-status-confirmed-orb-ink",
+  "status-caution": "bg-status-caution-orb text-status-caution-orb-ink",
+  "status-unavailable": "bg-status-unavailable-orb text-status-unavailable-orb-ink",
+  "status-info": "bg-status-info-orb text-status-info-orb-ink",
+  rating: "bg-rating-orb text-rating-orb-ink",
 };
 
 /**

@@ -106,6 +106,28 @@
   --color-rating-bg: rgba(214, 164, 0, 0.16);
   --color-rating-muted: rgba(60, 60, 67, 0.24);
 
+  /* ── Solid icon orbs ──
+     These are opaque fill/ink pairs, not tonal status washes. The semantic
+     family owns both values; SolidIcon only inherits the resulting ink. Every
+     pair clears 4.5:1 so the compact glyph stays legible beyond the 3:1
+     non-text contrast floor. */
+  --color-icon-orb: #3a3a3c;
+  --color-icon-orb-ink: #ffffff;
+  --color-domain-food-orb: #8a3d00;
+  --color-domain-food-orb-ink: #ffffff;
+  --color-domain-money-orb: #006b57;
+  --color-domain-money-orb-ink: #ffffff;
+  --color-rating-orb: #805600;
+  --color-rating-orb-ink: #ffffff;
+  --color-status-confirmed-orb: #1e7634;
+  --color-status-confirmed-orb-ink: #ffffff;
+  --color-status-caution-orb: #a94c00;
+  --color-status-caution-orb-ink: #ffffff;
+  --color-status-unavailable-orb: #be261b;
+  --color-status-unavailable-orb-ink: #ffffff;
+  --color-status-info-orb: #0058d0;
+  --color-status-info-orb-ink: #ffffff;
+
   /* Ink on a saturated status fill. Stays white in both themes because the
      status hues are saturated mid-tones in both — unlike accent, which flips. */
   --color-on-status: #ffffff;
@@ -259,6 +281,23 @@
   --color-rating: #ffd60a;
   --color-rating-bg: rgba(255, 214, 10, 0.18);
   --color-rating-muted: rgba(235, 235, 245, 0.28);
+
+  --color-icon-orb: #d1d1d6;
+  --color-icon-orb-ink: #000000;
+  --color-domain-food-orb: #ff9f5a;
+  --color-domain-food-orb-ink: #000000;
+  --color-domain-money-orb: #64d9bf;
+  --color-domain-money-orb-ink: #000000;
+  --color-rating-orb: #ffd60a;
+  --color-rating-orb-ink: #000000;
+  --color-status-confirmed-orb: #30d158;
+  --color-status-confirmed-orb-ink: #000000;
+  --color-status-caution-orb: #ff9f0a;
+  --color-status-caution-orb-ink: #000000;
+  --color-status-unavailable-orb: #ff6961;
+  --color-status-unavailable-orb-ink: #000000;
+  --color-status-info-orb: #409cff;
+  --color-status-info-orb-ink: #000000;
 
   /* Unchanged from light: status hues stay saturated, so their ink stays white. */
   --color-on-status: #ffffff;

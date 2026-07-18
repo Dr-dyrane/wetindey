@@ -28,6 +28,29 @@ function matches(source: string, pattern: RegExp): number {
   return source.match(pattern)?.length ?? 0;
 }
 
+function tokenValues(source: string, token: string): string[] {
+  return Array.from(
+    source.matchAll(new RegExp(`${token}:\\s*(#[0-9a-fA-F]{6});`, "g")),
+    (match) => match[1]
+  );
+}
+
+function relativeLuminance(hex: string): number {
+  const channels = [1, 3, 5].map((index) => {
+    const channel = Number.parseInt(hex.slice(index, index + 2), 16) / 255;
+    return channel <= 0.04045
+      ? channel / 12.92
+      : ((channel + 0.055) / 1.055) ** 2.4;
+  });
+  return 0.2126 * channels[0] + 0.7152 * channels[1] + 0.0722 * channels[2];
+}
+
+function contrastRatio(first: string, second: string): number {
+  const lighter = Math.max(relativeLuminance(first), relativeLuminance(second));
+  const darker = Math.min(relativeLuminance(first), relativeLuminance(second));
+  return (lighter + 0.05) / (darker + 0.05);
+}
+
 function iconBearingListRows(source: string): number {
   return source
     .split("<ListRow")
@@ -60,6 +83,9 @@ assert.match(sources.orb, /export type IconOrbSize = 28 \| 32 \| 48;/);
 assert.match(sources.orb, /28:\s*"h-7 w-7/);
 assert.match(sources.orb, /32:\s*"h-8 w-8/);
 assert.match(sources.orb, /48:\s*"h-12 w-12/);
+assert.match(sources.orb, /28:\s*"[^"]*h-icon-compact[^"]*w-icon-compact/);
+assert.match(sources.orb, /32:\s*"[^"]*h-icon-standard[^"]*w-icon-standard/);
+assert.match(sources.orb, /48:\s*"[^"]*h-icon-prominent[^"]*w-icon-prominent/);
 for (const tone of [
   "neutral",
   "domain-food",
@@ -76,9 +102,13 @@ assert.match(sources.orb, /aria-hidden="true"/);
 assert.match(sources.orb, /squircle-full/);
 assert.doesNotMatch(sources.orb, /\bborder(?:-|")|\bshadow-|\banimate-|\bonClick\b|<button\b/);
 assert.match(sources.solid, /export type SolidIconSize = 16 \| 18 \| 24;/);
+assert.match(sources.solid, /16:\s*"h-icon-compact w-icon-compact"/);
+assert.match(sources.solid, /18:\s*"h-icon-standard w-icon-standard"/);
+assert.match(sources.solid, /24:\s*"h-icon-prominent w-icon-prominent"/);
 assert.match(sources.solid, /aria-hidden="true"/);
 assert.match(sources.solid, /focusable="false"/);
 assert.doesNotMatch(sources.solid, /\bonClick\b|<button\b|https?:\/\//);
+assert.doesNotMatch(sources.solid, /className\??:\s*string|\$\{className\}|\bstyle=/);
 assert.match(sources.globals, /\.solid-icon\s*\{[\s\S]*fill:\s*currentColor;[\s\S]*stroke:\s*none;/);
 assert.match(sources.globals, /@media \(prefers-reduced-motion: reduce\)/);
 assert.match(
@@ -89,8 +119,50 @@ assert.doesNotMatch(
   sources.globals,
   /@media \(forced-colors: active\)[\s\S]*?\.solid-icon\s*\{[\s\S]*?\bcolor\s*:/
 );
-for (const size of ["icon-compact", "icon-standard", "icon-prominent"]) {
-  assert.ok(sources.tailwind.includes(`"${size}"`), size);
+for (const [size, value] of [
+  ["icon-compact", "16px"],
+  ["icon-standard", "18px"],
+  ["icon-prominent", "24px"],
+] as const) {
+  assert.ok(sources.tailwind.includes(`"${size}": "${value}"`), `${size}=${value}`);
+}
+assert.doesNotMatch(
+  sources.orb,
+  /bg-(?:fillTertiary|domain-(?:food|money)-bg|rating-bg|status-(?:confirmed|caution|unavailable|info)-bg)/
+);
+for (const className of [
+  "bg-iconOrb",
+  "bg-domain-food-orb",
+  "bg-domain-money-orb",
+  "bg-rating-orb",
+  "bg-status-confirmed-orb",
+  "bg-status-caution-orb",
+  "bg-status-unavailable-orb",
+  "bg-status-info-orb",
+]) {
+  assert.ok(sources.orb.includes(className), className);
+}
+
+for (const [fillToken, inkToken] of [
+  ["--color-icon-orb", "--color-icon-orb-ink"],
+  ["--color-domain-food-orb", "--color-domain-food-orb-ink"],
+  ["--color-domain-money-orb", "--color-domain-money-orb-ink"],
+  ["--color-rating-orb", "--color-rating-orb-ink"],
+  ["--color-status-confirmed-orb", "--color-status-confirmed-orb-ink"],
+  ["--color-status-caution-orb", "--color-status-caution-orb-ink"],
+  ["--color-status-unavailable-orb", "--color-status-unavailable-orb-ink"],
+  ["--color-status-info-orb", "--color-status-info-orb-ink"],
+] as const) {
+  const fills = tokenValues(sources.globals, fillToken);
+  const inks = tokenValues(sources.globals, inkToken);
+  assert.equal(fills.length, 2, `${fillToken} light/dark opaque values`);
+  assert.equal(inks.length, 2, `${inkToken} light/dark opaque values`);
+  for (let theme = 0; theme < 2; theme += 1) {
+    assert.ok(
+      contrastRatio(fills[theme], inks[theme]) >= 4.5,
+      `${fillToken} theme ${theme} contrast`
+    );
+  }
 }
 
 // Token families remain separate even if later palette work changes values.
