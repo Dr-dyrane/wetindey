@@ -151,9 +151,14 @@ function providerLabel(rate: ReferenceRate): string {
 }
 
 function parseAmount(value: string): { value: number | null; error: string | null } {
-  const normalized = value.replaceAll(",", "").trim();
+  const trimmed = value.trim();
+  const normalized = trimmed.replaceAll(",", "");
   if (normalized === "") return { value: null, error: null };
-  if (!/^(?:\d+|\d*\.\d+)$/.test(normalized)) {
+  if (
+    !/^(?:\d+|\d{1,3}(?:,\d{3})+|\d*\.\d+|\d{1,3}(?:,\d{3})+\.\d+)$/.test(
+      trimmed
+    )
+  ) {
     return { value: null, error: "Enter numbers only." };
   }
   const amount = Number(normalized);

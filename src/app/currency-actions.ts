@@ -148,10 +148,15 @@ export async function getReferenceRate(currency: string): Promise<ReferenceRate 
   const upstream = rates.find((candidate) => candidate.quote === currency);
   if (!upstream) return null;
 
+  const rate = 1 / upstream.rate;
+  if (!Number.isFinite(rate) || rate <= 0) {
+    throw new Error("The reference currency rate was invalid.");
+  }
+
   return {
     base: currency,
     quote: "NGN",
-    rate: 1 / upstream.rate,
+    rate,
     effectiveDate: upstream.date,
     provider: entry.provider,
   };
