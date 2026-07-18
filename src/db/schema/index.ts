@@ -506,23 +506,6 @@ export const userProfiles = pgTable("user_profiles", {
   contactChannelKind: varchar("contact_channel_kind", { length: 50 }), // 'phone', 'whatsapp', 'sms'
   contactChannelValue: varchar("contact_channel_value", { length: 255 }),
   /**
-   * Whether this user has opted IN to showing their location on the public map.
-   *
-   * OFF BY DEFAULT, and the default IS the privacy decision, not a placeholder:
-   * location is opt-in the way Snap's Ghost Mode and Apple's reduced-accuracy
-   * model are, so a signed-in user is invisible on the map until they choose
-   * otherwise. NOT NULL because "unset" is not a real third state here, a user
-   * either shares or does not, and an existing row taking the default of false is
-   * the honest answer for someone who never chose (they are not sharing).
-   *
-   * This is the flag the MAP LANE reads to decide whether to render this user's
-   * own avatar pin and whether they appear to other sharing users. It gates the
-   * avatar below: nothing renders on the strength of avatar_url alone.
-   */
-  locationSharing: boolean("location_sharing").default(false).notNull(),
-  latitude: doublePrecision("latitude"),
-  longitude: doublePrecision("longitude"),
-  /**
    * A Vercel Blob URL for this user's avatar, or NULL when they have uploaded
    * none. Nullable and defaultless for the same reason the contact pair is: NULL
    * means "no avatar on file", exactly what an existing row answers today, so
@@ -530,8 +513,9 @@ export const userProfiles = pgTable("user_profiles", {
    *
    * Written only by `uploadMyAvatar` (which put()s the image and stores the URL
    * it returns) and nulled by `removeMyAvatar` (which del()s the blob). The Blob
-   * host is allow-listed in next.config.ts so next/image will render it, and it
-   * is shown on the map only when `location_sharing` above is true.
+   * host is allow-listed in next.config.ts so next/image will render it.
+   * Nearby presence never reads contact data from this profile and keeps its
+   * separately consented display fields in `presence_preferences`.
    */
   avatarUrl: text("avatar_url"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -550,3 +534,4 @@ export const userProfiles = pgTable("user_profiles", {
 
 export * from "./reviews";
 export * from "./ingestion";
+export * from "./presence";
