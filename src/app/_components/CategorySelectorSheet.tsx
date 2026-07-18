@@ -67,7 +67,9 @@ export function CategorySelectorSheet({
                 pressed={active}
                 chevron={false}
                 disabled={!supported}
-                onClick={supported ? () => handleSelect(c.id) : () => undefined}
+                onClick={() => {
+                  if (c.id === "food") handleSelect(c.id);
+                }}
               />
             );
           })}
