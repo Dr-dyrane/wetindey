@@ -232,7 +232,13 @@ safety/integrity lanes until their separate gates are independently satisfied.
   `₦3,982–₦7,949 / Paint bucket / 12 places`. Category switching remained operable, no
   visible exception appeared, and the tab was restored. The Rice Search lane is closed;
   `src/app/actions.ts` is released from Search and transferred immediately to the
-  Contribution containment lane below.
+  Contribution containment lane below. A later independent static review returned PASS:
+  the mismatch was Sample-projection divergence, not `ItemCard`; `searchItems` now mirrors
+  the home fresh-current-offer and detail-window projections while synthetic results remain
+  Sample/zero-confidence and the observed-only gate is preserved. That worker's browser
+  recheck was blocked by connector `Cannot redefine property: process`. The tooling
+  residual neither overturns the prior runtime PASS nor reopens the Search code lane. No
+  edits, tests, or DB access occurred.
 - Product & Data Governance Architect task
   `019f7599-0eaa-7423-9ebf-a1bfea8efe37` completed the two-path ADR-017 governance
   correction at `0bf641d7784edfa512ab54bf13a15c3ac0c72ce1`. Independent refutation
@@ -354,21 +360,48 @@ safety/integrity lanes until their separate gates are independently satisfied.
   are disabled. UI safety/readability, disabled controls, and no-promise copy passed;
   storage/network/visit residuals remain unproven. Retain all five paths pending shared-
   modal diagnosis and a new reused-tab verdict. Schema, migration, `0013`, and full
-  moderation work remain excluded. No tests, DB, push, or deploy is authorized.
+  moderation work remain excluded. The completed `0013+` planning packet enumerates
+  ADR-019, schema/migration/manifest, app/ops paths, and dependencies, but grants no claim
+  or implementation authority. Do not activate it until containment runtime evidence and
+  Presence/shared-migration gates pass, followed by a fresh exact exclusive handoff. No
+  tests, DB, push, or deploy is authorized.
 - Motion & Interaction Engineer task `019f75e9-880d-7b41-880c-736a3150e406` is active
   read-only/pathless on shared `ModalSheet` focus diagnosis. It owns no implementation
   path and has no edit, build, test, or browser authority until an exact future handoff.
-- H38 offline search remains open but pathless and blocked while Contribution exclusively
-  owns `src/app/page.tsx`. Its old full-error-boundary description is stale: search
-  rejection is caught and `AsyncList` receives an error prop. The narrower residual is
-  that failure clears prior trustworthy rows and no `onRetry` is supplied. The future
-  one-file proposal is a retry token, retaining prior rows, and wiring the existing retry;
-  it requires a separate exact claim after `page.tsx` releases.
+- H38 offline search assessment is complete, but correction remains pathless and blocked
+  while Contribution exclusively owns `src/app/page.tsx`. Catastrophic error-boundary
+  escape is refuted in the current tree: search rejection is caught and `AsyncList`
+  receives an error prop. The confirmed residual is only that the search catch clears
+  prior trustworthy rows and no `onRetry` is supplied. The smallest future one-file patch
+  adds retry-token state, removes the clear, adds the dependency token and `onRetry`
+  callback, and preserves cancellation/finally. Browser-refuter criteria are ready; no
+  edits or tests occurred, and a separate exact claim is required after `page.tsx`
+  releases.
 - Security & Privacy Engineering Lead task
-  `019f75e5-8c04-74c0-9392-d9f741a7a131` is active read-only/pathless on H6 CSP
-  architecture assessment. It owns no file and has no authority to build, test, use
-  browser verification, edit, or implement until an exact future handoff. This employee
-  assignment introduces no implementation claim and changes no release state.
+  `019f75e5-8c04-74c0-9392-d9f741a7a131` completed the H6 CSP architecture assessment
+  read-only/pathless. P0 findings: leaving static `vercel.json` CSP beside future
+  middleware creates two intersecting enforcing policies; all three raw layout scripts and
+  the parser-inserted Mapbox script require nonce; and Next 15.5.20 requires the same
+  policy on cloned request headers and response, so `x-nonce` alone is insufficient.
+  Future governance paths are
+  `docs/adr/020-per-request-nonce-content-security-policy.md`, `DECISIONS.md`,
+  `WETINDEY_BIBLE.md`, and `docs/architecture/SERVICE-ARCHITECTURE.md`. Only after ADR
+  acceptance may a fresh exact implementation handoff claim `src/middleware.ts`,
+  `src/app/layout.tsx`, `vercel.json`, and the conditional SEO/error/route/service-worker/
+  report-endpoint call sites. Dynamic/no-store HTML, environment-specific policies, Blob
+  CSP, and report-only rollout remain P1/P2 dependencies. The assessment claims no path,
+  authorizes no implementation, and involved no edits, tests, browser, or DB access.
+- H37 place iconography is complete at `6611068`, and current HEAD corrects a stale final
+  audit description: `MapboxCanvas` forwards `candidate.placeType`, `MapMarkerOptions`
+  declares `placeType`, and the adapter selects semantic place symbols. Those two
+  implementation paths remain released. The confirmed user-visible gap is peer presence,
+  because `src/app/page.tsx` passes `sharedUsers={[]}`. The self marker is a precise or
+  approximate position marker only; unsigned fallback is a generic position marker, and
+  neither has a self-avatar contract. Self-avatar/profile work remains a separate pathless
+  location/profile lane. Peer presence requires a future exact adapter/canvas/page plus
+  presence-data/schema/action handoff and remains gated by ADR-016, unapplied `0012`,
+  privacy, consent, leases, rate controls, block/report, and kill-switch evidence. No path
+  is claimed; no edit, browser, DB, push, or deployment is authorized.
 - Preview schema/ledger drift remains proven and quarantined. Production identity, ledger,
   schema/RPC/RLS/grant fingerprint, migration state, compatibility, restore evidence, and
   deployment ordering remain unknown.
