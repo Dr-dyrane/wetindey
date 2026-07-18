@@ -1,4 +1,4 @@
-# ADR-015: Live confidence admits observed evidence; synthetic data stays labelled demo
+# ADR-015: Live confidence admits observed evidence; synthetic data stays labelled `Sample`
 
 **Date:** 2026-07-18
 **Status:** Accepted
@@ -31,7 +31,7 @@ authorize promotion into live observations.
 | Provenance | V1 current-state use | Confidence and independence | Public treatment |
 |---|---|---|---|
 | `observed` | Admissible after the existing moderation and freshness gates | May contribute through the existing source-weighted, per-source-capped trust model | May produce current status, confidence, and reported-price projections |
-| `synthetic` | Demo fallback only | Must contribute zero confidence, zero corroboration, zero reputation, and zero verified outcomes | Must be visibly labelled `Demo data`; it may not be presented as confirmed or reported evidence |
+| `synthetic` | Demo fallback only | Must contribute zero confidence, zero corroboration, zero reputation, and zero verified outcomes | Must be visibly labelled `Sample`; it may not be presented as confirmed or reported evidence |
 | `partner` | Quarantined until an accepted promotion and admissibility decision | Zero in V1 | No live writer or public current-state projection is authorized |
 | `reference` | Context only, never current local state | Zero | May support future explanatory content, never a current offer |
 | `inferred` | Quarantined from direct current-state claims | Zero | Must not be presented as observation, verification, or corroboration |
@@ -51,7 +51,7 @@ An offer key may have both synthetic and observed history.
 3. Once admissible observed evidence exists for an offer key, its live price and
    availability projection must not merge synthetic values into the observed range.
 4. When no observed evidence exists, the current demo projection may remain visible only
-   as a clearly labelled demo fallback with caution or neutral map treatment.
+   as a fallback clearly labelled `Sample`, with caution or neutral map treatment.
 5. Partner, reference, and inferred rows do not become fallback live offers.
 
 This preserves the useful demonstration experience without laundering demo fixtures into
@@ -61,10 +61,15 @@ community evidence.
 
 Every public projection must preserve the same provenance meaning.
 
-- Landing and search cards may show a demo price, but the status label must say
-  `Demo data`, not `E sure`, `confirmed`, or an equivalent claim.
+- `Sample` is a synthetic-origin label, not a member of the `E sure` / `Check am` /
+  `E no dey` status set, a confidence band, a verification assertion, or a
+  current/observed claim.
+- Landing and search cards may show a demo price, but must show the separate
+  synthetic-origin label `Sample`; synthetic-only evidence must not be presented as
+  `E sure`, `confirmed`, or an equivalent current/observed claim.
 - Offer detail and Get-It may retain the sample price and location for demonstration, but
-  confidence must show no admissible reports and the provenance label must remain visible.
+  confidence must show no admissible reports and the synthetic-origin label `Sample` must
+  remain visible.
 - Demo-only map markers use caution or neutral treatment, never confirmed treatment.
 - A mixed offer displays only the assessment and live range derived from observed rows.
 - Indexable item/place pages may describe the catalog subject or venue, but synthetic-only
@@ -100,7 +105,7 @@ The implementation remains evolutionary:
    only admissible observed rows into `assessTrust`; update both read and write-side trust
    derivation.
 2. **T2B, demo presentation:** carry the provenance summary through cards, offer detail,
-   Get-It, and map markers; label synthetic-only fallback consistently.
+   Get-It, and map markers; label synthetic-only fallback `Sample` consistently.
 3. **T2C, projection isolation:** prevent mixed synthetic/observed price and availability
    ranges; observed evidence wins without deleting demonstration history.
 4. **T2D, SEO firewall:** exclude synthetic-only offers from current-price metadata,
@@ -137,8 +142,9 @@ references a column missing from a shared database is an outage, not fail-closed
 Demonstration content remains useful and honest. Future partner evidence cannot enter by
 accident.
 
-**Costs.** Read and projection queries must carry provenance summaries, demo labels need
-surface work, and SEO loses price-bearing markup until observed coverage exists.
+**Costs.** Read and projection queries must carry provenance summaries, the `Sample`
+synthetic-origin label needs surface work, and SEO loses price-bearing markup until
+observed coverage exists.
 
 **Constrains.** The platform cannot claim current verified coverage from its seed, use
 demo rows to bootstrap reputation, or deploy provenance-aware code ahead of migration
@@ -148,7 +154,8 @@ demo rows to bootstrap reputation, or deploy provenance-aware code ahead of migr
 
 T2 is not complete until an independent refuter proves:
 
-- synthetic-only evidence yields zero confidence and a visible demo label;
+- synthetic-only evidence yields zero confidence and a visible `Sample` synthetic-origin
+  label;
 - repeated synthetic rows never change the confidence band;
 - mixed offers derive confidence and live ranges from observed rows only;
 - partner, reference, and inferred rows remain inadmissible;

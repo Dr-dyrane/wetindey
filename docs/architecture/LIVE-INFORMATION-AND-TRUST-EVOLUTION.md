@@ -25,7 +25,9 @@ The deep repository audit observed `8ebefb7`. The reconciled planning baseline i
 - T1 made server-derived trust authoritative across card, detail, Get-It, and marker
   presentation.
 - T2A now admits only `observed` evidence to confidence and labels synthetic-only fallback
-  `Demo data`; the audit's synthetic-confidence finding is therefore closed.
+  `Sample`; `Sample` is a synthetic-origin label, not an `E sure` / `Check am` /
+  `E no dey` status, confidence band, verification assertion, or current/observed claim.
+  The audit's synthetic-confidence finding is therefore closed.
 - Food remains the only selectable live category. The other category rows are honest
   unavailable context, not partial implementations.
 - The current search path still contains a runtime-invalid `item_variants.unit_id`
@@ -377,7 +379,7 @@ verification, moderation, confidence, or organic rank.
 
 | Release stage | Scope | Exit condition and explicit exclusions |
 |---|---|---|
-| Current checkpoint | D1 and disposable D2 complete; T1 authoritative reads complete; T2A observed-only confidence and `Demo data` presentation complete; Food-only category containment preserved | No shared `0009`, no claim of open-pilot readiness |
+| Current checkpoint | D1 and disposable D2 complete; T1 authoritative reads complete; T2A observed-only confidence and separate `Sample` synthetic-origin presentation complete; Food-only category containment preserved | No shared `0009`, no claim of open-pilot readiness |
 | Stage 0 - Release truth gate | Fix and disposable-DB-test `searchItems()`; complete T2C observed-only projections and T2D SEO firewall; migrate an explicitly authorized staging target before provenance-aware deployment; make writes transactional/idempotent/rate-limited with contradictory-report handling; settle account deletion; create integrated release checks; run Luna refutation | The same offer is truthful and semantically aligned on card, detail, marker, Get-It, share, item/place routes, and SEO. No new category, reviews, reputation, rewards, or evidence media |
 | Stage 1 - Operational Food pilot | Source-review and field-entry tools; merchant/contact consent; catalog/unit mapping; place correction/merge; disputes/corrections; coverage/freshness dashboard; moderator identity/audit; bounded seller contact and stewardship | A bounded geography and catalog have enough current verified density for successful real errands. No Lagos-wide scale claim |
 | Stage 2 - Controlled Lagos expansion | Expand markets and merchant participation; approved scheduled ingestion; contributor training; freshness SLAs; alerts; viewport querying/clustering; funnel and wasted-trip measurement | Expand only where false-high confidence and stale coverage are measured and controlled |
