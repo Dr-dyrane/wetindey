@@ -18,13 +18,13 @@ export interface ItemCardData {
   placeCount?: number;
   priceFrom?: number | null;
   priceTo?: number | null;
-  freshest?: string | null;
+  /** Server-derived assessment of the freshest nearby offer represented here. */
+  trust?: {
+    status: Exclude<StatusKind, "info">;
+  } | null;
   /** The unit the price range is quoted in. A price without its unit can lie. */
   unitLabel?: string | null;
 }
-
-const toStatus = (freshness?: string | null): StatusKind =>
-  freshness === "confirmed" ? "confirmed" : freshness === "unavailable" ? "unavailable" : "caution";
 
 /**
  * The badge's words now live in the dictionary, not here.
@@ -115,7 +115,7 @@ export function ItemCard({
 }) {
   const statusLabel = useStatusLabel();
   const [broken, setBroken] = useState(false);
-  const status = toStatus(item.freshest);
+  const status: StatusKind = item.trust?.status ?? "caution";
   const showImage = item.imageUrl && !broken;
 
   const priceLabel =

@@ -845,7 +845,7 @@ export default function HomePage() {
    * between origin and offer would need.
    */
   const handleSelectOffer = useEventCallback((offer: NarrowedOffer) => {
-    const signal = offerSignal(offer, Date.now());
+    const signal = offerSignal(offer);
 
     setDetailItem(null);
     setMapCenter({ lat: offer.lat, lng: offer.lng });
@@ -990,7 +990,6 @@ export default function HomePage() {
    */
   const mapMarkers = useMemo(() => {
     if (itemOffers.length > 0) {
-      const now = Date.now();
       return itemOffers.map((o) => ({
         id: o.id,
         placeId: o.placeId,
@@ -999,7 +998,7 @@ export default function HomePage() {
         lat: o.lat,
         lng: o.lng,
         address: o.address ?? "",
-        detail: { confidenceLevel: offerSignal(o, now).kind }
+        detail: { confidenceLevel: offerSignal(o).kind }
       }));
     }
     return allPlaces.map((p) => ({

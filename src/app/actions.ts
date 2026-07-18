@@ -29,6 +29,59 @@ import {
   type TrustObservation,
 } from "@/lib/trust";
 
+export interface ReadTrust {
+  confidenceScore: number;
+  band: TrustAssessment["band"];
+  freshness: TrustAssessment["freshness"];
+  availability: TrustAssessment["availability"];
+  ageHours: number | null;
+  distinctSourceCount: number;
+  observationCount: number;
+  explanation: string;
+  status: "confirmed" | "caution" | "unavailable";
+}
+
+function toReadTrust(assessment: TrustAssessment): ReadTrust {
+  return {
+    confidenceScore: assessment.confidenceScore,
+    band: assessment.band,
+    freshness: assessment.freshness,
+    availability: assessment.availability,
+    ageHours: Number.isFinite(assessment.ageHours) ? assessment.ageHours : null,
+    distinctSourceCount: assessment.distinctSourceCount,
+    observationCount: assessment.observationCount,
+    explanation: assessment.explanation,
+    status:
+      assessment.availability === "unavailable"
+        ? "unavailable"
+        : assessment.freshness === "fresh"
+          ? "confirmed"
+          : "caution",
+  };
+}
+
+function nullableOfferKey(row: {
+  trustVariantId: string | null;
+  trustUnitId: string | null;
+  trustPlaceId: string | null;
+}): OfferKey | null {
+  if (!row.trustVariantId || !row.trustUnitId || !row.trustPlaceId) return null;
+  return {
+    itemVariantId: row.trustVariantId,
+    unitId: row.trustUnitId,
+    placeId: row.trustPlaceId,
+  };
+}
+
+function readTrustForKey(
+  assessments: Record<string, TrustAssessment>,
+  key: OfferKey | null
+): ReadTrust | null {
+  if (!key) return null;
+  const assessment = assessments[offerKeyOf(key)];
+  return assessment ? toReadTrust(assessment) : null;
+}
+
 /** Shape shared by every item the UI renders in a list or grid. */
 const itemCard = {
   id: items.id,
@@ -128,7 +181,9 @@ export async function searchItems(
       COALESCE(COUNT(DISTINCT o.place_id), 0)::int     AS "placeCount",
       MIN(o.price_min)::int                            AS "priceFrom",
       MAX(COALESCE(o.price_max, o.price_min))::int     AS "priceTo",
-      (array_agg(o.freshness_state ORDER BY o.last_observed_at DESC))[1] AS freshest,
+      (array_agg(o.item_variant_id ORDER BY o.last_observed_at DESC NULLS LAST, o.id ASC))[1] AS "trustVariantId",
+      (array_agg(o.unit_id ORDER BY o.last_observed_at DESC NULLS LAST, o.id ASC))[1] AS "trustUnitId",
+      (array_agg(o.place_id ORDER BY o.last_observed_at DESC NULLS LAST, o.id ASC))[1] AS "trustPlaceId",
       MAX(o.last_observed_at)                          AS "lastObservedAt"
     FROM matched_items mi
     JOIN ${items} i ON i.id = mi.id
@@ -147,26 +202,37 @@ export async function searchItems(
     image_license: string | null; image_source_url: string | null;
     unitLabel: string; offerCount: number; placeCount: number;
     priceFrom: number | null; priceTo: number | null;
-    freshest: string | null; lastObservedAt: Date | null;
+    trustVariantId: string | null; trustUnitId: string | null; trustPlaceId: string | null;
+    lastObservedAt: Date | null;
   };
 
-  return (rows.rows as unknown as Row[]).map((r) => ({
-    id: r.id,
-    slug: r.slug,
-    name: r.name,
-    description: r.description,
-    imageUrl: r.image_url,
-    imageAttribution: r.image_attribution,
-    imageLicense: r.image_license,
-    imageSourceUrl: r.image_source_url,
-    unitLabel: r.unitLabel,
-    offerCount: r.offerCount,
-    placeCount: r.placeCount,
-    priceFrom: r.priceFrom ?? null,
-    priceTo: r.priceTo ?? null,
-    freshest: r.freshest ?? "stale", // Default to stale status if no local offers exist
-    lastObservedAt: r.lastObservedAt ? new Date(r.lastObservedAt).toISOString() : null,
-  }));
+  const cardRows = rows.rows as unknown as Row[];
+  const trustKeys = cardRows.flatMap((row) => {
+    const key = nullableOfferKey(row);
+    return key ? [key] : [];
+  });
+  const trustByKey = await getOfferTrustBatch(trustKeys);
+
+  return cardRows.map((r) => {
+    const trustKey = nullableOfferKey(r);
+    return {
+      id: r.id,
+      slug: r.slug,
+      name: r.name,
+      description: r.description,
+      imageUrl: r.image_url,
+      imageAttribution: r.image_attribution,
+      imageLicense: r.image_license,
+      imageSourceUrl: r.image_source_url,
+      unitLabel: r.unitLabel,
+      offerCount: r.offerCount,
+      placeCount: r.placeCount,
+      priceFrom: r.priceFrom ?? null,
+      priceTo: r.priceTo ?? null,
+      trust: readTrustForKey(trustByKey, trustKey),
+      lastObservedAt: r.lastObservedAt ? new Date(r.lastObservedAt).toISOString() : null,
+    };
+  });
 }
 
 /**
@@ -322,7 +388,9 @@ export async function getPopularItems(input: {
       COALESCE(dp.place_count, 0)::int                 AS "placeCount",
       MIN(o.price_min)::int                            AS "priceFrom",
       MAX(COALESCE(o.price_max, o.price_min))::int     AS "priceTo",
-      (array_agg(o.freshness_state ORDER BY o.last_observed_at DESC))[1] AS freshest,
+      (array_agg(o.item_variant_id ORDER BY o.last_observed_at DESC, o.id ASC))[1] AS "trustVariantId",
+      (array_agg(o.unit_id ORDER BY o.last_observed_at DESC, o.id ASC))[1] AS "trustUnitId",
+      (array_agg(o.place_id ORDER BY o.last_observed_at DESC, o.id ASC))[1] AS "trustPlaceId",
       MAX(o.last_observed_at)                          AS "lastObservedAt"
     FROM ${items} i
     JOIN modal_unit  mu ON mu.item_id = i.id
@@ -342,26 +410,36 @@ export async function getPopularItems(input: {
     image_license: string | null; image_source_url: string | null;
     unitLabel: string; offerCount: number; placeCount: number;
     priceFrom: number | null; priceTo: number | null;
-    freshest: string | null; lastObservedAt: Date | null;
+    trustVariantId: string; trustUnitId: string; trustPlaceId: string;
+    lastObservedAt: Date | null;
   };
 
-  return (rows.rows as unknown as Row[]).map((r) => ({
-    id: r.id,
-    slug: r.slug,
-    name: r.name,
-    description: r.description,
-    imageUrl: r.image_url,
-    imageAttribution: r.image_attribution,
-    imageLicense: r.image_license,
-    imageSourceUrl: r.image_source_url,
-    unitLabel: r.unitLabel,
-    offerCount: r.offerCount,
-    placeCount: r.placeCount,
-    priceFrom: r.priceFrom ?? null,
-    priceTo: r.priceTo ?? null,
-    freshest: r.freshest,
-    lastObservedAt: r.lastObservedAt ? new Date(r.lastObservedAt).toISOString() : null,
-  }));
+  const cardRows = rows.rows as unknown as Row[];
+  const trustKeys = cardRows
+    .map((row) => nullableOfferKey(row))
+    .filter((key): key is OfferKey => key !== null);
+  const trustByKey = await getOfferTrustBatch(trustKeys);
+
+  return cardRows.map((r) => {
+    const trustKey = nullableOfferKey(r);
+    return {
+      id: r.id,
+      slug: r.slug,
+      name: r.name,
+      description: r.description,
+      imageUrl: r.image_url,
+      imageAttribution: r.image_attribution,
+      imageLicense: r.image_license,
+      imageSourceUrl: r.image_source_url,
+      unitLabel: r.unitLabel,
+      offerCount: r.offerCount,
+      placeCount: r.placeCount,
+      priceFrom: r.priceFrom ?? null,
+      priceTo: r.priceTo ?? null,
+      trust: readTrustForKey(trustByKey, trustKey),
+      lastObservedAt: r.lastObservedAt ? new Date(r.lastObservedAt).toISOString() : null,
+    };
+  });
 }
 
 // 2. Fetch candidates/offers for a selected food item
@@ -1186,8 +1264,10 @@ export interface NarrowedOffer {
    * detail panel showed as a percentage, reads ten reports from one person as
    * 100% confidence. Two people saying the same thing is evidence; one person
    * saying it ten times is not.
-   */
+  */
   distinctSourceCount: number;
+  /** Authoritative, age-decayed assessment derived from admissible observations. */
+  trust: ReadTrust;
 }
 
 /** Reject an origin we cannot trust rather than quietly searching from it. */
@@ -1362,11 +1442,27 @@ export async function getOffersNarrowed(input: NarrowingInput): Promise<Narrowed
     .orderBy(sql`(${offersCurrent.availabilityState} = 'unavailable') asc, ${ranking}, ${offersCurrent.id} asc`)
     .limit(limit);
 
+  const trustKeys: OfferKey[] = rows.map((r) => ({
+    itemVariantId: r.variantId,
+    unitId: r.unitId,
+    placeId: r.placeId,
+  }));
+  const trustByKey = await getOfferTrustBatch(trustKeys);
+
   return rows.map((r) => {
     // The (0,0) incident: a place that cannot be located is not a place we can
     // rank by distance, so it fails loudly rather than sorting first forever.
     if (!Number.isFinite(r.distanceM)) {
       throw new Error(`Discovery: no distance for place ${r.placeId} (${r.placeName})`);
+    }
+    const trustKey: OfferKey = {
+      itemVariantId: r.variantId,
+      unitId: r.unitId,
+      placeId: r.placeId,
+    };
+    const trust = readTrustForKey(trustByKey, trustKey);
+    if (!trust) {
+      throw new Error(`Discovery: no trust assessment for offer ${r.id}`);
     }
     return {
       id: r.id,
@@ -1391,6 +1487,7 @@ export async function getOffersNarrowed(input: NarrowingInput): Promise<Narrowed
       expiresAt: r.expiresAt.toISOString(),
       supportingObservationCount: r.supportingObservationCount,
       distinctSourceCount: r.distinctSourceCount,
+      trust,
     };
   });
 }

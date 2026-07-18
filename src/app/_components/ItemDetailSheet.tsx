@@ -94,17 +94,9 @@ const naira = (kobo: number) =>
     maximumFractionDigits: 0,
   }).format(kobo / 100);
 
-/** No silent fallbacks: a timestamp we cannot read is a bug, not a blank. */
-function parseAt(iso: string, field: string): number {
-  const t = Date.parse(iso);
-  if (!Number.isFinite(t)) {
-    throw new Error(`ItemDetailSheet: unreadable ${field} timestamp ${JSON.stringify(iso)}`);
-  }
-  return t;
-}
-
-function formatAge(ms: number): string {
-  const mins = Math.round(Math.max(0, ms) / 60000);
+function formatAge(ageHours: number | null): string {
+  if (ageHours === null) return "at an unknown time";
+  const mins = Math.round(Math.max(0, ageHours) * 60);
   if (mins < 1) return "just now";
   if (mins < 60) return `${mins} min ago`;
   const hrs = Math.round(mins / 60);
@@ -114,74 +106,19 @@ function formatAge(ms: number): string {
 }
 
 /**
- * Freshness, derived rather than trusted.
+ * Presentation of the server-derived trust answer.
  *
- * `offers_current.freshnessState` is a stored string and `expiresAt` is a
- * column nothing enforces (USER-FLOW open question 2), so a row can sit at
- * "confirmed" five days after it expired. Age wins over the stored state: an
- * expired confirmation is not a confirmation, and rendering it green would be
- * the confident-and-wrong failure this product cannot afford.
- *
- * Availability rides the same dot because an offer reported finished has no
- * meaningful freshness — but it also strikes the price, so the signal survives
- * greyscale and a colour-blind glance.
- *
- * EXPORTED because the map pins are the same claim in another projection. A pin
- * coloured straight from `freshnessState` while the row beside it derives the
- * kind would show green on the map and amber in the list for the same expired
- * offer, and the user would have no way to know which one was lying. One
- * derivation, two renderers.
+ * Freshness windows, availability, source independence, reliability weighting,
+ * and confidence bands are computed by `assessTrust` on the server. This
+ * function only turns that answer into the compact words shared by offer rows,
+ * Get-It, and map markers.
  */
-/**
- * ONE STATUS, ONE NAME. The three verdicts are the card's, verbatim:
- * "E sure" / "Check am" / "E no dey" — owner's call, 2026-07-16.
- *
- * This function used to word the same three states differently: "Confirmed" /
- * "Needs checking" / "Likely". Two surfaces describing one underlying state in
- * two vocabularies is cognitive friction the user pays for and we don't.
- *
- * The stale/expired split is deliberately GONE. `kind` was already `caution` for
- * both, so only the word differed — and the two words disagreed about what to
- * do: "Needs checking" is passive, "Likely" is a probability claim that hedges
- * where the product must either stand behind the evidence or say go and check.
- * `label` still appends the age, so the nuance a shopper can act on ("Check am ·
- * 3 days ago") survives in the part that carries information.
- *
- * THESE THREE STRINGS ARE A KNOWN DUPLICATE of `item.status_*` in the
- * dictionary, and they should not be. This is a plain function, not a hook, so
- * it cannot call `useT()`; and its callers include `page.tsx` (:672, :831),
- * which belongs to another lane today, so the labels cannot be lifted to a
- * parameter without editing it. Phase 1 deletes this function outright as a
- * competing trust model — at which point the labels come from the dictionary and
- * this note goes with it. Until then: if you change a word, change it in BOTH
- * places, or the disagreement this comment removed comes straight back.
- */
-export function offerSignal(offer: NarrowedOffer, now: number) {
-  const observedAt = parseAt(offer.lastObservedAt, "lastObservedAt");
-  const expiresAt = parseAt(offer.expiresAt, "expiresAt");
-  const age = formatAge(now - observedAt);
-  const expired = expiresAt <= now;
-  const sold = offer.availabilityState === "unavailable";
-
-  let kind: StatusKind;
-  /** The verdict alone. See `label` for why it is separate. */
-  let short: string;
-  if (sold) {
-    kind = "unavailable";
-    short = "E no dey";
-  } else if (offer.freshnessState === "confirmed" && !expired) {
-    kind = "confirmed";
-    short = "E sure";
-  } else {
-    kind = "caution";
-    short = "Check am";
-  }
-
-  /**
-   * Verdict AND age, for a row that has room for one line and must carry both.
-   * `short` exists for surfaces that already print the age themselves — GetItSheet
-   * does — where this would read "Confirmed 18 min ago · Last seen 18 minutes ago".
-   */
+export function offerSignal(offer: NarrowedOffer) {
+  const kind: StatusKind = offer.trust.status;
+  const short =
+    kind === "unavailable" ? "E no dey" : kind === "confirmed" ? "E sure" : "Check am";
+  const age = formatAge(offer.trust.ageHours);
+  const sold = offer.trust.availability === "unavailable";
   const label = kind === "confirmed" ? `${short} ${age}` : `${short} · ${age}`;
 
   return { kind, label, short, sold };
@@ -195,18 +132,16 @@ const FRESH_FG: Record<StatusKind, string> = {
 };
 
 /**
- * Confidence, as a count of people rather than a percentage.
+ * Confidence presentation, without a second confidence model.
  *
- * The old panel showed `supportingObservationCount * 10` as a percent, so ten
- * reports from one contributor read as 100% confidence. Independent sources are
- * the axis that carries trust; report volume is a tiebreak, never a promotion
- * on its own. Nothing here can reach "high" on one person's word.
+ * The server owns source independence, reliability, decay, score, and band.
+ * The client maps that already-decided band to neutral bars and formats the
+ * server counts for sighted and screen-reader users.
  */
 function confidenceFor(offer: NarrowedOffer) {
-  const sources = offer.distinctSourceCount;
-  const reports = offer.supportingObservationCount;
-  const bars = sources >= 2 && reports >= 3 ? 3 : sources >= 2 || reports >= 3 ? 2 : 1;
-  const word = bars === 3 ? "High" : bars === 2 ? "Medium" : "Low";
+  const { band, distinctSourceCount: sources, observationCount: reports } = offer.trust;
+  const bars = band === "high" ? 3 : band === "medium" ? 2 : band === "low" ? 1 : 0;
+  const word = band === "high" ? "High" : band === "medium" ? "Medium" : band === "low" ? "Low" : "No";
   const label =
     `${reports} ${reports === 1 ? "report" : "reports"}` +
     ` · ${sources} ${sources === 1 ? "source" : "sources"}`;
@@ -452,7 +387,6 @@ export function ItemDetailSheet({
   }, [unitOptions, unitId]);
 
   const rows = useMemo(() => {
-    const now = Date.now();
     const available = offers.filter((o) => o.availabilityState !== "unavailable");
     // Whatever the sort, name the row that wins on price and the row that wins
     // on distance. That is how "the best answer" stops depending on the user
@@ -468,7 +402,7 @@ export function ItemDetailSheet({
 
     return offers.map((offer) => ({
       offer,
-      signal: offerSignal(offer, now),
+      signal: offerSignal(offer),
       confidence: confidenceFor(offer),
       isCheapest: offers.length > 1 && offer.id === cheapestId,
       isClosest: offers.length > 1 && offer.id === closestId,
