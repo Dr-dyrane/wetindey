@@ -11,6 +11,7 @@ import {
   SEED_ITEMS,
   EXTRA_PLACES,
   allSeedVariants,
+  getConsumerPrimaryVariant,
   normalizeAlias,
   assertSeedContent,
 } from "./seedContent";
@@ -29,6 +30,39 @@ import {
  */
 const STALE_HOURS = 24;
 const EXPIRATION_HOURS = 72;
+const SEED_VERSION = "wetindey-sample-v1";
+
+/**
+ * A dependency-free, stable PRNG keyed by source identifiers rather than
+ * database ids or insertion order. FNV-1a supplies the 32-bit seed and
+ * Mulberry32 supplies the repeatable stream.
+ */
+const createStableRandom = (key: string): (() => number) => {
+  let state = 2_166_136_261;
+  for (let i = 0; i < key.length; i++) {
+    state ^= key.charCodeAt(i);
+    state = Math.imul(state, 16_777_619);
+  }
+  state >>>= 0;
+
+  return () => {
+    state = (state + 0x6d2b79f5) >>> 0;
+    let value = state;
+    value = Math.imul(value ^ (value >>> 15), value | 1);
+    value ^= value + Math.imul(value ^ (value >>> 7), value | 61);
+    return ((value ^ (value >>> 14)) >>> 0) / 4_294_967_296;
+  };
+};
+
+/** Fisher-Yates with an injected stable random stream. */
+const shuffledWith = <T>(values: readonly T[], random: () => number): T[] => {
+  const shuffled = [...values];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled;
+};
 
 /** Attach the verified Commons photo for a slug, if we have one. */
 const withImage = (slug: string) => {
@@ -42,7 +76,8 @@ const withImage = (slug: string) => {
   };
 };
 
-const hoursAgo = (h: number) => new Date(Date.now() - h * 3600 * 1000);
+const hoursAgo = (anchor: Date, h: number) =>
+  new Date(anchor.getTime() - h * 3600 * 1000);
 
 const run = async () => {
   const connectionString = process.env.DATABASE_URL;
@@ -50,6 +85,7 @@ const run = async () => {
     console.error("DATABASE_URL environment variable is missing.");
     process.exit(1);
   }
+  const runStartedAt = new Date();
 
   // Fail before writing anything, naming the offender. A variant pointing at a
   // missing unit code would otherwise surface as a null far from its cause.
@@ -310,30 +346,38 @@ const run = async () => {
    *   3. It set expiresAt to observedAt + 72h while seeding observations up to
    *      5.5 days old, so half the pilot was expired on arrival.
    *
-   * Now: write the observations FIRST, from real distinct sources at real
-   * distinct times, then derive every field of the offer from them. The count is
-   * the count. The freshness follows the clock. Nothing is invented.
+   * Now: write the Sample/synthetic observations FIRST, from distinct Sample
+   * sources at internally consistent times, then derive every field of the
+   * offer from them. The count is the count. The freshness follows the one
+   * captured run clock. Nothing is presented as observed evidence.
    */
-  console.log("Generating observations, deriving offers...");
+  console.log("Generating Sample/synthetic observations, deriving offers...");
 
   const priceBySlug = new Map(seedVariants.map((v) => [v.slug, v.priceKobo]));
   const unitBySlugVariant = new Map(seedVariants.map((v) => [v.slug, v.unitCode]));
-  const channelsBySlug = new Map(seedVariants.map((v) => [v.slug, v.channels]));
 
   let obsCount = 0;
   let offerCount = 0;
 
   for (const place of placesList) {
-    // A kiosk does not sell 50kg bags; an open market does. `channels` on each
-    // item says where it plausibly appears, so the basket differs by place type
-    // instead of every stall carrying an identical random slice.
-    const stockable = seedVariants.filter((v) =>
-      (channelsBySlug.get(v.slug) ?? []).includes(place.placeType as never)
-    );
-    if (stockable.length === 0) continue;
+    const random = createStableRandom(`${SEED_VERSION}:${place.slug}`);
 
-    const shuffled = [...stockable].sort(() => 0.5 - Math.random());
-    const carried = shuffled.slice(0, 6 + Math.floor(Math.random() * 5)); // 6-10 lines per place
+    // Select ITEMS before variants. Each item's variants[0] is its asserted
+    // consumer-primary unit, so a later bulk alternative can never displace it
+    // from a place's limited 6-10 Sample lines.
+    const stockableItems = SEED_ITEMS
+      .filter((item) => item.channels.includes(place.placeType as never))
+      .sort((a, b) => a.slug.localeCompare(b.slug));
+    if (stockableItems.length === 0) continue;
+
+    const carriedCount = 6 + Math.floor(random() * 5);
+    const carried = shuffledWith(stockableItems, random)
+      .slice(0, carriedCount)
+      .map((item) => ({
+        ...getConsumerPrimaryVariant(item),
+        itemSlug: item.slug,
+        channels: item.channels
+      }));
 
     for (const variant of carried) {
       const band = priceBySlug.get(variant.slug)!;
@@ -343,30 +387,30 @@ const run = async () => {
 
       const premium = place.placeType === "supermarket" ? 1.08 : place.placeType === "kiosk" ? 1.04 : 0.96;
 
-      // How many people have actually reported this line. This is the real
-      // number; the offer's count is computed from it, not guessed alongside it.
-      const reportCount = 1 + Math.floor(Math.random() * 3); // 1-3
+      // How many Sample reports back this line. The offer's count is computed
+      // from these generated rows, not guessed alongside them.
+      const reportCount = 1 + Math.floor(random() * 3); // 1-3
 
       // Newest report drives freshness. Weighted toward recent so the pilot is
       // mostly live rather than mostly expired.
-      const newestAgeH = Math.random() < 0.55
-        ? Math.random() * STALE_HOURS                      // fresh: < 24h
-        : Math.random() < 0.75
-          ? STALE_HOURS + Math.random() * (EXPIRATION_HOURS - STALE_HOURS)  // stale: 24-72h
-          : EXPIRATION_HOURS + Math.random() * 36;         // expired: > 72h
+      const newestAgeH = random() < 0.55
+        ? random() * STALE_HOURS                      // fresh: < 24h
+        : random() < 0.75
+          ? STALE_HOURS + random() * (EXPIRATION_HOURS - STALE_HOURS)  // stale: 24-72h
+          : EXPIRATION_HOURS + random() * 36;         // expired: > 72h
 
-      const available = Math.random() > 0.12; // most lines are in stock
+      const available = random() > 0.12; // most Sample lines are in stock
 
       const observations: Array<{ at: Date; price: number; sourceId: string }> = [];
       for (let i = 0; i < reportCount; i++) {
         // Older reports sit behind the newest one, spread over a few days.
-        const ageH = newestAgeH + i * (6 + Math.random() * 30);
-        const price = Math.round((band.min + Math.random() * (band.max - band.min)) * premium);
+        const ageH = newestAgeH + i * (6 + random() * 30);
+        const price = Math.round((band.min + random() * (band.max - band.min)) * premium);
         observations.push({
-          at: hoursAgo(ageH),
+          at: hoursAgo(runStartedAt, ageH),
           price,
-          // Distinct sources where possible — a count of 3 that is one person
-          // three times is not worth more than a count of 1.
+          // Distinct Sample sources where possible so the generated count and
+          // its supporting rows remain internally consistent.
           sourceId: sourcesList[i % sourcesList.length].id
         });
       }
@@ -397,7 +441,7 @@ const run = async () => {
       const prices = observations.map((o) => o.price);
       const priceMin = Math.min(...prices);
       const priceMax = Math.max(...prices);
-      const ageH = (Date.now() - newest.at.getTime()) / 3600_000;
+      const ageH = (runStartedAt.getTime() - newest.at.getTime()) / 3600_000;
 
       // Freshness follows the clock, using the shared trust policy.
       const freshnessState = !available
@@ -427,8 +471,8 @@ const run = async () => {
     }
   }
 
-  console.log(`✓ Seeded ${obsCount} observations backing ${offerCount} offers.`);
-  console.log(`  every offer's supportingObservationCount equals its real observation count.`);
+  console.log(`✓ Seeded ${obsCount} Sample/synthetic observations backing ${offerCount} offers.`);
+  console.log(`  every offer's supportingObservationCount equals its generated observation count.`);
   await pool.end();
 };
 

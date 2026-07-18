@@ -160,6 +160,11 @@ export interface SeedItem {
   description: string;
   category?: string;
   aliases: SeedAlias[];
+  /**
+   * Consumer-primary contract: variants[0] is the ordinary street-level unit
+   * selected for generated Sample inventory. Later entries are alternatives
+   * and may never displace it.
+   */
   variants: SeedVariant[];
   /** Where this plausibly sells. A supermarket does not sell a basket of rodo. */
   channels: PlaceType[];
@@ -1565,6 +1570,15 @@ export const allSeedVariants = (): Array<SeedVariant & { itemSlug: string; chann
     item.variants.map((v) => ({ ...v, itemSlug: item.slug, channels: item.channels }))
   );
 
+/** Resolve the consumer-primary contract after assertSeedContent() has passed. */
+export function getConsumerPrimaryVariant(item: SeedItem): SeedVariant {
+  const primaryVariant = item.variants[0];
+  if (!primaryVariant || primaryVariant.slug.trim() === "") {
+    throw new Error(`item "${item.slug}" has no valid consumer-primary variant at variants[0]`);
+  }
+  return primaryVariant;
+}
+
 /**
  * Fail the seed on contradictory content rather than letting it reach the map.
  *
@@ -1593,7 +1607,12 @@ export function assertSeedContent(): void {
   seen(EXTRA_PLACES, (p) => p.slug, "duplicate place slug");
 
   for (const item of SEED_ITEMS) {
-    if (item.variants.length === 0) problems.push(`item "${item.slug}" has no variants`);
+    const primaryVariant = item.variants[0];
+    if (!primaryVariant) {
+      problems.push(`item "${item.slug}" has no consumer-primary variant at variants[0]`);
+    } else if (primaryVariant.slug.trim() === "") {
+      problems.push(`item "${item.slug}" has a blank consumer-primary variant slug at variants[0]`);
+    }
     if (item.channels.length === 0) problems.push(`item "${item.slug}" has no channels`);
 
     for (const v of item.variants) {
