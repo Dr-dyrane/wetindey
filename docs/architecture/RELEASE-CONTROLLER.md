@@ -220,11 +220,23 @@ safety/integrity lanes until their separate gates are independently satisfied.
   `WETINDEY_BIBLE.md` and `docs/adr/016-nearby-user-presence.md`, now released. ADR-016 is
   Accepted for implementation architecture only and authorizes no shared migration,
   deployment, pilot traffic, or public rollout.
-- The Presence Platform Engineer has an active read-only implementation-design assignment
-  and owns no paths. The engineering sequence remains forward presence migration `0012`
-  with frozen `0011` untouched, server boundary, consent/lifecycle, snapshot lifecycle,
-  map DTO/UI, independent refutation, and separately authorized target migration/pilot.
-  Contribution integrity must follow as `0013` or later.
+- Presence Platform Engineer task `019f759f-3521-7ee1-90a3-5af3539d757e` now owns the
+  reduced local-only Nearby Presence schema lane over exactly:
+  `src/db/schema/presence.ts`, `src/db/schema/index.ts`,
+  `src/db/pillars/80-presence-services.sql`,
+  `src/db/pillars/90-presence-security.sql`,
+  `src/db/migrations/0012_guarded_presence.sql`,
+  `src/db/migrations/meta/0012_snapshot.json`,
+  `src/db/migrations/meta/_journal.json`, and
+  `scripts/presence/presence-migration-contract.test.ts`. Scope is a disabled seven-table
+  core (`presence_control`, preferences, leases, blocks, waves, reports, rate buckets),
+  nine RPCs, forced RLS with no `PUBLIC`, removal of unsafe `user_profiles` location
+  fields, and forward `0012` while frozen `0011` remains byte-identical. No DB access,
+  migration or test execution, shared repair/application, disposable execution,
+  app/UI/actions/map changes, allowlist activation, pilot traffic, push, or deploy is
+  authorized. Require one path-scoped local commit and independent static/diff refutation;
+  disposable execution remains a separate future authorization. Contribution integrity
+  follows as `0013` or later.
 - Catalog Stewardship Engineer task
   `019f75a3-f38d-7893-9b82-2d6871a2563c` completed its source audit and now owns the
   active exclusive source-only lane over exactly `src/db/seed.ts` and
