@@ -256,3 +256,77 @@ safety/integrity lanes until their separate gates are independently satisfied.
   all applicable P0/P1/P2 and the integrated release gate pass at one exact candidate;
   durable evidence exists; and exact authorized shared-target migration compatibility or
   proven-disabled automatic deployment removes the migration-before-code race.
+
+## Controller run: 2026-07-18T14:09:41Z
+
+- Candidate: commit `4da4d5bea58a02feb088a00ae45b94f331a2dd40` (tree
+  `0b182780a6db7c26bd77c85eb5915c9ba1bf4028`, parent
+  `bb4dca448b177f5a30be168d5dcef25aab28da2a`) on clean `main`. After a fetch without
+  rebasing, `origin/main` remained `b89ebba14e5ab7017b84e9dc9ddcd57aeb255c6e`
+  (tree `4f2dd4e06def335ab4a8d80004c1c2a71d61c3bd`), an ancestor at `0` behind / `39`
+  ahead. Reviewed range:
+  `b89ebba14e5ab7017b84e9dc9ddcd57aeb255c6e..4da4d5bea58a02feb088a00ae45b94f331a2dd40`.
+- The ten commits after the previous controller record were `611ad9c`, `95f6a37`,
+  `295babf`, `0480182`, `893f167`, `a9a7c60`, `ef1455e`, `164a12c`, `bb4dca4`, and
+  `4da4d5b`. The full candidate contains 39 linear commits and 39 changed paths:
+  `DECISIONS.md`, `LANES.md`, `WETINDEY_BIBLE.md`,
+  `docs/adr/015-observation-provenance-admissibility.md`,
+  `docs/adr/016-nearby-user-presence.md`,
+  `docs/adr/017-cbn-reference-rate-converter.md`,
+  `docs/architecture/LIVE-INFORMATION-AND-TRUST-EVOLUTION.md`,
+  `docs/architecture/RELEASE-CONTROLLER.md`, `docs/database/README.md`,
+  `docs/operations/PORTFOLIO-AND-IDEA-REGISTER.md`,
+  `docs/operations/WETINDEY-OPERATING-SYSTEM.md`,
+  `scripts/ingestion/ingestion-contract.test.ts`,
+  `src/app/_components/CategorySelectorSheet.tsx`,
+  `src/app/_components/ExchangePanel.tsx`, `src/app/_components/GetItSheet.tsx`,
+  `src/app/_components/ManageProfileSheet.tsx`,
+  `src/app/_data/exchange-sample-locations.ts`, `src/app/actions.ts`,
+  `src/app/currency-actions.ts`, `src/app/item/[slug]/opengraph-image.tsx`,
+  `src/app/item/[slug]/page.tsx`, `src/app/opengraph-image.tsx`, `src/app/page.tsx`,
+  `src/app/place/[slug]/opengraph-image.tsx`, `src/app/place/[slug]/page.tsx`,
+  `src/app/sitemap.ts`, `src/db/migrations/0010_public_source_ingestion_boundary.sql`,
+  `src/db/migrations/0011_classy_the_stranger.sql`,
+  `src/db/migrations/meta/0011_snapshot.json`, `src/db/migrations/meta/_journal.json`,
+  `src/db/schema/index.ts`, `src/db/seedContent.ts`,
+  `src/design-system/components/ItemCard.tsx`,
+  `src/design-system/components/MapboxCanvas.tsx`,
+  `src/integrations/maps/MapboxAdapter.ts`, `src/lib/og.tsx`,
+  `src/lib/seo-queries.ts`, `src/lib/seo.tsx`, and `src/lib/validation.ts`.
+- Worktree and ancestry gates passed for the immutable candidate. Current lane records
+  release the operating-model, presence containment, ADR-016 packet, reviews containment,
+  and database-status documentation paths with their named independent evidence. This run
+  removed stale coordination claims that `src/app/actions.ts` remained exclusively owned,
+  that ADR-016 still needed packet preparation, and that the already-corrected ModalSheet,
+  desktop close-button, and H40 search defects were still open. No implementation path was
+  edited.
+- Static hygiene still fails: `git diff --check origin/main..HEAD` reports 17 trailing-
+  whitespace defects across ADR-017 (2), the two operating-model documents (9),
+  `GetItSheet.tsx` (3), `actions.ts` (1), and `MapboxAdapter.ts` (2).
+- Migration gate failed. Candidate hashes are `0009`
+  `34dd394d6d4f1aad24a73edee5eb88a93441449a1ff86985b60d3ba04f927b4c`, `0010`
+  `9aa8cc511374010f1deb68ec330573a9c4940c2aff1188218d5f3e841fccd7fe`, and `0011`
+  `1ad4a33a06dfdc58affcfa92dc7085b5843478e09761ee26a24c7cd6b3c0151b`.
+  The volatile `/tmp/wetindey-refute-0010-c6f304b-9bb58f7891d7.evidence.json` still
+  hashes to `7b1038bb15516425ad2164c21edfcd73e331bef5775cad1ae9773821110b930c`
+  and matches the candidate `0009`, `0010`, and journal bytes, but its source is `c6f304b`
+  and it explicitly excludes `0011`. Preview has proven schema/ledger drift around `0011`;
+  Production identity, ledger, hashes, schema/RPC/RLS/grant fingerprint, restore evidence,
+  authorized order, and compatibility remain unknown. Provenance-aware application and SEO
+  reads therefore cannot safely deploy ahead of exact-target `0009` proof.
+- Release evidence gate failed. The merged Release verification + Q1 harness remains
+  planned and has no result tied to `4da4d5b`; disposable search execution and SEO runtime
+  evidence remain pending. Valid unresolved P0s remain for inaccessible Mapbox markers and
+  3.30:1 light-mode secondary text. The earlier ModalSheet focus and unnamed close-button
+  findings are corrected in the current tree and were not reused as blockers.
+- Independent read-only subagent `/root/release_refuter` returned candidate **REFUTED** and
+  controller **NO PUSH NOT_REFUTED**. It independently verified clean linear ancestry and
+  released containment paths, then confirmed the migration dependency, missing exact-HEAD
+  integrated gate, pending executable evidence, valid P0s, and 17 whitespace defects.
+- Decision: **NO PUSH**. A push is a Production deployment, so a normal Git revert cannot
+  make an application/schema race safe. No push, deployment, migration, seed, shared-
+  database access, Blob/Vercel/external configuration change, destructive operation, or
+  history rewrite occurred. Re-review only after exact authorized shared-target migration
+  compatibility is proven, the integrated gate passes at one exact clean candidate, all
+  applicable P0/P1/P2 findings and whitespace defects are closed, and required evidence is
+  durable rather than `/tmp`-only.
