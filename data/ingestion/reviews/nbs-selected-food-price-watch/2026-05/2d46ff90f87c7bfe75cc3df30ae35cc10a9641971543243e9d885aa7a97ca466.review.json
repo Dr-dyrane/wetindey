@@ -1,0 +1,43 @@
+{
+  "artifactVersion": "nbs-selected-food-price-watch-review-v1",
+  "reviewMode": "append_only",
+  "publicationMode": "review_only",
+  "source": {
+    "sourceName": "National Bureau of Statistics — Selected Food Price Watch",
+    "sourceCategory": "government_official",
+    "lifecycleState": "active",
+    "permittedIngestionMode": "fetch_and_stage",
+    "policyVersion": "nbs-selected-food-price-watch-v1"
+  },
+  "capture": {
+    "contentHash": "2d46ff90f87c7bfe75cc3df30ae35cc10a9641971543243e9d885aa7a97ca466",
+    "rawContentPointer": "https://microdata.nigerianstat.gov.ng/index.php/catalog/162/download/1427",
+    "fetchedAt": "2026-07-18T00:42:43.000Z"
+  },
+  "candidateArtifacts": [
+    {
+      "candidateArtifactId": "d8d4467b4acde42f0be4bcfcc00db6b3c84611a6e83e2b24a77d61ffd7b34872",
+      "path": "data/ingestion/candidates/nbs-selected-food-price-watch/d8d4467b4acde42f0be4bcfcc00db6b3c84611a6e83e2b24a77d61ffd7b34872.candidate.json",
+      "validationStatus": "needs_item_mapping",
+      "reviewStatus": "pending_manual_review"
+    },
+    {
+      "candidateArtifactId": "e0585afafce8ce60c359c1d3758e9410596e2a0dc685aaa5e43bd526fbbf0cc8",
+      "path": "data/ingestion/candidates/nbs-selected-food-price-watch/e0585afafce8ce60c359c1d3758e9410596e2a0dc685aaa5e43bd526fbbf0cc8.candidate.json",
+      "validationStatus": "needs_item_mapping",
+      "reviewStatus": "pending_manual_review"
+    }
+  ],
+  "reviewDecisions": [],
+  "originLabel": "Official data · NBS · Lagos State · May 2026",
+  "effectFirewall": {
+    "sharedMigration0010Applied": false,
+    "databaseWrites": 0,
+    "liveObservationPromotions": 0,
+    "offersCurrentEffects": 0,
+    "mapEffects": 0,
+    "searchEffects": 0,
+    "seoEffects": 0,
+    "uiEffects": 0
+  }
+}

@@ -18,6 +18,12 @@ import {
   validateCandidate,
   type CandidateDraft,
 } from "../../src/db/ingestion/tooling";
+import {
+  NBS_CANDIDATES,
+  NBS_ORIGIN_LABEL,
+  NBS_PACKAGE_SHA256,
+  NBS_PACKAGE_URL,
+} from "./adapters/nbs-selected-food-price-watch";
 
 const baseCandidate: CandidateDraft = {
   canonicalSourceIdentity: "National Bureau of Statistics",
@@ -246,6 +252,46 @@ test("a formerly productive parser cannot report a successful empty result", () 
     }),
     "captured"
   );
+});
+
+test("NBS review artifacts preserve approved external-pointer-only source facts", async () => {
+  const capture = JSON.parse(
+    await readFile(
+      resolve(
+        process.cwd(),
+        "data/ingestion/captures/nbs-selected-food-price-watch/2d46ff90f87c7bfe75cc3df30ae35cc10a9641971543243e9d885aa7a97ca466.capture.json"
+      ),
+      "utf8"
+    )
+  ) as {
+    archiveMode: string;
+    capture: Record<string, unknown>;
+  };
+  const fixture = JSON.parse(
+    await readFile(
+      resolve(
+        process.cwd(),
+        "data/development-fixtures/current-food-news/2026-07-18.provenance.json"
+      ),
+      "utf8"
+    )
+  ) as { items: Array<Record<string, unknown>>; effectFirewall: Record<string, unknown> };
+
+  assert.equal(capture.archiveMode, "external_pointer");
+  assert.equal(capture.capture.contentHash, NBS_PACKAGE_SHA256);
+  assert.equal(capture.capture.rawContentPointer, NBS_PACKAGE_URL);
+  assert.equal(capture.capture.rawContentStoredInRepository, false);
+  assert.equal(capture.capture.rawContentStoredInDatabase, false);
+  assert.equal(fixture.items.length, 1);
+  assert.equal(fixture.items[0].originLabel, NBS_ORIGIN_LABEL);
+  assert.equal(fixture.items[0].availability, "unknown");
+  assert.equal(fixture.items[0].observedAt, null);
+  assert.equal(JSON.stringify(fixture).includes("Sample"), false);
+  assert.deepEqual(
+    fixture.items[0].candidateArtifactIds,
+    NBS_CANDIDATES.map((candidate) => candidate.candidateArtifactId)
+  );
+  assert.ok(Object.values(fixture.effectFirewall).every((value) => value === 0 || value === false));
 });
 
 test("pilot preserves demo sources byte-for-byte and asserts the publication firewall", async () => {

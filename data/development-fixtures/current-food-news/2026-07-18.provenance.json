@@ -1,0 +1,42 @@
+{
+  "fixtureVersion": "current-food-news-provenance-v1",
+  "environment": "development_only",
+  "publicationMode": "review_only",
+  "fixtureDate": "2026-07-18",
+  "items": [
+    {
+      "sourceType": "public_source",
+      "sourceCategory": "government_official",
+      "sourceName": "National Bureau of Statistics — Selected Food Price Watch",
+      "canonicalUrl": "https://microdata.nigerianstat.gov.ng/index.php/catalog/162/download/1427",
+      "contentHash": "2d46ff90f87c7bfe75cc3df30ae35cc10a9641971543243e9d885aa7a97ca466",
+      "rawContentPointer": "https://microdata.nigerianstat.gov.ng/index.php/catalog/162/download/1427",
+      "originLabel": "Official data · NBS · Lagos State · May 2026",
+      "geographicPrecision": "lagos_state",
+      "rawGeographicScope": "Lagos",
+      "rawSurveyPeriod": "May 2026",
+      "surveyPeriodStart": "2026-05-01T00:00:00.000Z",
+      "surveyPeriodEnd": "2026-05-31T23:59:59.999Z",
+      "rawPublishedDate": "2026-06-25",
+      "publishedAt": "2026-06-25T00:00:00.000Z",
+      "observedAt": null,
+      "fetchedAt": "2026-07-18T00:42:43.000Z",
+      "availability": "unknown",
+      "reviewStatus": "pending_manual_review",
+      "candidateArtifactIds": [
+        "d8d4467b4acde42f0be4bcfcc00db6b3c84611a6e83e2b24a77d61ffd7b34872",
+        "e0585afafce8ce60c359c1d3758e9410596e2a0dc685aaa5e43bd526fbbf0cc8"
+      ]
+    }
+  ],
+  "effectFirewall": {
+    "observationsWritten": 0,
+    "offersCurrentEffects": 0,
+    "confidenceEffects": 0,
+    "mapEffects": 0,
+    "searchEffects": 0,
+    "seoEffects": 0,
+    "liveUiEffects": 0,
+    "sampleLabelApplied": false
+  }
+}

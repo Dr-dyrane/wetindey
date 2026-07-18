@@ -1,0 +1,55 @@
+{
+  "artifactVersion": "nbs-selected-food-price-watch-capture-v1",
+  "archiveMode": "external_pointer",
+  "publicationMode": "review_only",
+  "source": {
+    "sourceName": "National Bureau of Statistics — Selected Food Price Watch",
+    "sourceCategory": "government_official",
+    "canonicalLandingUrl": "https://microdata.nigerianstat.gov.ng/index.php/catalog/162/related-materials"
+  },
+  "capture": {
+    "requestUrl": "https://microdata.nigerianstat.gov.ng/index.php/catalog/162/download/1427",
+    "finalResolvedUrl": "https://microdata.nigerianstat.gov.ng/index.php/catalog/162/download/1427",
+    "rawContentPointer": "https://microdata.nigerianstat.gov.ng/index.php/catalog/162/download/1427",
+    "fetchStatusCode": 200,
+    "fetchedAt": "2026-07-18T00:42:43.000Z",
+    "mediaType": "application/octet-stream",
+    "contentFormat": "zip",
+    "byteLength": 5294517,
+    "hashingAlgorithm": "sha256",
+    "contentHash": "2d46ff90f87c7bfe75cc3df30ae35cc10a9641971543243e9d885aa7a97ca466",
+    "rawContentStoredInRepository": false,
+    "rawContentStoredInDatabase": false,
+    "packageFiles": [
+      "Selected_Food_Report_May 26.pdf",
+      "selected food table May 26.xlsx"
+    ],
+    "title": "Selected Food Price Watch, May 2026",
+    "publisher": "National Bureau of Statistics",
+    "upstreamPublicationIdentity": "Selected Food Price Watch, May 2026",
+    "rawPublishedDate": "2026-06-25",
+    "publishedAt": "2026-06-25T00:00:00.000Z",
+    "publicationPrecision": "date",
+    "observedAt": null,
+    "rawSurveyPeriod": "May 2026",
+    "surveyPeriodStart": "2026-05-01T00:00:00.000Z",
+    "surveyPeriodEnd": "2026-05-31T23:59:59.999Z",
+    "surveyPeriodPrecision": "month",
+    "rawGeographicScope": "Lagos",
+    "geographicPrecision": "lagos_state",
+    "attributionText": "National Bureau of Statistics, Selected Food Price Watch, Lagos State, May 2026",
+    "originLabel": "Official data · NBS · Lagos State · May 2026",
+    "parserVersion": "nbs-selected-food-price-watch-v1",
+    "captureStatus": "retained_external",
+    "outcome": "captured"
+  },
+  "effectFirewall": {
+    "databaseWrites": 0,
+    "liveObservationPromotions": 0,
+    "offersCurrentEffects": 0,
+    "mapEffects": 0,
+    "searchEffects": 0,
+    "seoEffects": 0,
+    "uiEffects": 0
+  }
+}
