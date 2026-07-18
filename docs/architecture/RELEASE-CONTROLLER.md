@@ -196,3 +196,63 @@ safety/integrity lanes until their separate gates are independently satisfied.
 - Release verification and Q1 refutation are one planned adversarial gate.
 - Current decision: **NO PUSH** because exact shared-target `0009`/`0010`/`0011`
   compatibility and rollout order are unverified.
+
+## Controller run: 2026-07-18T13:09:28Z
+
+- Candidate: commit `4e25b8c7ac8a3ad598567e186575defd51113247`
+  (tree `9b53d9a15fcb35b2e579da2dbd9cfd5be3ebfc53`, parent
+  `a8871a1db0ffa0bda0343a65f078afa82a345d50`) on `main`; fetched `origin/main` was
+  `b89ebba14e5ab7017b84e9dc9ddcd57aeb255c6e` (tree
+  `4f2dd4e06def335ab4a8d80004c1c2a71d61c3bd`) and remained an ancestor at
+  `0` behind / `28` ahead. Reviewed range:
+  `b89ebba14e5ab7017b84e9dc9ddcd57aeb255c6e..4e25b8c7ac8a3ad598567e186575defd51113247`.
+- Exact changed paths: `DECISIONS.md`, `LANES.md`, `WETINDEY_BIBLE.md`,
+  `docs/adr/015-observation-provenance-admissibility.md`,
+  `docs/adr/016-nearby-user-presence.md`,
+  `docs/adr/017-cbn-reference-rate-converter.md`,
+  `docs/architecture/LIVE-INFORMATION-AND-TRUST-EVOLUTION.md`,
+  `docs/architecture/RELEASE-CONTROLLER.md`,
+  `scripts/ingestion/ingestion-contract.test.ts`,
+  `src/app/_components/CategorySelectorSheet.tsx`,
+  `src/app/_components/ExchangePanel.tsx`, `src/app/_components/GetItSheet.tsx`,
+  `src/app/_components/ManageProfileSheet.tsx`,
+  `src/app/_data/exchange-sample-locations.ts`, `src/app/actions.ts`,
+  `src/app/currency-actions.ts`, `src/app/item/[slug]/opengraph-image.tsx`,
+  `src/app/item/[slug]/page.tsx`, `src/app/opengraph-image.tsx`,
+  `src/app/page.tsx`, `src/app/place/[slug]/opengraph-image.tsx`,
+  `src/app/place/[slug]/page.tsx`, `src/app/sitemap.ts`,
+  `src/db/migrations/0010_public_source_ingestion_boundary.sql`,
+  `src/db/migrations/0011_classy_the_stranger.sql`,
+  `src/db/migrations/meta/0011_snapshot.json`,
+  `src/db/migrations/meta/_journal.json`, `src/db/schema/index.ts`,
+  `src/db/seedContent.ts`, `src/design-system/components/ItemCard.tsx`,
+  `src/design-system/components/MapboxCanvas.tsx`,
+  `src/integrations/maps/MapboxAdapter.ts`, `src/lib/og.tsx`,
+  `src/lib/seo-queries.ts`, `src/lib/seo.tsx`, and `src/lib/validation.ts`.
+- Worktree gate: **failed** after fetch because the active operating-model lane owns two
+  preserved untracked files, `docs/operations/PORTFOLIO-AND-IDEA-REGISTER.md` and
+  `docs/operations/WETINDEY-OPERATING-SYSTEM.md`. The controller did not read into,
+  stage, edit, commit, or delete that lane's work.
+- Lane/evidence gates: **failed**. Commit `4e25b8c` changes exactly the four paths still
+  owned by the active nearby-presence containment lane, with no release handoff or
+  independent evidence tied to that commit. The merged Release verification + Q1 harness
+  and the reviews containment/integrity lane remain planned rather than executable.
+  `git diff --check origin/main..HEAD` also reported nine trailing-whitespace defects.
+- Migration gate: **failed**. The candidate modifies unapplied `0010`, adds `0011` plus
+  its snapshot/journal/schema dependency, and contains provenance-aware application code.
+  Exact shared-target identity, ledger, hashes, applied state, `0009`/`0010`/`0011`
+  ordering, compatibility, authorization, rollback, and automatic-deployment state remain
+  unproven. Disposable `0010` evidence at
+  `/tmp/wetindey-refute-0010-c6f304b-9bb58f7891d7.evidence.json` still hashes to
+  `7b1038bb15516425ad2164c21edfcd73e331bef5775cad1ae9773821110b930c`, but is volatile,
+  tied to `c6f304b`, and explicitly excludes `0011`; it is not shared-target proof.
+- Refutation: read-only subagent `/root/release_refuter` returned candidate
+  **REFUTED** and the controller's **NO PUSH NOT_REFUTED**, independently confirming the
+  dirty worktree, active containment claim, migration incompatibility gate, missing exact-
+  HEAD release evidence, and open P0/P1 accessibility defects at `LANES.md:334-338`.
+- Decision: **NO PUSH**. No deployment, migration, seed, external configuration change,
+  destructive operation, history rewrite, or push occurred. Re-review only after the
+  other lane leaves a clean tree; containment is independently verified and released;
+  all applicable P0/P1/P2 and the integrated release gate pass at one exact candidate;
+  durable evidence exists; and exact authorized shared-target migration compatibility or
+  proven-disabled automatic deployment removes the migration-before-code race.
