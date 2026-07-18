@@ -727,3 +727,7 @@ Independent refutation: PASS. Dead derivation declarations were removed from `sr
 Owner: Maps Engineering worker Confucius (`019f762e-be77-7043-922a-d347c15ab4ed`). Exact paths: `src/design-system/components/MapboxCanvas.tsx` and `src/integrations/maps/MapboxAdapter.ts` only. Prior worker Feynman exited without edits; no files were changed. Implementation committed locally at `6611068`; independent refutation by Banach returned NOT REFUTED with no H37 defect. Runtime residuals: shared-user markers are not exercised because the live page passes an empty list; no focused typecheck or browser proof was run; unknown future place types use the intentional generic fallback.
 
 Scope: forward existing `placeType` into the live marker adapter and render deterministic semantic symbols for markets, supermarkets, kiosks, banks, and bureaux de change. Preserve avatar/initial user markers and precise/approximate location markers. No `page.tsx`, `actions.ts`, schema, migration, provider configuration, database, push, or deployment changes.
+
+### Contribution containment: refreshed ModalSheet diagnosis
+
+The former Motion diagnosis worker is no longer addressable. Mendel (`019f7638-4f36-7952-b775-e9b141f0fd7d`) diagnosed the shared lifecycle defect; Carver implemented `f7cddba`, Leibniz refuted disabled-fieldset ancestry, and Godel corrected it in `9fe9d4e` on `src/design-system/components/ModalSheet.tsx` only. Boole independently returned NOT REFUTED with no P1/P2. Runtime/browser focus and typecheck remain residuals; the five Contribution paths remain protected.
