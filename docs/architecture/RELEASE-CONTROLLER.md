@@ -1,11 +1,13 @@
-# WetinDey Git Release Controller
+# WetinDey Quality & Release Controller
 
 ## Purpose and authority
 
-The Git Release Controller is an autonomous, fail-closed review harness for integrating
-already completed WetinDey work. It reviews the repository once per hour, reconciles
-path ownership, records evidence, creates narrowly scoped documentation checkpoints when
-needed, and decides `PUSH` or `NO PUSH`.
+The Quality & Release Controller is a persistent, fail-closed employee for integrating
+already completed WetinDey work. It replaces the deleted repeating Git Release Controller
+automation. It operates only on explicit CEO-controller assignments, stays idle between
+assignments, and never creates a timer, recurring automation, duplicate task, or child
+task. For an assigned checkpoint it reconciles path ownership, records evidence, creates
+narrowly scoped documentation checkpoints when needed, and decides `PUSH` or `NO PUSH`.
 
 The controller does not make a feature correct by merging it, does not replace an
 independent refuter, and does not gain ownership of implementation paths. Its exclusive
@@ -16,11 +18,17 @@ standing write scope is:
 
 Any implementation edit requires a separately claimed lane. Shared or production database
 access, migrations, destructive data work, manual deployment, and force operations always
-remain outside the autonomous controller's authority.
+remain outside the persistent controller's authority.
 
-## Hourly autonomous harness
+Release readiness, Git hygiene, commit/push criteria, migration-before-code ordering, and
+fail-closed `NO PUSH / NO DEPLOY` decisions are the primary duty. Event-driven upkeep of
+the two owned documents after employee handoffs is secondary. A local path-scoped
+documentation commit does not authorize a push, test, deployment, migration, or seed.
 
-Each hourly run uses one immutable review candidate and completes this sequence:
+## Event-driven checkpoint harness
+
+Each explicitly assigned checkpoint uses one immutable review candidate and completes
+this sequence:
 
 1. Record UTC time, local `HEAD`, `origin/main`, branch, divergence, and porcelain status.
 2. Stop with `NO PUSH` if the branch is not `main`, the worktree is dirty, the branch has
@@ -36,10 +44,11 @@ Each hourly run uses one immutable review candidate and completes this sequence:
 7. Run the single planned **Release verification + Q1 refutation** gate when its separately
    authorized harness exists. The refuter defaults to `REFUTED` when evidence is thin.
 8. Record the decision and evidence. A `NO PUSH` is a successful safety result, not a
-   failed controller run.
-9. Push direct to `main` only when every criterion in this document is affirmatively
-   proven at the same candidate commit. Re-read the remote ref immediately before push;
-   if it changed, discard the decision and start a later hourly review from step 1.
+   failed controller checkpoint.
+9. Push direct to `main` only when the Founder/CEO explicitly requested that checkpoint
+   review and every criterion in this document is affirmatively proven at the same
+   candidate commit. Re-read the remote ref immediately before push; if it changed,
+   discard the decision and wait for a later explicit checkpoint assignment.
 
 The controller never force-pushes, amends, rebases, resets, stashes, deploys manually, or
 absorbs another lane's dirty work. It never runs `next build` against a live development
@@ -65,8 +74,9 @@ Every condition must be true:
   unauthorized deployment action is included.
 - The migration compatibility gate is either not applicable or passes for the exact shared
   target and exact release order.
-- The push itself is authorized by the standing controller policy and no narrower owner
-  instruction pauses it.
+- The Founder/CEO explicitly requested the exact checkpoint review and push remains within
+  that authorization; silence, a prior checkpoint, or standing employee status is not
+  push authority.
 
 ### `NO PUSH`
 
@@ -131,8 +141,8 @@ controller documentation commit.
 
 ## Evidence record
 
-Each hourly record must be sufficient for another session to refute the decision without
-trusting the controller. Record:
+Each checkpoint record must be sufficient for another session to refute the decision
+without trusting the controller. Record:
 
 - Review time, candidate and parent commit hashes, branch, remote ref, divergence, and
   worktree status.
@@ -183,6 +193,45 @@ explicitly released. The controller then:
 Containment and integrity work remains active or planned even when the implementation that
 created the risk has landed. Nearby-user presence and reviews therefore retain explicit
 safety/integrity lanes until their separate gates are independently satisfied.
+
+## Persistent employee conversion checkpoint: 2026-07-18
+
+- The deleted repeating Git Release Controller automation is replaced by the persistent
+  Quality & Release Controller employee. It is event-driven, owns only `LANES.md` and this
+  document, stays idle between explicit assignments, and creates no timer, recurring
+  automation, duplicate task, or child task.
+- Human Interface commit `4b572e0a666648dd3f9c016616e0c6b161cb981f` remains claimed
+  and awaiting independent direct Safari light/dark and compact/desktop refutation. A
+  commit without that release handoff is not behavioral or release evidence.
+- Nearby Presence governance completed in path-scoped commit
+  `c96086007e6f379c1b686b8203deef2c7c5559c2` with independent PASS. Its exact paths were
+  `WETINDEY_BIBLE.md` and `docs/adr/016-nearby-user-presence.md`, now released. ADR-016 is
+  Accepted for implementation architecture only and authorizes no shared migration,
+  deployment, pilot traffic, or public rollout.
+- The Presence Platform Engineer has an active read-only implementation-design assignment
+  and owns no paths. The engineering sequence remains forward presence migration `0012`
+  with frozen `0011` untouched, server boundary, consent/lifecycle, snapshot lifecycle,
+  map DTO/UI, independent refutation, and separately authorized target migration/pilot.
+  Contribution integrity must follow as `0013` or later.
+- Catalog Stewardship Engineer task
+  `019f75a3-f38d-7893-9b82-2d6871a2563c` is queued read-only and owns no paths. A future
+  exclusive implementation lane may claim exactly `src/db/seed.ts` and
+  `src/db/seedContent.ts`; no database access or reseed is authorized, and source
+  correctness is not database state.
+- Contribution Integrity & Moderation Engineer task
+  `019f75a3-f50d-7180-8e92-0a7aabd8a98c` is queued read-only/pathless pending its exact
+  containment plan. `src/app/page.tsx` remains withheld until HI commit `4b572e0` is
+  independently refuted and released. Contribution migration work is `0013` or later,
+  after presence-owned forward `0012`. Threat model, disposable integration evidence, and
+  independent refutation remain prerequisites to implementation ownership.
+- Preview schema/ledger drift remains proven and quarantined. Production identity, ledger,
+  schema/RPC/RLS/grant fingerprint, migration state, compatibility, restore evidence, and
+  deployment ordering remain unknown.
+- Presence target authorization, counsel, safety-responder, rate-budget, two-account
+  Festac allowlist, default-off application flag, database kill switch, retention, pilot,
+  and public-rollout gates remain unresolved.
+- Decision: **NO PUSH / NO DEPLOY**. This documentation checkpoint authorizes no test,
+  push, deployment, migration, seed, shared-database access, or external change.
 
 ## Bootstrap reconciliation: 2026-07-18
 
