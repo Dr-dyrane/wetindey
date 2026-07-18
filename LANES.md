@@ -754,9 +754,15 @@ contract claim requires its own explicit handoff after those active owners relea
 
 ### Architecture-document drift handoff
 
-Current HEAD behavior for Button feedback, typed market markers, and search price/place
-parity has outpaced stale architecture-document descriptions. This LANES-only checkpoint
-claims no architecture path and edits no architecture document. A future documentation
-owner must propose exact non-overlapping architecture paths, reconcile them against current
-code and the accepted ADRs, preserve code/ADR/architecture precedence, and obtain an
-independent refutation before any release claim.
+The controller-owned Aboki release record was a concrete, unblocked drift correction:
+`docs/architecture/RELEASE-CONTROLLER.md` still retained seven paths after the
+`ed9483c` implementation, `a4eaed3` independent static PASS, and the completed narrow
+localhost Safari runtime PASS. This checkpoint reconciles that record and releases those
+paths there without changing product behavior or release authority.
+
+Broader architecture descriptions of Button feedback, typed market markers, and search
+price/place parity may still trail current HEAD. They remain unclaimed and require a future
+exact non-overlapping documentation handoff, reconciliation against current code and
+accepted ADRs, and independent refutation. Contribution, iconography-runtime,
+Safari/artificial-state, shared-migration, `NO PUSH`, and `NO DEPLOY` dependencies remain
+unchanged.

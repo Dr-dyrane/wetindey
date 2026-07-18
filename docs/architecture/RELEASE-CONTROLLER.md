@@ -256,9 +256,14 @@ safety/integrity lanes until their separate gates are independently satisfied.
   `a4eaed3b41f19162bc89e4f07100dc23a0285001` changed only `ExchangePanel.tsx` and
   received independent static PASS with no P1/P2/P3. It uses bounded validated current-tab
   `sessionStorage` to preserve amount across responsive remount, clears invalid or blank
-  state, and changes no egress/provider behavior. Retain all seven paths pending the newly
-  assigned narrow HI Quality same-tab desktop→compact→desktop and clear/no-resurrection
-  verdict. The Founder-reaffirmed
+  state, and changes no egress/provider behavior. HI Quality then returned narrow runtime
+  PASS in the existing localhost Safari WetinDey tab: `100` JPY persisted
+  desktop→compact→desktop; clearing removed the amount; pair reset intentionally cleared
+  it; invalid compact input did not resurrect the prior amount; light/dark were exercised;
+  and the tab was restored to Food/light desktop. The seven implementation paths are
+  released. This scoped PASS does not close separate Safari keyboard/artificial-state,
+  iconography-runtime, Contribution, shared-migration, push, or deployment gates. The
+  Founder-reaffirmed
   visual-system rule binds this lane: primary surfaces stay monochrome/neutral so
   controlled color lives in iconography and photography; currency flags are circular local
   SVG orbs, never emoji or rectangular flag badges. No tests, DB, push, or deploy occurred.
