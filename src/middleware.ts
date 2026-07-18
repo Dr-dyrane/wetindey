@@ -28,7 +28,11 @@ export function middleware(request: NextRequest): NextResponse {
   });
 
   const requestHeaders = new Headers(request.headers);
-  requestHeaders.delete("Content-Security-Policy");
+  // Next 15.5 reads Content-Security-Policy before Report-Only when it derives
+  // the nonce for its production bootstrap and Flight scripts. This header is
+  // internal to the cloned request. The nonce policy reaches the browser only
+  // as Report-Only; Vercel's existing static enforcing response stays separate.
+  requestHeaders.set("Content-Security-Policy", policy);
   requestHeaders.set(CSP_NONCE_HEADER, nonce);
   requestHeaders.set(CSP_REPORT_ONLY_HEADER, policy);
 

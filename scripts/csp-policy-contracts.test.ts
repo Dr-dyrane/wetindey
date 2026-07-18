@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { unstable_doesMiddlewareMatch } from "next/experimental/testing/server";
+import { getScriptNonceFromHeader } from "next/dist/server/app-render/get-script-nonce-from-header";
 import { NextRequest } from "next/server";
 import { config, middleware } from "../src/middleware";
 import {
@@ -84,6 +85,7 @@ function middlewareMatches(path: string): boolean {
 const policySource = read("src/lib/security/csp-policy.ts");
 const middlewareSource = read("src/middleware.ts");
 const layoutSource = read("src/app/layout.tsx");
+const seoSource = read("src/lib/seo.tsx");
 const vercelConfig = JSON.parse(read("vercel.json")) as {
   headers: Array<{
     headers: Array<{ key: string; value: string }>;
@@ -181,7 +183,9 @@ const developmentPolicy = buildCspPolicy({
 assert.match(directive(developmentPolicy, "script-src"), /'unsafe-eval'/);
 assert.doesNotMatch(directive(developmentPolicy, "script-src"), /'unsafe-inline'/);
 
-// The exact same policy instance reaches Next's overridden request and the browser.
+// The exact same policy reaches both cloned request CSP headers and the browser's
+// Report-Only response. The internal enforcing-shaped header wins Next 15.5's
+// production precedence without becoming a browser enforcement header.
 const response = withEnvironment(
   {
     NODE_ENV: "production",
@@ -194,7 +198,7 @@ const response = withEnvironment(
       new NextRequest("https://wetindey-git-h6.vercel.app/", {
         headers: {
           accept: "text/html",
-          "content-security-policy": "script-src 'nonce-attacker'",
+          "content-security-policy": "script-src 'self' 'unsafe-inline'",
         },
       }),
     ),
@@ -204,18 +208,20 @@ const requestPolicy = requiredHeader(
   response.headers,
   `x-middleware-request-${CSP_REPORT_ONLY_HEADER.toLowerCase()}`,
 );
+const nextRequestPolicy = requiredHeader(
+  response.headers,
+  "x-middleware-request-content-security-policy",
+);
 const requestNonce = requiredHeader(
   response.headers,
   `x-middleware-request-${CSP_NONCE_HEADER}`,
 );
 assert.equal(requestPolicy, responsePolicy);
+assert.equal(nextRequestPolicy, responsePolicy);
+assert.equal(getScriptNonceFromHeader(nextRequestPolicy), requestNonce);
 assert.match(responsePolicy, new RegExp(`'nonce-${requestNonce}'`));
 assert.ok(isCspNonce(requestNonce));
 assert.equal(response.headers.get("Content-Security-Policy"), null);
-assert.equal(
-  response.headers.get("x-middleware-request-content-security-policy"),
-  null,
-);
 assert.equal(response.headers.get(CSP_NONCE_HEADER), null);
 assert.equal(
   response.headers.get("Cache-Control"),
@@ -224,6 +230,10 @@ assert.equal(
 assert.match(
   requiredHeader(response.headers, "x-middleware-override-headers"),
   /(?:^|,)x-nonce(?:,|$)/,
+);
+assert.match(
+  requiredHeader(response.headers, "x-middleware-override-headers"),
+  /(?:^|,)content-security-policy(?:,|$)/,
 );
 
 const middlewareNonces = withEnvironment(
@@ -280,6 +290,17 @@ assert.match(
   layoutSource,
   /<script\s+nonce=\{nonce\}\s+src="https:\/\/api\.mapbox\.com\/mapbox-gl-js\/v3\.1\.2\/mapbox-gl\.js"\s+defer\s+\/>/,
 );
+assert.match(seoSource, /export async function JsonLd/);
+assert.match(
+  seoSource,
+  /const nonce = \(await headers\(\)\)\.get\(CSP_NONCE_HEADER\);/,
+);
+assert.match(seoSource, /if \(!nonce \|\| !isCspNonce\(nonce\)\)/);
+assert.equal(seoSource.match(/nonce=\{nonce\}/g)?.length, 1);
+assert.equal(
+  seoSource.includes('JSON.stringify(data).replace(/</g, "\\\\u003c")'),
+  true,
+);
 
 // The matcher keeps nonce-bearing policy off non-document and collector routes.
 for (const path of ["/", "/item/rice", "/place/mile-12"]) {
@@ -311,7 +332,11 @@ assert.match(
 );
 assert.match(
   middlewareSource,
-  /requestHeaders\.delete\("Content-Security-Policy"\)/,
+  /requestHeaders\.set\("Content-Security-Policy", policy\)/,
+);
+assert.doesNotMatch(
+  middlewareSource,
+  /response\.headers\.set\("Content-Security-Policy"/,
 );
 assert.equal(middlewareSource.match(/buildCspPolicy\(/g)?.length, 1);
 

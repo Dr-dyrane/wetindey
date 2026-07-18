@@ -10,7 +10,9 @@
  * configured; that is deliberate (see its comment) and it is the same throw the
  * sitemap already relies on at build.
  */
+import { headers } from "next/headers";
 import { siteOrigin } from "@/app/sitemap";
+import { CSP_NONCE_HEADER, isCspNonce } from "@/lib/security/csp-policy";
 
 /** e.g. absoluteUrl("/item/rice") -> "https://wetindey.live/item/rice". */
 export function absoluteUrl(path = "/"): string {
@@ -23,17 +25,27 @@ export function absoluteUrl(path = "/"): string {
  * A JSON-LD block, embedded the way Google reads it.
  *
  * `type="application/ld+json"` is a script, so the site CSP's `script-src`
- * covers it (vercel.json ships `'unsafe-inline'` today; if H6's nonce lands,
- * this tag needs the nonce threaded in, same as layout.tsx's inline scripts).
+ * covers it. It consumes the same cloned-request nonce as Next and the root
+ * layout, so the structured-data bytes do not need an unsafe-inline exception.
  *
  * The `<` escape is not decoration: a stray "</script>" inside any string value
  * (a market address, an item description) would otherwise close the tag early
  * and inject the remainder as markup. Escaping "<" to its unicode form is the
  * standard, and it leaves the JSON semantically identical.
  */
-export function JsonLd({ data }: { data: Record<string, unknown> | Record<string, unknown>[] }) {
+export async function JsonLd({
+  data,
+}: {
+  data: Record<string, unknown> | Record<string, unknown>[];
+}) {
+  const nonce = (await headers()).get(CSP_NONCE_HEADER);
+  if (!nonce || !isCspNonce(nonce)) {
+    throw new Error("JsonLd requires the request-boundary CSP nonce.");
+  }
+
   return (
     <script
+      nonce={nonce}
       type="application/ld+json"
       dangerouslySetInnerHTML={{ __html: JSON.stringify(data).replace(/</g, "\\u003c") }}
     />
