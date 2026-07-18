@@ -15,17 +15,28 @@ import { getItemBySlug, getItemOffers } from "@/lib/seo-queries";
  */
 export const size = OG_SIZE;
 export const contentType = OG_CONTENT_TYPE;
-export const alt = "A WetinDey food price card";
+export const alt = "A WetinDey food item information card";
+export const revalidate = 3600;
 
 export default async function Image({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const item = await getItemBySlug(slug);
   if (!item) return ogCard({ eyebrow: "WetinDey", title: "Food prices in Lagos" });
 
-  const summary = itemPriceSummary(await getItemOffers(item.id));
+  const result = await getItemOffers(item.id);
+  const summary =
+    result.kind === "observed" ? itemPriceSummary(result.offers) : null;
+  if (!summary) {
+    return ogCard({
+      eyebrow: "WetinDey",
+      title: item.name,
+      subtitle: "Food catalog information in Lagos",
+    });
+  }
+
   return ogCard({
     eyebrow: "WetinDey",
     title: `${item.name} price in Lagos`,
-    pill: summary ? `From ${nairaPlain(summary.minKobo)} / ${summary.unit}` : undefined,
+    pill: `Observed from ${nairaPlain(summary.minKobo)} / ${summary.unit}`,
   });
 }

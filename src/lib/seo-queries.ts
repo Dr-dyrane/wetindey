@@ -13,18 +13,32 @@
  *      one, and keeping them apart stops the client from importing a route-only
  *      query by accident.
  *
- * The shapes deliberately mirror `getPlaceOffers` (actions.ts) so the two never
- * disagree about what an offer row is, with one addition each surface needs:
- * `items.slug` / `places.slug`, so a page can link to the other family.
+ * Public offer facts come from immutable observations, never from the
+ * provenance-flattened `offers_current` projection. The exported result is
+ * discriminated so a sample number cannot accidentally enter metadata,
+ * structured data, or a social card as an observed price.
  *
- * PRICES ARE KOBO. `offers_current.price_min` / `price_max` are integer kobo
- * (schema/index.ts, and money.ts: "The argument is ALWAYS kobo"). Nothing here
- * divides by 100; the callers format with `formatNaira` (display) or divide once
- * for JSON-LD (seo.tsx). This module passes the stored unit through untouched.
+ * PRICES ARE KOBO. Nothing here divides by 100; callers format display values
+ * with `formatNaira`, while `productJsonLd` performs the one JSON-LD conversion.
  */
 import { db } from "@/db";
-import { areas, items, itemVariants, offersCurrent, places, units } from "@/db/schema";
-import { and, asc, eq } from "drizzle-orm";
+import {
+  areas,
+  items,
+  itemVariants,
+  observations,
+  places,
+  sources,
+  units,
+} from "@/db/schema";
+import { and, eq, lte, ne } from "drizzle-orm";
+import {
+  assessTrust,
+  FRESHNESS_POLICY,
+  type Availability,
+  type ObservationProvenance,
+  type TrustObservation,
+} from "@/lib/trust";
 
 export type SeoItem = {
   id: string;
@@ -61,56 +75,355 @@ export async function getItemBySlug(slug: string): Promise<SeoItem | null> {
   return row ?? null;
 }
 
-/** A current offer for one item, at one place, in one unit. Prices in kobo. */
-export type SeoItemOffer = {
-  offerId: string;
+type SeoObservedAvailability =
+  | {
+      kind: "available";
+      price: {
+        minKobo: number;
+        maxKobo: number;
+      };
+    }
+  | { kind: "unavailable" };
+
+export type SeoObservedFacts = {
+  observedAt: string;
+  freshness: "fresh" | "stale";
+  availability: SeoObservedAvailability;
+};
+
+type SeoItemOfferIdentity = {
+  offerKey: string;
   placeId: string;
   placeName: string;
   placeSlug: string;
   variantName: string;
   unit: string;
-  priceMin: number;
-  priceMax: number | null;
-  availabilityState: string;
-  freshnessState: string;
-  lastObservedAt: string; // ISO 8601
 };
 
+export type SeoItemOffersResult =
+  | {
+      kind: "observed";
+      offers: Array<SeoItemOfferIdentity & { facts: SeoObservedFacts }>;
+    }
+  | {
+      kind: "sample";
+      samples: Array<
+        SeoItemOfferIdentity & {
+          samplePrice: { minKobo: number; maxKobo: number };
+        }
+      >;
+    }
+  | { kind: "catalog" };
+
+type EvidenceRow = {
+  itemVariantId: string;
+  unitId: string;
+  placeId: string;
+  availabilityState: string;
+  priceAmount: number | null;
+  currency: string;
+  observedAt: Date;
+  sourceId: string;
+  sourceReliability: number;
+  collectionMethod: string;
+  provenance: unknown;
+};
+
+type EvidenceProjection<T extends EvidenceRow> =
+  | {
+      kind: "observed";
+      offers: Array<{ row: T; facts: SeoObservedFacts }>;
+    }
+  | {
+      kind: "sample";
+      samples: Array<{
+        row: T;
+        samplePrice: { minKobo: number; maxKobo: number };
+      }>;
+    }
+  | { kind: "catalog" };
+
+const EXPIRATION_MS = FRESHNESS_POLICY.expirationHours * 3_600_000;
+
+function provenanceOf(value: unknown): ObservationProvenance {
+  switch (value) {
+    case "synthetic":
+    case "observed":
+    case "partner":
+    case "reference":
+    case "inferred":
+      return value;
+    default:
+      throw new Error(`seo: unknown observation provenance ${JSON.stringify(value)}`);
+  }
+}
+
+function availabilityOf(value: string): Availability {
+  if (value === "available" || value === "unavailable") return value;
+  throw new Error(`seo: unknown observation availability ${JSON.stringify(value)}`);
+}
+
+function observedAtMillis(row: EvidenceRow): number {
+  const value = row.observedAt.getTime();
+  if (!Number.isFinite(value)) {
+    throw new Error(`seo: undecodable observed_at ${String(row.observedAt)}`);
+  }
+  return value;
+}
+
+function requirePrice(row: EvidenceRow): number {
+  if (
+    row.currency !== "NGN" ||
+    row.priceAmount === null ||
+    !Number.isSafeInteger(row.priceAmount) ||
+    row.priceAmount <= 0
+  ) {
+    throw new Error("seo: an available observation has no valid NGN price");
+  }
+  return row.priceAmount;
+}
+
+function evidenceKey(row: EvidenceRow): string {
+  return `${row.itemVariantId}:${row.unitId}:${row.placeId}`;
+}
+
+function groupEvidence<T extends EvidenceRow>(rows: T[]): T[][] {
+  const groups = new Map<string, T[]>();
+  for (const row of rows) {
+    const key = evidenceKey(row);
+    const group = groups.get(key);
+    if (group) group.push(row);
+    else groups.set(key, [row]);
+  }
+  return [...groups.values()];
+}
+
+function trustObservation(row: EvidenceRow): TrustObservation {
+  return {
+    observedAt: row.observedAt,
+    sourceId: row.sourceId,
+    sourceReliability: row.sourceReliability,
+    collectionMethod: row.collectionMethod,
+    availabilityState: row.availabilityState,
+    provenance: provenanceOf(row.provenance),
+  };
+}
+
+function observedFacts(rows: EvidenceRow[], now: number): SeoObservedFacts | null {
+  const observedRows = rows.filter((row) => provenanceOf(row.provenance) === "observed");
+  if (observedRows.length === 0) return null;
+
+  for (const row of observedRows) {
+    const availability = availabilityOf(row.availabilityState);
+    observedAtMillis(row);
+    if (availability === "available") requirePrice(row);
+  }
+
+  const assessment = assessTrust(observedRows.map(trustObservation), now);
+  if (assessment.freshness === "expired" || assessment.observationCount === 0) return null;
+
+  const cutoff = now - EXPIRATION_MS;
+  const currentRows = observedRows.filter((row) => observedAtMillis(row) >= cutoff);
+  if (currentRows.length === 0) return null;
+
+  const newestMillis = Math.max(...currentRows.map(observedAtMillis));
+  const newestStates = new Set(
+    currentRows
+      .filter((row) => observedAtMillis(row) === newestMillis)
+      .map((row) => availabilityOf(row.availabilityState)),
+  );
+  if (newestStates.size !== 1) {
+    throw new Error("seo: equally recent observed rows disagree on availability");
+  }
+
+  const availability = [...newestStates][0];
+  if (assessment.availability !== availability) {
+    throw new Error("seo: observation assessment disagrees with newest availability");
+  }
+
+  const base = {
+    observedAt: new Date(newestMillis).toISOString(),
+    freshness: assessment.freshness,
+  } as const;
+
+  if (availability === "unavailable") {
+    return { ...base, availability: { kind: "unavailable" } };
+  }
+
+  const prices = currentRows
+    .filter((row) => availabilityOf(row.availabilityState) === "available")
+    .map(requirePrice);
+
+  return {
+    ...base,
+    availability: {
+      kind: "available",
+      price: {
+        minKobo: Math.min(...prices),
+        maxKobo: Math.max(...prices),
+      },
+    },
+  };
+}
+
+function samplePrice(
+  rows: EvidenceRow[],
+): { minKobo: number; maxKobo: number } | null {
+  for (const row of rows) {
+    observedAtMillis(row);
+    availabilityOf(row.availabilityState);
+  }
+
+  const newestMillis = Math.max(...rows.map(observedAtMillis));
+  const newestStates = new Set(
+    rows
+      .filter((row) => observedAtMillis(row) === newestMillis)
+      .map((row) => availabilityOf(row.availabilityState)),
+  );
+  if (newestStates.size !== 1) {
+    throw new Error("seo: equally recent sample rows disagree on availability");
+  }
+  if ([...newestStates][0] === "unavailable") return null;
+
+  const prices = rows
+    .filter((row) => availabilityOf(row.availabilityState) === "available")
+    .map(requirePrice);
+  if (prices.length === 0) return null;
+  return { minKobo: Math.min(...prices), maxKobo: Math.max(...prices) };
+}
+
 /**
- * Every current offer for an item, across all of its variants, at every place.
+ * Route-level publication policy:
+ * - any live observed evidence publishes only observed offer keys;
+ * - a wholly synthetic result may expose HTML-only sample values;
+ * - every other origin mixture is catalog-only.
  *
- * No radius and no expiry filter, on purpose: this is the whole picture for one
- * item, and each row carries its own `freshnessState` and `lastObservedAt` so
- * the page can date it honestly rather than hide the stale ones. That mirrors
- * `getPlaceOffers`, which also returns all current offers unfiltered; the
- * radius/expiry windowing belongs to the location-aware landing list, not here.
- *
- * Ordered by price so the cheapest market is first, which is the question an
- * item page answers.
+ * Data faults also return catalog-only. A malformed or unknown row may remove
+ * an offer claim, but it may never manufacture one.
  */
-export async function getItemOffers(itemId: string): Promise<SeoItemOffer[]> {
+function projectEvidence<T extends EvidenceRow>(
+  rows: T[],
+  now: number = Date.now(),
+): EvidenceProjection<T> {
+  try {
+    const provenances = rows.map((row) => provenanceOf(row.provenance));
+    if (provenances.includes("observed")) {
+      const offers = groupEvidence(rows)
+        .filter((group) =>
+          group.some((row) => provenanceOf(row.provenance) === "observed"),
+        )
+        .map((group) => {
+          const facts = observedFacts(group, now);
+          return facts ? { row: group[0], facts } : null;
+        })
+        .filter(
+          (offer): offer is { row: T; facts: SeoObservedFacts } => offer !== null,
+        );
+      return offers.length > 0 ? { kind: "observed", offers } : { kind: "catalog" };
+    }
+
+    if (provenances.length > 0 && provenances.every((value) => value === "synthetic")) {
+      const samples = groupEvidence(rows)
+        .map((group) => {
+          const price = samplePrice(group);
+          return price ? { row: group[0], samplePrice: price } : null;
+        })
+        .filter(
+          (
+            sample,
+          ): sample is {
+            row: T;
+            samplePrice: { minKobo: number; maxKobo: number };
+          } => sample !== null,
+        );
+      return samples.length > 0 ? { kind: "sample", samples } : { kind: "catalog" };
+    }
+
+    return { kind: "catalog" };
+  } catch {
+    return { kind: "catalog" };
+  }
+}
+
+/**
+ * Public evidence for an item. Moderation admits every non-rejected immutable
+ * row; provenance and freshness admission happen in `projectEvidence`.
+ */
+export async function getItemOffers(itemId: string): Promise<SeoItemOffersResult> {
+  const now = new Date();
   const rows = await db
     .select({
-      offerId: offersCurrent.id,
-      placeId: places.id,
+      itemVariantId: observations.itemVariantId,
+      unitId: observations.unitId,
+      placeId: observations.placeId,
       placeName: places.name,
       placeSlug: places.slug,
       variantName: itemVariants.displayName,
       unit: units.displayName,
-      priceMin: offersCurrent.priceMin,
-      priceMax: offersCurrent.priceMax,
-      availabilityState: offersCurrent.availabilityState,
-      freshnessState: offersCurrent.freshnessState,
-      lastObservedAt: offersCurrent.lastObservedAt,
+      availabilityState: observations.availabilityState,
+      priceAmount: observations.priceAmount,
+      currency: observations.currency,
+      observedAt: observations.observedAt,
+      sourceId: observations.sourceId,
+      sourceReliability: sources.reliabilityScoreInternal,
+      collectionMethod: observations.collectionMethod,
+      provenance: observations.provenance,
     })
-    .from(offersCurrent)
-    .innerJoin(itemVariants, eq(offersCurrent.itemVariantId, itemVariants.id))
-    .innerJoin(places, eq(offersCurrent.placeId, places.id))
-    .innerJoin(units, eq(offersCurrent.unitId, units.id))
-    .where(eq(itemVariants.itemId, itemId))
-    .orderBy(asc(offersCurrent.priceMin));
+    .from(observations)
+    .innerJoin(itemVariants, eq(observations.itemVariantId, itemVariants.id))
+    .innerJoin(places, eq(observations.placeId, places.id))
+    .innerJoin(units, eq(observations.unitId, units.id))
+    .innerJoin(sources, eq(observations.sourceId, sources.id))
+    .where(
+      and(
+        eq(itemVariants.itemId, itemId),
+        ne(observations.moderationStatus, "rejected"),
+        lte(observations.observedAt, now),
+      ),
+    );
 
-  return rows.map((r) => ({ ...r, lastObservedAt: r.lastObservedAt.toISOString() }));
+  const result = projectEvidence(rows, now.getTime());
+  if (result.kind === "observed") {
+    const offers = result.offers.map(({ row, facts }) => ({
+      offerKey: evidenceKey(row),
+      placeId: row.placeId,
+      placeName: row.placeName,
+      placeSlug: row.placeSlug,
+      variantName: row.variantName,
+      unit: row.unit,
+      facts,
+    }));
+    offers.sort((left, right) => {
+      const leftPrice =
+        left.facts.availability.kind === "available"
+          ? left.facts.availability.price.minKobo
+          : Number.POSITIVE_INFINITY;
+      const rightPrice =
+        right.facts.availability.kind === "available"
+          ? right.facts.availability.price.minKobo
+          : Number.POSITIVE_INFINITY;
+      return leftPrice - rightPrice || left.placeName.localeCompare(right.placeName);
+    });
+    return { kind: "observed", offers };
+  }
+  if (result.kind === "sample") {
+    const samples = result.samples.map(({ row, samplePrice: price }) => ({
+      offerKey: evidenceKey(row),
+      placeId: row.placeId,
+      placeName: row.placeName,
+      placeSlug: row.placeSlug,
+      variantName: row.variantName,
+      unit: row.unit,
+      samplePrice: price,
+    }));
+    samples.sort(
+      (left, right) =>
+        left.samplePrice.minKobo - right.samplePrice.minKobo ||
+        left.placeName.localeCompare(right.placeName),
+    );
+    return { kind: "sample", samples };
+  }
+  return result;
 }
 
 export type SeoPlace = {
@@ -174,48 +487,103 @@ export async function getPlaceBySlug(slug: string): Promise<SeoPlace | null> {
   };
 }
 
-/** A current offer at one place. Prices in kobo. Carries `itemSlug` so the place
- *  page can link each price to its item page. */
-export type SeoPlaceOffer = {
-  offerId: string;
+type SeoPlaceOfferIdentity = {
+  offerKey: string;
   itemName: string;
   itemSlug: string;
   variantName: string;
   unit: string;
-  priceMin: number;
-  priceMax: number | null;
-  availabilityState: string;
-  freshnessState: string;
-  lastObservedAt: string; // ISO 8601
 };
 
+export type SeoPlaceOffersResult =
+  | {
+      kind: "observed";
+      offers: Array<SeoPlaceOfferIdentity & { facts: SeoObservedFacts }>;
+    }
+  | {
+      kind: "sample";
+      samples: Array<
+        SeoPlaceOfferIdentity & {
+          samplePrice: { minKobo: number; maxKobo: number };
+        }
+      >;
+    }
+  | { kind: "catalog" };
+
 /**
- * Every current offer at a place. Mirrors `getPlaceOffers` (actions.ts) exactly,
- * adding `items.slug` for the outbound link. Ordered by item name so the list
- * reads like a price board.
+ * Public evidence at a place, with the same admission and fail-closed result
+ * contract as the item query.
  */
-export async function getPlaceOffersForSeo(placeId: string): Promise<SeoPlaceOffer[]> {
+export async function getPlaceOffersForSeo(
+  placeId: string,
+): Promise<SeoPlaceOffersResult> {
+  const now = new Date();
   const rows = await db
     .select({
-      offerId: offersCurrent.id,
+      itemVariantId: observations.itemVariantId,
+      unitId: observations.unitId,
+      placeId: observations.placeId,
       itemName: items.canonicalName,
       itemSlug: items.slug,
       variantName: itemVariants.displayName,
       unit: units.displayName,
-      priceMin: offersCurrent.priceMin,
-      priceMax: offersCurrent.priceMax,
-      availabilityState: offersCurrent.availabilityState,
-      freshnessState: offersCurrent.freshnessState,
-      lastObservedAt: offersCurrent.lastObservedAt,
+      availabilityState: observations.availabilityState,
+      priceAmount: observations.priceAmount,
+      currency: observations.currency,
+      observedAt: observations.observedAt,
+      sourceId: observations.sourceId,
+      sourceReliability: sources.reliabilityScoreInternal,
+      collectionMethod: observations.collectionMethod,
+      provenance: observations.provenance,
     })
-    .from(offersCurrent)
-    .innerJoin(itemVariants, eq(offersCurrent.itemVariantId, itemVariants.id))
+    .from(observations)
+    .innerJoin(itemVariants, eq(observations.itemVariantId, itemVariants.id))
     .innerJoin(items, eq(itemVariants.itemId, items.id))
-    .innerJoin(units, eq(offersCurrent.unitId, units.id))
-    .where(eq(offersCurrent.placeId, placeId))
-    .orderBy(asc(items.canonicalName));
+    .innerJoin(units, eq(observations.unitId, units.id))
+    .innerJoin(sources, eq(observations.sourceId, sources.id))
+    .where(
+      and(
+        eq(observations.placeId, placeId),
+        eq(items.active, true),
+        ne(observations.moderationStatus, "rejected"),
+        lte(observations.observedAt, now),
+      ),
+    );
 
-  return rows.map((r) => ({ ...r, lastObservedAt: r.lastObservedAt.toISOString() }));
+  const result = projectEvidence(rows, now.getTime());
+  if (result.kind === "observed") {
+    const offers = result.offers.map(({ row, facts }) => ({
+      offerKey: evidenceKey(row),
+      itemName: row.itemName,
+      itemSlug: row.itemSlug,
+      variantName: row.variantName,
+      unit: row.unit,
+      facts,
+    }));
+    offers.sort(
+      (left, right) =>
+        left.itemName.localeCompare(right.itemName) ||
+        left.variantName.localeCompare(right.variantName),
+    );
+    return { kind: "observed", offers };
+  }
+  if (result.kind === "sample") {
+    const samples = result.samples.map(({ row, samplePrice: price }) => ({
+      offerKey: evidenceKey(row),
+      itemName: row.itemName,
+      itemSlug: row.itemSlug,
+      variantName: row.variantName,
+      unit: row.unit,
+      samplePrice: price,
+    }));
+    samples.sort(
+      (left, right) =>
+        left.itemName.localeCompare(right.itemName) ||
+        left.variantName.localeCompare(right.variantName),
+    );
+    return { kind: "sample", samples };
+  }
+  return result;
 }
 
 /**

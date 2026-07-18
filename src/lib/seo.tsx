@@ -79,7 +79,7 @@ export function breadcrumbJsonLd(crumbs: { name: string; path: string }[]) {
 }
 
 /**
- * A food item as a `Product` with an `AggregateOffer`.
+ * A food item as a `Product`, optionally with an observed `AggregateOffer`.
  *
  * A price-comparison page (one commodity, many sellers) is exactly what
  * AggregateOffer models: `lowPrice`/`highPrice` bound the range and `offerCount`
@@ -96,9 +96,14 @@ export function productJsonLd(args: {
   slug: string;
   description: string | null;
   image: string | null;
-  priceMinKobo: number | null;
-  priceMaxKobo: number | null;
-  offerCount: number;
+  offer:
+    | {
+        kind: "observed";
+        priceMinKobo: number;
+        priceMaxKobo: number;
+        offerCount: number;
+      }
+    | { kind: "none" };
 }) {
   const data: Record<string, unknown> = {
     "@context": "https://schema.org",
@@ -109,13 +114,13 @@ export function productJsonLd(args: {
   };
   if (args.description) data.description = args.description;
   if (args.image) data.image = args.image;
-  if (args.priceMinKobo !== null && args.priceMaxKobo !== null && args.offerCount > 0) {
+  if (args.offer.kind === "observed") {
     data.offers = {
       "@type": "AggregateOffer",
       priceCurrency: CURRENCY,
-      lowPrice: args.priceMinKobo / 100,
-      highPrice: args.priceMaxKobo / 100,
-      offerCount: args.offerCount,
+      lowPrice: args.offer.priceMinKobo / 100,
+      highPrice: args.offer.priceMaxKobo / 100,
+      offerCount: args.offer.offerCount,
     };
   }
   return data;
@@ -218,12 +223,34 @@ export type ItemPriceSummary = {
  * SAME number from one implementation. Input is the minimal shape both have.
  */
 export function itemPriceSummary(
-  offers: { unit: string; priceMin: number; priceMax: number | null; placeId: string }[],
+  offers: Array<{
+    unit: string;
+    placeId: string;
+    facts: {
+      availability:
+        | {
+            kind: "available";
+            price: { minKobo: number; maxKobo: number };
+          }
+        | { kind: "unavailable" };
+    };
+  }>,
 ): ItemPriceSummary | null {
-  if (offers.length === 0) return null;
+  const available = offers.flatMap((offer) =>
+    offer.facts.availability.kind === "available"
+      ? [
+          {
+            unit: offer.unit,
+            placeId: offer.placeId,
+            price: offer.facts.availability.price,
+          },
+        ]
+      : [],
+  );
+  if (available.length === 0) return null;
 
-  const byUnit = new Map<string, typeof offers>();
-  for (const o of offers) {
+  const byUnit = new Map<string, typeof available>();
+  for (const o of available) {
     const list = byUnit.get(o.unit);
     if (list) list.push(o);
     else byUnit.set(o.unit, [o]);
@@ -232,7 +259,7 @@ export function itemPriceSummary(
   // Most offers wins; ties break on unit label so the choice is stable, the same
   // tiebreak `modal_unit` uses in actions.ts.
   let unit = "";
-  let chosen: typeof offers = [];
+  let chosen: typeof available = [];
   for (const [u, list] of byUnit) {
     if (list.length > chosen.length || (list.length === chosen.length && u < unit)) {
       unit = u;
@@ -244,8 +271,8 @@ export function itemPriceSummary(
   let maxKobo = -Infinity;
   const places = new Set<string>();
   for (const o of chosen) {
-    minKobo = Math.min(minKobo, o.priceMin);
-    maxKobo = Math.max(maxKobo, o.priceMax ?? o.priceMin);
+    minKobo = Math.min(minKobo, o.price.minKobo);
+    maxKobo = Math.max(maxKobo, o.price.maxKobo);
     places.add(o.placeId);
   }
 

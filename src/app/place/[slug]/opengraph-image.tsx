@@ -10,19 +10,25 @@ import { getPlaceBySlug, getPlaceOffersForSeo } from "@/lib/seo-queries";
  */
 export const size = OG_SIZE;
 export const contentType = OG_CONTENT_TYPE;
-export const alt = "A WetinDey market price card";
+export const alt = "A WetinDey market information card";
+export const revalidate = 3600;
 
 export default async function Image({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const place = await getPlaceBySlug(slug);
   if (!place) return ogCard({ eyebrow: "WetinDey", title: "Lagos food markets" });
 
-  const offers = await getPlaceOffersForSeo(place.id);
+  const result = await getPlaceOffersForSeo(place.id);
   const where = place.areaName ? `${place.areaName}, Lagos` : "Lagos";
   return ogCard({
     eyebrow: "WetinDey",
     title: place.name,
     subtitle: `${placeTypeLabel(place.placeType)} in ${where}`,
-    pill: offers.length > 0 ? `${offers.length} ${offers.length === 1 ? "price" : "prices"} reported` : undefined,
+    pill:
+      result.kind === "observed"
+        ? `${result.offers.length} observed ${
+            result.offers.length === 1 ? "listing" : "listings"
+          }`
+        : undefined,
   });
 }

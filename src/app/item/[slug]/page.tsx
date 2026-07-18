@@ -49,15 +49,21 @@ export async function generateMetadata({
   const item = await loadItem(slug);
   if (!item) return {};
 
-  const summary = itemPriceSummary(await loadOffers(item.id));
-  const title = `${item.name} food price and availability in Lagos`;
+  const result = await loadOffers(item.id);
+  const summary =
+    result.kind === "observed" ? itemPriceSummary(result.offers) : null;
+  const title = summary
+    ? `${item.name} food price and availability in Lagos`
+    : `${item.name} in Lagos`;
   const description = summary
-    ? `${item.name} food price and availability information across ${summary.placeCount} ${
+    ? `Observed ${item.name} food prices across ${summary.placeCount} ${
         summary.placeCount === 1 ? "market" : "markets"
-      } in south-west Lagos. Prices currently range from ${formatNaira(summary.minKobo)}${
+      } in south-west Lagos range from ${formatNaira(summary.minKobo)}${
         summary.maxKobo > summary.minKobo ? ` to ${formatNaira(summary.maxKobo)}` : ""
       } per ${summary.unit}. Coverage and freshness vary, and price or availability may change before arrival.`
-    : `Food price and availability information for ${item.name} in south-west Lagos. Coverage and freshness vary, and availability is not guaranteed at arrival.`;
+    : result.kind === "observed"
+      ? `Recent observed availability information for ${item.name} in south-west Lagos. Coverage and freshness vary, and availability may change before arrival.`
+      : `Catalog information for ${item.name} in south-west Lagos on WetinDey.`;
 
   const canonical = `/item/${item.slug}`;
   return {
@@ -79,8 +85,9 @@ export default async function ItemPage({ params }: { params: Promise<{ slug: str
   const item = await loadItem(slug);
   if (!item) notFound();
 
-  const offers = await loadOffers(item.id);
-  const summary = itemPriceSummary(offers);
+  const result = await loadOffers(item.id);
+  const summary =
+    result.kind === "observed" ? itemPriceSummary(result.offers) : null;
 
   return (
     <main className="mx-auto min-h-screen max-w-[720px] bg-background px-4 py-6 sm:px-6">
@@ -90,9 +97,14 @@ export default async function ItemPage({ params }: { params: Promise<{ slug: str
           slug: item.slug,
           description: item.description,
           image: item.imageUrl,
-          priceMinKobo: summary?.minKobo ?? null,
-          priceMaxKobo: summary?.maxKobo ?? null,
-          offerCount: summary?.offerCount ?? 0,
+          offer: summary
+            ? {
+                kind: "observed",
+                priceMinKobo: summary.minKobo,
+                priceMaxKobo: summary.maxKobo,
+                offerCount: summary.offerCount,
+              }
+            : { kind: "none" },
         })}
       />
       <JsonLd
@@ -124,19 +136,28 @@ export default async function ItemPage({ params }: { params: Promise<{ slug: str
         )}
         <div className="min-w-0">
           <h1 className="text-title-1 font-semibold tracking-tight text-text-primary">
-            {item.name} price in Lagos
+            {summary ? `${item.name} price in Lagos` : `${item.name} in Lagos`}
           </h1>
           {summary ? (
             <p className="mt-2 text-body text-text-secondary">
               {formatNaira(summary.minKobo)}
               {summary.maxKobo > summary.minKobo
                 ? ` to ${formatNaira(summary.maxKobo)}`
-                : ""} per {summary.unit}, seen at {summary.placeCount}{" "}
+                : ""} per {summary.unit}, observed at {summary.placeCount}{" "}
               {summary.placeCount === 1 ? "market" : "markets"} near south-west Lagos.
+            </p>
+          ) : result.kind === "observed" ? (
+            <p className="mt-2 text-body text-text-secondary">
+              Recent observed availability information is available below.
+            </p>
+          ) : result.kind === "sample" ? (
+            <p className="mt-2 text-body text-text-secondary">
+              Catalog information with clearly labelled Sample listings for exploring
+              WetinDey.
             </p>
           ) : (
             <p className="mt-2 text-body text-text-secondary">
-              No price reported yet. Be the first to report one.
+              No public local observations are available yet.
             </p>
           )}
           {item.description && (
@@ -145,12 +166,15 @@ export default async function ItemPage({ params }: { params: Promise<{ slug: str
         </div>
       </header>
 
-      {offers.length > 0 && (
+      {result.kind === "observed" && (
         <section className="mt-7">
-          <h2 className="text-footnote font-semibold text-text-primary">Where to buy it</h2>
+          <h2 className="text-footnote font-semibold text-text-primary">
+            {result.offers.length} observed{" "}
+            {result.offers.length === 1 ? "listing" : "listings"}
+          </h2>
           <ul className="mt-2.5 flex flex-col gap-2">
-            {offers.map((o) => (
-              <li key={o.offerId}>
+            {result.offers.map((o) => (
+              <li key={o.offerKey}>
                 <Link
                   href={`/place/${o.placeSlug}`}
                   className="squircle flex items-center justify-between gap-3 bg-surface px-3.5 py-3 shadow-card transition-opacity duration-instant active:opacity-80"
@@ -161,16 +185,73 @@ export default async function ItemPage({ params }: { params: Promise<{ slug: str
                     </span>
                     <span className="block truncate text-caption-1 text-text-secondary">
                       {o.variantName}
-                      {o.availabilityState === "unavailable"
-                        ? ", reported unavailable"
-                        : `, ${seenLabel(o.lastObservedAt)}`}
+                      {o.facts.availability.kind === "unavailable"
+                        ? `, observed unavailable, ${seenLabel(o.facts.observedAt)}`
+                        : `, ${seenLabel(o.facts.observedAt)}`}
                     </span>
                   </span>
                   <span className="shrink-0 text-right">
-                    <span className="block text-callout font-semibold tabular-nums text-text-primary">
-                      {formatNaira(o.priceMin)}
+                    {o.facts.availability.kind === "available" ? (
+                      <>
+                        <span className="block text-callout font-semibold tabular-nums text-text-primary">
+                          {formatNaira(o.facts.availability.price.minKobo)}
+                          {o.facts.availability.price.maxKobo >
+                          o.facts.availability.price.minKobo
+                            ? ` to ${formatNaira(
+                                o.facts.availability.price.maxKobo,
+                              )}`
+                            : ""}
+                        </span>
+                        <span className="block text-caption-2 text-text-tertiary">
+                          / {o.unit}
+                        </span>
+                      </>
+                    ) : (
+                      <span className="block text-callout text-text-secondary">
+                        Unavailable
+                      </span>
+                    )}
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      {result.kind === "sample" && (
+        <section className="mt-7">
+          <h2 className="text-footnote font-semibold text-text-primary">
+            Sample listings
+          </h2>
+          <p className="mt-1.5 text-caption-1 text-text-tertiary">
+            Sample data for exploring WetinDey, not a current observation.
+          </p>
+          <ul className="mt-2.5 flex flex-col gap-2">
+            {result.samples.map((o) => (
+              <li key={o.offerKey}>
+                <Link
+                  href={`/place/${o.placeSlug}`}
+                  className="squircle flex items-center justify-between gap-3 bg-surface px-3.5 py-3 shadow-card transition-opacity duration-instant active:opacity-80"
+                >
+                  <span className="min-w-0">
+                    <span className="block truncate text-callout text-text-primary">
+                      {o.placeName}
                     </span>
-                    <span className="block text-caption-2 text-text-tertiary">/ {o.unit}</span>
+                    <span className="block truncate text-caption-1 text-text-tertiary">
+                      {o.variantName}, Sample
+                    </span>
+                  </span>
+                  <span className="shrink-0 text-right">
+                    <span className="block text-callout tabular-nums text-text-secondary">
+                      {formatNaira(o.samplePrice.minKobo)}
+                      {o.samplePrice.maxKobo > o.samplePrice.minKobo
+                        ? ` to ${formatNaira(o.samplePrice.maxKobo)}`
+                        : ""}
+                    </span>
+                    <span className="block text-caption-2 text-text-tertiary">
+                      / {o.unit}
+                    </span>
                   </span>
                 </Link>
               </li>

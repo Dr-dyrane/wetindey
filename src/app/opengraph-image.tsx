@@ -56,17 +56,6 @@ const INK = {
    * change if this element is ever moved onto a different fill.
    */
   textSecondary: "#6C6C71",
-  /**
-   * globals.css `--color-status-confirmed` (systemGreen). The only saturated
-   * hue on the card, spent on the one thing the product actually claims.
-   */
-  statusConfirmed: "#34C759",
-  /** globals.css `--color-status-confirmed-fg` — the ramp's darkened value for
-   *  small text on a tint. */
-  statusConfirmedFg: "#248A3D",
-  /** globals.css `--color-status-confirmed-bg` — rgba(52,199,89,0.14) —
-   *  flattened onto `--color-surface`. */
-  statusConfirmedBg: "#E9F9EE",
 } as const;
 
 export const alt = "WetinDey helps people understand nearby live local information before leaving. Food price and availability are the current V1 capability in south-west Lagos; coverage and freshness vary, and availability may change before arrival.";
@@ -182,8 +171,7 @@ export default async function OpengraphImage() {
 
         <div style={{ display: "flex", flexDirection: "column", gap: "28px" }}>
           {/* Sentence case. The house rule is not decorative: an uppercase
-              headline would be the loudest thing on the card, and the green dot
-              below is supposed to be. */}
+              headline would overpower the location context below. */}
           <div
             style={{
               display: "flex",
@@ -195,32 +183,9 @@ export default async function OpengraphImage() {
             South-west Lagos food prices & availability may change before you arrive.
           </div>
 
-          {/* Separation is fill, never a stroke. Both pills are fills sitting on
-              the grouped background; neither carries an outline. */}
-          <div style={{ display: "flex", alignItems: "center", gap: "20px" }}>
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "14px",
-                background: INK.statusConfirmedBg,
-                color: INK.statusConfirmedFg,
-                fontSize: 30,
-                padding: "14px 28px",
-                borderRadius: "999px",
-              }}
-            >
-              <div
-                style={{
-                  display: "flex",
-                  width: 16,
-                  height: 16,
-                  borderRadius: "999px",
-                  background: INK.statusConfirmed,
-                }}
-              />
-              Confirmed nearby
-            </div>
+          {/* Separation is fill, never a stroke. The location pill sits on the
+              grouped background and carries no confidence treatment. */}
+          <div style={{ display: "flex", alignItems: "center" }}>
             <div
               style={{
                 display: "flex",

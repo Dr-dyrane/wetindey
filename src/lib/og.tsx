@@ -26,11 +26,9 @@ import { ImageResponse } from "next/og";
  */
 const INK = {
   background: "#F2F2F7",
+  surface: "#FFFFFF",
   textPrimary: "#000000",
   textSecondary: "#6C6C71",
-  statusConfirmed: "#34C759",
-  statusConfirmedFg: "#248A3D",
-  statusConfirmedBg: "#E9F9EE",
 } as const;
 
 export const OG_SIZE = { width: 1200, height: 630 };
@@ -89,16 +87,14 @@ export function ogCard(opts: {
             style={{
               display: "flex",
               alignItems: "center",
-              gap: 16,
               alignSelf: "flex-start",
-              background: INK.statusConfirmedBg,
-              color: INK.statusConfirmedFg,
+              background: INK.surface,
+              color: INK.textSecondary,
               fontSize: 34,
               padding: "16px 32px",
               borderRadius: 999,
             }}
           >
-            <div style={{ display: "flex", width: 18, height: 18, borderRadius: 999, background: INK.statusConfirmed }} />
             {opts.pill}
           </div>
         ) : null}

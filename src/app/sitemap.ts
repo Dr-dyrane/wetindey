@@ -1,8 +1,9 @@
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 import type { MetadataRoute } from "next";
-import { asc, eq, max } from "drizzle-orm";
-import { db, items, offersCurrent, places } from "@/db";
+import { and, asc, eq, gte, lte, max, ne } from "drizzle-orm";
+import { db, items, observations, places } from "@/db";
+import { FRESHNESS_POLICY } from "@/lib/trust";
 
 /**
  * Pins this route to build-time generation.
@@ -144,23 +145,38 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const origin = siteOrigin();
 
   /**
-   * The root renders the map and the offers on it, so what it last changed is
-   * when an offer last changed. This is a real query against real data rather
-   * than `new Date()`, which would claim the content changed on every deploy and
-   * teach crawlers to ignore the field.
+   * The root renders nearby live information, so its public freshness comes
+   * only from non-rejected observed evidence inside the shared expiration
+   * window. `offers_current.updated_at` is deliberately not used: that
+   * projection has no provenance and can be refreshed by sample or quarantined
+   * origins.
    *
    * `max()` over an empty table yields NULL. That is not an error — it is an
    * unseeded database honestly reporting it has no offers — so the entry simply
    * carries no `lastModified` rather than a fabricated one.
    */
-  const [offerFreshness] = await db
-    .select({ latest: max(offersCurrent.updatedAt) })
-    .from(offersCurrent);
+  const now = new Date();
+  const freshnessCutoff = new Date(
+    now.getTime() - FRESHNESS_POLICY.expirationHours * 3_600_000,
+  );
+  const [observedFreshness] = await db
+    .select({ latest: max(observations.observedAt) })
+    .from(observations)
+    .where(
+      and(
+        eq(observations.provenance, "observed"),
+        ne(observations.moderationStatus, "rejected"),
+        gte(observations.observedAt, freshnessCutoff),
+        lte(observations.observedAt, now),
+      ),
+    );
 
   const entries: MetadataRoute.Sitemap = [
     {
       url: `${origin}/`,
-      ...(offerFreshness?.latest ? { lastModified: offerFreshness.latest } : {}),
+      ...(observedFreshness?.latest
+        ? { lastModified: observedFreshness.latest }
+        : {}),
     },
   ];
 
