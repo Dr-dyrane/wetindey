@@ -198,13 +198,19 @@ export async function searchItems(
       ORDER BY item_id, offers_in_unit DESC, unit_id
     ),
     fallback_unit AS (
-      SELECT DISTINCT ON (item_id) item_id, unit_id
-      FROM (
-        SELECT iv.item_id, iv.unit_id, iv.id
-        FROM ${itemVariants} iv
-        JOIN matched_items mi ON mi.id = iv.item_id
-        ORDER BY iv.item_id, iv.id ASC
-      ) f
+      /*
+       * A variant has no intrinsic unit. The persisted relationship is the
+       * (variant, unit) pair on an offer or observation. This fallback supplies
+       * only a known unit label when nearby is empty; prices, counts, trust,
+       * and timestamps below still come exclusively from nearby.
+       */
+      SELECT DISTINCT ON (iv.item_id)
+        iv.item_id,
+        fo.unit_id
+      FROM matched_items mi
+      JOIN ${itemVariants} iv ON iv.item_id = mi.id
+      JOIN ${offersCurrent} fo ON fo.item_variant_id = iv.id
+      ORDER BY iv.item_id, iv.id ASC, fo.unit_id ASC, fo.id ASC
     ),
     resolved_unit AS (
       SELECT 
@@ -231,7 +237,7 @@ export async function searchItems(
     JOIN ${items} i ON i.id = mi.id
     JOIN resolved_unit ru ON ru.item_id = i.id
     JOIN ${units} u ON u.id = ru.unit_id
-    LEFT JOIN ${itemVariants} v ON v.item_id = i.id AND v.unit_id = ru.unit_id
+    LEFT JOIN ${itemVariants} v ON v.item_id = i.id
     LEFT JOIN nearby o ON o.item_variant_id = v.id AND o.unit_id = ru.unit_id
     GROUP BY i.id, u.display_name
     ORDER BY COUNT(o.id) DESC, i.canonical_name ASC
