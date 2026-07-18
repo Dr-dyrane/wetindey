@@ -46,7 +46,7 @@ to idle rather than creating a replacement task.
 
 | Pinned employee | Current state | Next bounded deliverable |
 |---|---|---|
-| Nearby Presence Platform Engineer | Active, pathless defect-enumeration lane | Complete the REFUTED disposable `0012` proof report around `presence_activate.expires_at`; propose no source correction paths before the report is final, claim no app/UI/map paths, and keep the shared database untouched |
+| Nearby Presence Platform Engineer | Active, exact four-path corrected-unapplied-`0012` lane | Correct the five enumerated executable SQL failures, add deterministic idle-retention and account-deletion contracts, and obtain fresh blank+upgrade plus independent new-cluster proof; shared DB and all frozen paths remain untouched |
 | Program Management & Functional Organization Lead | Idle | Reconcile portfolio proposals into CEO-reviewable lane candidates without editing product paths |
 | Contribution Integrity & Moderation Engineer | Active, exact five paths retained | Close the `495750a` runtime refutation without widening; `0013+` remains planning-only until containment and migration ordering clear |
 | Human Interface Design Engineer | Idle | Take the next controller-approved disjoint HI slice; no shared hot-file claim by implication |
@@ -98,13 +98,43 @@ source ownership; only rows with exact paths grant edit authority.
 | Contribution containment/integrity (`495750a`) | **Active, exact five paths retained** | Contribution retains `src/app/actions.ts`, `src/app/page.tsx`, `ReportPriceSheet.tsx`, `ConfirmVisitSheet.tsx`, and `src/core/i18n/strings.ts` until runtime refutation closes |
 | Modal zero-focusable/focus restoration | **Active, exact two paths** | Motion owns only `ModalSheet.tsx` and `scripts/motion-contracts.test.ts`; independent runtime verdict is pending |
 | Nonce CSP (`1384a53`) | **Pathless runtime/Preview evidence** | Source is corrected and committed. Prove nonce/header/auth/map/analytics/PWA/report delivery at runtime and in Preview; claim no source unless runtime finds a defect |
-| Nearby Presence forward `0012` | **Active, pathless evidence/defect enumeration** | Disposable proof is REFUTED on `presence_activate.expires_at` ambiguity. Finish the proof report before naming source-correction paths; shared database remains untouched |
+| Nearby Presence forward `0012` | **Active, exact four-path corrected-unapplied lane** | Presence owns only both presence pillars, `0012_guarded_presence.sql`, and the focused migration contract. Five executable SQL failures are enumerated below; schema declarations, migration metadata, all `0011` bytes, app/UI/map paths, and the shared database remain frozen |
 | P0 search schema/provenance (`c6f304b`) | **Pathless disposable-SQL evidence** | Static correction exists; reopen only guarded disposable execution. No code, schema, shared-target, push, or deploy claim |
 | HI category/Aboki plus Add/Profile | **Pathless release evidence** | Scoped UI changes passed. Reopen only combined Safari keyboard and artificial loading/error/cache/empty-state evidence; implementation paths remain released |
 | Historical interaction validation | **Pathless Q1 evidence/refutation** | Recheck category coherence, popular/detail count, route/fallback/handoff only where no newer runtime evidence supersedes the old failure; claim no implementation path |
 | Market Details Founder visual rejection | **Dependency-blocked, pathless** | Remains behind Contribution. Do not claim `src/app/page.tsx`, `src/app/actions.ts`, or the proposed row component yet |
 | Account deletion capability | **Pathless provider evidence and implementation planning** | Founder/legal product policy is approved. Reconcile Contribution/Profile conflicts before any exact path claim; no implementation is claimed |
 | Corrected historical refutations | **Closed / superseded** | Do not reopen D1/D2, seed typing/H27, H23, BottomSheet, Mapbox route validation, public-source ingestion, or ADR governance already corrected and independently passed |
+
+### Active lane: corrected-unapplied Nearby Presence `0012`
+
+The Nearby Presence Platform Engineer owns exactly:
+
+- `src/db/pillars/80-presence-services.sql`
+- `src/db/pillars/90-presence-security.sql`
+- `src/db/migrations/0012_guarded_presence.sql`
+- `scripts/presence/presence-migration-contract.test.ts`
+
+Disposable execution REFUTED the candidate with five executable SQL failures:
+
+1. `presence_activate` has an `expires_at` ambiguity.
+2. Snapshot execution fails on `control_generation`.
+3. Snapshot marker and Wave execution require explicit `varchar`/`text` casts.
+4. Wave execution has an `expires_at` ambiguity.
+5. `review_reports` resolution execution fails.
+
+The correction must also prove deterministic idle-retention cleanup and an
+account-deletion purge/anonymization contract. Acceptance requires fresh Drizzle proof
+from both blank and upgrade lineages, executable coverage for all nine RPCs, lifecycle,
+security, cleanup, and idempotence evidence, plus a fresh independent refuter on a new
+disposable cluster.
+
+Freeze `src/db/schema/presence.ts`, `src/db/schema/index.ts`,
+`src/db/migrations/meta/0012_snapshot.json`, `src/db/migrations/meta/_journal.json`, and
+every `0011` byte. They may change only if the corrected SQL provably changes stored
+objects or signatures, in which case the controller must record a new exact claim before
+the edit. The shared database remains untouched until the corrected candidate passes all
+required proof and independent refutation.
 
 ### Search execution proof handoff
 
@@ -253,7 +283,7 @@ below.
 
 Presence work must proceed in this dependency order:
 
-`containment [complete] -> ADR-016 acceptance [complete] -> disposable 0012 proof [active] -> exact-target schema/migration gate -> server boundary -> consent/lifecycle -> snapshot lifecycle -> map DTO/UI -> independent refutation -> separately released target migration/pilot`
+`containment [complete] -> ADR-016 acceptance [complete] -> corrected-unapplied 0012 exact four-path lane [active] -> blank+upgrade/new-cluster PASS -> exact-target schema/migration gate -> server boundary -> consent/lifecycle -> snapshot lifecycle -> map DTO/UI -> independent refutation -> separately released target migration/pilot`
 
 ### Founder-directed safe interpretation: Reciprocal Community Presence
 
@@ -292,9 +322,9 @@ with no P1, P2, or P3 findings, and all four paths are released. At-rest coordin
 the dormant presence DTO/renderer remain later schema/map concerns; this result claims no
 runtime or deployment proof. The Founder-reviewable ADR-016 packet is complete at
 `0480182` plus correction `a9a7c60`, and its former Founder-selection step was superseded
-by accepted `c960860`. The current dependency is the active pathless `0012`
-defect-enumeration report after the `presence_activate.expires_at` refutation, not
-app/UI/map implementation.
+by accepted `c960860`. The current dependency is the active exact four-path
+corrected-unapplied `0012` lane and its blank+upgrade/new-cluster proof, not app/UI/map
+implementation or shared-target execution.
 
 ### Localhost operational evidence - no repository lane
 
@@ -332,13 +362,14 @@ Antigravity and Nietzsche established the current fail-closed migration record:
 - Preview remains quarantined from rollout decisions while its unexplained ledger row and
   schema/ledger drift are unresolved.
 - **NO PUSH / NO DEPLOY** remains.
-- Forward `0012` is reserved for the presence repair. Its pathless disposable proof is
-  active, but shared execution remains gated on full shared-target inventory, parent
-  normalization plus quarantine-or-approved-repair, exact schema/RPC/RLS/grant
-  fingerprint, coordinate non-null aggregate, restore proof, independent NOT_REFUTED
-  evidence, and ordered release go/no-go. The deterministic exact-target flow/window is
-  conditionally authorized only after those gates pass. Contribution integrity must
-  follow as `0013` or later.
+- Forward `0012` is reserved for the presence repair. The corrected-unapplied lane is
+  active only over the two presence pillars, `0012_guarded_presence.sql`, and its focused
+  contract. Shared execution remains gated on fresh blank+upgrade Drizzle proof, all nine
+  RPCs, lifecycle/security/cleanup/idempotence evidence, a fresh independent new-cluster
+  NOT_REFUTED verdict, full shared-target inventory, parent normalization plus
+  quarantine-or-approved-repair, exact schema/RPC/RLS/grant fingerprint, coordinate
+  non-null aggregate, restore proof, and ordered release go/no-go. The shared database
+  remains untouched until PASS. Contribution integrity must follow as `0013` or later.
 
 The active product phase is **WetinDey Food Truth & Pilot Operations**. Its order is:
 search repair, provenance-complete reads/SEO, authorized staging migration, hardened
@@ -412,7 +443,7 @@ paths; after they are claimed, Sol's next step is implementation.
 | **Sample-origin card slot** | complete; path released | controller / Sol with bounded visual workers and independent refuters | Commits `70f6a4b` and `8c28f64` separate synthetic origin from status and render `Sample` as quiet top-right microcopy | Final source refuter PASS: no badge chrome, 4.59:1 light and 4.58:1 dark contrast, status remains separate as `E sure`, `Check am`, or `E no dey`; runtime perception remains unverified |
 | **Nearby-user presence safety containment** | completed at `4e25b8c7`; independent Pauli static refuter PASS with no P1/P2/P3; paths released | CEO controller / bounded presence worker | Removed or failed closed unauthenticated global presence reads, profile coordinate inputs, automatic publish/polling, stale marker retention, and misleading toggle/copy | At-rest coordinates and dormant DTO/renderer remain later schema/map concerns; no runtime, deployment, database, schema, migration, or map-UI expansion proof |
 | **ADR-016 Founder-decision revision** | completed at `c960860`; independent PASS; paths released; rollout disabled | presence-governance employee | ADR-016 is Accepted for implementation architecture only | Exact paths were `docs/adr/016-nearby-user-presence.md` and `WETINDEY_BIBLE.md`. Acceptance authorizes no shared migration, deployment, pilot traffic, or public rollout. Frozen `0011` remains untouched; presence repair is forward `0012`; contribution integrity is `0013` or later |
-| **Reduced local-only Nearby Presence schema** | source complete at `3e50656`; disposable `0012` proof REFUTED on `presence_activate.expires_at` ambiguity; active pathless defect enumeration | Presence Platform Engineer `019f759f-3521-7ee1-90a3-5af3539d757e` | Finish the disposable proof report and enumerate the defect before proposing any exact source-correction paths; frozen `0011` and the shared database remain untouched | The guarded disposable execution found ambiguity rather than authorizing migration. Conditional shared migration flow/window approval remains gated on corrected disposable NOT_REFUTED evidence, exact-target fingerprint, compatibility, restore, and release sequencing; seven app/UI/map paths, pilot, public rollout, push, and deploy remain unclaimed |
+| **Corrected-unapplied Nearby Presence `0012`** | active exact four-path correction after executable disposable REFUTATION | Presence Platform Engineer `019f759f-3521-7ee1-90a3-5af3539d757e`; fresh independent new-cluster refuter | `src/db/pillars/80-presence-services.sql`; `src/db/pillars/90-presence-security.sql`; `src/db/migrations/0012_guarded_presence.sql`; `scripts/presence/presence-migration-contract.test.ts` | Correct activation `expires_at`, snapshot `control_generation`, marker+Wave varchar/text casts, Wave `expires_at`, and `review_reports` resolution; prove deterministic idle cleanup and account-deletion purge/anonymization. Require fresh blank+upgrade Drizzle, all nine RPCs, lifecycle/security/cleanup/idempotence, and new-cluster NOT_REFUTED evidence. Freeze schema declarations, `0012` snapshot/journal, every `0011` byte, app/UI/map paths, and shared DB unless stored objects/signatures provably change and a new exact claim is recorded |
 | **Nearby Presence / Remote Sharing privacy policy** | Presence seven-path proposal wholly unclaimed behind Contribution; Remote Sharing policy-only and unclaimed | Presence Platform Engineer `019f759f-3521-7ee1-90a3-5af3539d757e` waiting | Nearby Presence stays fresh-GPS, reciprocal, and area-bound. Consent to share with someone outside the physical area is a separate Remote Sharing mode, never an override. Safe default: explicit trusted audience, coarse area/country label, short expiry, immediate revoke, no background tracking, and no automatic exact-location disclosure | Global “any signed-in user” visibility is a separate high-risk privacy/legal gate and is not authorized. Peer presence remains fail-closed through `sharedUsers={[]}`. Exact Presence path statuses and proof gates are recorded below; no product path claimed |
 | **Trusted Circle / Remote Sharing** | future pathless governance lane; unclaimed and unauthorized | future product/privacy governance owner plus independent privacy refuter | Invite/QR-based trusted audience with mutual acceptance, coarse sharing scope, short expiry, and immediate revoke; no contact sync or global directory | Separate from Nearby Presence and cannot weaken its fresh-GPS/reciprocal/area-bound rules. Requires counsel/privacy approval and an exact future path claim before any implementation |
 | **T2D SEO provenance firewall** | static implementation/refutation complete; paths released; runtime unverified | controller / Sol with bounded worker and fresh refuter | Commit `a1a82c2` derives observed-only public facts and isolates neutral `Sample` fallback across item/place metadata, JSON-LD, OG, and sitemap paths | Static refuter PASS with documentation-only P3 comments; generated metadata, database decoding, ISR/OG caching, Satori output, and deployed sitemap remain runtime-unverified |
@@ -595,10 +626,11 @@ in either one will conflict. **Never edit these without holding the lane that ow
 | `src/app/_components/ManageProfileSheet.tsx` | — | **released** after presence containment `4e25b8c7`. |
 | `src/db/seed.ts` | — | **released** after `32b15ae` catalog determinism PASS; H27 trust defect remains separately open/unclaimed because that commit preserves the hardcoded freshness-to-trust assignment |
 | `src/db/seedContent.ts` | — | **released** after `32b15ae` and independent static PASS; catalog 48/85, slugs/content, Spaghetti contract, and synthetic provenance preserved |
-| `src/db/schema/presence.ts`, `src/db/schema/index.ts` | — | **released after `3e50656` static/diff PASS**; no correction claim while the REFUTED disposable `0012` proof report is unfinished |
-| `src/db/pillars/80-presence-services.sql`, `src/db/pillars/90-presence-security.sql` | — | **released after `3e50656` static/diff PASS**; no shared application or execution proof |
-| `src/db/migrations/0012_guarded_presence.sql`, `src/db/migrations/meta/0012_snapshot.json`, `src/db/migrations/meta/_journal.json` | — | **released source at `3e50656`**; disposable proof REFUTED on `presence_activate.expires_at` ambiguity; correction paths pending the final pathless defect report; frozen `0011` and shared DB untouched |
-| `scripts/presence/presence-migration-contract.test.ts` | — | **released source at `3e50656`**; the Presence Platform Engineer owns pathless disposable execution evidence, not this file |
+| `src/db/schema/presence.ts`, `src/db/schema/index.ts` | — | **frozen** during corrected-unapplied `0012`; no claim unless stored objects/signatures provably change and the controller records a new exact handoff |
+| `src/db/pillars/80-presence-services.sql`, `src/db/pillars/90-presence-security.sql` | Nearby Presence Platform Engineer `019f759f-3521-7ee1-90a3-5af3539d757e` | **Corrected-unapplied `0012`** — active exact claim for the five enumerated executable SQL failures plus cleanup and deletion contracts; no shared application |
+| `src/db/migrations/0012_guarded_presence.sql` | Nearby Presence Platform Engineer `019f759f-3521-7ee1-90a3-5af3539d757e` | **Corrected-unapplied `0012`** — active exact claim; fresh blank+upgrade/new-cluster proof required before any shared action |
+| `src/db/migrations/meta/0012_snapshot.json`, `src/db/migrations/meta/_journal.json` | — | **frozen**; no claim unless corrected SQL provably changes stored objects/signatures and the controller records a new exact handoff |
+| `scripts/presence/presence-migration-contract.test.ts` | Nearby Presence Platform Engineer `019f759f-3521-7ee1-90a3-5af3539d757e` | **Corrected-unapplied `0012`** — active exact contract claim covering nine RPCs, lifecycle/security/cleanup/idempotence, deterministic idle retention, and account-deletion purge/anonymization |
 | `package.json` / `package-lock.json` | — | **auth** |
 | `LANES.md`, `docs/architecture/RELEASE-CONTROLLER.md` | — | **Quality & Release Controller employee** — event-driven lane reconciliation and checkpoint review; no timer, automation, child task, or push without a separately authorized passing checkpoint |
 | `docs/operations/WETINDEY-OPERATING-SYSTEM.md`, `docs/operations/PORTFOLIO-AND-IDEA-REGISTER.md` | — | **released** after independently `NOT_REFUTED` operating-model commit `611ad9c63c4e80e7a824ee2ebf5539149650832c`. |
@@ -657,7 +689,7 @@ in either one will conflict. **Never edit these without holding the lane that ow
 | **Nearby-user presence safety containment** | CEO controller / bounded presence worker; independent Pauli static refuter | ✅ commit `4e25b8c7ac8a3ad598567e186575defd51113247`; PASS with no P1/P2/P3; paths released | — | ADR-016 pre-acceptance fail-closed containment | 2026-07-18 | Completed exactly `src/app/actions.ts`, `src/lib/validation.ts`, `src/app/page.tsx`, and `src/app/_components/ManageProfileSheet.tsx`. At-rest coordinates and dormant DTO/renderer remain later schema/map concerns. No runtime, deployment, database, schema, migration, or map-UI expansion proof was claimed. |
 | **ADR-016 governance decision preparation** | CEO controller / ADR-016 governance worker; Curie follow-up refuter | ✅ packet `0480182` plus P2 correction `a9a7c60ea87246ab607600391f72dc6478914c7b`; PASS; historical preparation paths released | — | Presence dependency step 2 / Founder review | 2026-07-18 | The packet captured reciprocal, coarse, short-lived, default-off presence and separated the two-account Festac pilot from public rollout. Its former Proposed/pending-selection status was superseded by accepted `c960860` and the Founder approvals recorded above. This historical row grants no code, schema, migration, push, deployment, or rollout authority. |
 | **ADR-016 Founder-decision revision** | presence-governance employee; independent refuter | ✅ `c96086007e6f379c1b686b8203deef2c7c5559c2`; PASS; paths released | — | Founder-directed Reciprocal Community Presence architecture | 2026-07-18 | ADR-016 is Accepted for implementation architecture only. It authorizes no shared migration, deployment, pilot traffic, or public rollout. Frozen `0011` was untouched. Presence repair remains forward `0012`; contribution integrity remains `0013` or later. Founder product policy, two-account allowlist, and repository owner/platform maintainer safety-responder decisions are complete. Exact-target compatibility, disposable/refutation evidence, rate enforcement, default-off flag, database kill switch, retention implementation, qualified legal review where required, and rollout sequencing remain open. |
-| **Reduced local-only Nearby Presence schema** | Presence Platform Engineer `019f759f-3521-7ee1-90a3-5af3539d757e`; independent static/diff refuter | 🔴 `3e50656` source PASS; disposable `0012` proof REFUTED on `presence_activate.expires_at`; active pathless defect enumeration | — | ADR-016 schema / forward `0012` | 2026-07-18 | Finish the disposable proof report before proposing exact correction paths. Frozen `0011` and the shared database remain untouched. Conditional exact-target shared migration flow/window approval remains gated on corrected disposable NOT_REFUTED evidence plus target fingerprint, compatibility, restore, and release sequencing; seven app/UI/map paths, pilot traffic, and public rollout remain unclaimed. |
+| **Corrected-unapplied Nearby Presence `0012`** | Presence Platform Engineer `019f759f-3521-7ee1-90a3-5af3539d757e`; fresh independent new-cluster refuter | 🔴 executable disposable proof REFUTED; exact four-path source correction active | `src/db/pillars/80-presence-services.sql`; `src/db/pillars/90-presence-security.sql`; `src/db/migrations/0012_guarded_presence.sql`; `scripts/presence/presence-migration-contract.test.ts` | ADR-016 schema / forward `0012` | 2026-07-18 | Five failures are activation `expires_at`, snapshot `control_generation`, snapshot marker+Wave varchar/text casts, Wave `expires_at`, and `review_reports` resolution. Add deterministic idle-retention cleanup and account-deletion purge/anonymization contracts. Require fresh blank+upgrade Drizzle proof, all nine RPCs, lifecycle/security/cleanup/idempotence, and new-cluster independent NOT_REFUTED. Schema declarations, `0012` snapshot/journal, all `0011` bytes, seven app/UI/map paths, and shared DB remain frozen unless stored objects/signatures provably change and a new exact handoff is recorded. |
 | **Nearby Presence first-slice / Remote Sharing privacy policy** | Presence Platform Engineer `019f759f-3521-7ee1-90a3-5af3539d757e` | 🟡 Presence proposal unclaimed due `page.tsx`; Remote Sharing pathless and unauthorized | — | ADR-016 private-pilot preparation / separate remote-sharing governance | 2026-07-18 | Manual/AI/default centers never authorize real peers. Nearby Presence remains fresh-GPS, reciprocal, area-bound, coarse, and lease-scoped. Sharing with someone outside the physical area must be a separate Remote Sharing mode with explicit trusted-audience selection, coarse area/country only, short expiry, immediate revoke, no background tracking, and no automatic exact disclosure. Global any-signed-in visibility is a high-risk privacy/legal gate and is not authorized. |
 | **Trusted Circle / Remote Sharing** | future product/privacy governance owner; independent privacy refuter required | ⚪ pathless concept only; no implementation authority | — | Separate future remote-sharing governance | 2026-07-18 | Trusted audience is invite/QR-based with mutual acceptance, coarse scope, expiry, and immediate revoke. No contact sync, global directory, background tracking, automatic exact-location disclosure, or Nearby Presence override. Counsel/privacy approval and a fresh exact path claim are mandatory before implementation. |
 | **Seller Identity, reusable RBAC & Onboarding architecture** | future governance owner; independent identity/moderation refuter required | 🟡 Founder-approved architecture/planning only; pathless | — | Seller onboarding first vertical / reusable governed RBAC | 2026-07-18 | Reusable deny-by-default server-side authorization must cover seller owner/manager/staff, moderator, field operator, support, and community roles with scoped permissions and audit. Identity verification, business verification, reputation, confidence, and rewards remain separate. Suspension/revocation, appeals, non-purchasable badges, and seller-data isolation from automatic observation trust are mandatory. No provider/schema/RLS/code/deploy authority; exact paths and dependencies require later claims. |
@@ -954,19 +986,18 @@ Presence must wait until Contribution releases `src/app/page.tsx`, then request 
 atomic claim over the same seven paths. Do not widen into `src/app/actions.ts`,
 `locationStore`, profile/auth internals, or committed `0012` paths.
 
-Disposable proof is now an active pathless Presence Platform evidence lane. It must
-identify a guarded disposable target; reproduce exact migration lineage through `0012`; prove required
-roles/PostGIS, forced RLS, no `PUBLIC`, least privilege, default-off control and empty
-allowlist; prove the exact two-account Festac allowlist, reciprocal opt-in, lease
-creation/expiry/nonrenewal, rate limits, block/report, kill purge, and restore/cleanup
-evidence; and prove that fallback/selected/stale/simulated coordinates never activate
-presence. The two-account Festac allowlist, Founder product policy, and repository
-owner/platform maintainer safety responder decisions are approved; their implementation
-and evidence remain mandatory. The deterministic exact-target shared-migration flow and
-window become executable only after the disposable candidate is independently
-NOT_REFUTED and exact-target fingerprint/compatibility/release-sequencing gates pass. No
-shared migration, pilot traffic, push, or deployment has occurred or is authorized merely
-by this pathless proof lane.
+The corrected-unapplied `0012` lane is active over exactly the two presence pillars,
+`0012_guarded_presence.sql`, and the focused migration contract. It must reproduce exact
+migration lineage through `0012` on fresh blank and upgrade Drizzle paths; execute all nine
+RPCs; prove lifecycle, security, deterministic idle-retention cleanup, account-deletion
+purge/anonymization, and idempotence; and receive independent NOT_REFUTED evidence on a
+fresh disposable cluster. Required security evidence still includes roles/PostGIS, forced
+RLS, no `PUBLIC`, least privilege, default-off control, empty then exact two-account
+allowlist, reciprocity, lease creation/expiry/nonrenewal, rate limits, block/report, kill
+purge, restore/cleanup, and rejection of fallback/selected/stale/simulated coordinates.
+Schema declarations, `0012` snapshot/journal, every `0011` byte, and the seven app/UI/map
+paths remain frozen. The shared database remains untouched until PASS; no migration, pilot
+traffic, push, or deployment authority follows from this correction lane.
 
 Fail-closed privacy correction: a manual, AI-selected, or default center point—including a
 selected Badagry center—may drive browsing only and must never unlock real nearby users.
@@ -1077,7 +1108,7 @@ refuter.
 | Program Management / Release Control | Convert feedback into bounded lanes, prevent duplicate tasks, coordinate dependencies, and release evidenced commits | Active |
 | Human Interface / Iconography | Solid semantic icon orbs, sheet hierarchy, category trigger, market-detail visual system, and light/dark accessibility refutation | Exact five-path foundation active after ADR-018 correction `0ab0d5b`; all adoption paths unclaimed |
 | Maps Engineering | Place/market symbols, selected marker state, map visual language, and map-specific runtime refutation | Partially active; exact scope required |
-| Presence / Safety Engineering | Consent-based nearby presence, trusted people, blocks, reports, leases, and pilot gates | Disposable `0012` proof REFUTED on `expires_at`; pathless defect enumeration active; shared DB untouched and seven app/UI/map paths unclaimed |
+| Presence / Safety Engineering | Consent-based nearby presence, trusted people, blocks, reports, leases, and pilot gates | Corrected-unapplied `0012` active on exact four paths; fresh blank+upgrade/new-cluster proof required; shared DB and seven app/UI/map paths untouched |
 | Catalog Stewardship | Item CRUD, aliases, variants, units, category mapping, reference imagery, attribution, and duplicate merging | Unassigned |
 | Observation Evidence Media | Report attachments, receipts, EXIF removal, privacy, hashing, size limits, moderation, retention, and offline uploads | Unassigned |
 | Seller Platform / Identity & Access | Seller onboarding, scoped RBAC, verification, consented contact, and seller operations | Architecture approved; implementation unassigned |
