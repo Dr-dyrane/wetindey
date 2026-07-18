@@ -200,27 +200,29 @@ safety/integrity lanes until their separate gates are independently satisfied.
   Quality & Release Controller employee. It is event-driven, owns only `LANES.md` and this
   document, stays idle between explicit assignments, and creates no timer, recurring
   automation, duplicate task, or child task.
-- HI Quality **REFUTED** Human Interface commit
-  `4b572e0a666648dd3f9c016616e0c6b161cb981f`: required pixels were unavailable through
-  its failed connector, and `src/app/page.tsx` retains confirmed 32x32 Add/Profile hit
-  targets. Static category/Aboki changes otherwise had no scoped defect.
-  `src/app/_components/CategorySelectorSheet.tsx` and
-  `src/app/_components/ExchangePanel.tsx` have no current write claim but remain pending
-  direct-pixel evidence.
-- Exact one-file ownership of `src/app/page.tsx` transfers to Human Interface Design
-  Engineer task `019f75a5-0fc6-7f40-9a0f-8097ead3b45d`. The forward correction must make
-  Add/Profile hit regions at least 44x44 without changing visible icon/avatar scale.
-  Path-scoped commit `d82b87e11faa643840c322e6b1d9fbafd2ee356d` changed exactly
-  `src/app/page.tsx`, expanding the hit regions to 44x44 while leaving the visible
-  circle/avatar 32x32. HI Quality is now assigned independent visible-Safari refutation of
-  this exact commit and the remaining direct-pixel evidence for `4b572e0`. The path remains
-  claimed and `NO PUSH` remains until verdict, PASS, and explicit handoff.
-- HI Quality also visibly reproduced a Food search mismatch: home Rice shows a price
-  range and seven places, while search `rice` returns `No price yet / Check am`. This is
-  queued evidence intake only and owns no paths until HI Quality supplies its exact
-  evidence and the controller reconciles scope. Do not infer a cause or activate a search
-  lane yet. Keep it separate from category/Aboki and `src/app/page.tsx` hit-target
-  ownership. The prior `c6f304b` static correction is not runtime closure.
+- HI Quality completed visible selector/Aboki and `d82b87e` hit-target evidence across
+  desktop/compact and light/dark. Selector/Aboki behavior passed; 44x44 Add/Profile edge
+  clicks passed while visible circle/avatar scale remained 32px. The scoped implementation
+  paths `src/app/_components/CategorySelectorSheet.tsx`,
+  `src/app/_components/ExchangePanel.tsx`, and `src/app/page.tsx` were released. The
+  combined release verdict remains **REFUTED** only because Safari keyboard focus and
+  artificial loading/error/cache/empty states were not proven. Those remain residual
+  evidence gaps, not retained ownership. Exact screenshot paths remain in the HI report.
+  `ExchangePanel.tsx` is reserved for a future ADR-017-backed currency lane only after
+  governance commits; no Exchange/currency implementation path is currently claimed.
+- A later Founder-directed HI slim-category-trigger lane now owns exactly
+  `src/app/page.tsx` for the category trigger only: preserve a >=44px outer target while
+  making the visible surface a slim 30–32px rounded rectangle. Evidence is
+  `/var/folders/n9/d2z6ybln5vb34xvzpqrwj4wr0000gn/T/codex-clipboard-73abf622-9a6d-4201-9202-487733a63d08.png`.
+  No ExchangePanel, currency, actions, search, or contribution change is authorized;
+  require one path-scoped commit and HI Quality visible-pixel refutation.
+- Search & Ranking Engineer task `019f75b7-6c59-7952-bf14-b01cfbfd2793` committed
+  `48fac46` over `src/app/actions.ts` `searchItems()` only. Independent static/diff
+  refutation passed with no P1/P2/P3; no DB, tests, build, push, or deploy occurred. HI
+  Quality now owns the direct Amuwo Odofin 5 km `rice` browser refutation. Keep
+  `actions.ts` claimed and Contribution Integrity containment blocked until that verdict.
+  All writes remain excluded. The prior `c6f304b` static correction was not runtime
+  closure.
 - Product & Data Governance Architect task
   `019f7599-0eaa-7423-9ebf-a1bfea8efe37` owns the active two-path governance-only Aboki
   FX provider-policy correction lane over exactly
@@ -268,11 +270,11 @@ safety/integrity lanes until their separate gates are independently satisfied.
   remains a separate explicit gate.
 - Contribution Integrity & Moderation Engineer task
   `019f75a3-f50d-7180-8e92-0a7aabd8a98c` is queued read-only/pathless pending its exact
-  containment plan. `src/app/page.tsx` remains withheld by the HI Add/Profile 44px lane
-  until its independent visible-Safari PASS and release. Contribution migration work is
-  `0013` or later, after presence-owned forward `0012`. Threat model, disposable
-  integration evidence, and independent refutation remain prerequisites to implementation
-  ownership.
+  containment plan. HI Quality must complete the `48fac46` browser verdict and the
+  controller must release `src/app/actions.ts` first. Contribution migration work is
+  `0013` or later, after presence-owned
+  forward `0012`. Threat model, disposable integration evidence, and independent
+  refutation remain prerequisites to implementation ownership.
 - Preview schema/ledger drift remains proven and quarantined. Production identity, ledger,
   schema/RPC/RLS/grant fingerprint, migration state, compatibility, restore evidence, and
   deployment ordering remain unknown.
@@ -295,12 +297,15 @@ safety/integrity lanes until their separate gates are independently satisfied.
   publication/promotion, push, and deployment remain separate blocked approvals. Daily
   automation `lagos-food-data-ingestion` is recorded as updated; the controller did not
   create or modify it.
-- Sol provenance lead task `019f75a8-7eb2-7be2-9bbc-781e318bda0d` is active read-only to
-  propose exact new paths, then advances to implementation only after those paths are
-  claimed. Terra fixture engineer task
-  `019f75a8-7d3b-7482-b7e2-ce8ed35b9491` and Luna source refuter task
-  `019f75a8-8062-7330-93ee-1fb0d8d4fbc5` are queued/pathless. This is lane design only:
-  no fixture or implementation path is claimed until Sol returns the exact proposal.
+- Sol Lane A committed
+  `33104017380fd57b1e03132fd334482dcf26cf07` over its exact policy/runbook paths. Luna
+  independently matched the original 5,294,517-byte package and SHA-256
+  `2d46ff90f87c7bfe75cc3df30ae35cc10a9641971543243e9d885aa7a97ca466`; exact scope,
+  historical hashes, time/geography/unit/availability/attribution, no-Sample, and no-live
+  rules passed with no P1/P2. P3 only: intentional Markdown hard-break whitespace. Lane A
+  paths are released. Terra Lane B is now active over its already reserved exact paths;
+  final Luna artifact refutation remains required before release. No fetch, tests, DB,
+  seed, schema, migration, UI, push, or deploy occurred from Lane A.
 - Decision: **NO PUSH / NO DEPLOY**. This documentation checkpoint authorizes no test,
   push, deployment, migration, seed, shared-database access, or external change.
 
