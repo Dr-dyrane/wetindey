@@ -29,5 +29,11 @@
         }
       ]
     }
+  ],
+  "crons": [
+    {
+      "path": "/reports/security/csp/cleanup",
+      "schedule": "0 * * * *"
+    }
   ]
 }
