@@ -2,7 +2,7 @@
 
 import { db } from "@/db";
 import { areas, items, itemAliases, itemVariants, places, offersCurrent, units, observations, sources, problemReports, userProfiles } from "@/db/schema";
-import { eq, ilike, or, and, sql, gte, isNull, isNotNull, desc } from "drizzle-orm";
+import { eq, ilike, or, and, sql, gte, isNull, isNotNull, asc, desc } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import {
   parseSubmitObservation,
@@ -87,7 +87,7 @@ function toReadTrust(
       origin === "observed"
         ? "Observed reports"
         : origin === "synthetic"
-          ? "Demo data"
+          ? "Sample"
           : "No observed reports",
     status:
       origin !== "observed"
@@ -175,72 +175,214 @@ export async function searchItems(
           ia.alias ILIKE ${q}
         )
     ),
-    nearby AS (
-      SELECT o.*
-      FROM ${offersCurrent} o
-      JOIN ${places} pl ON pl.id = o.place_id
-      WHERE o.expires_at > now()
-        ${useLocation ? sql`AND ST_DWithin(pl.location, ST_SetSRID(ST_MakePoint(${lng}, ${lat}), 4326)::geography, ${radiusM})` : sql``}
+    live_observations AS (
+      /*
+       * Search facts cross the same V1 admission boundary as trust: only
+       * non-rejected, directly observed reports inside the shared expiry
+       * window. Joining every dimension here makes the persisted
+       * (variant, unit, place) relationship the fact source; offers_current is
+       * not evidence and cannot admit another provenance by projection.
+       */
+      SELECT
+        observation.id,
+        variant.item_id,
+        observation.item_variant_id,
+        observation.unit_id,
+        observation.place_id,
+        observation.price_amount,
+        observation.availability_state,
+        observation.observed_at
+      FROM ${observations} observation
+      JOIN ${itemVariants} variant ON variant.id = observation.item_variant_id
+      JOIN matched_items mi ON mi.id = variant.item_id
+      JOIN ${units} observed_unit ON observed_unit.id = observation.unit_id
+      JOIN ${places} observed_place ON observed_place.id = observation.place_id
+      WHERE observation.moderation_status <> 'rejected'
+        AND observation.provenance = 'observed'
+        AND observation.observed_at >=
+          now() - make_interval(hours => ${FRESHNESS_POLICY.expirationHours})
+        AND observation.observed_at <= now()
+        ${useLocation ? sql`AND ST_DWithin(observed_place.location, ST_SetSRID(ST_MakePoint(${lng}, ${lat}), 4326)::geography, ${radiusM})` : sql``}
+    ),
+    live_offers AS (
+      /*
+       * Preserve offer semantics while reading the immutable evidence table:
+       * repeated reports for one triple form one live offer. Price range uses
+       * only admitted rows, and newest-observation-wins availability has an
+       * observation-id tie-break so every selected context is deterministic.
+       */
+      SELECT
+        item_id,
+        item_variant_id,
+        unit_id,
+        place_id,
+        (MIN(price_amount) FILTER (
+          WHERE availability_state = 'available'
+        ))::int AS price_min,
+        (MAX(price_amount) FILTER (
+          WHERE availability_state = 'available'
+        ))::int AS price_max,
+        (array_agg(
+          availability_state
+          ORDER BY observed_at DESC, id ASC
+        ))[1] AS availability_state,
+        MAX(observed_at) AS last_observed_at,
+        (array_agg(id ORDER BY observed_at DESC, id ASC))[1] AS latest_observation_id
+      FROM live_observations
+      GROUP BY item_id, item_variant_id, unit_id, place_id
     ),
     offer_units AS (
       SELECT
-        mi.id               AS item_id,
-        n.unit_id           AS unit_id,
-        COUNT(n.id)         AS offers_in_unit
-      FROM matched_items mi
-      JOIN ${itemVariants} iv ON iv.item_id = mi.id
-      JOIN nearby n        ON n.item_variant_id = iv.id
-      GROUP BY mi.id, n.unit_id
+        item_id,
+        unit_id,
+        COUNT(*) AS offers_in_unit
+      FROM live_offers
+      GROUP BY item_id, unit_id
     ),
     modal_unit AS (
       SELECT DISTINCT ON (item_id) item_id, unit_id
       FROM offer_units
       ORDER BY item_id, offers_in_unit DESC, unit_id
     ),
-    fallback_unit AS (
+    fallback_candidates AS (
       /*
        * A variant has no intrinsic unit. The persisted relationship is the
-       * (variant, unit) pair on an offer or observation. This fallback supplies
-       * only a known unit label when nearby is empty; prices, counts, trust,
-       * and timestamps below still come exclusively from nearby.
+       * (variant, unit, place) triple on a real observation. Grouping all
+       * non-rejected history for that triple lets fallback ordering distinguish
+       * observed history, non-synthetic inadmissible evidence, and a genuinely
+       * synthetic-only sample without consulting offers_current.
        */
-      SELECT DISTINCT ON (iv.item_id)
-        iv.item_id,
-        fo.unit_id
-      FROM matched_items mi
-      JOIN ${itemVariants} iv ON iv.item_id = mi.id
-      JOIN ${offersCurrent} fo ON fo.item_variant_id = iv.id
-      ORDER BY iv.item_id, iv.id ASC, fo.unit_id ASC, fo.id ASC
+      SELECT
+        variant.item_id,
+        fallback_observation.item_variant_id,
+        fallback_observation.unit_id,
+        fallback_observation.place_id,
+        BOOL_OR(fallback_observation.provenance = 'observed') AS has_observed,
+        BOOL_OR(fallback_observation.provenance = 'synthetic') AS has_synthetic,
+        BOOL_OR(
+          fallback_observation.provenance IN ('partner', 'reference', 'inferred')
+        ) AS has_other_inadmissible
+      FROM ${observations} fallback_observation
+      JOIN ${itemVariants} variant
+        ON variant.id = fallback_observation.item_variant_id
+      JOIN matched_items mi ON mi.id = variant.item_id
+      JOIN ${units} fallback_unit
+        ON fallback_unit.id = fallback_observation.unit_id
+      JOIN ${places} fallback_place
+        ON fallback_place.id = fallback_observation.place_id
+      WHERE fallback_observation.moderation_status <> 'rejected'
+      GROUP BY
+        variant.item_id,
+        fallback_observation.item_variant_id,
+        fallback_observation.unit_id,
+        fallback_observation.place_id
+    ),
+    fallback_relationship AS (
+      /*
+       * Historical observed context wins so ADR-006 can continue decaying it
+       * through 144h. With no observed context, non-synthetic inadmissible
+       * evidence wins over synthetic, preventing Sample from masking a mixed
+       * inadmissible item. UUID ordering makes the selected triple stable.
+       */
+      SELECT DISTINCT ON (item_id)
+        item_id,
+        item_variant_id,
+        unit_id,
+        place_id,
+        has_observed,
+        has_synthetic,
+        has_other_inadmissible
+      FROM fallback_candidates
+      ORDER BY
+        item_id,
+        CASE
+          WHEN has_observed THEN 0
+          WHEN has_other_inadmissible THEN 1
+          WHEN has_synthetic THEN 2
+          ELSE 3
+        END,
+        item_variant_id ASC,
+        unit_id ASC,
+        place_id ASC
+    ),
+    fallback_trust_context AS (
+      /*
+       * Synthetic-only and single-class inadmissible triples go through the
+       * authoritative trust call. A no-observed triple mixing synthetic with
+       * partner/reference/inferred is withheld so synthetic precedence cannot
+       * turn mixed inadmissible evidence into Sample.
+       */
+      SELECT
+        fallback.item_id,
+        fallback.item_variant_id,
+        fallback.unit_id,
+        fallback.place_id
+      FROM fallback_relationship fallback
+      WHERE fallback.has_observed
+        OR NOT (
+          fallback.has_synthetic
+          AND fallback.has_other_inadmissible
+        )
     ),
     resolved_unit AS (
       SELECT 
         mi.id AS item_id,
-        COALESCE(mu.unit_id, fu.unit_id) AS unit_id
+        COALESCE(mu.unit_id, fallback.unit_id) AS unit_id
       FROM matched_items mi
       LEFT JOIN modal_unit mu ON mu.item_id = mi.id
-      LEFT JOIN fallback_unit fu ON fu.item_id = mi.id
+      LEFT JOIN fallback_relationship fallback ON fallback.item_id = mi.id
     )
     SELECT
       i.id, i.slug, i.canonical_name AS name, i.description,
       i.image_url, i.image_attribution, i.image_license, i.image_source_url,
       u.display_name                                   AS "unitLabel",
-      COALESCE(COUNT(o.id), 0)::int                    AS "offerCount",
+      COALESCE(COUNT(o.item_variant_id), 0)::int       AS "offerCount",
       COALESCE(COUNT(DISTINCT o.place_id), 0)::int     AS "placeCount",
       MIN(o.price_min)::int                            AS "priceFrom",
       MAX(COALESCE(o.price_max, o.price_min))::int     AS "priceTo",
-      (array_agg(o.item_variant_id ORDER BY o.last_observed_at DESC NULLS LAST, o.id ASC))[1] AS "trustVariantId",
-      (array_agg(o.unit_id ORDER BY o.last_observed_at DESC NULLS LAST, o.id ASC))[1] AS "trustUnitId",
-      (array_agg(o.place_id ORDER BY o.last_observed_at DESC NULLS LAST, o.id ASC))[1] AS "trustPlaceId",
-      (array_agg(o.availability_state ORDER BY o.last_observed_at DESC NULLS LAST, o.id ASC))[1] AS "trustAvailabilityState",
+      COALESCE(
+        (array_agg(
+          o.item_variant_id
+          ORDER BY o.last_observed_at DESC NULLS LAST, o.latest_observation_id ASC
+        ) FILTER (WHERE o.item_variant_id IS NOT NULL))[1],
+        fallback_trust.item_variant_id
+      ) AS "trustVariantId",
+      COALESCE(
+        (array_agg(
+          o.unit_id
+          ORDER BY o.last_observed_at DESC NULLS LAST, o.latest_observation_id ASC
+        ) FILTER (WHERE o.item_variant_id IS NOT NULL))[1],
+        fallback_trust.unit_id
+      ) AS "trustUnitId",
+      COALESCE(
+        (array_agg(
+          o.place_id
+          ORDER BY o.last_observed_at DESC NULLS LAST, o.latest_observation_id ASC
+        ) FILTER (WHERE o.item_variant_id IS NOT NULL))[1],
+        fallback_trust.place_id
+      ) AS "trustPlaceId",
+      (array_agg(
+        o.availability_state
+        ORDER BY o.last_observed_at DESC NULLS LAST, o.latest_observation_id ASC
+      ) FILTER (WHERE o.item_variant_id IS NOT NULL))[1] AS "trustAvailabilityState",
       MAX(o.last_observed_at)                          AS "lastObservedAt"
     FROM matched_items mi
     JOIN ${items} i ON i.id = mi.id
     JOIN resolved_unit ru ON ru.item_id = i.id
     JOIN ${units} u ON u.id = ru.unit_id
-    LEFT JOIN ${itemVariants} v ON v.item_id = i.id
-    LEFT JOIN nearby o ON o.item_variant_id = v.id AND o.unit_id = ru.unit_id
-    GROUP BY i.id, u.display_name
-    ORDER BY COUNT(o.id) DESC, i.canonical_name ASC
+    LEFT JOIN live_offers o ON o.item_id = i.id AND o.unit_id = ru.unit_id
+    LEFT JOIN fallback_trust_context fallback_trust ON fallback_trust.item_id = i.id
+    GROUP BY
+      i.id,
+      u.display_name,
+      fallback_trust.item_variant_id,
+      fallback_trust.unit_id,
+      fallback_trust.place_id
+    ORDER BY
+      COUNT(o.item_variant_id) DESC,
+      i.canonical_name ASC,
+      i.slug ASC,
+      i.id ASC
     LIMIT 10
   `);
 
@@ -1921,6 +2063,13 @@ export async function getOfferTrustBatch(
           )
         )
       )
+    )
+    .orderBy(
+      asc(observations.itemVariantId),
+      asc(observations.unitId),
+      asc(observations.placeId),
+      desc(observations.observedAt),
+      asc(observations.id)
     );
 
   const grouped = new Map<string, TrustObservation[]>();
