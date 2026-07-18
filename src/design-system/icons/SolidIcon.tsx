@@ -14,6 +14,7 @@ export type SolidIconName =
   | "chevron-down"
   | "close"
   | "copy"
+  | "food"
   | "map-pin"
   | "money"
   | "moon"
@@ -21,6 +22,7 @@ export type SolidIconName =
   | "phone"
   | "refresh"
   | "search"
+  | "settings"
   | "share"
   | "star"
   | "sun"
@@ -37,9 +39,10 @@ const SIZE_STYLES: Record<SolidIconSize, string> = {
 
 const PATHS: Record<SolidIconName, React.ReactNode> = {
   building: (
-    <>
-      <path d="M4 20h16v2H4zM6 9h12v10H6zM3 7.2 12 2l9 5.2V9H3z" />
-    </>
+    <path
+      fillRule="evenodd"
+      d="M3 7.4 12 2l9 5.4V10h-2v9h2v3H3v-3h2v-9H3zm5 2.6v9h2v-9zm6 0v9h2v-9z"
+    />
   ),
   check: <path d="m9.3 17.2-4.5-4.5 2.1-2.1 2.4 2.4 7.8-7.8 2.1 2.1z" />,
   "chevron-down": <path d="m5.4 8.4 6.6 6.6 6.6-6.6 1.8 1.8-8.4 8.4-8.4-8.4z" />,
@@ -47,10 +50,13 @@ const PATHS: Record<SolidIconName, React.ReactNode> = {
     <path d="m6.2 4.8 5.8 5.8 5.8-5.8 1.4 1.4-5.8 5.8 5.8 5.8-1.4 1.4-5.8-5.8-5.8 5.8-1.4-1.4 5.8-5.8-5.8-5.8z" />
   ),
   copy: (
-    <>
-      <path d="M8 7h11a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2z" />
-      <path d="M5 17H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h11a2 2 0 0 1 2 2v1h-2V4H4v11h1z" />
-    </>
+    <path
+      fillRule="evenodd"
+      d="M8 7h11a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2zm2.2 3.2v8.6h8.6v-8.6zM4 2h11a2 2 0 0 1 2 2v1h-2V4H4v11h1v2H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z"
+    />
+  ),
+  food: (
+    <path d="M3 2h2v7h1V2h2v7h1V2h2v7a4 4 0 0 1-3 3.9V22H6v-9.1A4 4 0 0 1 3 9zm13 0c2.8 0 5 3.1 5 7v4h-2v9h-3z" />
   ),
   "map-pin": (
     <path
@@ -61,7 +67,7 @@ const PATHS: Record<SolidIconName, React.ReactNode> = {
   money: (
     <path
       fillRule="evenodd"
-      d="M12 2a10 10 0 1 1 0 20 10 10 0 0 1 0-20zm1 4h-2v1.1c-1.8.3-3 1.4-3 3 0 2 1.7 2.7 3.8 3.2 1.4.3 2.2.6 2.2 1.4 0 .7-.7 1.2-1.9 1.2-1.3 0-2.4-.5-3.3-1.3l-1.2 1.7c.9.8 2 1.3 3.4 1.6V19h2v-1.1c2-.3 3.2-1.6 3.2-3.3 0-2.1-1.8-2.8-4-3.3-1.3-.3-2-.6-2-1.3 0-.6.6-1.1 1.7-1.1 1 0 2 .4 2.8 1l1.1-1.7A6.4 6.4 0 0 0 13 7.1z"
+      d="M12 2a10 10 0 1 1 0 20 10 10 0 0 1 0-20zM8 7h2.4l3.2 5V7H16v10h-2.4l-3.2-5v5H8zm-1 3.8h10v1.8H7zm0 3h10v1.8H7z"
     />
   ),
   moon: <path d="M20.8 15.4A8.8 8.8 0 0 1 8.6 3.2 9.5 9.5 0 1 0 20.8 15.4z" />,
@@ -78,6 +84,12 @@ const PATHS: Record<SolidIconName, React.ReactNode> = {
     <path
       fillRule="evenodd"
       d="M10.8 3a7.8 7.8 0 1 1-4.9 13.9L2.8 20l1.8 1.8 3.1-3.1A7.8 7.8 0 0 1 10.8 3zm0 2.5a5.3 5.3 0 1 0 0 10.6 5.3 5.3 0 0 0 0-10.6z"
+    />
+  ),
+  settings: (
+    <path
+      fillRule="evenodd"
+      d="m10.4 2 3.2.1.7 2.2c.6.2 1.1.5 1.6.9L18 4.4l2.2 2.3-.9 2c.3.6.6 1.1.7 1.7l2 .8V14l-2 .8c-.2.6-.4 1.2-.8 1.7l.9 2-2.3 2.2-2-.9c-.5.4-1.1.6-1.7.8l-.8 2h-3.1l-.8-2a8 8 0 0 1-1.7-.8l-2 .9-2.2-2.3.9-2a8 8 0 0 1-.7-1.7l-2-.8v-3.1l2-.8c.2-.6.5-1.1.8-1.7l-.9-2L6 4.1l2 .9c.5-.3 1.1-.6 1.7-.7zM12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8zm0 2.2a1.8 1.8 0 1 1 0 3.6 1.8 1.8 0 0 1 0-3.6z"
     />
   ),
   share: (
@@ -115,6 +127,7 @@ export function SolidIcon({
       viewBox="0 0 24 24"
       className={`solid-icon ${SIZE_STYLES[size]}`}
       focusable="false"
+      shapeRendering="geometricPrecision"
     >
       {PATHS[name]}
     </svg>

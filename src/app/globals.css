@@ -106,27 +106,52 @@
   --color-rating-bg: rgba(214, 164, 0, 0.16);
   --color-rating-muted: rgba(60, 60, 67, 0.24);
 
-  /* ── Solid icon orbs ──
-     These are opaque fill/ink pairs, not tonal status washes. The semantic
-     family owns both values; SolidIcon only inherits the resulting ink. Every
-     pair clears 4.5:1 so the compact glyph stays legible beyond the 3:1
-     non-text contrast floor. */
-  --color-icon-orb: #3a3a3c;
-  --color-icon-orb-ink: #ffffff;
-  --color-domain-food-orb: #8a3d00;
+  /* ── Dimensional contextual icon orbs ──
+     Every family is an opaque lighter-top/base/deeper-lower ramp with explicit
+     high-contrast ink. Context families are not status aliases: navigation
+     blue is not “info”, contact green is not “confirmed”, and rating gold is
+     not caution. Universal controls and unavailable future categories use the
+     neutral ramp. */
+  --color-icon-orb-neutral-top: #636366;
+  --color-icon-orb-neutral-base: #3a3a3c;
+  --color-icon-orb-neutral-deep: #1c1c1e;
+  --color-icon-orb-neutral-ink: #ffffff;
+  --color-domain-food-orb-top: #a94c1b;
+  --color-domain-food-orb-base: #8a3d00;
+  --color-domain-food-orb-deep: #5f2900;
   --color-domain-food-orb-ink: #ffffff;
-  --color-domain-money-orb: #006b57;
+  --color-domain-money-orb-top: #007761;
+  --color-domain-money-orb-base: #006b57;
+  --color-domain-money-orb-deep: #004b3e;
   --color-domain-money-orb-ink: #ffffff;
-  --color-rating-orb: #805600;
+  --color-context-location-orb-top: #1f6fd1;
+  --color-context-location-orb-base: #0058d0;
+  --color-context-location-orb-deep: #003f99;
+  --color-context-location-orb-ink: #ffffff;
+  --color-context-navigation-orb-top: #2f6fbd;
+  --color-context-navigation-orb-base: #1f63bd;
+  --color-context-navigation-orb-deep: #124786;
+  --color-context-navigation-orb-ink: #ffffff;
+  --color-context-contact-orb-top: #3b7d20;
+  --color-context-contact-orb-base: #276418;
+  --color-context-contact-orb-deep: #18450f;
+  --color-context-contact-orb-ink: #ffffff;
+  --color-rating-orb-top: #926900;
+  --color-rating-orb-base: #805600;
+  --color-rating-orb-deep: #5f3e00;
   --color-rating-orb-ink: #ffffff;
-  --color-status-confirmed-orb: #1e7634;
+  --color-status-confirmed-orb-top: #2e8544;
+  --color-status-confirmed-orb-base: #1e7634;
+  --color-status-confirmed-orb-deep: #115124;
   --color-status-confirmed-orb-ink: #ffffff;
-  --color-status-caution-orb: #a94c00;
+  --color-status-caution-orb-top: #b14e00;
+  --color-status-caution-orb-base: #9b4000;
+  --color-status-caution-orb-deep: #6f2d00;
   --color-status-caution-orb-ink: #ffffff;
-  --color-status-unavailable-orb: #be261b;
+  --color-status-unavailable-orb-top: #ce3d31;
+  --color-status-unavailable-orb-base: #be261b;
+  --color-status-unavailable-orb-deep: #861a13;
   --color-status-unavailable-orb-ink: #ffffff;
-  --color-status-info-orb: #0058d0;
-  --color-status-info-orb-ink: #ffffff;
 
   /* Ink on a saturated status fill. Stays white in both themes because the
      status hues are saturated mid-tones in both — unlike accent, which flips. */
@@ -282,22 +307,46 @@
   --color-rating-bg: rgba(255, 214, 10, 0.18);
   --color-rating-muted: rgba(235, 235, 245, 0.28);
 
-  --color-icon-orb: #d1d1d6;
-  --color-icon-orb-ink: #000000;
-  --color-domain-food-orb: #ff9f5a;
+  --color-icon-orb-neutral-top: #f2f2f7;
+  --color-icon-orb-neutral-base: #d1d1d6;
+  --color-icon-orb-neutral-deep: #8e8e93;
+  --color-icon-orb-neutral-ink: #000000;
+  --color-domain-food-orb-top: #ffb37a;
+  --color-domain-food-orb-base: #ff9f5a;
+  --color-domain-food-orb-deep: #c96a2b;
   --color-domain-food-orb-ink: #000000;
-  --color-domain-money-orb: #64d9bf;
+  --color-domain-money-orb-top: #8cebd5;
+  --color-domain-money-orb-base: #64d9bf;
+  --color-domain-money-orb-deep: #2f9f89;
   --color-domain-money-orb-ink: #000000;
-  --color-rating-orb: #ffd60a;
+  --color-context-location-orb-top: #72b5ff;
+  --color-context-location-orb-base: #409cff;
+  --color-context-location-orb-deep: #147be3;
+  --color-context-location-orb-ink: #000000;
+  --color-context-navigation-orb-top: #8fc5ff;
+  --color-context-navigation-orb-base: #5aa7ff;
+  --color-context-navigation-orb-deep: #1f78d1;
+  --color-context-navigation-orb-ink: #000000;
+  --color-context-contact-orb-top: #8bdc65;
+  --color-context-contact-orb-base: #68bd45;
+  --color-context-contact-orb-deep: #3b8b25;
+  --color-context-contact-orb-ink: #000000;
+  --color-rating-orb-top: #ffe36b;
+  --color-rating-orb-base: #ffd60a;
+  --color-rating-orb-deep: #b89400;
   --color-rating-orb-ink: #000000;
-  --color-status-confirmed-orb: #30d158;
+  --color-status-confirmed-orb-top: #6ee58b;
+  --color-status-confirmed-orb-base: #30d158;
+  --color-status-confirmed-orb-deep: #15943b;
   --color-status-confirmed-orb-ink: #000000;
-  --color-status-caution-orb: #ff9f0a;
+  --color-status-caution-orb-top: #ffb340;
+  --color-status-caution-orb-base: #ff9f0a;
+  --color-status-caution-orb-deep: #c96800;
   --color-status-caution-orb-ink: #000000;
-  --color-status-unavailable-orb: #ff6961;
+  --color-status-unavailable-orb-top: #ff8a82;
+  --color-status-unavailable-orb-base: #ff6961;
+  --color-status-unavailable-orb-deep: #d9362f;
   --color-status-unavailable-orb-ink: #000000;
-  --color-status-info-orb: #409cff;
-  --color-status-info-orb-ink: #000000;
 
   /* Unchanged from light: status hues stay saturated, so their ink stays white. */
   --color-on-status: #ffffff;
@@ -446,9 +495,94 @@
     border-radius: 9999px;
   }
 
+  /* The orb owns dimensional surface and semantic color. The confined top
+     sheen ends before the smallest centered glyph box, so it cannot wash out
+     semantic ink; adjacent visible text remains the accessible label. */
+  .icon-orb {
+    --icon-orb-top: var(--color-icon-orb-neutral-top);
+    --icon-orb-base: var(--color-icon-orb-neutral-base);
+    --icon-orb-deep: var(--color-icon-orb-neutral-deep);
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    background-color: var(--icon-orb-base);
+    background-image: linear-gradient(
+      155deg,
+      var(--icon-orb-top) 0%,
+      var(--icon-orb-base) 48%,
+      var(--icon-orb-deep) 100%
+    );
+    box-shadow:
+      0 4px 10px rgba(0, 0, 0, 0.22),
+      0 1px 2px rgba(0, 0, 0, 0.16);
+  }
+  .icon-orb::before {
+    position: absolute;
+    top: 5%;
+    left: 24%;
+    width: 52%;
+    height: 8%;
+    z-index: -1;
+    border-radius: 9999px;
+    background: rgba(255, 255, 255, 0.26);
+    content: "";
+    filter: blur(0.75px);
+    pointer-events: none;
+  }
+  .icon-orb > svg {
+    position: relative;
+    z-index: 1;
+    filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.24));
+  }
+  .icon-orb[data-icon-orb-tone="domain-food"] {
+    --icon-orb-top: var(--color-domain-food-orb-top);
+    --icon-orb-base: var(--color-domain-food-orb-base);
+    --icon-orb-deep: var(--color-domain-food-orb-deep);
+  }
+  .icon-orb[data-icon-orb-tone="domain-money"] {
+    --icon-orb-top: var(--color-domain-money-orb-top);
+    --icon-orb-base: var(--color-domain-money-orb-base);
+    --icon-orb-deep: var(--color-domain-money-orb-deep);
+  }
+  .icon-orb[data-icon-orb-tone="context-location"] {
+    --icon-orb-top: var(--color-context-location-orb-top);
+    --icon-orb-base: var(--color-context-location-orb-base);
+    --icon-orb-deep: var(--color-context-location-orb-deep);
+  }
+  .icon-orb[data-icon-orb-tone="context-navigation"] {
+    --icon-orb-top: var(--color-context-navigation-orb-top);
+    --icon-orb-base: var(--color-context-navigation-orb-base);
+    --icon-orb-deep: var(--color-context-navigation-orb-deep);
+  }
+  .icon-orb[data-icon-orb-tone="context-contact"] {
+    --icon-orb-top: var(--color-context-contact-orb-top);
+    --icon-orb-base: var(--color-context-contact-orb-base);
+    --icon-orb-deep: var(--color-context-contact-orb-deep);
+  }
+  .icon-orb[data-icon-orb-tone="rating"] {
+    --icon-orb-top: var(--color-rating-orb-top);
+    --icon-orb-base: var(--color-rating-orb-base);
+    --icon-orb-deep: var(--color-rating-orb-deep);
+  }
+  .icon-orb[data-icon-orb-tone="status-confirmed"] {
+    --icon-orb-top: var(--color-status-confirmed-orb-top);
+    --icon-orb-base: var(--color-status-confirmed-orb-base);
+    --icon-orb-deep: var(--color-status-confirmed-orb-deep);
+  }
+  .icon-orb[data-icon-orb-tone="status-caution"] {
+    --icon-orb-top: var(--color-status-caution-orb-top);
+    --icon-orb-base: var(--color-status-caution-orb-base);
+    --icon-orb-deep: var(--color-status-caution-orb-deep);
+  }
+  .icon-orb[data-icon-orb-tone="status-unavailable"] {
+    --icon-orb-top: var(--color-status-unavailable-orb-top);
+    --icon-orb-base: var(--color-status-unavailable-orb-base);
+    --icon-orb-deep: var(--color-status-unavailable-orb-deep);
+  }
+
   /* Dependency-free solid glyph primitive. Geometry is authored locally in
      SolidIcon.tsx; colour remains inherited so the semantic owner is the
-     surrounding neutral/domain/rating/status component, never the glyph. */
+     surrounding contextual component, never the glyph. */
   .solid-icon {
     display: block;
     flex: none;
@@ -665,9 +799,16 @@
 @media (forced-colors: active) {
   .icon-orb {
     color: CanvasText;
-    background-color: Canvas;
+    background: Canvas;
+    box-shadow: none;
     outline: 1px solid CanvasText;
     outline-offset: -1px;
+  }
+  .icon-orb::before {
+    display: none;
+  }
+  .icon-orb > svg {
+    filter: none;
   }
 }
 

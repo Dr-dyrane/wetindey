@@ -8,10 +8,12 @@ export type IconOrbTone =
   | "neutral"
   | "domain-food"
   | "domain-money"
+  | "context-location"
+  | "context-navigation"
+  | "context-contact"
   | "status-confirmed"
   | "status-caution"
   | "status-unavailable"
-  | "status-info"
   | "rating";
 
 const SIZE_STYLES: Record<IconOrbSize, string> = {
@@ -21,14 +23,16 @@ const SIZE_STYLES: Record<IconOrbSize, string> = {
 };
 
 const TONE_STYLES: Record<IconOrbTone, string> = {
-  neutral: "bg-iconOrb text-iconOrb-ink",
-  "domain-food": "bg-domain-food-orb text-domain-food-orb-ink",
-  "domain-money": "bg-domain-money-orb text-domain-money-orb-ink",
-  "status-confirmed": "bg-status-confirmed-orb text-status-confirmed-orb-ink",
-  "status-caution": "bg-status-caution-orb text-status-caution-orb-ink",
-  "status-unavailable": "bg-status-unavailable-orb text-status-unavailable-orb-ink",
-  "status-info": "bg-status-info-orb text-status-info-orb-ink",
-  rating: "bg-rating-orb text-rating-orb-ink",
+  neutral: "text-iconOrb-neutral-ink",
+  "domain-food": "text-domain-food-orb-ink",
+  "domain-money": "text-domain-money-orb-ink",
+  "context-location": "text-iconOrb-location-ink",
+  "context-navigation": "text-iconOrb-navigation-ink",
+  "context-contact": "text-iconOrb-contact-ink",
+  "status-confirmed": "text-status-confirmed-orb-ink",
+  "status-caution": "text-status-caution-orb-ink",
+  "status-unavailable": "text-status-unavailable-orb-ink",
+  rating: "text-rating-orb-ink",
 };
 
 /**

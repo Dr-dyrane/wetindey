@@ -90,10 +90,12 @@ for (const tone of [
   "neutral",
   "domain-food",
   "domain-money",
+  "context-location",
+  "context-navigation",
+  "context-contact",
   "status-confirmed",
   "status-caution",
   "status-unavailable",
-  "status-info",
   "rating",
 ]) {
   assert.ok(sources.orb.includes(`"${tone}"`) || sources.orb.includes(`${tone}:`), tone);
@@ -107,6 +109,9 @@ assert.match(sources.solid, /18:\s*"h-icon-standard w-icon-standard"/);
 assert.match(sources.solid, /24:\s*"h-icon-prominent w-icon-prominent"/);
 assert.match(sources.solid, /aria-hidden="true"/);
 assert.match(sources.solid, /focusable="false"/);
+assert.match(sources.solid, /shapeRendering="geometricPrecision"/);
+assert.match(sources.solid, /\| "food"/);
+assert.match(sources.solid, /\| "settings"/);
 assert.doesNotMatch(sources.solid, /\bonClick\b|<button\b|https?:\/\//);
 assert.doesNotMatch(sources.solid, /className\??:\s*string|\$\{className\}|\bstyle=/);
 assert.match(sources.globals, /\.solid-icon\s*\{[\s\S]*fill:\s*currentColor;[\s\S]*stroke:\s*none;/);
@@ -118,6 +123,21 @@ assert.match(
 assert.doesNotMatch(
   sources.globals,
   /@media \(forced-colors: active\)[\s\S]*?\.solid-icon\s*\{[\s\S]*?\bcolor\s*:/
+);
+assert.match(
+  sources.globals,
+  /\.icon-orb\s*\{[\s\S]*?background-image:\s*linear-gradient[\s\S]*?box-shadow:/
+);
+const orbBlock = sources.globals.match(/\.icon-orb\s*\{([\s\S]*?)\n  \}/)?.[1] ?? "";
+const sheenBlock =
+  sources.globals.match(/\.icon-orb::before\s*\{([\s\S]*?)\n  \}/)?.[1] ?? "";
+assert.doesNotMatch(orbBlock, /radial-gradient|\binset\b/);
+assert.match(sheenBlock, /top:\s*5%/);
+assert.match(sheenBlock, /height:\s*8%/);
+assert.match(sheenBlock, /filter:\s*blur\(0\.75px\)/);
+assert.doesNotMatch(
+  orbBlock,
+  /\bborder(?:-|\s*:)/,
 );
 for (const [size, value] of [
   ["icon-compact", "16px"],
@@ -131,38 +151,66 @@ assert.doesNotMatch(
   /bg-(?:fillTertiary|domain-(?:food|money)-bg|rating-bg|status-(?:confirmed|caution|unavailable|info)-bg)/
 );
 for (const className of [
-  "bg-iconOrb",
-  "bg-domain-food-orb",
-  "bg-domain-money-orb",
-  "bg-rating-orb",
-  "bg-status-confirmed-orb",
-  "bg-status-caution-orb",
-  "bg-status-unavailable-orb",
-  "bg-status-info-orb",
+  "text-iconOrb-neutral-ink",
+  "text-domain-food-orb-ink",
+  "text-domain-money-orb-ink",
+  "text-iconOrb-location-ink",
+  "text-iconOrb-navigation-ink",
+  "text-iconOrb-contact-ink",
+  "text-rating-orb-ink",
+  "text-status-confirmed-orb-ink",
+  "text-status-caution-orb-ink",
+  "text-status-unavailable-orb-ink",
 ]) {
   assert.ok(sources.orb.includes(className), className);
 }
 
-for (const [fillToken, inkToken] of [
-  ["--color-icon-orb", "--color-icon-orb-ink"],
+for (const [familyToken, inkToken] of [
+  ["--color-icon-orb-neutral", "--color-icon-orb-neutral-ink"],
   ["--color-domain-food-orb", "--color-domain-food-orb-ink"],
   ["--color-domain-money-orb", "--color-domain-money-orb-ink"],
+  ["--color-context-location-orb", "--color-context-location-orb-ink"],
+  ["--color-context-navigation-orb", "--color-context-navigation-orb-ink"],
+  ["--color-context-contact-orb", "--color-context-contact-orb-ink"],
   ["--color-rating-orb", "--color-rating-orb-ink"],
   ["--color-status-confirmed-orb", "--color-status-confirmed-orb-ink"],
   ["--color-status-caution-orb", "--color-status-caution-orb-ink"],
   ["--color-status-unavailable-orb", "--color-status-unavailable-orb-ink"],
-  ["--color-status-info-orb", "--color-status-info-orb-ink"],
 ] as const) {
-  const fills = tokenValues(sources.globals, fillToken);
+  const tops = tokenValues(sources.globals, `${familyToken}-top`);
+  const bases = tokenValues(sources.globals, `${familyToken}-base`);
+  const deeps = tokenValues(sources.globals, `${familyToken}-deep`);
   const inks = tokenValues(sources.globals, inkToken);
-  assert.equal(fills.length, 2, `${fillToken} light/dark opaque values`);
+  assert.equal(tops.length, 2, `${familyToken} light/dark opaque top values`);
+  assert.equal(bases.length, 2, `${familyToken} light/dark opaque base values`);
+  assert.equal(deeps.length, 2, `${familyToken} light/dark opaque deep values`);
   assert.equal(inks.length, 2, `${inkToken} light/dark opaque values`);
   for (let theme = 0; theme < 2; theme += 1) {
+    const stops = [tops[theme], bases[theme], deeps[theme]];
+    for (const stop of stops) {
+      assert.ok(
+        contrastRatio(stop, inks[theme]) >= 4.5,
+        `${familyToken} theme ${theme} stop ${stop} contrast`
+      );
+    }
     assert.ok(
-      contrastRatio(fills[theme], inks[theme]) >= 4.5,
-      `${fillToken} theme ${theme} contrast`
+      relativeLuminance(tops[theme]) > relativeLuminance(bases[theme]) &&
+        relativeLuminance(bases[theme]) > relativeLuminance(deeps[theme]),
+      `${familyToken} theme ${theme} lighter-top/deeper-lower order`
     );
   }
+}
+
+for (const [tailwindKey, token] of [
+  ["neutral-top", "--color-icon-orb-neutral-top"],
+  ["location-top", "--color-context-location-orb-top"],
+  ["navigation-top", "--color-context-navigation-orb-top"],
+  ["contact-top", "--color-context-contact-orb-top"],
+] as const) {
+  assert.ok(
+    sources.tailwind.includes(`"${tailwindKey}": "var(${token})"`),
+    `${tailwindKey} stable contextual mapping`
+  );
 }
 
 // Token families remain separate even if later palette work changes values.
@@ -219,8 +267,8 @@ assert.match(
 );
 assert.match(sources.reportProblem, /<IconOrb size=\{48\} tone="status-confirmed">/);
 
-// Ordinary actions and destinations stay neutral. Status colors remain legal
-// elsewhere in these files only where copy asserts an actual state.
+// Contextual actions must never borrow status colors. Adoption is a later lane,
+// so existing callers remain unchanged while the foundation exposes the names.
 for (const source of [
   sources.profile,
   sources.getIt,
@@ -242,6 +290,7 @@ assert.doesNotMatch(sources.getIt, /\bborder-t\b|\bborder-dashed\b/);
 assert.doesNotMatch(sources.itemCard, /monogramInk|linear-gradient\(145deg/);
 
 // The orb never substitutes for the 44px interactive parent.
+assert.ok(sources.tailwind.includes('tap: "44px"'), "tap target token remains exactly 44px");
 assert.match(sources.listRow, /min-h-tap/);
 assert.match(sources.category, /className=\{`squircle grid h-12 w-full/);
 assert.match(sources.about, /className="flex min-h-tap w-full/);
