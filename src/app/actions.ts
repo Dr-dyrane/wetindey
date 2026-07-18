@@ -148,6 +148,40 @@ export async function searchItems(
   category: string = "food",
   coords?: { lat: number; lng: number; radiusKm: number }
 ) {
+  if (coords !== undefined) {
+    const candidate = coords as unknown;
+    if (
+      candidate === null ||
+      typeof candidate !== "object" ||
+      !Object.prototype.hasOwnProperty.call(candidate, "lat") ||
+      !Object.prototype.hasOwnProperty.call(candidate, "lng") ||
+      !Object.prototype.hasOwnProperty.call(candidate, "radiusKm")
+    ) {
+      throw new Error("search: coordinates must include own lat, lng, and radiusKm values");
+    }
+
+    const { lat, lng, radiusKm } = candidate as {
+      lat: unknown;
+      lng: unknown;
+      radiusKm: unknown;
+    };
+    if (
+      typeof lat !== "number" ||
+      typeof lng !== "number" ||
+      typeof radiusKm !== "number" ||
+      !Number.isFinite(lat) ||
+      !Number.isFinite(lng) ||
+      !Number.isFinite(radiusKm) ||
+      Math.abs(lat) > 90 ||
+      Math.abs(lng) > 180
+    ) {
+      throw new Error("search: coordinates are invalid");
+    }
+
+    // Normalize accepted runtime input before it reaches query construction.
+    coords = { lat, lng, radiusKm };
+  }
+
   // Before the empty check, not after: a non-string caller reaches `.trim()`
   // first and dies on "trim is not a function", a 500 for what is really a
   // rejected input. Empty stays legal; the search box clears on every keystroke.
@@ -157,11 +191,9 @@ export async function searchItems(
   }
 
   const q = `%${parsed.trim()}%`;
-  const lat = coords?.lat;
-  const lng = coords?.lng;
-  const radiusKm = coords?.radiusKm;
-  const useLocation = lat !== undefined && lng !== undefined && radiusKm !== undefined;
-  const radiusM = radiusKm ? radiusKm * 1000 : 0;
+  const useLocation = coords !== undefined;
+  const searchPoint = coords === undefined ? sql`` : searchOrigin(coords);
+  const radiusM = coords === undefined ? 0 : searchRadiusMetres(coords.radiusKm);
 
   const rows = await db.execute(sql`
     WITH matched_items AS (
@@ -203,7 +235,7 @@ export async function searchItems(
         AND observation.observed_at >=
           now() - make_interval(hours => ${FRESHNESS_POLICY.expirationHours})
         AND observation.observed_at <= now()
-        ${useLocation ? sql`AND ST_DWithin(observed_place.location, ST_SetSRID(ST_MakePoint(${lng}, ${lat}), 4326)::geography, ${radiusM})` : sql``}
+        ${useLocation ? sql`AND ST_DWithin(observed_place.location, ${searchPoint}::geography, ${radiusM})` : sql``}
     ),
     live_offers AS (
       /*
@@ -249,9 +281,9 @@ export async function searchItems(
       /*
        * A variant has no intrinsic unit. The persisted relationship is the
        * (variant, unit, place) triple on a real observation. Grouping all
-       * non-rejected history for that triple lets fallback ordering distinguish
-       * observed history, non-synthetic inadmissible evidence, and a genuinely
-       * synthetic-only sample without consulting offers_current.
+       * non-rejected, nonfuture history for that triple lets fallback ordering
+       * distinguish observed trust history, non-synthetic inadmissible evidence,
+       * and a genuinely synthetic-only sample without offers_current.
        */
       SELECT
         variant.item_id,
@@ -262,7 +294,23 @@ export async function searchItems(
         BOOL_OR(fallback_observation.provenance = 'synthetic') AS has_synthetic,
         BOOL_OR(
           fallback_observation.provenance IN ('partner', 'reference', 'inferred')
-        ) AS has_other_inadmissible
+        ) AS has_other_inadmissible,
+        COUNT(*) FILTER (
+          WHERE fallback_observation.provenance = 'observed'
+        )::int AS observed_count,
+        COUNT(*) FILTER (
+          WHERE fallback_observation.provenance = 'synthetic'
+        )::int AS synthetic_count,
+        COUNT(*) FILTER (
+          WHERE fallback_observation.provenance = 'partner'
+        )::int AS partner_count,
+        COUNT(*) FILTER (
+          WHERE fallback_observation.provenance = 'reference'
+        )::int AS reference_count,
+        COUNT(*) FILTER (
+          WHERE fallback_observation.provenance = 'inferred'
+        )::int AS inferred_count,
+        MAX(fallback_observation.observed_at) AS newest_admissible_context_at
       FROM ${observations} fallback_observation
       JOIN ${itemVariants} variant
         ON variant.id = fallback_observation.item_variant_id
@@ -272,6 +320,12 @@ export async function searchItems(
       JOIN ${places} fallback_place
         ON fallback_place.id = fallback_observation.place_id
       WHERE fallback_observation.moderation_status <> 'rejected'
+        AND fallback_observation.observed_at <= now()
+        AND (
+          fallback_observation.provenance <> 'observed'
+          OR fallback_observation.observed_at >= now() - interval '144 hours'
+        )
+        ${useLocation ? sql`AND ST_DWithin(fallback_place.location, ${searchPoint}::geography, ${radiusM})` : sql``}
       GROUP BY
         variant.item_id,
         fallback_observation.item_variant_id,
@@ -292,7 +346,13 @@ export async function searchItems(
         place_id,
         has_observed,
         has_synthetic,
-        has_other_inadmissible
+        has_other_inadmissible,
+        observed_count,
+        synthetic_count,
+        partner_count,
+        reference_count,
+        inferred_count,
+        newest_admissible_context_at
       FROM fallback_candidates
       ORDER BY
         item_id,
@@ -302,22 +362,31 @@ export async function searchItems(
           WHEN has_synthetic THEN 2
           ELSE 3
         END,
+        newest_admissible_context_at DESC,
         item_variant_id ASC,
         unit_id ASC,
         place_id ASC
     ),
     fallback_trust_context AS (
       /*
-       * Synthetic-only and single-class inadmissible triples go through the
-       * authoritative trust call. A no-observed triple mixing synthetic with
-       * partner/reference/inferred is withheld so synthetic precedence cannot
-       * turn mixed inadmissible evidence into Sample.
+       * Only admitted observed triples reopen the authoritative trust reader.
+       * The mapping receives exact provenance counts for synthetic and pure
+       * inadmissible context, while mixed synthetic/inadmissible rows remain
+       * withheld so they cannot become Sample.
        */
       SELECT
         fallback.item_id,
         fallback.item_variant_id,
         fallback.unit_id,
-        fallback.place_id
+        fallback.place_id,
+        fallback.has_observed,
+        fallback.has_synthetic,
+        fallback.has_other_inadmissible,
+        fallback.observed_count,
+        fallback.synthetic_count,
+        fallback.partner_count,
+        fallback.reference_count,
+        fallback.inferred_count
       FROM fallback_relationship fallback
       WHERE fallback.has_observed
         OR NOT (
@@ -366,6 +435,18 @@ export async function searchItems(
         o.availability_state
         ORDER BY o.last_observed_at DESC NULLS LAST, o.latest_observation_id ASC
       ) FILTER (WHERE o.item_variant_id IS NOT NULL))[1] AS "trustAvailabilityState",
+      COALESCE(BOOL_OR(o.item_variant_id IS NOT NULL), false) AS "hasLiveTrust",
+      COALESCE(fallback_trust.has_observed, false) AS "fallbackHasObserved",
+      COALESCE(fallback_trust.has_synthetic, false) AS "fallbackHasSynthetic",
+      COALESCE(
+        fallback_trust.has_other_inadmissible,
+        false
+      ) AS "fallbackHasOtherInadmissible",
+      COALESCE(fallback_trust.observed_count, 0)::int AS "fallbackObservedCount",
+      COALESCE(fallback_trust.synthetic_count, 0)::int AS "fallbackSyntheticCount",
+      COALESCE(fallback_trust.partner_count, 0)::int AS "fallbackPartnerCount",
+      COALESCE(fallback_trust.reference_count, 0)::int AS "fallbackReferenceCount",
+      COALESCE(fallback_trust.inferred_count, 0)::int AS "fallbackInferredCount",
       MAX(o.last_observed_at)                          AS "lastObservedAt"
     FROM matched_items mi
     JOIN ${items} i ON i.id = mi.id
@@ -378,7 +459,15 @@ export async function searchItems(
       u.display_name,
       fallback_trust.item_variant_id,
       fallback_trust.unit_id,
-      fallback_trust.place_id
+      fallback_trust.place_id,
+      fallback_trust.has_observed,
+      fallback_trust.has_synthetic,
+      fallback_trust.has_other_inadmissible,
+      fallback_trust.observed_count,
+      fallback_trust.synthetic_count,
+      fallback_trust.partner_count,
+      fallback_trust.reference_count,
+      fallback_trust.inferred_count
     ORDER BY
       COUNT(o.item_variant_id) DESC,
       i.canonical_name ASC,
@@ -395,18 +484,53 @@ export async function searchItems(
     priceFrom: number | null; priceTo: number | null;
     trustVariantId: string | null; trustUnitId: string | null; trustPlaceId: string | null;
     trustAvailabilityState: string | null;
+    hasLiveTrust: boolean;
+    fallbackHasObserved: boolean;
+    fallbackHasSynthetic: boolean;
+    fallbackHasOtherInadmissible: boolean;
+    fallbackObservedCount: number;
+    fallbackSyntheticCount: number;
+    fallbackPartnerCount: number;
+    fallbackReferenceCount: number;
+    fallbackInferredCount: number;
     lastObservedAt: Date | null;
   };
 
   const cardRows = rows.rows as unknown as Row[];
   const trustKeys = cardRows.flatMap((row) => {
     const key = nullableOfferKey(row);
-    return key ? [key] : [];
+    return key && (row.hasLiveTrust || row.fallbackHasObserved) ? [key] : [];
   });
   const trustByKey = await getOfferTrustBatch(trustKeys);
 
+  const classifiedFallbackTrust = (row: Row): ReadTrust | null => {
+    if (
+      row.hasLiveTrust ||
+      row.fallbackHasObserved ||
+      (!row.fallbackHasSynthetic && !row.fallbackHasOtherInadmissible) ||
+      (row.fallbackHasSynthetic && row.fallbackHasOtherInadmissible)
+    ) {
+      return null;
+    }
+
+    return toReadTrust(
+      {
+        ...assessTrust([]),
+        provenanceSummary: {
+          observed: row.fallbackObservedCount,
+          synthetic: row.fallbackSyntheticCount,
+          partner: row.fallbackPartnerCount,
+          reference: row.fallbackReferenceCount,
+          inferred: row.fallbackInferredCount,
+        },
+      },
+      null
+    );
+  };
+
   return cardRows.map((r) => {
     const trustKey = nullableOfferKey(r);
+    const fallbackTrust = classifiedFallbackTrust(r);
     return {
       id: r.id,
       slug: r.slug,
@@ -421,7 +545,7 @@ export async function searchItems(
       placeCount: r.placeCount,
       priceFrom: r.priceFrom ?? null,
       priceTo: r.priceTo ?? null,
-      trust: readTrustForKey(trustByKey, trustKey, r.trustAvailabilityState),
+      trust: fallbackTrust ?? readTrustForKey(trustByKey, trustKey, r.trustAvailabilityState),
       lastObservedAt: r.lastObservedAt ? new Date(r.lastObservedAt).toISOString() : null,
     };
   });
