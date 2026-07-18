@@ -192,21 +192,15 @@ export function ExchangePanel({
   const selectedLocation = locations.find((location) => location.id === selectedLocationId) ?? null;
 
   return (
-    <div className="space-y-5 px-3 pb-[calc(max(var(--sheet-hidden,0px),var(--safe-area-bottom))+20px)]">
-      <section className="space-y-3" aria-labelledby="cbn-reference-heading">
+    <div className="space-y-4 px-3 pb-[calc(max(var(--sheet-hidden,0px),var(--safe-area-bottom))+20px)]">
+      <section className="space-y-2.5" aria-labelledby="cbn-reference-heading">
         <div className="px-1">
-          <p className="text-caption-1 font-semibold uppercase tracking-[0.12em] text-text-tertiary">
-            CBN reference
-          </p>
-          <h2 id="cbn-reference-heading" className="mt-1 text-title-2 font-semibold text-text-primary">
+          <h2 id="cbn-reference-heading" className="text-title-2 font-semibold text-text-primary">
             How much in Naira?
           </h2>
-          <p className="mt-0.5 text-footnote text-text-secondary">
-            Start with what you have and see a Naira reference estimate.
-          </p>
         </div>
 
-        <div className="squircle-card space-y-4 bg-surface-card p-4 shadow-card">
+        <div className="squircle-card space-y-3 bg-surface-card p-3">
           <label className="block space-y-1.5">
             <span className="block text-footnote font-semibold text-text-secondary">You have</span>
             <Input
@@ -242,7 +236,7 @@ export function ExchangePanel({
           />
 
           <div
-            className="squircle-card min-h-[132px] bg-fillTertiary p-4"
+            className="squircle min-h-[112px] bg-fillTertiary p-3"
             aria-live="polite"
             aria-atomic="true"
           >
@@ -274,7 +268,7 @@ export function ExchangePanel({
             ) : visibleRate ? (
               <div>
                 <div className="flex items-start justify-between gap-3">
-                  <p className="text-footnote font-semibold text-text-secondary">CBN reference gives</p>
+                  <p className="text-footnote font-semibold text-text-secondary">Naira estimate</p>
                   {(rateState.kind === "loading" ||
                     (rateState.kind === "ready" && rateState.saved)) && (
                     <span className="shrink-0 text-caption-1 font-medium text-status-caution-fg">
@@ -285,19 +279,14 @@ export function ExchangePanel({
                 <p className="mt-1 break-words text-title-1 font-semibold tabular-nums text-text-primary">
                   {converted === null ? "Enter an amount" : NAIRA.format(converted)}
                 </p>
-                <p className="mt-2 text-footnote tabular-nums text-text-secondary">
-                  {CURRENCY_META[currency].symbol}1 = ₦{RATE.format(visibleRate.rate)}
-                </p>
-                <p className="mt-0.5 text-caption-1 text-text-tertiary">
-                  CBN reference rate · data relay: Frankfurter
-                </p>
-                <p className="mt-0.5 text-caption-1 text-text-tertiary">
+                <p className="mt-2 text-caption-1 leading-snug tabular-nums text-text-secondary">
+                  CBN · {CURRENCY_META[currency].symbol}1 = ₦{RATE.format(visibleRate.rate)} ·
                   Published {formatPublishedDate(visibleRate.publishedDate)}
                 </p>
                 {rateState.kind === "ready" && rateState.refreshFailed && (
                   <div className="mt-2 flex items-center justify-between gap-3">
                     <p role="status" className="text-caption-1 text-status-caution-fg">
-                      Latest refresh failed; showing the last saved CBN rate.
+                      Using the saved rate; latest refresh failed.
                     </p>
                     <button
                       type="button"
@@ -312,31 +301,29 @@ export function ExchangePanel({
             ) : null}
           </div>
 
-          <p id="exchange-reference-note" className="text-caption-1 text-text-tertiary">
-            WetinDey no dey exchange money. CBN reference-rate data is relayed by Frankfurter;
-            this is an estimate, and banks and currency exchangers may offer different rates.
+          <p id="exchange-reference-note" className="text-caption-1 leading-snug text-text-tertiary">
+            WetinDey does not exchange money. This CBN reference estimate is relayed by
+            Frankfurter; providers may quote differently.
           </p>
         </div>
       </section>
 
-      <section className="space-y-3" aria-labelledby="sample-nearby-heading">
+      <section className="space-y-2.5" aria-labelledby="sample-nearby-heading">
         <div className="px-1">
-          <div className="flex items-start justify-between gap-3">
-            <div>
-              <h2
-                id="sample-nearby-heading"
-                className="text-title-3 font-semibold text-text-primary"
-              >
-                Sample locations
-              </h2>
-              <p className="mt-0.5 text-footnote text-text-secondary">
-                Prototype map points, not businesses, licensed outlets, directions, or outlet rates.
-              </p>
-            </div>
-            <span className="squircle bg-fillTertiary px-2 py-1 text-caption-1 font-semibold text-text-secondary">
+          <div className="flex items-center justify-between gap-3">
+            <h2
+              id="sample-nearby-heading"
+              className="text-title-3 font-semibold text-text-primary"
+            >
+              Nearby locations
+            </h2>
+            <span className="shrink-0 text-caption-1 font-semibold text-text-tertiary">
               Sample
             </span>
           </div>
+          <p className="mt-0.5 text-caption-1 leading-snug text-text-tertiary">
+            Map pins and places are demonstration data, not verified businesses or live rates.
+          </p>
         </div>
 
         <div
@@ -347,7 +334,7 @@ export function ExchangePanel({
             [
               ["all", "All"],
               ["bank", "Banks"],
-              ["bdc", "BDC outlets"],
+              ["bdc", "BDCs"],
             ] as const
           ).map(([value, label]) => (
             <button
@@ -367,18 +354,14 @@ export function ExchangePanel({
         </div>
 
         {selectedLocation && (
-          <div className="squircle-card bg-status-caution-bg p-4">
-            <div className="flex items-start gap-3">
-              <MapPin className="mt-0.5 h-5 w-5 shrink-0 text-status-caution-fg" aria-hidden />
-              <div>
-                <p className="text-body font-semibold text-status-caution-fg">
-                  {selectedLocation.name}
-                </p>
-                <p className="mt-1 text-footnote text-status-caution-fg">
-                  Sample map point selected. No business or outlet details are available.
-                </p>
-              </div>
-            </div>
+          <div
+            role="status"
+            className="squircle flex min-h-tap items-center gap-2.5 bg-fillTertiary px-3 py-2"
+          >
+            <MapPin className="h-4 w-4 shrink-0 text-text-secondary" aria-hidden />
+            <p className="truncate text-footnote font-semibold text-text-secondary">
+              {selectedLocation.name} selected
+            </p>
           </div>
         )}
 
@@ -394,7 +377,7 @@ export function ExchangePanel({
                 type="button"
                 aria-pressed={selected}
                 onClick={() => onSelectLocation(location)}
-                className={`squircle-card flex min-h-tap w-full items-center gap-3 p-3 text-left shadow-card transition-colors duration-instant active:opacity-60 ${
+                className={`squircle-card grid min-h-[64px] w-full grid-cols-[2.25rem_minmax(0,1fr)_auto] items-center gap-3 p-3 text-left transition-colors duration-instant active:opacity-60 ${
                   selected ? "bg-fillSecondary" : "bg-surface-card"
                 }`}
               >
@@ -406,19 +389,14 @@ export function ExchangePanel({
                   )}
                 </span>
                 <span className="min-w-0 flex-1">
-                  <span className="flex items-center gap-2">
-                    <span className="truncate text-body font-semibold text-text-primary">
-                      {location.name}
-                    </span>
-                    <span className="shrink-0 text-caption-1 font-semibold text-text-tertiary">
-                      Sample
-                    </span>
+                  <span className="block truncate text-body font-semibold text-text-primary">
+                    {location.name}
                   </span>
                   <span className="mt-0.5 block truncate text-footnote text-text-secondary">
                     {location.description}
                   </span>
                 </span>
-                <span className="shrink-0 text-caption-1 tabular-nums text-text-tertiary">
+                <span className="shrink-0 whitespace-nowrap text-caption-1 tabular-nums text-text-tertiary">
                   {distance}
                 </span>
               </button>
@@ -426,15 +404,10 @@ export function ExchangePanel({
           })}
         </div>
 
-        <p className="px-1 text-caption-1 text-text-tertiary">
-          Every pin and place is Sample test data, not a verified business, licensed outlet, or
-          live rate.
-        </p>
-
         {locations.length === 0 && (
           <div className="squircle-card bg-fillTertiary px-4 py-6 text-center">
             <p className="text-body font-semibold text-text-primary">
-              No Sample places in this filter
+              No places in this filter
             </p>
             <p className="mt-1 text-footnote text-text-secondary">Choose another place type.</p>
           </div>

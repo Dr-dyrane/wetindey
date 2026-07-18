@@ -1271,12 +1271,6 @@ export default function HomePage() {
           </div>
           </div>
 
-          {activeCategory === "money" && (
-            <p className="squircle bg-fillTertiary px-3 py-2 text-caption-1 text-text-secondary">
-              Map pins are Sample, not verified outlets.
-            </p>
-          )}
-
           {activeCategory === "food" && (
           <SearchField
             value={searchQuery}

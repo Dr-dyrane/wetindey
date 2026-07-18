@@ -1,9 +1,18 @@
 "use client";
 
 import React from "react";
-import { Check } from "lucide-react";
+import {
+  Bus,
+  Check,
+  CircleDollarSign,
+  Fuel,
+  HeartPulse,
+  House,
+  Utensils,
+  Users,
+  type LucideIcon,
+} from "lucide-react";
 import { ModalSheet } from "@/design-system/components/ModalSheet";
-import { ListGroup, ListRow } from "@/design-system/components/ListRow";
 import { haptics } from "@/lib/haptics";
 
 export type CategoryPillar = "food" | "home" | "health" | "money" | "transport" | "community";
@@ -24,20 +33,24 @@ export function CategorySelectorSheet({
   onCategoryChange,
   t,
 }: CategorySelectorSheetProps) {
-  // Labels stay text-first until a category has a complete, typed vertical that
-  // can justify an unambiguous domain glyph across map, search, and reporting.
-  const categories: { id: SelectorCategory; label: string; detail: string }[] = [
-    { id: "food", label: t.category_food || "Food", detail: t.category_food_desc || "Prices, availability, markets" },
-    { id: "fuel", label: "Fuel prices", detail: "Fuel stations and pump prices" },
-    { id: "home", label: t.category_home || "Home & Living", detail: t.category_home_desc || "Building materials, charcoal" },
-    { id: "health", label: t.category_health || "Health & Beauty", detail: t.category_health_desc || "Medicine, pharmacy, beauty" },
+  const categories: {
+    id: SelectorCategory;
+    label: string;
+    icon: LucideIcon;
+    supported: boolean;
+  }[] = [
+    { id: "food", label: t.category_food || "Food", icon: Utensils, supported: true },
+    { id: "fuel", label: "Fuel prices", icon: Fuel, supported: false },
+    { id: "home", label: t.category_home || "Home & Living", icon: House, supported: false },
     {
-      id: "money",
-      label: "Aboki FX",
-      detail: "Official CBN reference and Sample places",
+      id: "health",
+      label: t.category_health || "Health & Beauty",
+      icon: HeartPulse,
+      supported: false,
     },
-    { id: "transport", label: t.category_transport || "Transport", detail: t.category_transport_desc || "Bus fares, ride prices, ferry" },
-    { id: "community", label: t.category_community || "Community", detail: t.category_community_desc || "Outages, services, happenings" },
+    { id: "money", label: "Aboki FX", icon: CircleDollarSign, supported: true },
+    { id: "transport", label: t.category_transport || "Transport", icon: Bus, supported: false },
+    { id: "community", label: t.category_community || "Community", icon: Users, supported: false },
   ];
 
   const handleSelect = (category: CategoryPillar) => {
@@ -50,34 +63,54 @@ export function CategorySelectorSheet({
 
   return (
     <ModalSheet open={open} onClose={onClose} title={t.select_category || "Select Category"} size="form">
-      <div className="py-4">
-        <ListGroup header={t.categories_header || "Pillars of Daily Uncertainty"}>
-          {categories.map((c) => {
-            const active = c.id === activeCategory;
-            const supported = c.id === "food" || c.id === "money";
+      <div className="py-2">
+        <div
+          className="squircle-card bg-fillTertiary p-1"
+          role="group"
+          aria-label={t.select_category || "Select Category"}
+        >
+          {categories.map((category) => {
+            const active = category.id === activeCategory;
+            const Icon = category.icon;
+
             return (
-              <ListRow
-                key={c.id}
-                label={c.label}
-                detail={
-                  active ? (
-                    <Check className="h-5 w-5 text-info" strokeWidth={2.5} aria-hidden="true" />
-                  ) : supported ? (
-                    c.detail
-                  ) : (
-                    "Not available in this version"
-                  )
-                }
-                pressed={active}
-                chevron={false}
-                disabled={!supported}
+              <button
+                key={category.id}
+                type="button"
+                aria-pressed={active}
+                disabled={!category.supported}
                 onClick={() => {
-                  if (c.id === "food" || c.id === "money") handleSelect(c.id);
+                  if (category.id === "food" || category.id === "money") {
+                    handleSelect(category.id);
+                  }
                 }}
-              />
+                className={`squircle grid h-12 w-full grid-cols-[2rem_minmax(0,1fr)_auto] items-center gap-3 px-2.5 text-left
+                            transition-colors duration-instant focus-visible:outline-none focus-visible:ring-2
+                            focus-visible:ring-accent focus-visible:ring-inset disabled:cursor-not-allowed disabled:opacity-100 ${
+                              active
+                                ? "bg-surface-card text-text-primary shadow-card"
+                                : category.supported
+                                  ? "text-text-primary active:bg-fillSecondary"
+                                  : "text-text-tertiary"
+                            }`}
+              >
+                <span
+                  className={`grid h-8 w-8 place-items-center rounded-[14px] bg-fillSecondary ${
+                    active ? "text-info" : "text-text-secondary"
+                  }`}
+                >
+                  <Icon className="h-[18px] w-[18px]" strokeWidth={2} aria-hidden />
+                </span>
+                <span className="truncate text-body font-semibold">{category.label}</span>
+                {active ? (
+                  <Check className="h-5 w-5 text-info" strokeWidth={2.5} aria-hidden />
+                ) : !category.supported ? (
+                  <span className="text-caption-1 font-medium text-text-tertiary">Soon</span>
+                ) : null}
+              </button>
             );
           })}
-        </ListGroup>
+        </div>
       </div>
     </ModalSheet>
   );
