@@ -221,6 +221,19 @@ safety/integrity lanes until their separate gates are independently satisfied.
   evidence and the controller reconciles scope. Do not infer a cause or activate a search
   lane yet. Keep it separate from category/Aboki and `src/app/page.tsx` hit-target
   ownership. The prior `c6f304b` static correction is not runtime closure.
+- Product & Data Governance Architect task
+  `019f7599-0eaa-7423-9ebf-a1bfea8efe37` owns the active two-path governance-only Aboki
+  FX provider-policy correction lane over exactly
+  `docs/adr/017-cbn-reference-rate-converter.md` and `WETINDEY_BIBLE.md`. Scope replaces
+  CBN-only policy with a truthful Frankfurter reference model while preserving
+  provider/date attribution, the Aboki FX category name, and a clear non-transaction
+  boundary. No rate may be labelled CBN unless actually CBN-backed; blended corridors use
+  `Frankfurter reference`. Curated USD, GBP, EUR, CAD, AUD, GHS, KES, ZAR, AED, CNY, INR,
+  BRL, CHF, JPY, and SAR corridors remain subject to live server catalog availability.
+  Local SVG flags and a searchable picker direction are approved without emoji or remote
+  flags. No code, assets, tests, DB, ExchangePanel, currency path, push, or deploy is
+  authorized. Require one path-scoped governance commit and independent read-only
+  refutation before release; implementation paths remain unclaimed until governance lands.
 - Nearby Presence governance completed in path-scoped commit
   `c96086007e6f379c1b686b8203deef2c7c5559c2` with independent PASS. Its exact paths were
   `WETINDEY_BIBLE.md` and `docs/adr/016-nearby-user-presence.md`, now released. ADR-016 is
