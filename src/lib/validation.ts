@@ -474,6 +474,8 @@ const updateMyProfileInput = z
     locationSharing: z
       .boolean({ invalid_type_error: "locationSharing must be true or false" })
       .optional(),
+    latitude: z.number().finite().gte(-90).lte(90).nullish(),
+    longitude: z.number().finite().gte(-180).lte(180).nullish(),
   })
   .strict()
   .refine((v) => (v.contactChannelKind == null) === (v.contactChannelValue == null), {

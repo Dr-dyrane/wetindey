@@ -520,6 +520,8 @@ export const userProfiles = pgTable("user_profiles", {
    * avatar below: nothing renders on the strength of avatar_url alone.
    */
   locationSharing: boolean("location_sharing").default(false).notNull(),
+  latitude: doublePrecision("latitude"),
+  longitude: doublePrecision("longitude"),
   /**
    * A Vercel Blob URL for this user's avatar, or NULL when they have uploaded
    * none. Nullable and defaultless for the same reason the contact pair is: NULL

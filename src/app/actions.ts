@@ -2381,6 +2381,8 @@ export async function updateMyProfile(data: {
   contactChannelKind?: "phone" | "whatsapp" | "sms" | null;
   contactChannelValue?: string | null;
   locationSharing?: boolean;
+  latitude?: number | null;
+  longitude?: number | null;
 }): Promise<void> {
   const input = parseUpdateMyProfile(data);
 
@@ -2392,10 +2394,16 @@ export async function updateMyProfile(data: {
 
   const contactChannelKind = input.contactChannelKind ?? null;
   const contactChannelValue = input.contactChannelValue ?? null;
-  // Only touch the flag when the caller actually sent one. Omitted means "leave
-  // it as it is" on an existing row, and the column default (false) on a new one.
-  const sharing: { locationSharing?: boolean } =
-    input.locationSharing === undefined ? {} : { locationSharing: input.locationSharing };
+  // Only touch the flag/coordinates when the caller actually sent them.
+  const sharing: {
+    locationSharing?: boolean;
+    latitude?: number | null;
+    longitude?: number | null;
+  } = {
+    ...(input.locationSharing === undefined ? {} : { locationSharing: input.locationSharing }),
+    ...(input.latitude === undefined ? {} : { latitude: input.latitude }),
+    ...(input.longitude === undefined ? {} : { longitude: input.longitude }),
+  };
 
   await db
     .insert(userProfiles)
@@ -2537,4 +2545,44 @@ export async function removeMyAvatar(): Promise<void> {
     // The blob is already gone or unreachable; the profile is what matters and it
     // is already cleared.
   }
+}
+
+export interface SharedUserLocation {
+  userId: string;
+  name: string;
+  avatarUrl: string | null;
+  latitude: number;
+  longitude: number;
+}
+
+export async function getSharedUserLocations(): Promise<SharedUserLocation[]> {
+  const result = await db.execute<{
+    user_id: string;
+    name: string | null;
+    email: string | null;
+    avatar_url: string | null;
+    latitude: string | number;
+    longitude: string | number;
+  }>(sql`
+    SELECT 
+      up.user_id,
+      u.name,
+      u.email,
+      up.avatar_url,
+      up.latitude,
+      up.longitude
+    FROM user_profiles up
+    LEFT JOIN neon_auth.user u ON u.id = up.user_id
+    WHERE up.location_sharing = true 
+      AND up.latitude IS NOT NULL 
+      AND up.longitude IS NOT NULL
+  `);
+
+  return result.rows.map(row => ({
+    userId: row.user_id,
+    name: row.name || row.email || "Anonymous",
+    avatarUrl: row.avatar_url,
+    latitude: Number(row.latitude),
+    longitude: Number(row.longitude),
+  }));
 }

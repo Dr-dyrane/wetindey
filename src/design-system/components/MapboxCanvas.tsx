@@ -21,6 +21,7 @@ import {
   type UserPositionPrecision
 } from "@/integrations/maps/MapboxAdapter";
 import { DETENT_FRACTION, type Detent } from "./BottomSheet";
+import type { SharedUserLocation } from "@/app/actions";
 import { useTheme } from "@/core/context/ThemeContext";
 import {
   useLocationChrome,
@@ -77,6 +78,7 @@ interface MapboxCanvasProps {
    * status model exists, and this is only the seam able to carry one later.
    */
   routeTint?: RouteTint;
+  sharedUsers?: SharedUserLocation[];
 }
 
 /**
@@ -225,7 +227,8 @@ export const MapboxCanvas = forwardRef<MapCameraHandle, MapboxCanvasProps>(funct
     detent = null,
     padding,
     route = null,
-    routeTint
+    routeTint,
+    sharedUsers = []
   },
   ref
 ) {
@@ -381,6 +384,13 @@ export const MapboxCanvas = forwardRef<MapCameraHandle, MapboxCanvasProps>(funct
       label: precision === "point" ? "You are here" : `Somewhere around ${locationLabel}`
     });
   }, [userPosition, locationLabel, ready]);
+
+  // Render other location-sharing users on the map
+  useEffect(() => {
+    const adapter = adapterRef.current;
+    if (!adapter) return;
+    adapter.setSharedUserMarkers(sharedUsers);
+  }, [sharedUsers, ready]);
 
   /**
    * The route is geometry the caller owns; this hands it to the layer AND

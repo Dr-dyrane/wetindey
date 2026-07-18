@@ -1,3 +1,5 @@
+import type { SharedUserLocation } from "@/app/actions";
+
 export interface MapMarkerOptions {
   id: string;
   lat: number;
@@ -731,6 +733,7 @@ interface WindowWithMapboxgl extends Window {
 export class MapboxAdapter implements MapProviderAdapter {
   private mapInstance: MapboxMap | null = null;
   private markersMap: Map<string, MapboxMarker> = new Map();
+  private sharedUserMarkers: Map<string, MapboxMarker> = new Map();
   /**
    * "You", held apart from markersMap on purpose. MapboxCanvas calls
    * clearMarkers() and re-adds every candidate whenever the list changes; a user
@@ -1195,6 +1198,84 @@ export class MapboxAdapter implements MapProviderAdapter {
       .addTo(this.mapInstance);
     this.userMarkerEl = el;
     this.userMarkerPrecision = options.precision;
+  }
+
+  public setSharedUserMarkers(users: SharedUserLocation[]): void {
+    const map = this.mapInstance;
+    if (!map) return;
+    const mapboxgl = (window as unknown as WindowWithMapboxgl).mapboxgl;
+    if (!mapboxgl) return;
+
+    // 1. Remove markers that are no longer in the list
+    const activeIds = new Set(users.map((u) => u.userId));
+    this.sharedUserMarkers.forEach((marker, id) => {
+      if (!activeIds.has(id)) {
+        marker.remove();
+        this.sharedUserMarkers.delete(id);
+      }
+    });
+
+    // 2. Add or update markers
+    users.forEach((user) => {
+      const existing = this.sharedUserMarkers.get(user.userId);
+      if (existing) {
+        existing.setLngLat([user.longitude, user.latitude]);
+      } else {
+        const el = document.createElement("div");
+        el.className = "shared-user-marker";
+        el.style.width = "40px";
+        el.style.height = "40px";
+        el.style.borderRadius = "12px"; // Apple HIG continuous-like squircle
+        el.style.boxShadow = "var(--shadow-raised)";
+        el.style.border = "2px solid #FFFFFF";
+        el.style.backgroundColor = "var(--color-status-info)";
+        el.style.display = "flex";
+        el.style.alignItems = "center";
+        el.style.justifyContent = "center";
+        el.style.cursor = "pointer";
+        el.style.overflow = "hidden";
+        el.style.transition = "transform 0.2s ease-in-out";
+
+        el.addEventListener("mouseenter", () => {
+          el.style.transform = "scale(1.1)";
+        });
+        el.addEventListener("mouseleave", () => {
+          el.style.transform = "scale(1)";
+        });
+
+        if (user.avatarUrl) {
+          const img = document.createElement("img");
+          img.src = user.avatarUrl;
+          img.style.width = "100%";
+          img.style.height = "100%";
+          img.style.objectFit = "cover";
+          el.appendChild(img);
+        } else {
+          // Initials fallback
+          const initials = user.name
+            .split(" ")
+            .map((n) => n[0])
+            .join("")
+            .substring(0, 2)
+            .toUpperCase() || "?";
+          
+          const text = document.createElement("span");
+          text.textContent = initials;
+          text.style.color = "#FFFFFF";
+          text.style.fontWeight = "bold";
+          text.style.fontSize = "13px";
+          el.appendChild(text);
+        }
+
+        el.title = user.name;
+
+        const markerInstance = new mapboxgl.Marker(el)
+          .setLngLat([user.longitude, user.latitude])
+          .addTo(map);
+
+        this.sharedUserMarkers.set(user.userId, markerInstance);
+      }
+    });
   }
 
   /**

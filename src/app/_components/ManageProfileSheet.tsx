@@ -18,6 +18,7 @@ import {
 } from "@/app/actions";
 import { Avatar } from "@/app/_components/ProfileSheet";
 import { haptics } from "@/lib/haptics";
+import { useLocationStore } from "@/core/state/locationStore";
 
 /**
  * Manage profile: the editable half of the account.
@@ -356,7 +357,20 @@ export function ManageProfileSheet({
     setSharingError(null);
 
     try {
-      await updateMyProfile({ locationSharing: next });
+      if (next) {
+        const pos = useLocationStore.getState().position;
+        await updateMyProfile({
+          locationSharing: true,
+          latitude: pos.lat,
+          longitude: pos.lng,
+        });
+      } else {
+        await updateMyProfile({
+          locationSharing: false,
+          latitude: null,
+          longitude: null,
+        });
+      }
       setProfile((prev) => (prev ? { ...prev, locationSharing: next } : null));
     } catch (err) {
       console.error("ManageProfileSheet: failed to toggle location sharing", err);
