@@ -308,6 +308,40 @@ export async function searchItems(
       FROM sample_offer_units
       ORDER BY item_id, offers_in_unit DESC, unit_id
     ),
+    sample_detail_candidates AS (
+      /*
+       * getPopularItems intentionally counts places from its initial detail
+       * window, not from its fresh price projection. Keep that visible-card
+       * contract here too: unavailable and expired offers participate, the
+       * distance expression is spherical, and the deterministic window is
+       * applied before distinct places are counted.
+       */
+      SELECT
+        variant.item_id,
+        detail_offer.place_id,
+        ROW_NUMBER() OVER (
+          PARTITION BY variant.item_id
+          ORDER BY
+            (detail_offer.availability_state = 'unavailable') ASC,
+            ${useLocation ? sql`ST_DistanceSphere(detail_place.location::geometry, ${searchPoint}) ASC,` : sql``}
+            detail_offer.price_min ASC,
+            detail_offer.id ASC
+        ) AS candidate_rank
+      FROM ${offersCurrent} detail_offer
+      JOIN ${itemVariants} variant ON variant.id = detail_offer.item_variant_id
+      JOIN matched_items mi ON mi.id = variant.item_id
+      JOIN ${places} detail_place ON detail_place.id = detail_offer.place_id
+      WHERE variant.active = true
+        ${useLocation ? sql`AND ST_DistanceSphere(detail_place.location::geometry, ${searchPoint}) <= ${radiusM}` : sql``}
+    ),
+    sample_detail_places AS (
+      SELECT
+        item_id,
+        COUNT(DISTINCT place_id)::int AS place_count
+      FROM sample_detail_candidates
+      WHERE candidate_rank <= ${DEFAULT_DETAIL_OFFER_LIMIT}
+      GROUP BY item_id
+    ),
     fallback_candidates AS (
       /*
        * A variant has no intrinsic unit. The persisted relationship is the
@@ -455,7 +489,9 @@ export async function searchItems(
       )::int                                           AS "offerCount",
       COALESCE(
         NULLIF(COUNT(DISTINCT o.place_id), 0),
-        COUNT(DISTINCT sample.place_id),
+        CASE
+          WHEN COUNT(sample.id) > 0 THEN MAX(sample_detail.place_count)
+        END,
         0
       )::int                                           AS "placeCount",
       COALESCE(MIN(o.price_min), MIN(sample.price_min))::int AS "priceFrom",
@@ -518,6 +554,7 @@ export async function searchItems(
       AND NOT EXISTS (
         SELECT 1 FROM live_offers observed WHERE observed.item_id = i.id
       )
+    LEFT JOIN sample_detail_places sample_detail ON sample_detail.item_id = i.id
     GROUP BY
       i.id,
       u.display_name,
