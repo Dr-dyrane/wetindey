@@ -1,19 +1,39 @@
 "use server";
 
-const CBN_REFERENCE_CURRENCIES = ["USD", "GBP", "EUR"] as const;
-export type CbnReferenceCurrency = (typeof CBN_REFERENCE_CURRENCIES)[number];
+import {
+  REFERENCE_CURRENCIES,
+  isReferenceCurrencyCode,
+  type ReferenceCurrencyCode,
+} from "@/app/_data/reference-currencies";
 
-export interface CbnReferenceRate {
-  base: CbnReferenceCurrency;
+export type ReferenceProvider = "CBN" | "FRANKFURTER";
+
+export interface ReferenceCurrencyCatalogEntry {
+  code: ReferenceCurrencyCode;
+  provider: ReferenceProvider;
+}
+
+export interface ReferenceRate {
+  base: ReferenceCurrencyCode;
   quote: "NGN";
   rate: number;
-  publishedDate: string;
-  provider: "CBN";
+  effectiveDate: string;
+  provider: ReferenceProvider;
 }
 
-function isSupportedCurrency(value: string): value is CbnReferenceCurrency {
-  return CBN_REFERENCE_CURRENCIES.some((currency) => currency === value);
+interface UpstreamRate {
+  date: string;
+  base: "NGN";
+  quote: ReferenceCurrencyCode;
+  rate: number;
 }
+
+const API_ROOT = "https://api.frankfurter.dev/v2";
+const QUOTES = REFERENCE_CURRENCIES.join(",");
+const REQUEST_OPTIONS = {
+  headers: { Accept: "application/json" },
+  next: { revalidate: 3600 },
+} as const;
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
@@ -25,49 +45,114 @@ function isIsoCalendarDate(value: unknown): value is string {
   return !Number.isNaN(parsed.getTime()) && parsed.toISOString().slice(0, 10) === value;
 }
 
-function parseRatePayload(value: unknown, requested: CbnReferenceCurrency): CbnReferenceRate {
-  if (
-    !isRecord(value) ||
-    value.base !== requested ||
-    value.quote !== "NGN" ||
-    typeof value.rate !== "number" ||
-    !Number.isFinite(value.rate) ||
-    value.rate <= 0 ||
-    !isIsoCalendarDate(value.date)
-  ) {
-    throw new Error("The CBN reference-rate response was invalid.");
+function parseNgnRates(value: unknown): UpstreamRate[] {
+  if (!Array.isArray(value)) {
+    throw new Error("The reference currency catalog was invalid.");
   }
 
-  return {
-    base: requested,
-    quote: "NGN",
-    rate: value.rate,
-    publishedDate: value.date,
-    provider: "CBN",
-  };
+  const byCurrency = new Map<ReferenceCurrencyCode, UpstreamRate>();
+  for (const row of value) {
+    if (
+      !isRecord(row) ||
+      row.base !== "NGN" ||
+      typeof row.quote !== "string" ||
+      !isReferenceCurrencyCode(row.quote) ||
+      typeof row.rate !== "number" ||
+      !Number.isFinite(row.rate) ||
+      row.rate <= 0 ||
+      !isIsoCalendarDate(row.date)
+    ) {
+      continue;
+    }
+
+    byCurrency.set(row.quote, {
+      date: row.date,
+      base: "NGN",
+      quote: row.quote,
+      rate: row.rate,
+    });
+  }
+
+  return REFERENCE_CURRENCIES.flatMap((code) => {
+    const rate = byCurrency.get(code);
+    return rate ? [rate] : [];
+  });
 }
 
-/**
- * A fixed-pair server request. The amount being converted never reaches this
- * action or Frankfurter; multiplication stays in the browser.
- */
-export async function getCbnReferenceRate(currency: string): Promise<CbnReferenceRate> {
-  if (!isSupportedCurrency(currency)) {
-    throw new Error("Unsupported reference currency.");
-  }
-
+async function fetchNgnRates(provider: ReferenceProvider): Promise<UpstreamRate[]> {
+  const providerQuery = provider === "CBN" ? "&providers=CBN" : "";
   const response = await fetch(
-    `https://api.frankfurter.dev/v2/rate/${currency}/NGN?providers=CBN`,
+    `${API_ROOT}/rates?base=NGN&quotes=${QUOTES}${providerQuery}`,
     {
-      headers: { Accept: "application/json" },
-      next: { revalidate: 3600 },
+      ...REQUEST_OPTIONS,
       signal: AbortSignal.timeout(8_000),
     }
   );
 
   if (!response.ok) {
-    throw new Error("The latest CBN reference rate is unavailable.");
+    throw new Error(
+      provider === "CBN"
+        ? "The CBN reference catalog is unavailable."
+        : "The Frankfurter reference catalog is unavailable."
+    );
   }
 
-  return parseRatePayload(await response.json(), currency);
+  return parseNgnRates(await response.json());
+}
+
+async function buildReferenceCurrencyCatalog(): Promise<ReferenceCurrencyCatalogEntry[]> {
+  const [frankfurterRates, cbnRates] = await Promise.all([
+    fetchNgnRates("FRANKFURTER"),
+    fetchNgnRates("CBN").catch(() => []),
+  ]);
+  const frankfurterCodes = new Set(frankfurterRates.map((rate) => rate.quote));
+  const cbnCodes = new Set(cbnRates.map((rate) => rate.quote));
+
+  return REFERENCE_CURRENCIES.flatMap((code) =>
+    frankfurterCodes.has(code)
+      ? [{ code, provider: cbnCodes.has(code) ? ("CBN" as const) : ("FRANKFURTER" as const) }]
+      : []
+  );
+}
+
+/**
+ * The live product catalog is an intersection, never the curated list alone.
+ * A failed CBN catalog quietly removes CBN attribution while the independently
+ * validated Frankfurter catalog can remain useful; it never leaves a CBN label
+ * behind on a blended result.
+ */
+export async function getReferenceCurrencyCatalog(): Promise<
+  ReferenceCurrencyCatalogEntry[]
+> {
+  return buildReferenceCurrencyCatalog();
+}
+
+/**
+ * Fetch one validated foreign-currency-to-NGN reference. The client sends only
+ * the currency code: the amount stays in the browser and is multiplied there.
+ *
+ * `null` means the curated pair is not in the current validated catalog. An
+ * upstream failure still throws so the client can distinguish unavailable from
+ * a refresh error and decide whether a visibly saved rate is honest to show.
+ */
+export async function getReferenceRate(currency: string): Promise<ReferenceRate | null> {
+  if (!isReferenceCurrencyCode(currency)) {
+    throw new Error("Unsupported reference currency.");
+  }
+
+  const catalog = await buildReferenceCurrencyCatalog();
+  const entry = catalog.find((candidate) => candidate.code === currency);
+  if (!entry) return null;
+
+  const rates = await fetchNgnRates(entry.provider);
+  const upstream = rates.find((candidate) => candidate.quote === currency);
+  if (!upstream) return null;
+
+  return {
+    base: currency,
+    quote: "NGN",
+    rate: 1 / upstream.rate,
+    effectiveDate: upstream.date,
+    provider: entry.provider,
+  };
 }

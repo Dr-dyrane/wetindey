@@ -1,0 +1,336 @@
+"use client";
+
+import React, { useMemo, useRef, useState } from "react";
+import { Check, ChevronDown, Search, X } from "lucide-react";
+import { ModalSheet, useModalSheetNavigation } from "@/design-system/components/ModalSheet";
+import { transition } from "@/design-system/motion";
+import {
+  POPULAR_REFERENCE_CURRENCIES,
+  REFERENCE_CURRENCY_META,
+  isReferenceCurrencyCode,
+  type ReferenceCurrencyCode,
+} from "@/app/_data/reference-currencies";
+import { CurrencyFlag } from "@/app/_components/CurrencyFlag";
+
+const RECENTS_KEY = "wetindey:reference-currency-recents:v1";
+const MAX_RECENTS = 3;
+
+interface CurrencyPickerSheetProps {
+  available: readonly ReferenceCurrencyCode[];
+  value: ReferenceCurrencyCode | null;
+  onSelect: (currency: ReferenceCurrencyCode) => void;
+  disabled?: boolean;
+}
+
+function CurrencySearchField({
+  value,
+  onChange,
+  onClear,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+  onClear: () => void;
+}) {
+  return (
+    <div
+      className={`squircle-full relative flex h-11 w-full items-center overflow-hidden bg-controlFill ${transition.focus} focus-within:bg-surface-card focus-within:outline focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-focusRing`}
+    >
+      <Search
+        aria-hidden="true"
+        className="pointer-events-none absolute left-3 h-4 w-4 text-text-tertiary"
+        strokeWidth={2.5}
+      />
+      <input
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        placeholder="Search currencies"
+        aria-label="Search currencies"
+        enterKeyHint="search"
+        className="h-full w-full bg-transparent pl-9 pr-11 text-body text-text-primary placeholder:text-text-tertiary"
+      />
+      {value && (
+        <button
+          type="button"
+          onClick={onClear}
+          aria-label="Clear currency search"
+          className={`absolute right-0 grid h-11 w-11 place-items-center text-text-tertiary ${transition.press}`}
+        >
+          <span className="grid h-[17px] w-[17px] place-items-center rounded-full bg-text-tertiary">
+            <X aria-hidden="true" className="h-[11px] w-[11px] text-surface" strokeWidth={3.5} />
+          </span>
+        </button>
+      )}
+    </div>
+  );
+}
+
+function readRecents(available: ReadonlySet<ReferenceCurrencyCode>): ReferenceCurrencyCode[] {
+  try {
+    const parsed: unknown = JSON.parse(window.localStorage.getItem(RECENTS_KEY) ?? "[]");
+    if (!Array.isArray(parsed)) return [];
+    return parsed
+      .filter(
+        (value): value is ReferenceCurrencyCode =>
+          typeof value === "string" && isReferenceCurrencyCode(value) && available.has(value)
+      )
+      .filter((value, index, values) => values.indexOf(value) === index)
+      .slice(0, MAX_RECENTS);
+  } catch {
+    return [];
+  }
+}
+
+function rememberCurrency(
+  currency: ReferenceCurrencyCode,
+  previous: readonly ReferenceCurrencyCode[]
+): ReferenceCurrencyCode[] {
+  const next = [currency, ...previous.filter((value) => value !== currency)].slice(0, MAX_RECENTS);
+  try {
+    window.localStorage.setItem(RECENTS_KEY, JSON.stringify(next));
+  } catch {
+    // Selection still succeeds when device-local storage is unavailable.
+  }
+  return next;
+}
+
+function searchScore(code: ReferenceCurrencyCode, query: string): number {
+  const meta = REFERENCE_CURRENCY_META[code];
+  if (code.toLowerCase() === query) return 0;
+  if (code.toLowerCase().startsWith(query)) return 1;
+  if (meta.name.toLowerCase().startsWith(query)) return 2;
+  return 3;
+}
+
+function CurrencyRow({
+  code,
+  selected,
+  onSelect,
+}: {
+  code: ReferenceCurrencyCode;
+  selected: boolean;
+  onSelect: (currency: ReferenceCurrencyCode) => void;
+}) {
+  const meta = REFERENCE_CURRENCY_META[code];
+  return (
+    <button
+      type="button"
+      aria-pressed={selected}
+      onClick={() => onSelect(code)}
+      className={`flex min-h-tap w-full items-center gap-3 px-4 py-2.5 text-left active:bg-fillTertiary ${transition.feedback}`}
+    >
+      <CurrencyFlag code={code} />
+      <span className="min-w-0 flex-1">
+        <span className="block truncate text-body font-medium text-text-primary">{meta.name}</span>
+        <span className="mt-0.5 block text-footnote font-semibold text-text-secondary">{code}</span>
+      </span>
+      {selected && (
+        <Check
+          aria-hidden="true"
+          className="h-5 w-5 shrink-0 text-status-info"
+          strokeWidth={2.5}
+        />
+      )}
+    </button>
+  );
+}
+
+function CurrencyGroup({
+  title,
+  currencies,
+  value,
+  onSelect,
+}: {
+  title: string;
+  currencies: readonly ReferenceCurrencyCode[];
+  value: ReferenceCurrencyCode | null;
+  onSelect: (currency: ReferenceCurrencyCode) => void;
+}) {
+  if (currencies.length === 0) return null;
+  return (
+    <section aria-labelledby={`currency-group-${title.toLowerCase().replaceAll(" ", "-")}`}>
+      <h3
+        id={`currency-group-${title.toLowerCase().replaceAll(" ", "-")}`}
+        className="px-1 pb-1 text-footnote font-semibold text-text-secondary"
+      >
+        {title}
+      </h3>
+      <div className="squircle-card overflow-hidden bg-surface-card">
+        {currencies.map((code) => (
+          <CurrencyRow
+            key={code}
+            code={code}
+            selected={code === value}
+            onSelect={onSelect}
+          />
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function CurrencyPickerContent({
+  available,
+  value,
+  onSelect,
+}: {
+  available: readonly ReferenceCurrencyCode[];
+  value: ReferenceCurrencyCode | null;
+  onSelect: (currency: ReferenceCurrencyCode) => void;
+}) {
+  const availableSet = useMemo(() => new Set(available), [available]);
+  const [query, setQuery] = useState("");
+  const [recents, setRecents] = useState<ReferenceCurrencyCode[]>(() =>
+    readRecents(availableSet)
+  );
+  const normalizedQuery = query.trim().toLowerCase();
+
+  const recentCurrencies = recents.filter((code) => availableSet.has(code));
+  const used = new Set<ReferenceCurrencyCode>(recentCurrencies);
+  const popularCurrencies = POPULAR_REFERENCE_CURRENCIES.filter(
+    (code) => availableSet.has(code) && !used.has(code)
+  );
+  popularCurrencies.forEach((code) => used.add(code));
+  const allCurrencies = available.filter((code) => !used.has(code));
+
+  const searchResults = normalizedQuery
+    ? [...available]
+        .filter((code) => {
+          const meta = REFERENCE_CURRENCY_META[code];
+          return [code, meta.name, ...meta.searchAliases]
+            .join(" ")
+            .toLowerCase()
+            .includes(normalizedQuery);
+        })
+        .sort(
+          (left, right) =>
+            searchScore(left, normalizedQuery) - searchScore(right, normalizedQuery)
+        )
+    : [];
+
+  const commit = (currency: ReferenceCurrencyCode) => {
+    setRecents(rememberCurrency(currency, recents));
+    onSelect(currency);
+  };
+
+  return (
+    <div className="space-y-4 px-4 py-2">
+      <CurrencySearchField
+        value={query}
+        onChange={setQuery}
+        onClear={() => setQuery("")}
+      />
+
+      {normalizedQuery ? (
+        searchResults.length > 0 ? (
+          <CurrencyGroup
+            title="Search results"
+            currencies={searchResults}
+            value={value}
+            onSelect={commit}
+          />
+        ) : (
+          <p role="status" className="py-8 text-center text-body text-text-secondary">
+            No currencies found
+          </p>
+        )
+      ) : available.length > 0 ? (
+        <>
+          <CurrencyGroup
+            title="Recent"
+            currencies={recentCurrencies}
+            value={value}
+            onSelect={commit}
+          />
+          <CurrencyGroup
+            title="Popular"
+            currencies={popularCurrencies}
+            value={value}
+            onSelect={commit}
+          />
+          <CurrencyGroup
+            title="All currencies"
+            currencies={allCurrencies}
+            value={value}
+            onSelect={commit}
+          />
+        </>
+      ) : (
+        <p role="status" className="py-8 text-center text-body text-text-secondary">
+          No currencies available
+        </p>
+      )}
+    </div>
+  );
+}
+
+export function CurrencyPickerSheet({
+  available,
+  value,
+  onSelect,
+  disabled,
+}: CurrencyPickerSheetProps) {
+  const navigation = useModalSheetNavigation();
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const [fallbackOpen, setFallbackOpen] = useState(false);
+  const [childId, setChildId] = useState<string | null>(null);
+  const selectedMeta = value ? REFERENCE_CURRENCY_META[value] : null;
+  const isOpen = navigation ? navigation.childOpen && navigation.childId === childId : fallbackOpen;
+
+  const commit = (currency: ReferenceCurrencyCode) => {
+    onSelect(currency);
+    if (navigation) {
+      setChildId(null);
+      navigation.popChild();
+    } else {
+      setFallbackOpen(false);
+    }
+  };
+
+  const openPicker = () => {
+    if (!navigation) {
+      setFallbackOpen(true);
+      return;
+    }
+
+    const nextChildId = navigation.pushChild({
+      title: "Choose currency",
+      returnFocus: triggerRef.current,
+      content: (
+        <CurrencyPickerContent available={available} value={value} onSelect={commit} />
+      ),
+    });
+    setChildId(nextChildId);
+  };
+
+  return (
+    <>
+      <button
+        ref={triggerRef}
+        type="button"
+        disabled={disabled || !value}
+        onClick={openPicker}
+        aria-haspopup="dialog"
+        aria-expanded={isOpen}
+        aria-label={
+          selectedMeta ? `Choose currency, ${selectedMeta.name} selected` : "Choose currency"
+        }
+        className={`squircle flex h-11 shrink-0 items-center gap-2 bg-surface-card px-3 text-text-primary disabled:opacity-40 ${transition.press}`}
+      >
+        {value && <CurrencyFlag code={value} />}
+        <span className="text-body font-semibold">{value ?? "—"}</span>
+        <ChevronDown aria-hidden="true" className="h-4 w-4 text-text-tertiary" strokeWidth={2.5} />
+      </button>
+
+      {!navigation && (
+        <ModalSheet
+          open={fallbackOpen}
+          onClose={() => setFallbackOpen(false)}
+          title="Choose currency"
+          size="form"
+        >
+          <CurrencyPickerContent available={available} value={value} onSelect={commit} />
+        </ModalSheet>
+      )}
+    </>
+  );
+}

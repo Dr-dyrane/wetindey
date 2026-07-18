@@ -1,16 +1,22 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 import { Building2, CircleDollarSign, MapPin, RefreshCw } from "lucide-react";
-import { Button } from "@/design-system/components/Button";
-import { Input } from "@/design-system/components/Input";
-import { SheetPicker } from "@/design-system/components/SheetPicker";
 import { Skeleton } from "@/design-system/components/Skeleton";
+import { transition } from "@/design-system/motion";
 import {
-  getCbnReferenceRate,
-  type CbnReferenceCurrency,
-  type CbnReferenceRate,
+  getReferenceCurrencyCatalog,
+  getReferenceRate,
+  type ReferenceCurrencyCatalogEntry,
+  type ReferenceRate,
 } from "@/app/currency-actions";
+import {
+  REFERENCE_CURRENCY_META,
+  isReferenceCurrencyCode,
+  type ReferenceCurrencyCode,
+} from "@/app/_data/reference-currencies";
+import { CurrencyFlag } from "@/app/_components/CurrencyFlag";
+import { CurrencyPickerSheet } from "@/app/_components/CurrencyPickerSheet";
 import type {
   ExchangeLocationKind,
   ExchangeSampleLocation,
@@ -28,24 +34,26 @@ interface ExchangePanelProps {
   onSelectLocation: (location: ExchangeSampleLocation) => void;
 }
 
-interface CachedRate extends CbnReferenceRate {
+interface CachedRate extends ReferenceRate {
   savedAt: number;
 }
 
-type RateState =
-  | { kind: "loading"; cached: CachedRate | null }
-  | { kind: "ready"; rate: CbnReferenceRate; saved: boolean; refreshFailed: boolean }
+type CatalogState =
+  | { kind: "loading" }
+  | { kind: "ready"; entries: ReferenceCurrencyCatalogEntry[] }
+  | { kind: "empty" }
   | { kind: "error" };
 
-const CACHE_PREFIX = "wetindey:cbn-rate:";
-const MAX_AMOUNT = 1_000_000_000;
-const CBN_REFERENCE_CURRENCIES: readonly CbnReferenceCurrency[] = ["USD", "GBP", "EUR"];
+type RateState =
+  | { kind: "idle" }
+  | { kind: "loading"; cached: CachedRate | null }
+  | { kind: "ready"; rate: ReferenceRate; saved: boolean; refreshFailed: boolean }
+  | { kind: "unavailable" }
+  | { kind: "error" };
 
-const CURRENCY_META: Record<CbnReferenceCurrency, { label: string; symbol: string }> = {
-  USD: { label: "USD — US dollar", symbol: "$" },
-  GBP: { label: "GBP — British pound", symbol: "£" },
-  EUR: { label: "EUR — Euro", symbol: "€" },
-};
+const CACHE_PREFIX = "wetindey:reference-rate:v2:";
+const LAST_CURRENCY_KEY = "wetindey:reference-rate:last-currency:v1";
+const MAX_AMOUNT = 1_000_000_000;
 
 const NAIRA = new Intl.NumberFormat("en-NG", {
   style: "currency",
@@ -58,7 +66,7 @@ const RATE = new Intl.NumberFormat("en-NG", {
   maximumFractionDigits: 4,
 });
 
-const PUBLISHED_DATE = new Intl.DateTimeFormat("en-NG", {
+const EFFECTIVE_DATE = new Intl.DateTimeFormat("en-NG", {
   day: "numeric",
   month: "long",
   year: "numeric",
@@ -71,23 +79,23 @@ function isIsoCalendarDate(value: unknown): value is string {
   return !Number.isNaN(parsed.getTime()) && parsed.toISOString().slice(0, 10) === value;
 }
 
-function isCachedRate(value: unknown, currency: CbnReferenceCurrency): value is CachedRate {
+function isCachedRate(value: unknown, currency: ReferenceCurrencyCode): value is CachedRate {
   if (typeof value !== "object" || value === null) return false;
   const candidate = value as Partial<CachedRate>;
   return (
     candidate.base === currency &&
     candidate.quote === "NGN" &&
-    candidate.provider === "CBN" &&
+    (candidate.provider === "CBN" || candidate.provider === "FRANKFURTER") &&
     typeof candidate.rate === "number" &&
     Number.isFinite(candidate.rate) &&
     candidate.rate > 0 &&
-    isIsoCalendarDate(candidate.publishedDate) &&
+    isIsoCalendarDate(candidate.effectiveDate) &&
     typeof candidate.savedAt === "number" &&
     Number.isFinite(candidate.savedAt)
   );
 }
 
-function readCachedRate(currency: CbnReferenceCurrency): CachedRate | null {
+function readCachedRate(currency: ReferenceCurrencyCode): CachedRate | null {
   try {
     const raw = window.localStorage.getItem(`${CACHE_PREFIX}${currency}`);
     if (!raw) return null;
@@ -98,18 +106,32 @@ function readCachedRate(currency: CbnReferenceCurrency): CachedRate | null {
   }
 }
 
-function saveCachedRate(rate: CbnReferenceRate) {
+function readLastCachedRate(): CachedRate | null {
   try {
-    const cached: CachedRate = { ...rate, savedAt: Date.now() };
-    window.localStorage.setItem(`${CACHE_PREFIX}${rate.base}`, JSON.stringify(cached));
+    const currency = window.localStorage.getItem(LAST_CURRENCY_KEY);
+    return currency && isReferenceCurrencyCode(currency) ? readCachedRate(currency) : null;
   } catch {
-    // The rate still works for this session when storage is unavailable.
+    return null;
   }
 }
 
-function formatPublishedDate(date: string): string {
+function saveCachedRate(rate: ReferenceRate) {
+  try {
+    const cached: CachedRate = { ...rate, savedAt: Date.now() };
+    window.localStorage.setItem(`${CACHE_PREFIX}${rate.base}`, JSON.stringify(cached));
+    window.localStorage.setItem(LAST_CURRENCY_KEY, rate.base);
+  } catch {
+    // The validated rate still works for this session when storage is unavailable.
+  }
+}
+
+function formatEffectiveDate(date: string): string {
   if (!isIsoCalendarDate(date)) return "date unavailable";
-  return PUBLISHED_DATE.format(new Date(`${date}T12:00:00Z`));
+  return EFFECTIVE_DATE.format(new Date(`${date}T12:00:00Z`));
+}
+
+function providerLabel(rate: ReferenceRate): string {
+  return rate.provider === "CBN" ? "CBN reference" : "Frankfurter reference";
 }
 
 function parseAmount(value: string): { value: number | null; error: string | null } {
@@ -136,34 +158,92 @@ export function ExchangePanel({
   selectedLocationId,
   onSelectLocation,
 }: ExchangePanelProps) {
-  const [currency, setCurrency] = useState<CbnReferenceCurrency>("USD");
+  const amountId = useId();
+  const amountErrorId = useId();
+  const currencyRef = useRef<ReferenceCurrencyCode | null>(null);
+  const [currency, setCurrency] = useState<ReferenceCurrencyCode | null>(null);
   const [amount, setAmount] = useState("");
-  const [retrySequence, setRetrySequence] = useState(0);
-  const [rateState, setRateState] = useState<RateState>({
-    kind: "loading",
-    cached: null,
-  });
+  const [catalogRetry, setCatalogRetry] = useState(0);
+  const [rateRetry, setRateRetry] = useState(0);
+  const [offline, setOffline] = useState(false);
+  const [catalogState, setCatalogState] = useState<CatalogState>({ kind: "loading" });
+  const [rateState, setRateState] = useState<RateState>({ kind: "idle" });
+  const enterCurrency = useCallback((nextCurrency: ReferenceCurrencyCode) => {
+    currencyRef.current = nextCurrency;
+    setCurrency(nextCurrency);
+    setRateState({ kind: "loading", cached: readCachedRate(nextCurrency) });
+  }, []);
 
   useEffect(() => {
+    let cancelled = false;
+    const saved = readLastCachedRate();
+    setCatalogState({ kind: "loading" });
+    if (saved) {
+      currencyRef.current = saved.base;
+      setCurrency(saved.base);
+      setRateState({ kind: "ready", rate: saved, saved: true, refreshFailed: false });
+    } else {
+      setRateState({ kind: "idle" });
+    }
+
+    void getReferenceCurrencyCatalog()
+      .then((entries) => {
+        if (cancelled) return;
+        if (entries.length === 0) {
+          setCatalogState({ kind: "empty" });
+          currencyRef.current = null;
+          setCurrency(null);
+          setRateState({ kind: "idle" });
+          return;
+        }
+
+        setCatalogState({ kind: "ready", entries });
+        const current = currencyRef.current;
+        const nextCurrency =
+          current && entries.some((entry) => entry.code === current)
+            ? current
+            : entries.find((entry) => entry.code === "USD")?.code ?? entries[0]!.code;
+        enterCurrency(nextCurrency);
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setCatalogState({ kind: "error" });
+        if (saved) {
+          currencyRef.current = saved.base;
+          setCurrency(saved.base);
+          setRateState({ kind: "ready", rate: saved, saved: true, refreshFailed: true });
+        } else {
+          currencyRef.current = null;
+          setCurrency(null);
+          setRateState({ kind: "idle" });
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [catalogRetry, enterCurrency]);
+
+  useEffect(() => {
+    if (!currency || catalogState.kind !== "ready") return;
     let cancelled = false;
     const cached = readCachedRate(currency);
     setRateState({ kind: "loading", cached });
 
-    void getCbnReferenceRate(currency)
+    void getReferenceRate(currency)
       .then((rate) => {
         if (cancelled) return;
+        if (!rate) {
+          setRateState({ kind: "unavailable" });
+          return;
+        }
         saveCachedRate(rate);
         setRateState({ kind: "ready", rate, saved: false, refreshFailed: false });
       })
       .catch(() => {
         if (cancelled) return;
         if (cached) {
-          setRateState({
-            kind: "ready",
-            rate: cached,
-            saved: true,
-            refreshFailed: true,
-          });
+          setRateState({ kind: "ready", rate: cached, saved: true, refreshFailed: true });
           return;
         }
         setRateState({ kind: "error" });
@@ -172,129 +252,237 @@ export function ExchangePanel({
     return () => {
       cancelled = true;
     };
-  }, [currency, retrySequence]);
+  }, [catalogState.kind, currency, rateRetry]);
 
   useEffect(() => {
-    const retryWhenOnline = () => setRetrySequence((value) => value + 1);
+    const syncOnlineState = () => setOffline(!window.navigator.onLine);
+    const retryWhenOnline = () => {
+      setOffline(false);
+      setCatalogRetry((value) => value + 1);
+      setRateRetry((value) => value + 1);
+    };
+    syncOnlineState();
+    window.addEventListener("offline", syncOnlineState);
     window.addEventListener("online", retryWhenOnline);
-    return () => window.removeEventListener("online", retryWhenOnline);
+    return () => {
+      window.removeEventListener("offline", syncOnlineState);
+      window.removeEventListener("online", retryWhenOnline);
+    };
   }, []);
 
   const parsedAmount = useMemo(() => parseAmount(amount), [amount]);
-  const visibleRate =
+  const candidateVisibleRate =
     rateState.kind === "ready"
       ? rateState.rate
       : rateState.kind === "loading"
         ? rateState.cached
         : null;
+  const visibleRate =
+    candidateVisibleRate && candidateVisibleRate.base === currency ? candidateVisibleRate : null;
+  const usingSavedRate =
+    (rateState.kind === "loading" && rateState.cached !== null) ||
+    (rateState.kind === "ready" && rateState.saved) ||
+    (offline && visibleRate !== null);
   const converted =
     visibleRate && parsedAmount.value !== null ? visibleRate.rate * parsedAmount.value : null;
+  const availableCurrencies =
+    catalogState.kind === "ready" ? catalogState.entries.map((entry) => entry.code) : [];
+  const selectedMeta = currency ? REFERENCE_CURRENCY_META[currency] : null;
   const selectedLocation = locations.find((location) => location.id === selectedLocationId) ?? null;
+  const retryCatalog = () => setCatalogRetry((value) => value + 1);
+  const retryRate = () => setRateRetry((value) => value + 1);
 
   return (
     <div className="space-y-4 px-3 pb-[calc(max(var(--sheet-hidden,0px),var(--safe-area-bottom))+20px)]">
-      <section className="space-y-2.5" aria-labelledby="cbn-reference-heading">
+      <section className="space-y-2.5" aria-labelledby="exchange-reference-heading">
         <div className="px-1">
-          <h2 id="cbn-reference-heading" className="text-title-2 font-semibold text-text-primary">
+          <h2
+            id="exchange-reference-heading"
+            className="text-title-2 font-semibold text-text-primary"
+          >
             How much in Naira?
           </h2>
         </div>
 
         <div className="squircle-card space-y-3 bg-surface-card p-3">
-          <label className="block space-y-1.5">
-            <span className="block text-footnote font-semibold text-text-secondary">You have</span>
-            <Input
-              value={amount}
-              onChange={(event) => setAmount(event.target.value)}
-              inputMode="decimal"
-              autoComplete="off"
-              placeholder="100"
-              icon={
-                <span aria-hidden className="text-body font-semibold">
-                  {CURRENCY_META[currency].symbol}
-                </span>
-              }
-              error={parsedAmount.error ?? undefined}
-              aria-describedby="exchange-reference-note"
-              data-autofocus
-            />
-          </label>
-
-          <SheetPicker
-            options={CBN_REFERENCE_CURRENCIES.map((code) => ({
-              id: code,
-              label: CURRENCY_META[code].label,
-            }))}
-            value={currency}
-            onSelect={(value) => {
-              if (CBN_REFERENCE_CURRENCIES.some((code) => code === value)) {
-                setCurrency(value as CbnReferenceCurrency);
-              }
-            }}
-            title="Choose currency"
-            label="Currency you have"
-          />
+          <div>
+            <label
+              htmlFor={amountId}
+              className="mb-1.5 block text-footnote font-semibold text-text-secondary"
+            >
+              Foreign amount
+            </label>
+            <div
+              className={`squircle flex min-h-[64px] items-center gap-2 bg-controlFill px-3 ${transition.focus} focus-within:bg-surface-card focus-within:outline focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-focusRing`}
+            >
+              <input
+                id={amountId}
+                value={amount}
+                onChange={(event) => setAmount(event.target.value)}
+                inputMode="decimal"
+                autoComplete="off"
+                placeholder="100"
+                aria-invalid={parsedAmount.error ? true : undefined}
+                aria-describedby={
+                  parsedAmount.error
+                    ? `${amountErrorId} exchange-reference-note`
+                    : "exchange-reference-note"
+                }
+                data-autofocus
+                className="min-w-0 flex-1 bg-transparent text-title-1 font-semibold tabular-nums text-text-primary placeholder:text-text-tertiary"
+              />
+              {catalogState.kind === "loading" && !currency ? (
+                <Skeleton className="h-11 w-24 rounded-[14px]" />
+              ) : (
+                <CurrencyPickerSheet
+                  available={availableCurrencies}
+                  value={currency}
+                  onSelect={enterCurrency}
+                  disabled={catalogState.kind !== "ready"}
+                />
+              )}
+            </div>
+            {parsedAmount.error && (
+              <p
+                id={amountErrorId}
+                role="alert"
+                className="mt-1.5 px-1 text-footnote text-status-danger-fg"
+              >
+                {parsedAmount.error}
+              </p>
+            )}
+          </div>
 
           <div
-            className="squircle min-h-[112px] bg-fillTertiary p-3"
+            className="squircle min-h-[132px] bg-fillTertiary p-3"
             aria-live="polite"
             aria-atomic="true"
           >
-            {rateState.kind === "loading" && !rateState.cached ? (
-              <div aria-label="Loading the latest CBN reference rate" className="space-y-3">
-                <Skeleton className="h-4 w-28" />
+            <div className="flex items-center justify-between gap-3">
+              <p className="text-footnote font-semibold text-text-secondary">Naira estimate</p>
+              <span className="flex items-center gap-1.5 text-footnote font-semibold text-text-secondary">
+                <CurrencyFlag code="NGN" />
+                NGN
+              </span>
+            </div>
+
+            {catalogState.kind === "loading" && !visibleRate ? (
+              <div aria-label="Loading available reference currencies" className="mt-3 space-y-3">
                 <Skeleton className="h-9 w-3/4" />
-                <Skeleton className="h-3 w-40" />
+                <Skeleton className="h-3 w-44" />
               </div>
-            ) : rateState.kind === "error" ? (
-              <div className="space-y-3">
+            ) : catalogState.kind === "empty" ? (
+              <div className="mt-3 space-y-3">
                 <div>
-                  <p role="alert" className="text-body font-semibold text-text-primary">
-                    Couldn’t load the latest rate
+                  <p role="status" className="text-body font-semibold text-text-primary">
+                    No reference currencies available
                   </p>
                   <p className="mt-1 text-footnote text-text-secondary">
-                    Check your connection and try again.
+                    The current catalog returned no supported Naira pairs.
                   </p>
                 </div>
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  onClick={() => setRetrySequence((value) => value + 1)}
+                <button
+                  type="button"
+                  onClick={retryCatalog}
+                  className={`squircle min-h-tap bg-controlFill px-3 text-footnote font-semibold text-text-primary ${transition.press}`}
                 >
-                  <RefreshCw className="mr-1.5 h-4 w-4" aria-hidden />
+                  <RefreshCw className="mr-1.5 inline h-4 w-4" aria-hidden="true" />
                   Try again
-                </Button>
+                </button>
               </div>
-            ) : visibleRate ? (
-              <div>
+            ) : catalogState.kind === "error" && !visibleRate ? (
+              <div className="mt-3 space-y-3">
+                <div>
+                  <p role="alert" className="text-body font-semibold text-text-primary">
+                    Couldn’t load reference currencies
+                  </p>
+                  <p className="mt-1 text-footnote text-text-secondary">
+                    {offline ? "You’re offline. Reconnect and try again." : "Try again shortly."}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={retryCatalog}
+                  className={`squircle min-h-tap bg-controlFill px-3 text-footnote font-semibold text-text-primary ${transition.press}`}
+                >
+                  <RefreshCw className="mr-1.5 inline h-4 w-4" aria-hidden="true" />
+                  Try again
+                </button>
+              </div>
+            ) : rateState.kind === "loading" && !rateState.cached ? (
+              <div aria-label="Loading the reference rate" className="mt-3 space-y-3">
+                <Skeleton className="h-9 w-3/4" />
+                <Skeleton className="h-3 w-44" />
+              </div>
+            ) : rateState.kind === "unavailable" ? (
+              <div className="mt-3">
+                <p role="status" className="text-body font-semibold text-text-primary">
+                  Pair unavailable
+                </p>
+                <p className="mt-1 text-footnote text-text-secondary">
+                  Choose another available currency.
+                </p>
+              </div>
+            ) : rateState.kind === "error" ? (
+              <div className="mt-3 space-y-3">
+                <div>
+                  <p role="alert" className="text-body font-semibold text-text-primary">
+                    Couldn’t load this reference rate
+                  </p>
+                  <p className="mt-1 text-footnote text-text-secondary">
+                    {offline ? "You’re offline. Reconnect and try again." : "Try again shortly."}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={retryRate}
+                  className={`squircle min-h-tap bg-controlFill px-3 text-footnote font-semibold text-text-primary ${transition.press}`}
+                >
+                  <RefreshCw className="mr-1.5 inline h-4 w-4" aria-hidden="true" />
+                  Try again
+                </button>
+              </div>
+            ) : visibleRate && selectedMeta ? (
+              <div className="mt-1">
                 <div className="flex items-start justify-between gap-3">
-                  <p className="text-footnote font-semibold text-text-secondary">Naira estimate</p>
-                  {(rateState.kind === "loading" ||
-                    (rateState.kind === "ready" && rateState.saved)) && (
-                    <span className="shrink-0 text-caption-1 font-medium text-status-caution-fg">
-                      Saved rate
+                  <p className="break-words text-title-1 font-semibold tabular-nums text-text-primary">
+                    {converted === null ? "Enter an amount" : NAIRA.format(converted)}
+                  </p>
+                  {usingSavedRate && (
+                    <span className="shrink-0 text-caption-1 font-semibold text-status-caution-fg">
+                      {offline ? "Offline · Saved" : "Saved rate"}
                     </span>
                   )}
                 </div>
-                <p className="mt-1 break-words text-title-1 font-semibold tabular-nums text-text-primary">
-                  {converted === null ? "Enter an amount" : NAIRA.format(converted)}
-                </p>
                 <p className="mt-2 text-caption-1 leading-snug tabular-nums text-text-secondary">
-                  CBN · {CURRENCY_META[currency].symbol}1 = ₦{RATE.format(visibleRate.rate)} ·
-                  Published {formatPublishedDate(visibleRate.publishedDate)}
+                  {providerLabel(visibleRate)} · {selectedMeta.symbol}1 = ₦
+                  {RATE.format(visibleRate.rate)} · Effective{" "}
+                  {formatEffectiveDate(visibleRate.effectiveDate)}
                 </p>
-                {rateState.kind === "ready" && rateState.refreshFailed && (
+                {(rateState.kind === "loading" ||
+                  (rateState.kind === "ready" && rateState.refreshFailed) ||
+                  offline ||
+                  catalogState.kind === "loading" ||
+                  catalogState.kind === "error") && (
                   <div className="mt-2 flex items-center justify-between gap-3">
                     <p role="status" className="text-caption-1 text-status-caution-fg">
-                      Using the saved rate; latest refresh failed.
+                      {offline
+                        ? "Using the saved reference while offline."
+                        : catalogState.kind === "error"
+                          ? "Using the saved reference; the currency list is unavailable."
+                          : catalogState.kind === "loading"
+                            ? "Using the saved reference while currencies refresh."
+                          : "Using the saved reference while the latest rate refreshes."}
                     </p>
-                    <button
-                      type="button"
-                      onClick={() => setRetrySequence((value) => value + 1)}
-                      className="min-h-tap shrink-0 px-2 text-footnote font-semibold text-status-caution-fg active:opacity-60"
-                    >
-                      Refresh
-                    </button>
+                    {!offline && catalogState.kind !== "loading" && (
+                      <button
+                        type="button"
+                        onClick={catalogState.kind === "error" ? retryCatalog : retryRate}
+                        className={`min-h-tap shrink-0 px-2 text-footnote font-semibold text-status-caution-fg ${transition.press}`}
+                      >
+                        Refresh
+                      </button>
+                    )}
                   </div>
                 )}
               </div>
@@ -302,8 +490,8 @@ export function ExchangePanel({
           </div>
 
           <p id="exchange-reference-note" className="text-caption-1 leading-snug text-text-tertiary">
-            WetinDey does not exchange money. This CBN reference estimate is relayed by
-            Frankfurter; providers may quote differently.
+            WetinDey does not exchange money. This is a reference estimate; banks and
+            currency exchangers may offer different rates.
           </p>
         </div>
       </section>
@@ -358,7 +546,7 @@ export function ExchangePanel({
             role="status"
             className="squircle flex min-h-tap items-center gap-2.5 bg-fillTertiary px-3 py-2"
           >
-            <MapPin className="h-4 w-4 shrink-0 text-text-secondary" aria-hidden />
+            <MapPin className="h-4 w-4 shrink-0 text-text-secondary" aria-hidden="true" />
             <p className="truncate text-footnote font-semibold text-text-secondary">
               {selectedLocation.name} selected
             </p>
@@ -383,9 +571,9 @@ export function ExchangePanel({
               >
                 <span className="squircle grid h-9 w-9 shrink-0 place-items-center bg-fillTertiary text-text-secondary">
                   {location.kind === "bank" ? (
-                    <Building2 className="h-5 w-5" aria-hidden />
+                    <Building2 className="h-5 w-5" aria-hidden="true" />
                   ) : (
-                    <CircleDollarSign className="h-5 w-5" aria-hidden />
+                    <CircleDollarSign className="h-5 w-5" aria-hidden="true" />
                   )}
                 </span>
                 <span className="min-w-0 flex-1">
@@ -406,13 +594,10 @@ export function ExchangePanel({
 
         {locations.length === 0 && (
           <div className="squircle-card bg-fillTertiary px-4 py-6 text-center">
-            <p className="text-body font-semibold text-text-primary">
-              No places in this filter
-            </p>
+            <p className="text-body font-semibold text-text-primary">No places in this filter</p>
             <p className="mt-1 text-footnote text-text-secondary">Choose another place type.</p>
           </div>
         )}
-
       </section>
     </div>
   );
