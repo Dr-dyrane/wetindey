@@ -294,13 +294,76 @@ async function main(): Promise<void> {
     verified,
     issuedAtMs + 4 * 60 * 1000,
   );
+  const paletteHexes =
+    rendered.html.match(/#[0-9a-f]{3,8}\b/gi) ?? [];
+  const paletteRgbValues = [
+    ...rendered.html.matchAll(
+      /rgba?\(([^)]+)\)/gi,
+    ),
+  ];
+  const declaredColors = [
+    ...rendered.html.matchAll(
+      /(?:^|[;{"'])\s*(?:color|background(?:-color)?)\s*:\s*([^;"]+)/gi,
+    ),
+  ].map((match) =>
+    match[1].replace(/\s*!important\s*$/i, "").trim(),
+  );
+
   assert.equal(rendered.subject, WETINDEY_OTP_EMAIL_SUBJECT);
-  assert.match(rendered.html, /123456/);
-  assert.match(rendered.html, /Expires in 5 minutes/);
-  assert.match(rendered.html, /#16a34a/i);
   assert.match(
     rendered.html,
-    /https:\/\/www\.wetindey\.live\/logo\.png/,
+    /id="verification-code"[^>]*>123456<\/div>/,
+  );
+  assert.match(
+    rendered.html,
+    /id="verification-expiry"[^>]*>Expires in 5 minutes<\/div>/,
+  );
+  assert.match(rendered.html, /#f5f5f5/i);
+  assert.match(rendered.html, /#1d1d1d/i);
+  assert.ok(paletteHexes.length > 0);
+  for (const color of paletteHexes) {
+    assert.equal(color.length, 7, `${color} is not six-digit neutral`);
+    const red = color.slice(1, 3);
+    const green = color.slice(3, 5);
+    const blue = color.slice(5, 7);
+    assert.equal(red, green, `${color} is not monochrome`);
+    assert.equal(green, blue, `${color} is not monochrome`);
+  }
+  for (const color of paletteRgbValues) {
+    const channels = color[1]
+      .split(/[\s,/]+/)
+      .filter(Boolean)
+      .slice(0, 3)
+      .map((channel) =>
+        channel.endsWith("%")
+          ? Number.parseFloat(channel) * 2.55
+          : Number.parseFloat(channel),
+      );
+    assert.equal(channels.length, 3, `${color[0]} is not valid RGB`);
+    assert.ok(
+      channels.every(Number.isFinite),
+      `${color[0]} is not valid RGB`,
+    );
+    assert.equal(channels[0], channels[1], `${color[0]} is not monochrome`);
+    assert.equal(channels[1], channels[2], `${color[0]} is not monochrome`);
+  }
+  assert.doesNotMatch(rendered.html, /hsla?\(/i);
+  assert.doesNotMatch(
+    rendered.html,
+    /\b(?:hwb|lab|lch|oklab|oklch|color|color-mix)\(/i,
+  );
+  assert.doesNotMatch(rendered.html, /\burl\(/i);
+  assert.doesNotMatch(rendered.html, /<(?:img|picture|svg)\b/i);
+  for (const color of declaredColors) {
+    assert.match(
+      color,
+      /^(?:#[0-9a-f]{6}|rgba?\([^)]+\)|transparent)$/i,
+      `${color} is not an approved neutral color declaration`,
+    );
+  }
+  assert.doesNotMatch(
+    rendered.html,
+    /green|lime|olive|teal|aqua|cyan|chartreuse/i,
   );
   assert.match(rendered.html, /support@wetindey\.live/);
   assert.match(
@@ -308,6 +371,33 @@ async function main(): Promise<void> {
     /If you didn't request this code, you can safely ignore this email\./,
   );
   assert.match(rendered.text, /Your verification code is:\n\n123456/);
+  assert.match(rendered.text, /sign in/);
+  assert.match(rendered.html, /sign in/);
+  assert.match(rendered.text, /Expires in 5 minutes\./);
+  assert.match(
+    rendered.text,
+    /If you didn't request this code, you can safely ignore this email\./,
+  );
+  assert.match(rendered.text, /support@wetindey\.live/);
+
+  const verificationEmail = renderWetinDeyOtpEmail(
+    { ...verified, otpType: "email-verification" },
+    issuedAtMs + 4 * 60 * 1000,
+  );
+  const passwordResetEmail = renderWetinDeyOtpEmail(
+    { ...verified, otpType: "forget-password" },
+    issuedAtMs + 4 * 60 * 1000,
+  );
+  assert.match(verificationEmail.text, /verify your email/);
+  assert.match(verificationEmail.html, /verify your email/);
+  assert.match(
+    passwordResetEmail.text,
+    /continue resetting your password/,
+  );
+  assert.match(
+    passwordResetEmail.html,
+    /continue resetting your password/,
+  );
 
   let providerMessage: Record<string, unknown> | undefined;
   const deliveryNow = issuedAtMs + 1_000;

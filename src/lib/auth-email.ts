@@ -12,8 +12,6 @@ export const WETINDEY_OTP_EMAIL_SUBJECT =
   "Your WetinDey verification code";
 
 export const WETINDEY_SUPPORT_EMAIL = "support@wetindey.live";
-
-const WETINDEY_LOGO_URL = "https://www.wetindey.live/logo.png";
 const WEBHOOK_MAX_AGE_MS = 5 * 60 * 1000;
 const JWKS_CACHE_TTL_MS = 5 * 60 * 1000;
 const JWKS_UNKNOWN_KID_REFRESH_INTERVAL_MS = 10_000;
@@ -215,76 +213,66 @@ export function renderWetinDeyOtpEmail(
         .wd-shell { width: 100% !important; }
         .wd-card { border-radius: 0 !important; }
         .wd-pad { padding-left: 24px !important; padding-right: 24px !important; }
-        .wd-code { font-size: 36px !important; letter-spacing: 7px !important; }
+        .wd-code { font-size: 34px !important; letter-spacing: 5px !important; }
       }
       @media (prefers-color-scheme: dark) {
-        .wd-page { background: #07110d !important; }
-        .wd-card { background: #111d17 !important; }
-        .wd-copy { color: #f4f7f5 !important; }
-        .wd-muted { color: #b4c2ba !important; }
-        .wd-code-panel { background: #163422 !important; }
-        .wd-rule { background: #284236 !important; }
+        .wd-page { background: #000000 !important; }
+        .wd-card { background: #1c1c1c !important; }
+        .wd-copy { color: #f5f5f5 !important; }
+        .wd-muted { color: #a1a1a1 !important; }
+        .wd-code-panel { background: #2c2c2c !important; }
+        .wd-rule { background: #383838 !important; }
+        .wd-link { color: #f5f5f5 !important; }
       }
     </style>
   </head>
-  <body class="wd-page" style="margin:0;padding:0;background:#f1f6f2;color:#17211b;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
+  <body class="wd-page" style="margin:0;padding:0;background:#f5f5f5;color:#1d1d1d;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Helvetica Neue',Arial,sans-serif;">
     <div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent;">
       Your WetinDey code is ${code}. ${expiryCopy}.
     </div>
-    <table role="presentation" class="wd-page" width="100%" cellspacing="0" cellpadding="0" border="0" style="width:100%;background:#f1f6f2;">
+    <table role="presentation" class="wd-page" width="100%" cellspacing="0" cellpadding="0" border="0" style="width:100%;background:#f5f5f5;">
       <tr>
         <td align="center" style="padding:28px 12px;">
-          <table role="presentation" class="wd-shell" width="600" cellspacing="0" cellpadding="0" border="0" style="width:600px;max-width:600px;">
+          <table role="presentation" class="wd-shell" width="100%" cellspacing="0" cellpadding="0" border="0" style="width:100%;max-width:600px;">
             <tr>
-              <td class="wd-card" style="overflow:hidden;border-radius:28px;background:#ffffff;box-shadow:0 18px 50px rgba(16,35,27,.12);">
+              <td class="wd-card" style="overflow:hidden;border-radius:28px;background:#ffffff;box-shadow:0 18px 50px rgba(0,0,0,.08);">
                 <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
                   <tr>
-                    <td class="wd-pad" style="padding:28px 40px;background:#10231b;">
-                      <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
-                        <tr>
-                          <td width="52" valign="middle">
-                            <div style="width:48px;height:48px;border-radius:16px;background:#16a34a;box-shadow:inset 0 1px 0 rgba(255,255,255,.34),0 8px 18px rgba(22,163,74,.24);">
-                              <img src="${WETINDEY_LOGO_URL}" width="48" height="48" alt="" style="display:block;width:48px;height:48px;border:0;">
-                            </div>
-                          </td>
-                          <td valign="middle" style="padding-left:14px;">
-                            <div style="font-size:22px;line-height:28px;font-weight:800;letter-spacing:-.4px;color:#ffffff;">WetinDey</div>
-                            <div style="font-size:13px;line-height:18px;color:#b9d7c3;">Know before you go.</div>
-                          </td>
-                        </tr>
-                      </table>
+                    <td class="wd-pad" style="padding:32px 32px 10px;">
+                      <div class="wd-copy" style="font-size:22px;line-height:28px;font-weight:750;letter-spacing:-.5px;color:#1d1d1d;">WetinDey</div>
+                      <div class="wd-muted" style="font-size:13px;line-height:18px;color:#595959;">Know before you go.</div>
                     </td>
                   </tr>
                   <tr>
-                    <td class="wd-pad wd-copy" style="padding:42px 40px 20px;color:#17211b;">
-                      <div style="font-size:14px;line-height:20px;font-weight:700;color:#16a34a;text-transform:uppercase;letter-spacing:1.2px;">Verification code</div>
-                      <h1 style="margin:10px 0 12px;font-size:30px;line-height:38px;font-weight:800;letter-spacing:-.7px;">How far,</h1>
+                    <td class="wd-pad wd-copy" style="padding:38px 32px 20px;color:#1d1d1d;">
+                      <div class="wd-muted" style="font-size:13px;line-height:18px;font-weight:650;color:#595959;text-transform:uppercase;letter-spacing:1.1px;">Verification code</div>
+                      <h1 style="margin:10px 0 12px;font-size:32px;line-height:39px;font-weight:750;letter-spacing:-.8px;">How far,</h1>
                       <p style="margin:0;font-size:17px;line-height:27px;">Use this code to ${purpose} on WetinDey.</p>
                     </td>
                   </tr>
                   <tr>
-                    <td class="wd-pad" style="padding:8px 40px 28px;">
-                      <div class="wd-code-panel" style="border-radius:20px;background:#e9f8ee;padding:24px 16px;text-align:center;">
-                        <div class="wd-code wd-copy" aria-label="Verification code ${code}" style="font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;font-size:42px;line-height:52px;font-weight:800;letter-spacing:9px;color:#10231b;">${code}</div>
-                        <div class="wd-muted" style="margin-top:8px;font-size:14px;line-height:20px;color:#5d6d63;">${expiryCopy}</div>
+                    <td class="wd-pad" style="padding:8px 32px 28px;">
+                      <div class="wd-code-panel" style="border-radius:20px;background:#f5f5f5;padding:22px 12px;text-align:center;">
+                        <div id="verification-code" class="wd-code wd-copy" aria-label="Verification code ${code}" style="font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;font-size:36px;line-height:46px;font-weight:750;letter-spacing:6px;color:#1d1d1d;">${code}</div>
+                        <div id="verification-expiry" class="wd-muted" style="margin-top:8px;font-size:14px;line-height:20px;color:#595959;">${expiryCopy}</div>
                       </div>
                     </td>
                   </tr>
                   <tr>
-                    <td class="wd-pad wd-copy" style="padding:0 40px 34px;color:#17211b;">
+                    <td class="wd-pad wd-copy" style="padding:0 32px 34px;color:#1d1d1d;">
                       <p style="margin:0 0 8px;font-size:15px;line-height:23px;font-weight:700;">Keep this code to yourself.</p>
-                      <p class="wd-muted" style="margin:0;font-size:14px;line-height:22px;color:#5d6d63;">${securityNotice}</p>
+                      <p class="wd-muted" style="margin:0;font-size:14px;line-height:22px;color:#595959;">${securityNotice}</p>
                     </td>
                   </tr>
                   <tr>
-                    <td class="wd-pad" style="padding:0 40px;">
-                      <div class="wd-rule" style="height:1px;background:#e1e9e3;"></div>
+                    <td class="wd-pad" style="padding:0 32px;">
+                      <div class="wd-rule" style="height:1px;background:#e5e5e5;"></div>
                     </td>
                   </tr>
                   <tr>
-                    <td class="wd-pad wd-muted" style="padding:24px 40px 32px;font-size:13px;line-height:20px;color:#718078;">
-                      Need help? <a href="mailto:${WETINDEY_SUPPORT_EMAIL}" style="color:#16a34a;font-weight:700;text-decoration:none;">${WETINDEY_SUPPORT_EMAIL}</a><br>
-                      <span style="color:#8b9991;">WetinDey · Nearby live local information</span>
+                    <td class="wd-pad wd-muted" style="padding:24px 32px 32px;font-size:13px;line-height:20px;color:#595959;">
+                      Need help? <a class="wd-link" href="mailto:${WETINDEY_SUPPORT_EMAIL}" style="color:#1d1d1d;font-weight:700;text-decoration:none;">${WETINDEY_SUPPORT_EMAIL}</a><br>
+                      <span class="wd-muted" style="color:#595959;">WetinDey · Nearby live local information</span>
                     </td>
                   </tr>
                 </table>
