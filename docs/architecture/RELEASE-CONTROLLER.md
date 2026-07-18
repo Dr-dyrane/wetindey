@@ -508,16 +508,21 @@ safety/integrity lanes until their separate gates are independently satisfied.
   `NextResponse.next({request:{headers}})`, and a byte-identical response CSP. The four
   governance paths are released. This closes architecture evidence only and authorizes no
   implementation, Preview/Production enforcement, push, or deployment.
-- The next highest-priority conflict-free lane is H6 nonce-CSP implementation. Prospective
-  owner `/root/h6_nonce_implementation` has read-only readiness over exactly new
-  `src/middleware.ts`, existing `src/app/layout.tsx`, and `vercel.json`; no code started in
-  this reporting checkpoint. Independent refuter after commit is
-  `019f7692-d254-7e43-a687-154876274927`. Acceptance requires one canonical per-request
-  policy, raw nonce plus exact CSP on cloned request headers, identical response CSP,
-  nonce coverage for all three raw layout scripts and the Mapbox script, same-change
-  removal of only the static Vercel CSP while preserving every other header,
-  private/no-store and environment contracts, and no product/layout redesign or second
-  enforcement boundary.
+- H6 nonce-CSP implementation is **BLOCKED before edit**, not active readiness. Owner
+  `/root/h6_nonce_implementation` retains exactly new `src/middleware.ts`, existing
+  `src/app/layout.tsx`, and `vercel.json`, and has stopped with zero code changes.
+  Repository-visible Blob evidence is limited to wildcard
+  `*.public.blob.vercel-storage.com` plus the runtime `blob.url`; no non-secret file
+  records the exact per-store avatar hostname, and ADR-020 forbids guessing or admitting
+  the wildcard. The repository also contains no CSP reporting endpoint/header, collector
+  implementation, or approved Preview redaction/access/retention contract. Therefore
+  Preview report-only, Preview/Production enforcement, and static-CSP removal remain
+  prohibited. If those gates are later satisfied, acceptance still requires one canonical
+  per-request policy, raw nonce plus exact CSP on cloned request headers, identical
+  response CSP, nonce coverage for all three raw layout scripts and the Mapbox script,
+  preservation of every non-CSP Vercel header, private/no-store and environment
+  contracts, and no product/layout redesign or second enforcement boundary. Independent
+  refuter after any future commit remains `019f7692-d254-7e43-a687-154876274927`.
 - Account deletion completion is not supported by repository evidence. All visible refs,
   `git log --all`, reflog, and inspected unreachable commit subjects reveal no deletion
   implementation; current and reachable source/history contain no `deleteUser` or
