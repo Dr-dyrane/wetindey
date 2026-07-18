@@ -250,8 +250,10 @@ safety/integrity lanes until their separate gates are independently satisfied.
   `public/icons/currency-flags.svg`, and `public/icons/currency-flags.LICENSE.md`.
   Independent static/diff refutation passed. The exact tree has 28px circular local SVG
   orbs, pair-keyed rate state, a typed catalog/rate call chain, and truthful
-  provider/effective-date data. No runtime claim exists yet; retain all seven paths pending
-  the newly assigned HI Quality reused-tab runtime verdict. The Founder-reaffirmed
+  provider/effective-date data. HI Quality runtime refutation **REFUTED** the candidate:
+  amount `100` JPY clears when the same Safari window crosses desktop→compact. All other
+  tested core flows, circular orbs, and provider labels passed. Retain all seven paths for
+  a forward fix and repeated reused-tab verdict. The Founder-reaffirmed
   visual-system rule binds this lane: primary surfaces stay monochrome/neutral so
   controlled color lives in iconography and photography; currency flags are circular local
   SVG orbs, never emoji or rectangular flag badges. No tests, DB, push, or deploy occurred.
@@ -261,20 +263,31 @@ safety/integrity lanes until their separate gates are independently satisfied.
   with no P1/P2/P3. `docs/adr/006-freshness-windows.md` is released. The repair changed
   citations and call-site descriptions only while preserving every freshness/trust
   decision; no code or policy change occurred.
-- The same Product & Data Governance Architect now owns the active ADR-018 Controlled
-  Semantic Iconography docs lane over exactly `docs/adr/018-controlled-semantic-iconography.md`,
-  `docs/design-system/ICONOGRAPHY.md`, `docs/architecture/SERVICE-ARCHITECTURE.md`, and
-  `WETINDEY_BIBLE.md`. Ratify neutral primary surfaces; authentic color in licensed
-  flags/photos/avatars; ordinary actions neutral; domain tones separate from status;
-  status tones only asserted states; dedicated rating tone; circular `IconOrb` sizes
-  28/32/48 with 44px parent targets; decorative/accessibility/reduced-motion/borderless
-  rules; and neutral disabled future categories. Explicitly supersede contradictory
-  provisional palette/separator language. No implementation path or Aboki overlap.
-  Require one docs-only path-scoped local commit and independent refutation; no tests,
-  build, browser, DB, push, or deploy.
+- The same Product & Data Governance Architect completed ADR-018 Controlled Semantic
+  Iconography at `4116532def401c8419cc645b55d18b2dca36139e` over exactly
+  `docs/adr/018-controlled-semantic-iconography.md`, `docs/design-system/ICONOGRAPHY.md`,
+  `docs/architecture/SERVICE-ARCHITECTURE.md`, and `WETINDEY_BIBLE.md`. Follow-up
+  independent refutation passed with no P1/P2/P3, so all four governance paths are
+  released.
+- Iconography & Visual Systems Lead task `019f75cf-4d8f-7263-822b-06e846fce7ac` now
+  owns the exact twelve-path ADR-018 implementation lane: `src/app/globals.css`,
+  `tailwind.config.ts`, `src/design-system/components/IconOrb.tsx`,
+  `src/design-system/components/ListRow.tsx`, `src/design-system/components/ItemCard.tsx`,
+  `src/app/_components/CategorySelectorSheet.tsx`,
+  `src/app/_components/ProfileSheet.tsx`, `src/app/_components/GetItSheet.tsx`,
+  `src/app/_components/AboutSheet.tsx`, `src/app/_components/LocationSheet.tsx`,
+  `src/app/_components/ReportProblemSheet.tsx`, and
+  `scripts/iconography-contracts.test.ts`. Scope is the exact ADR/audit contract: neutral
+  ordinary actions; separate Food/Money domain tones; status only actual state; rating
+  token; neutral disabled future categories; circular borderless `IconOrb` 28/32/48;
+  neutral item fallback; scoped raw/status misuse and routine decorative-border removal;
+  >=44px parent targets; accessibility; and reduced motion. Exclude all seven Aboki paths,
+  `page.tsx`, `MapboxAdapter`, and DB. Require one local commit and independent static
+  refutation; no test execution, build, browser, DB, push, or deploy. HI runtime follows.
 - Reserve ADR-019 as `019-contribution-integrity-and-moderation.md` for later
-  post-containment migration `0013` policy. It remains pathless and sequentially blocked
-  while ADR-018 exclusively owns `WETINDEY_BIBLE.md` and until containment evidence exists.
+  post-containment migration `0013` policy. ADR-018 released `WETINDEY_BIBLE.md`, but
+  ADR-019 remains pathless until Contribution runtime evidence passes and a new exclusive
+  governance claim is recorded.
   These documentation updates change no release authority: unresolved shared migration state
   keeps the decision strictly **NO PUSH / NO DEPLOY**.
 - Nearby Presence governance completed in path-scoped commit
@@ -317,14 +330,19 @@ safety/integrity lanes until their separate gates are independently satisfied.
   `495750aaa0730dcd35b4e7a6dbeba24caef1caf3` over `src/app/actions.ts`,
   `src/app/page.tsx`,
   `src/app/_components/ReportPriceSheet.tsx`,
-  `src/app/_components/ConfirmVisitSheet.tsx`, and `src/core/i18n/strings.ts`. Both
+  `src/app/_components/ConfirmVisitSheet.tsx`, and `src/core/i18n/strings.ts`.
   Independent static/source refutation returned STATIC_PASS with no P1/P2/P3. Both actions
   reject as the first statement; no client enqueue/drain/retry/delete paths remain; both
   sheets remain reachable but disabled; maintenance copy is untranslated; and no success,
-  saved, queued, or will-sync promise remains. Retain all five paths pending the newly
-  queued HI Quality reused-tab runtime, accessibility, and queue-preservation verdict.
-  Schema, migration, `0013`, and full moderation work remain excluded. No tests, DB, push,
-  or deploy is authorized.
+  saved, queued, or will-sync promise remains. HI Quality runtime refutation **REFUTED**
+  the candidate solely because focus escapes to the background Map when all sheet controls
+  are disabled. UI safety/readability, disabled controls, and no-promise copy passed;
+  storage/network/visit residuals remain unproven. Retain all five paths pending shared-
+  modal diagnosis and a new reused-tab verdict. Schema, migration, `0013`, and full
+  moderation work remain excluded. No tests, DB, push, or deploy is authorized.
+- Motion & Interaction Engineer task `019f75e9-880d-7b41-880c-736a3150e406` is active
+  read-only/pathless on shared `ModalSheet` focus diagnosis. It owns no implementation
+  path and has no edit, build, test, or browser authority until an exact future handoff.
 - H38 offline search remains open but pathless and blocked while Contribution exclusively
   owns `src/app/page.tsx`. Its old full-error-boundary description is stale: search
   rejection is caught and `AsyncList` receives an error prop. The narrower residual is
