@@ -13,6 +13,7 @@
     "db:seed": "tsx --env-file=.env.local src/db/seed.ts",
     "db:recompute-bands": "node --env-file=.env.local scripts/recompute-bands.mjs",
     "audit:tokens": "node scripts/audit-tokens.mjs",
+    "test:auth-email": "tsx scripts/auth-email-contracts.test.ts",
     "typecheck": "tsc --noEmit",
     "knip": "knip"
   },
@@ -25,6 +26,7 @@
     "drizzle-orm": "^0.45.2",
     "lucide-react": "^0.468.0",
     "next": "^15.1.0",
+    "nodemailer": "^9.0.3",
     "pg": "^8.22.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
@@ -35,6 +37,7 @@
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.6",
     "@types/node": "^22.10.1",
+    "@types/nodemailer": "^8.0.1",
     "@types/pg": "^8.20.0",
     "@types/react": "^19.0.1",
     "@types/react-dom": "^19.0.1",
