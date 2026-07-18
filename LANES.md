@@ -61,6 +61,33 @@ employee task. `wetindey-orchestrator-recovery` remains the sole recovery automa
 Portfolio auditing and Lagos Food ingestion keep their distinct scheduled scopes and may
 not create controller clones.
 
+### Search execution proof handoff
+
+Search & Ranking returned **BLOCKED** without connecting to a database. Static source is
+aligned, but the only available credential is an ambient non-disposable Neon URL. No
+authorization names a unique disposable target, expected database/role/project identity,
+fixture, parent fingerprint, or destruction authority. The ambient URL must not be used.
+The lane returns to pinned-idle until an exact disposable target is supplied; no code path
+is claimed and no shared-target action is authorized.
+
+### Active lane: Market Details Sheet Visual Systems
+
+The iconography foundation dependency is closed by `89482fb` and independent no-P1/P2/P3
+refutation. The pinned Iconography & Visual Systems Lead now owns exactly:
+
+- `src/app/_components/ItemDetailSheet.tsx`
+- `src/design-system/components/ListRow.tsx`
+- `src/design-system/components/SheetPicker.tsx`
+- `src/app/_components/GetItSheet.tsx`
+
+Scope is the accepted Market Details visual contract only: remove the artificial dead
+zone/capped inventory presentation, use the established solid semantic icon-orb and
+available item-image language, improve hierarchy and vertical use, and preserve pinned
+action access. Trust, provenance, counts, prices/units, fulfilment boundaries, data queries,
+and action behavior must not change. The lane requires a path-scoped commit followed by an
+independent reused-state light/dark, compact/desktop, accessibility, and reduced-motion
+refutation. No `page.tsx`, `actions.ts`, database, map, flags, or currency-data widening.
+
 ## Controller reconciliation — semantic UI and market-detail follow-up
 
 The latest consumer-surface review identified two queued workstreams that were not

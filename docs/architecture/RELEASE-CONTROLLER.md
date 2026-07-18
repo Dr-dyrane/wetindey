@@ -709,6 +709,19 @@ authorized.
   independent refutation. No implementation lane is reopened until that evidence is
   returned.
 
+### Search proof result and forward routing
+
+Search & Ranking returned **BLOCKED** without database access. Current source is statically
+aligned, but the only available credential is an ambient non-disposable Neon URL. No record
+authorizes a uniquely named disposable database/project/branch, expected database and role,
+fixture, parent fingerprint, or destruction authority. The ambient URL is inadmissible.
+Search execution proof remains an explicit external-target gate and claims no code path.
+
+This blocker does not prevent disjoint local UI work. The next active lane is the exact
+four-path **Market Details Sheet Visual Systems** slice recorded in `LANES.md`, after the
+iconography foundation passed independent refutation. It authorizes no query, action,
+database, map, shared-target, push, or deployment change.
+
 
 - Aboki FX commit `37fa33d` is independently VERIFIED; its three UI paths are released.
 - Search commit `c6f304b` is statically VERIFIED; `src/app/actions.ts` remains actively
