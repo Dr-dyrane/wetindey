@@ -630,9 +630,6 @@
     outline: 1px solid CanvasText;
     outline-offset: -1px;
   }
-  .solid-icon {
-    color: CanvasText;
-  }
 }
 
 /* Reduce Transparency: Apple's materials collapse to opaque. Ours must too. */

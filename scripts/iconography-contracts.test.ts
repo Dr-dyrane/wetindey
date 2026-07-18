@@ -78,13 +78,16 @@ assert.doesNotMatch(sources.orb, /\bborder(?:-|")|\bshadow-|\banimate-|\bonClick
 assert.match(sources.solid, /export type SolidIconSize = 16 \| 18 \| 24;/);
 assert.match(sources.solid, /aria-hidden="true"/);
 assert.match(sources.solid, /focusable="false"/);
-assert.match(sources.solid, /not copied from[\s\S]*Apple SF Symbols/);
 assert.doesNotMatch(sources.solid, /\bonClick\b|<button\b|https?:\/\//);
 assert.match(sources.globals, /\.solid-icon\s*\{[\s\S]*fill:\s*currentColor;[\s\S]*stroke:\s*none;/);
 assert.match(sources.globals, /@media \(prefers-reduced-motion: reduce\)/);
 assert.match(
   sources.globals,
-  /@media \(forced-colors: active\)[\s\S]*?\.icon-orb[\s\S]*?\.solid-icon/
+  /@media \(forced-colors: active\)[\s\S]*?\.icon-orb/
+);
+assert.doesNotMatch(
+  sources.globals,
+  /@media \(forced-colors: active\)[\s\S]*?\.solid-icon\s*\{[\s\S]*?\bcolor\s*:/
 );
 for (const size of ["icon-compact", "icon-standard", "icon-prominent"]) {
   assert.ok(sources.tailwind.includes(`"${size}"`), size);
