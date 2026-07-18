@@ -58,9 +58,9 @@ to idle rather than creating a replacement task.
 | Motion & Interaction Engineer | Prepared, unclaimed | Modal zero-focusable focus-trap correction after exact `ModalSheet` lane claim |
 
 The Quality & Release Controller is this orchestrator thread. It is not a separate pinned
-employee task. `wetindey-orchestrator-recovery` remains the sole recovery automation;
-Portfolio auditing and Lagos Food ingestion keep their distinct scheduled scopes and may
-not create controller clones.
+employee task. The repeating `wetindey-orchestrator-recovery` automation is deleted and
+must not be recreated or assigned work. Portfolio auditing and Lagos Food ingestion keep
+their distinct scheduled scopes and may not create controller clones.
 
 ### Search execution proof handoff
 

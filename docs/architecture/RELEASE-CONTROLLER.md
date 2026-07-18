@@ -725,6 +725,14 @@ Market Details and every adoption lane remain closed until that foundation recei
 independent no-P1/P2 verdict. No query, action, database, map, shared-target, push, or
 deployment change is authorized.
 
+### Controller scheduling correction
+
+The repeating `wetindey-orchestrator-recovery` automation was deleted after generating
+multiple task runs and an extra controller task. Its generated runs and controller clone
+were archived. Controller work now remains in the primary orchestrator thread only. The
+Portfolio auditor and Lagos Food ingestion schedules keep their separate bounded purposes
+and may not receive release-controller assignments or create controller clones.
+
 
 - Aboki FX commit `37fa33d` is independently VERIFIED; its three UI paths are released.
 - Search commit `c6f304b` is statically VERIFIED; `src/app/actions.ts` remains actively
