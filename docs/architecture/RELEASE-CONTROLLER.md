@@ -255,26 +255,26 @@ safety/integrity lanes until their separate gates are independently satisfied.
   visual-system rule binds this lane: primary surfaces stay monochrome/neutral so
   controlled color lives in iconography and photography; currency flags are circular local
   SVG orbs, never emoji or rectangular flag badges. No tests, DB, push, or deploy occurred.
-- Iconography & Visual Systems Lead employee
-  `019f75cf-4d8f-7263-822b-06e846fce7ac` completed the read-only audit. Accepted
-  direction is: ordinary actions stay neutral; status tones represent only actual states;
-  domain tones stay separate from status; shared wrappers use circular `IconOrb`;
-  authentic flags/photos/avatars may carry color; and parent targets remain 44px. Current
-  inventory ends at ADR-017. Centrally reserve `018-controlled-semantic-iconography.md`
-  for this correction and `019-contribution-integrity-and-moderation.md` for later
-  post-containment 0013 policy. Neither path nor the audit's four proposed documentation
-  paths is active. After H23 releases ADR-006, the next governance claim may be proposed;
-  `WETINDEY_BIBLE.md` remains sequentially exclusive.
 - Product & Data Governance Architect task
-  `019f7599-0eaa-7423-9ebf-a1bfea8efe37` completed the H23 read-only assessment and now
-  owns exactly `docs/adr/006-freshness-windows.md` for a documentation-only citation
-  repair. Remove historical numeric line examples, normalize shorthand to full path +
-  symbol references, and accurately document that `offerSignal`/`confidenceFor` present
-  server-derived trust while `searchItems`/`getPopularItems`/`getOffersNarrowed` call
-  `getOfferTrustBatch`. Preserve all 24h/72h/144h, newest-observation, ranking,
-  `TRUST_BANDS`, seed-ladder-debt, and deleted `getFoodItemCandidates` decisions. No code
-  or policy change is authorized. Require one local path-scoped commit and independent
-  static refutation; no tests, build, browser, DB, push, or deploy.
+  `019f7599-0eaa-7423-9ebf-a1bfea8efe37` completed H23 at exact one-file commit
+  `18b9b09a0815037e90f438e43fdefba2b1f8dd27`; independent static refutation passed
+  with no P1/P2/P3. `docs/adr/006-freshness-windows.md` is released. The repair changed
+  citations and call-site descriptions only while preserving every freshness/trust
+  decision; no code or policy change occurred.
+- The same Product & Data Governance Architect now owns the active ADR-018 Controlled
+  Semantic Iconography docs lane over exactly `docs/adr/018-controlled-semantic-iconography.md`,
+  `docs/design-system/ICONOGRAPHY.md`, `docs/architecture/SERVICE-ARCHITECTURE.md`, and
+  `WETINDEY_BIBLE.md`. Ratify neutral primary surfaces; authentic color in licensed
+  flags/photos/avatars; ordinary actions neutral; domain tones separate from status;
+  status tones only asserted states; dedicated rating tone; circular `IconOrb` sizes
+  28/32/48 with 44px parent targets; decorative/accessibility/reduced-motion/borderless
+  rules; and neutral disabled future categories. Explicitly supersede contradictory
+  provisional palette/separator language. No implementation path or Aboki overlap.
+  Require one docs-only path-scoped local commit and independent refutation; no tests,
+  build, browser, DB, push, or deploy.
+- Reserve ADR-019 as `019-contribution-integrity-and-moderation.md` for later
+  post-containment migration `0013` policy. It remains pathless and sequentially blocked
+  while ADR-018 exclusively owns `WETINDEY_BIBLE.md` and until containment evidence exists.
   These documentation updates change no release authority: unresolved shared migration state
   keeps the decision strictly **NO PUSH / NO DEPLOY**.
 - Nearby Presence governance completed in path-scoped commit
