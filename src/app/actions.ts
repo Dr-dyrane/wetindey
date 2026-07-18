@@ -629,6 +629,7 @@ export async function submitObservation(data: {
    * function the client actually reaches.
    */
   const input = parseSubmitObservation(data);
+  data = input;
 
   // Who is filing this: their own source row, or the shared anonymous one.
   const sourceId = await contributorSourceId();
