@@ -1,7 +1,7 @@
 "use server";
 
 import { db } from "@/db";
-import { areas, items, itemAliases, itemVariants, places, offersCurrent, units, observations, sources, problemReports, userProfiles } from "@/db/schema";
+import { areas, items, itemAliases, itemVariants, places, offersCurrent, units, observations, sources, problemReports, userProfiles, reviews, reviewAggregates } from "@/db/schema";
 import { eq, ilike, or, and, sql, gte, isNull, isNotNull, asc, desc } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import {
@@ -18,6 +18,7 @@ import {
   parseCoverageForPoint,
   parseSubmitProblemReport,
   parseUpdateMyProfile,
+  parseSubmitReview,
 } from "@/lib/validation";
 import { auth } from "@/lib/auth";
 import { put, del } from "@vercel/blob";
@@ -2553,6 +2554,8 @@ export interface SharedUserLocation {
   avatarUrl: string | null;
   latitude: number;
   longitude: number;
+  contactChannelKind: string | null;
+  contactChannelValue: string | null;
 }
 
 export async function getSharedUserLocations(): Promise<SharedUserLocation[]> {
@@ -2563,6 +2566,8 @@ export async function getSharedUserLocations(): Promise<SharedUserLocation[]> {
     avatar_url: string | null;
     latitude: string | number;
     longitude: string | number;
+    contact_channel_kind: string | null;
+    contact_channel_value: string | null;
   }>(sql`
     SELECT 
       up.user_id,
@@ -2570,7 +2575,9 @@ export async function getSharedUserLocations(): Promise<SharedUserLocation[]> {
       u.email,
       up.avatar_url,
       up.latitude,
-      up.longitude
+      up.longitude,
+      up.contact_channel_kind,
+      up.contact_channel_value
     FROM user_profiles up
     LEFT JOIN neon_auth.user u ON u.id = up.user_id
     WHERE up.location_sharing = true 
@@ -2584,5 +2591,153 @@ export async function getSharedUserLocations(): Promise<SharedUserLocation[]> {
     avatarUrl: row.avatar_url,
     latitude: Number(row.latitude),
     longitude: Number(row.longitude),
+    contactChannelKind: row.contact_channel_kind,
+    contactChannelValue: row.contact_channel_value,
   }));
+}
+
+export interface ReviewData {
+  id: string;
+  userId: string | null;
+  reviewerName: string;
+  reviewerAvatarUrl: string | null;
+  rating: number;
+  title: string | null;
+  body: string | null;
+  createdAt: string;
+}
+
+export interface ReviewAggregateData {
+  ratingAverage: number;
+  ratingCount: number;
+}
+
+export async function getReviewsForEntity(
+  reviewableType: string,
+  reviewableId: string
+): Promise<ReviewData[]> {
+  const result = await db.execute<{
+    id: string;
+    user_id: string | null;
+    reviewer_name: string | null;
+    reviewer_email: string | null;
+    reviewer_avatar_url: string | null;
+    rating: number;
+    title: string | null;
+    body: string | null;
+    created_at: string;
+  }>(sql`
+    SELECT 
+      r.id,
+      r.user_id,
+      u.name as reviewer_name,
+      u.email as reviewer_email,
+      up.avatar_url as reviewer_avatar_url,
+      r.rating,
+      r.title,
+      r.body,
+      r.created_at
+    FROM reviews r
+    LEFT JOIN user_profiles up ON up.user_id = r.user_id
+    LEFT JOIN neon_auth.user u ON u.id = r.user_id
+    WHERE r.reviewable_type = ${reviewableType}
+      AND r.reviewable_id = ${reviewableId}::uuid
+      AND r.moderation_status = 'approved'
+    ORDER BY r.created_at DESC
+  `);
+
+  return result.rows.map((row) => ({
+    id: row.id,
+    userId: row.user_id,
+    reviewerName: row.reviewer_name || row.reviewer_email || "Anonymous",
+    reviewerAvatarUrl: row.reviewer_avatar_url,
+    rating: Number(row.rating),
+    title: row.title,
+    body: row.body,
+    createdAt: new Date(row.created_at).toISOString(),
+  }));
+}
+
+export async function getReviewAggregate(
+  reviewableType: string,
+  reviewableId: string
+): Promise<ReviewAggregateData | null> {
+  const result = await db
+    .select({
+      ratingAverage: reviewAggregates.ratingAverage,
+      ratingCount: reviewAggregates.ratingCount,
+    })
+    .from(reviewAggregates)
+    .where(
+      and(
+        eq(reviewAggregates.reviewableType, reviewableType),
+        eq(reviewAggregates.reviewableId, reviewableId)
+      )
+    )
+    .limit(1);
+
+  if (result.length === 0) return null;
+  return result[0];
+}
+
+export async function submitReview(data: {
+  reviewableType: string;
+  reviewableId: string;
+  rating: number;
+  title?: string | null;
+  body?: string | null;
+}): Promise<void> {
+  const input = parseSubmitReview(data);
+
+  const { data: session } = await auth.getSession();
+  const userId = session?.user?.id;
+  if (!userId) {
+    throw new Error("submitReview: no session, a review write is owner-scoped");
+  }
+
+  // 1. Insert the review
+  await db.insert(reviews).values({
+    userId: userId,
+    reviewableType: input.reviewableType,
+    reviewableId: input.reviewableId,
+    rating: input.rating,
+    title: input.title ?? null,
+    body: input.body ?? null,
+    moderationStatus: "approved",
+  });
+
+  // 2. Fetch all ratings for this entity to compute the new aggregate
+  const allRatings = await db
+    .select({ rating: reviews.rating })
+    .from(reviews)
+    .where(
+      and(
+        eq(reviews.reviewableType, input.reviewableType),
+        eq(reviews.reviewableId, input.reviewableId),
+        eq(reviews.moderationStatus, "approved")
+      )
+    );
+
+  const count = allRatings.length;
+  const sum = allRatings.reduce((acc, curr) => acc + curr.rating, 0);
+  const average = count > 0 ? sum / count : 0.0;
+
+  // 3. Upsert into reviewAggregates
+  await db
+    .insert(reviewAggregates)
+    .values({
+      reviewableType: input.reviewableType,
+      reviewableId: input.reviewableId,
+      ratingAverage: average,
+      ratingCount: count,
+      updatedAt: new Date(),
+    })
+    .onConflictDoUpdate({
+      target: [reviewAggregates.reviewableType, reviewAggregates.reviewableId],
+      set: {
+        ratingAverage: average,
+        ratingCount: count,
+        updatedAt: new Date(),
+      },
+    });
 }

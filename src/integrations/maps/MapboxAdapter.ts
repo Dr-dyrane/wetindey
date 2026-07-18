@@ -716,6 +716,16 @@ interface MapboxMarker {
   remove(): void;
 }
 
+interface MapboxPopup {
+  setLngLat(lnglat: [number, number]): MapboxPopup;
+  setDOMContent(html: HTMLElement): MapboxPopup;
+  setHTML(html: string): MapboxPopup;
+  addTo(map: MapboxMap): MapboxPopup;
+  remove(): void;
+  isOpen(): boolean;
+  on(type: "close", listener: () => void): MapboxPopup;
+}
+
 interface WindowWithMapboxgl extends Window {
   mapboxgl?: {
     accessToken: string;
@@ -727,6 +737,14 @@ interface WindowWithMapboxgl extends Window {
       attributionControl: boolean;
     }) => MapboxMap;
     Marker: new (element: HTMLDivElement) => MapboxMarker;
+    Popup: new (options?: {
+      closeButton?: boolean;
+      closeOnClick?: boolean;
+      className?: string;
+      maxWidth?: string;
+      anchor?: string;
+      offset?: number | [number, number] | { [key: string]: [number, number] };
+    }) => MapboxPopup;
   };
 }
 
@@ -734,6 +752,7 @@ export class MapboxAdapter implements MapProviderAdapter {
   private mapInstance: MapboxMap | null = null;
   private markersMap: Map<string, MapboxMarker> = new Map();
   private sharedUserMarkers: Map<string, MapboxMarker> = new Map();
+  private activeUserPopup: MapboxPopup | null = null;
   /**
    * "You", held apart from markersMap on purpose. MapboxCanvas calls
    * clearMarkers() and re-adds every candidate whenever the list changes; a user
@@ -1268,6 +1287,172 @@ export class MapboxAdapter implements MapProviderAdapter {
         }
 
         el.title = user.name;
+
+        // Click interaction: smoothly glide camera and show premium HIG popup card
+        el.addEventListener("click", (e) => {
+          e.stopPropagation(); // Avoid triggering map clicks
+          
+          this.recenterTo(user.latitude, user.longitude, 14.5);
+
+          // Close existing active popup first
+          this.activeUserPopup?.remove();
+
+          // Build custom Apple HIG-style popup card programmatically
+          const popupEl = document.createElement("div");
+          popupEl.style.padding = "16px";
+          popupEl.style.display = "flex";
+          popupEl.style.flexDirection = "column";
+          popupEl.style.alignItems = "center";
+          popupEl.style.gap = "12px";
+          popupEl.style.minWidth = "220px";
+          popupEl.style.fontFamily = "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif";
+
+          // Squirclized popup styling overrides
+          const styleTag = document.createElement("style");
+          styleTag.textContent = `
+            .apple-squircle-popup .mapboxgl-popup-content {
+              border-radius: 24px !important;
+              padding: 0 !important;
+              box-shadow: 0 12px 36px rgba(0, 0, 0, 0.16) !important;
+              background-color: var(--color-background-primary, #FFFFFF) !important;
+              border: none !important;
+            }
+            .apple-squircle-popup .mapboxgl-popup-close-button {
+              padding: 10px 14px !important;
+              font-size: 18px !important;
+              color: var(--color-text-secondary, #8E8E93) !important;
+              outline: none !important;
+              border: none !important;
+              background: none !important;
+            }
+            .apple-squircle-popup .mapboxgl-popup-tip {
+              border-top-color: var(--color-background-primary, #FFFFFF) !important;
+              border-bottom-color: var(--color-background-primary, #FFFFFF) !important;
+            }
+          `;
+          popupEl.appendChild(styleTag);
+
+          // Avatar circular container
+          const avatarContainer = document.createElement("div");
+          avatarContainer.style.width = "52px";
+          avatarContainer.style.height = "52px";
+          avatarContainer.style.borderRadius = "14px";
+          avatarContainer.style.overflow = "hidden";
+          avatarContainer.style.backgroundColor = "var(--color-status-info, #007AFF)";
+          avatarContainer.style.display = "flex";
+          avatarContainer.style.alignItems = "center";
+          avatarContainer.style.justifyContent = "center";
+          avatarContainer.style.boxShadow = "var(--shadow-raised)";
+
+          if (user.avatarUrl) {
+            const avatarImg = document.createElement("img");
+            avatarImg.src = user.avatarUrl;
+            avatarImg.style.width = "100%";
+            avatarImg.style.height = "100%";
+            avatarImg.style.objectFit = "cover";
+            avatarContainer.appendChild(avatarImg);
+          } else {
+            const initials = user.name
+              .split(" ")
+              .map((n) => n[0])
+              .join("")
+              .substring(0, 2)
+              .toUpperCase() || "?";
+            const initialsSpan = document.createElement("span");
+            initialsSpan.textContent = initials;
+            initialsSpan.style.color = "#FFFFFF";
+            initialsSpan.style.fontWeight = "700";
+            initialsSpan.style.fontSize = "18px";
+            avatarContainer.appendChild(initialsSpan);
+          }
+          popupEl.appendChild(avatarContainer);
+
+          // User name & status info
+          const infoContainer = document.createElement("div");
+          infoContainer.style.textAlign = "center";
+
+          const nameHeading = document.createElement("h3");
+          nameHeading.textContent = user.name;
+          nameHeading.style.margin = "0";
+          nameHeading.style.fontSize = "15px";
+          nameHeading.style.fontWeight = "600";
+          nameHeading.style.color = "var(--color-text-primary, #000000)";
+          infoContainer.appendChild(nameHeading);
+
+          const statusBadge = document.createElement("span");
+          statusBadge.textContent = "Sharing Location";
+          statusBadge.style.display = "inline-block";
+          statusBadge.style.marginTop = "4px";
+          statusBadge.style.padding = "2px 8px";
+          statusBadge.style.fontSize = "10px";
+          statusBadge.style.fontWeight = "700";
+          statusBadge.style.borderRadius = "9999px";
+          statusBadge.style.backgroundColor = "var(--color-status-info-bg, rgba(0, 122, 255, 0.1))";
+          statusBadge.style.color = "var(--color-status-info, #007AFF)";
+          infoContainer.appendChild(statusBadge);
+          popupEl.appendChild(infoContainer);
+
+          // Interactive action button
+          if (user.contactChannelKind && user.contactChannelValue) {
+            const contactBtn = document.createElement("a");
+            contactBtn.style.width = "100%";
+            contactBtn.style.padding = "8px 16px";
+            contactBtn.style.borderRadius = "12px";
+            contactBtn.style.backgroundColor = "var(--color-status-info, #007AFF)";
+            contactBtn.style.color = "#FFFFFF";
+            contactBtn.style.fontSize = "13px";
+            contactBtn.style.fontWeight = "600";
+            contactBtn.style.textAlign = "center";
+            contactBtn.style.textDecoration = "none";
+            contactBtn.style.display = "block";
+            contactBtn.style.boxShadow = "var(--shadow-raised)";
+            contactBtn.style.transition = "transform 0.1s ease, opacity 0.2s ease";
+
+            contactBtn.addEventListener("mouseenter", () => { contactBtn.style.opacity = "0.9"; });
+            contactBtn.addEventListener("mouseleave", () => { contactBtn.style.opacity = "1"; });
+            contactBtn.addEventListener("mousedown", () => { contactBtn.style.transform = "scale(0.98)"; });
+            contactBtn.addEventListener("mouseup", () => { contactBtn.style.transform = "scale(1)"; });
+
+            if (user.contactChannelKind === "whatsapp") {
+              contactBtn.textContent = "WhatsApp Message";
+              const cleanPhone = user.contactChannelValue.replace(/\D/g, "");
+              contactBtn.href = `https://wa.me/${cleanPhone}`;
+            } else if (user.contactChannelKind === "phone") {
+              contactBtn.textContent = "Call Contributor";
+              contactBtn.href = `tel:${user.contactChannelValue}`;
+            } else {
+              contactBtn.textContent = "Send SMS";
+              contactBtn.href = `sms:${user.contactChannelValue}`;
+            }
+            contactBtn.target = "_blank";
+            popupEl.appendChild(contactBtn);
+          } else {
+            const noContactLabel = document.createElement("span");
+            noContactLabel.textContent = "No contact details shared";
+            noContactLabel.style.fontSize = "11px";
+            noContactLabel.style.color = "var(--color-text-secondary, #8E8E93)";
+            noContactLabel.style.marginTop = "4px";
+            popupEl.appendChild(noContactLabel);
+          }
+
+          const popup = new mapboxgl.Popup({
+            closeButton: true,
+            closeOnClick: true,
+            offset: 25,
+            className: "apple-squircle-popup"
+          })
+            .setLngLat([user.longitude, user.latitude])
+            .setDOMContent(popupEl)
+            .addTo(map);
+
+          popup.on("close", () => {
+            if (this.activeUserPopup === popup) {
+              this.activeUserPopup = null;
+            }
+          });
+
+          this.activeUserPopup = popup;
+        });
 
         const markerInstance = new mapboxgl.Marker(el)
           .setLngLat([user.longitude, user.latitude])

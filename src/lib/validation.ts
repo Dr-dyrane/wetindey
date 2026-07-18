@@ -485,6 +485,16 @@ const updateMyProfileInput = z
 
 type UpdateMyProfileInput = z.infer<typeof updateMyProfileInput>;
 
+const submitReviewInput = z.object({
+  reviewableType: z.string().trim().min(1, "reviewableType is required").max(100),
+  reviewableId: z.string().uuid("reviewableId must be a valid UUID"),
+  rating: z.number().int("rating must be an integer").min(1, "rating must be at least 1").max(5, "rating cannot be more than 5"),
+  title: z.string().trim().max(255, "title must be under 255 characters").nullish(),
+  body: z.string().trim().max(2000, "keep the review under 2000 characters").nullish(),
+}).strict();
+
+export type SubmitReviewInput = z.infer<typeof submitReviewInput>;
+
 /* ─────────────────────────────────────────────────────────────────────────────
    The helper
    ──────────────────────────────────────────────────────────────────────────── */
@@ -566,4 +576,8 @@ export function parseSubmitProblemReport(data: unknown): SubmitProblemReportInpu
 
 export function parseUpdateMyProfile(data: unknown): UpdateMyProfileInput {
   return assertValid(updateMyProfileInput, data, "updateMyProfile");
+}
+
+export function parseSubmitReview(data: unknown): SubmitReviewInput {
+  return assertValid(submitReviewInput, data, "submitReview");
 }

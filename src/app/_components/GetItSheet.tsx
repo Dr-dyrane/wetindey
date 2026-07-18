@@ -1,11 +1,19 @@
 "use client";
 
 import React, { useCallback, useEffect, useState } from "react";
-import { Navigation, Share2, Copy, Phone } from "lucide-react";
+import { Navigation, Share2, Copy, Phone, Star, ChevronLeft } from "lucide-react";
 import { ModalSheet } from "@/design-system/components/ModalSheet";
 import { ListRow, ListGroup } from "@/design-system/components/ListRow";
 import { StatusBadge, type StatusKind } from "@/design-system/components/StatusBadge";
-import { getPlaceContactPolicy, type PlaceContactPolicy } from "@/app/actions";
+import {
+  getPlaceContactPolicy,
+  getReviewsForEntity,
+  getReviewAggregate,
+  submitReview,
+  type PlaceContactPolicy,
+  type ReviewData,
+  type ReviewAggregateData
+} from "@/app/actions";
 import { formatNaira } from "@/lib/money";
 
 /** The offer the user was looking at when they tapped "Get it", if any. */
@@ -330,6 +338,18 @@ export function GetItSheet({ open, onClose, target, origin, onGoThere }: GetItSh
   const [canShare, setCanShare] = useState(false);
   const [shareResult, setShareResult] = useState<ShareResult>({ kind: "idle" });
   const [contact, setContact] = useState<ContactState>({ status: "loading" });
+  const [reviewsList, setReviewsList] = useState<ReviewData[]>([]);
+  const [aggregate, setAggregate] = useState<ReviewAggregateData | null>(null);
+  const [loadingReviews, setLoadingReviews] = useState(false);
+
+  // Review writing states
+  const [isWritingReview, setIsWritingReview] = useState(false);
+  const [rating, setRating] = useState<number>(0);
+  const [hoverRating, setHoverRating] = useState<number>(0);
+  const [reviewTitle, setReviewTitle] = useState("");
+  const [reviewBody, setReviewBody] = useState("");
+  const [submittingReview, setSubmittingReview] = useState(false);
+  const [reviewError, setReviewError] = useState<string | null>(null);
 
   const placeId = target?.placeId ?? null;
 
@@ -361,8 +381,47 @@ export function GetItSheet({ open, onClose, target, origin, onGoThere }: GetItSh
     };
   }, [open, placeId]);
 
+  // Load reviews and aggregates per place, when the sheet opens.
   useEffect(() => {
-    if (!open) setShareResult({ kind: "idle" });
+    if (!open || !placeId) return;
+    let cancelled = false;
+    
+    setLoadingReviews(true);
+    
+    Promise.all([
+      getReviewsForEntity("place", placeId),
+      getReviewAggregate("place", placeId)
+    ])
+      .then(([list, agg]) => {
+        if (!cancelled) {
+          setReviewsList(list);
+          setAggregate(agg);
+        }
+      })
+      .catch((err) => {
+        console.error("Failed to load reviews:", err);
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setLoadingReviews(false);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [open, placeId]);
+
+  useEffect(() => {
+    if (!open) {
+      setShareResult({ kind: "idle" });
+      setIsWritingReview(false);
+      setRating(0);
+      setHoverRating(0);
+      setReviewTitle("");
+      setReviewBody("");
+      setReviewError(null);
+    }
   }, [open]);
 
   useEffect(() => {
@@ -434,6 +493,47 @@ export function GetItSheet({ open, onClose, target, origin, onGoThere }: GetItSh
     await copyToClipboard(`${text} ${url}`);
   }, [target, onClose, copyToClipboard]);
 
+  const handleReviewSubmit = useCallback(async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!placeId) return;
+    if (rating === 0) {
+      setReviewError("Please select a rating of at least 1 star.");
+      return;
+    }
+    setSubmittingReview(true);
+    setReviewError(null);
+
+    try {
+      await submitReview({
+        reviewableType: "place",
+        reviewableId: placeId,
+        rating,
+        title: reviewTitle.trim() || null,
+        body: reviewBody.trim() || null,
+      });
+
+      // Reload reviews and aggregates
+      const [list, agg] = await Promise.all([
+        getReviewsForEntity("place", placeId),
+        getReviewAggregate("place", placeId)
+      ]);
+      setReviewsList(list);
+      setAggregate(agg);
+
+      // Reset form and close writing view
+      setIsWritingReview(false);
+      setRating(0);
+      setHoverRating(0);
+      setReviewTitle("");
+      setReviewBody("");
+    } catch (err) {
+      console.error(err);
+      setReviewError(err instanceof Error ? err.message : "Failed to submit review. Are you signed in?");
+    } finally {
+      setSubmittingReview(false);
+    }
+  }, [placeId, rating, reviewTitle, reviewBody]);
+
   if (!target) return null;
 
   const where = whereabouts(target);
@@ -444,84 +544,277 @@ export function GetItSheet({ open, onClose, target, origin, onGoThere }: GetItSh
   const shareLabel = canShare ? "Share" : "Copy details";
 
   return (
-    <ModalSheet open={open} onClose={onClose} title="Get it" size="form">
+    <ModalSheet open={open} onClose={onClose} title={isWritingReview ? "Write a Review" : "Get it"} size="form">
       <div className="space-y-6 py-3">
-        {/* What you are about to act on. Restated because the sheet covers the
-            detail view it was opened from, and a handoff to another app should
-            never be a leap of faith about which market it is. */}
-        <div className="mx-4 squircle-card bg-surface dark:bg-surface-elevated px-4 py-3">
-          <p className="truncate text-headline text-text-primary">{target.placeName}</p>
-          {where && <p className="mt-0.5 truncate text-footnote text-text-secondary">{where}</p>}
+        {isWritingReview ? (
+          <form onSubmit={handleReviewSubmit} className="space-y-4 px-4 pb-4">
+            <button
+              type="button"
+              onClick={() => setIsWritingReview(false)}
+              className="flex items-center gap-1 text-footnote font-semibold text-status-info active:scale-95 transition-transform"
+            >
+              <ChevronLeft className="h-4 w-4" />
+              Back to place
+            </button>
 
-          {target.offer && (
-            <p className="mt-2 text-subhead text-text-secondary">
-              <span className="text-text-primary font-semibold">{formatPriceRange(target.offer)}</span>
-              {` per ${target.offer.unit} · ${target.offer.itemName}`}
-            </p>
-          )}
-
-          {(freshLabel || fresh) && (
-            <div className="mt-2 flex items-center gap-2">
-              {freshLabel && <StatusBadge kind={freshKind}>{freshLabel}</StatusBadge>}
-              {/* "Last seen", not "Confirmed": this line states WHEN we heard,
-                  and the badge beside it states WHAT we heard. Saying "confirmed"
-                  here read as confirmed-available next to a red "E no dey" badge —
-                  the two halves of the row contradicting each other. */}
-              {fresh && <span className="text-caption-1 text-text-tertiary">Last seen {fresh}</span>}
+            <div>
+              <label className="block text-subhead font-semibold text-text-primary mb-1">
+                Tap to Rate
+              </label>
+              <div className="flex items-center gap-2">
+                {Array.from({ length: 5 }).map((_, i) => {
+                  const starVal = i + 1;
+                  const active = starVal <= (hoverRating || rating);
+                  return (
+                    <button
+                      key={i}
+                      type="button"
+                      onClick={() => setRating(starVal)}
+                      onMouseEnter={() => setHoverRating(starVal)}
+                      onMouseLeave={() => setHoverRating(0)}
+                      className="text-amber-500 active:scale-90 transition-transform duration-instant focus:outline-none"
+                    >
+                      <Star
+                        className={`h-8 w-8 ${active ? "fill-current" : "text-neutral-300 dark:text-neutral-800"}`}
+                      />
+                    </button>
+                  );
+                })}
+              </div>
             </div>
-          )}
-        </div>
 
-        <ListGroup>
-          <ListRow
-            icon={<Navigation className="h-4 w-4 text-status-info-fg" />}
-            iconTint="bg-status-info-bg"
-            label="Go there"
-            detail={platform ? mapsAppName(platform) : undefined}
-            onClick={handleGoThere}
-          />
-          <ListRow
-            icon={
-              canShare ? (
-                <Share2 className="h-4 w-4 text-status-confirmed-fg" />
+            <div className="space-y-1">
+              <label htmlFor="review-title" className="block text-subhead font-semibold text-text-primary">
+                Review Title (Optional)
+              </label>
+              <input
+                id="review-title"
+                type="text"
+                value={reviewTitle}
+                onChange={(e) => setReviewTitle(e.target.value)}
+                placeholder="Summarize your experience..."
+                maxLength={255}
+                className="w-full h-11 px-3 rounded-[14px] bg-fillSecondary text-text-primary border-none focus:ring-2 focus:ring-status-info text-body"
+              />
+            </div>
+
+            <div className="space-y-1">
+              <label htmlFor="review-body" className="block text-subhead font-semibold text-text-primary">
+                Review Details
+              </label>
+              <textarea
+                id="review-body"
+                value={reviewBody}
+                onChange={(e) => setReviewBody(e.target.value)}
+                placeholder="Share details of price correctness, product quality, availability..."
+                rows={4}
+                maxLength={2000}
+                className="w-full p-3 rounded-[14px] bg-fillSecondary text-text-primary border-none focus:ring-2 focus:ring-status-info text-body resize-none"
+              />
+            </div>
+
+            {reviewError && (
+              <p className="text-footnote text-status-unavailable font-semibold">
+                {reviewError}
+              </p>
+            )}
+
+            <div className="pt-2">
+              <button
+                type="submit"
+                disabled={submittingReview}
+                className="w-full h-12 rounded-[16px] bg-status-info text-white font-semibold flex items-center justify-center active:scale-[0.98] transition-transform disabled:opacity-50"
+              >
+                {submittingReview ? "Submitting..." : "Submit Review"}
+              </button>
+            </div>
+          </form>
+        ) : (
+          <>
+            {/* What you are about to act on. Restated because the sheet covers the
+                detail view it was opened from, and a handoff to another app should
+                never be a leap of faith about which market it is. */}
+            <div className="mx-4 squircle-card bg-surface dark:bg-surface-elevated px-4 py-3">
+              <p className="truncate text-headline text-text-primary">{target.placeName}</p>
+              {where && <p className="mt-0.5 truncate text-footnote text-text-secondary">{where}</p>}
+
+              {aggregate && aggregate.ratingCount > 0 && (
+                <div className="mt-1.5 flex items-center gap-1.5">
+                  <div className="flex items-center text-amber-500">
+                    {Array.from({ length: 5 }).map((_, i) => (
+                      <Star
+                        key={i}
+                        className={`h-3.5 w-3.5 ${
+                          i < Math.round(aggregate.ratingAverage)
+                            ? "fill-current"
+                            : "text-neutral-300 dark:text-neutral-700"
+                        }`}
+                      />
+                    ))}
+                  </div>
+                  <span className="text-caption-1 font-semibold text-text-secondary">
+                    {aggregate.ratingAverage.toFixed(1)} ({aggregate.ratingCount} {aggregate.ratingCount === 1 ? "review" : "reviews"})
+                  </span>
+                </div>
+              )}
+
+              {target.offer && (
+                <p className="mt-2 text-subhead text-text-secondary">
+                  <span className="text-text-primary font-semibold">{formatPriceRange(target.offer)}</span>
+                  {` per ${target.offer.unit} · ${target.offer.itemName}`}
+                </p>
+              )}
+
+              {(freshLabel || fresh) && (
+                <div className="mt-2 flex items-center gap-2">
+                  {freshLabel && <StatusBadge kind={freshKind}>{freshLabel}</StatusBadge>}
+                  {/* "Last seen", not "Confirmed": this line states WHEN we heard,
+                      and the badge beside it states WHAT we heard. Saying "confirmed"
+                      here read as confirmed-available next to a red "E no dey" badge —
+                      the two halves of the row contradicting each other. */}
+                  {fresh && <span className="text-caption-1 text-text-tertiary">Last seen {fresh}</span>}
+                </div>
+              )}
+            </div>
+
+            <ListGroup>
+              <ListRow
+                icon={<Navigation className="h-4 w-4 text-status-info-fg" />}
+                iconTint="bg-status-info-bg"
+                label="Go there"
+                detail={platform ? mapsAppName(platform) : undefined}
+                onClick={handleGoThere}
+              />
+              <ListRow
+                icon={
+                  canShare ? (
+                    <Share2 className="h-4 w-4 text-status-confirmed-fg" />
+                  ) : (
+                    <Copy className="h-4 w-4 text-status-confirmed-fg" />
+                  )
+                }
+                iconTint="bg-status-confirmed-bg"
+                label={shareLabel}
+                detail={shareResult.kind === "copied" ? "Copied" : undefined}
+                onClick={() => {
+                  void handleShare();
+                }}
+              />
+            </ListGroup>
+
+            {/* Last resort: no share sheet, no clipboard. The text is still the
+                thing the user wanted, so it goes on screen where they can take it
+                by hand. select-all makes one tap select the lot. */}
+            {shareResult.kind === "manual" && (
+              <div className="mx-4 space-y-1.5">
+                <p className="text-footnote text-text-secondary">
+                  This browser will not let WetinDey copy for you. Select and copy:
+                </p>
+                <p className="squircle bg-fillTertiary px-3 py-2.5 text-footnote text-text-primary select-all break-words">
+                  {shareResult.text}
+                </p>
+              </div>
+            )}
+
+            {/* Informational, not disabled: a greyed-out button implies it might
+                light up. It will not — the seller said no, or there is nothing to
+                dial. The row states the fact and the footer gives the reason. */}
+            <ListGroup footer={contactText.footer ?? undefined}>
+              <ListRow
+                icon={<Phone className="h-4 w-4 text-text-secondary" />}
+                label="Contact seller"
+                detail={contactText.detail}
+                chevron={false}
+              />
+            </ListGroup>
+
+            {/* Reviews Section */}
+            <div className="border-t border-fillTertiary/50 pt-5 px-4 space-y-4">
+              <div className="flex items-center justify-between">
+                <h3 className="text-headline text-text-primary font-bold">Reviews</h3>
+                <button
+                  type="button"
+                  onClick={() => setIsWritingReview(true)}
+                  className="text-footnote font-semibold text-status-info active:scale-95 transition-transform"
+                >
+                  Write a Review
+                </button>
+              </div>
+
+              {loadingReviews ? (
+                <p className="text-footnote text-text-secondary py-2">Loading reviews...</p>
+              ) : reviewsList.length === 0 ? (
+                <div className="py-4 text-center">
+                  <p className="text-footnote text-text-secondary">No reviews yet.</p>
+                  <p className="text-caption-1 text-text-tertiary mt-1">Be the first to confirm prices and share your experience!</p>
+                </div>
               ) : (
-                <Copy className="h-4 w-4 text-status-confirmed-fg" />
-              )
-            }
-            iconTint="bg-status-confirmed-bg"
-            label={shareLabel}
-            detail={shareResult.kind === "copied" ? "Copied" : undefined}
-            onClick={() => {
-              void handleShare();
-            }}
-          />
-        </ListGroup>
+                <div className="space-y-4 pb-4">
+                  {reviewsList.map((review) => {
+                    const initials = review.reviewerName
+                      .split(" ")
+                      .map((n) => n[0])
+                      .join("")
+                      .substring(0, 2)
+                      .toUpperCase() || "?";
+                    
+                    return (
+                      <div key={review.id} className="squircle-card bg-fillSecondary p-3 space-y-2">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <div className="w-8 h-8 rounded-full bg-status-info-bg text-status-info flex items-center justify-center text-footnote font-bold">
+                              {review.reviewerAvatarUrl ? (
+                                <img
+                                  src={review.reviewerAvatarUrl}
+                                  alt={review.reviewerName}
+                                  className="w-full h-full rounded-full object-cover"
+                                />
+                              ) : (
+                                initials
+                              )}
+                            </div>
+                            <div>
+                              <p className="text-footnote font-semibold text-text-primary leading-tight">
+                                {review.reviewerName}
+                              </p>
+                              <div className="flex items-center text-amber-500 mt-0.5">
+                                {Array.from({ length: 5 }).map((_, idx) => (
+                                  <Star
+                                    key={idx}
+                                    className={`h-3 w-3 ${idx < review.rating ? "fill-current" : "text-neutral-300 dark:text-neutral-700"}`}
+                                  />
+                                ))}
+                              </div>
+                            </div>
+                          </div>
+                          <span className="text-caption-1 text-text-tertiary">
+                            {new Date(review.createdAt).toLocaleDateString("en-NG", {
+                              day: "numeric",
+                              month: "short",
+                              year: "numeric",
+                            })}
+                          </span>
+                        </div>
 
-        {/* Last resort: no share sheet, no clipboard. The text is still the
-            thing the user wanted, so it goes on screen where they can take it
-            by hand. select-all makes one tap select the lot. */}
-        {shareResult.kind === "manual" && (
-          <div className="mx-4 space-y-1.5">
-            <p className="text-footnote text-text-secondary">
-              This browser will not let WetinDey copy for you. Select and copy:
-            </p>
-            <p className="squircle bg-fillTertiary px-3 py-2.5 text-footnote text-text-primary select-all break-words">
-              {shareResult.text}
-            </p>
-          </div>
+                        {review.title && (
+                          <p className="text-footnote font-semibold text-text-primary">
+                            {review.title}
+                          </p>
+                        )}
+
+                        {review.body && (
+                          <p className="text-footnote text-text-secondary whitespace-pre-wrap leading-relaxed">
+                            {review.body}
+                          </p>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </>
         )}
-
-        {/* Informational, not disabled: a greyed-out button implies it might
-            light up. It will not — the seller said no, or there is nothing to
-            dial. The row states the fact and the footer gives the reason. */}
-        <ListGroup footer={contactText.footer ?? undefined}>
-          <ListRow
-            icon={<Phone className="h-4 w-4 text-text-secondary" />}
-            label="Contact seller"
-            detail={contactText.detail}
-            chevron={false}
-          />
-        </ListGroup>
       </div>
     </ModalSheet>
   );
