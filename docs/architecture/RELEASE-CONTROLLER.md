@@ -362,9 +362,13 @@ safety/integrity lanes until their separate gates are independently satisfied.
   fixture validator does not read candidate artifacts, and the historical validator
   default/contract regressed. P3: the fingerprint/ID relationship is unenforced. Luna
   verified the source facts, package hash/size, grounded Lagos rows, and absence of Sample
-  or live effect. Terra retains all ten exact paths for a forward-only correction; do not
-  amend or release them. No tests, DB, seed, schema, migration, UI, push, or deploy is
-  authorized.
+  or live effect. Terra committed forward correction `6ae4df9` over the same ten paths
+  with implementing static PASS. Its four contracts are: current recurring-fetch
+  timestamp; development fixture validator reads candidate artifacts; historical validator
+  default/contract restored; and fingerprint/ID relationship enforced. All ten paths remain
+  exclusively claimed pending repeat Luna original-source refutation of
+  `e49782b + 6ae4df9`; do not release them. No tests, DB, seed, schema, migration, UI,
+  push, or deploy is authorized.
 - Decision: **NO PUSH / NO DEPLOY**. This documentation checkpoint authorizes no test,
   push, deployment, migration, seed, shared-database access, or external change.
 
