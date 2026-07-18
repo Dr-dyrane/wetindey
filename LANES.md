@@ -30,9 +30,10 @@ fallback-unit query executing against the declared schema, and an independent re
 of the result. After that evidence, the controller will select the next implementation
 lane. No product implementation lane is reopened by this record.
 
-Completed iconography foundation correction `89482fb` remains accepted by independent
-refutation with no P1/P2/P3; its runtime high-contrast/accessibility checks remain a
-separate validation residual, not a release authorization.
+Commit `89482fb` is accepted only for its narrow forced-colors inheritance correction.
+The broader iconography foundation remains **REFUTED**: semantic orb backgrounds are still
+translucent tints, `SolidIcon` still accepts unrestricted caller `className`, and the
+contract does not prove exact size/token ownership. Adoption lanes remain closed.
 
 ### Pinned persistent employee roster
 
@@ -70,23 +71,35 @@ fixture, parent fingerprint, or destruction authority. The ambient URL must not 
 The lane returns to pinned-idle until an exact disposable target is supplied; no code path
 is claimed and no shared-target action is authorized.
 
-### Active lane: Market Details Sheet Visual Systems
+### Blocked lane: Market Details Sheet Visual Systems
 
-The iconography foundation dependency is closed by `89482fb` and independent no-P1/P2/P3
-refutation. The pinned Iconography & Visual Systems Lead now owns exactly:
+The four Market Details paths below are released and must not be edited until the broader
+foundation passes independent refutation:
 
 - `src/app/_components/ItemDetailSheet.tsx`
 - `src/design-system/components/ListRow.tsx`
 - `src/design-system/components/SheetPicker.tsx`
 - `src/app/_components/GetItSheet.tsx`
 
-Scope is the accepted Market Details visual contract only: remove the artificial dead
-zone/capped inventory presentation, use the established solid semantic icon-orb and
-available item-image language, improve hierarchy and vertical use, and preserve pinned
-action access. Trust, provenance, counts, prices/units, fulfilment boundaries, data queries,
-and action behavior must not change. The lane requires a path-scoped commit followed by an
-independent reused-state light/dark, compact/desktop, accessibility, and reduced-motion
-refutation. No `page.tsx`, `actions.ts`, database, map, flags, or currency-data widening.
+Its accepted visual contract remains queued unchanged.
+
+### Active lane: Semantic iconography foundation forward correction
+
+The pinned Iconography & Visual Systems Lead owns exactly:
+
+- `src/app/globals.css`
+- `tailwind.config.ts`
+- `src/design-system/components/IconOrb.tsx`
+- `src/design-system/icons/SolidIcon.tsx`
+- `scripts/iconography-contracts.test.ts`
+
+Required correction: replace translucent semantic orb fills with opaque, accessible,
+intent-owned fills in light and dark themes; keep ordinary controls neutral; prevent glyph
+callers from bypassing orb-owned semantic colour; and make the contract prove every exact
+orb/glyph size mapping plus the colour-ownership boundary. Preserve forced-colors system
+inheritance, 44px enclosing targets, decorative accessibility, reduced motion, local glyph
+geometry, and all existing call-site behavior. One path-scoped forward commit and an
+independent no-P1/P2 visual/accessibility refutation are required before any adoption lane.
 
 ## Controller reconciliation — semantic UI and market-detail follow-up
 

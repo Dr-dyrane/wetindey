@@ -698,8 +698,10 @@ authorized.
 
 ### Evidence and next lane
 
-- Iconography correction `89482fb` is independently **NOT REFUTED**, with no P1/P2/P3;
-  runtime high-contrast and accessibility validation remains residual evidence.
+- Iconography correction `89482fb` is independently **NOT REFUTED** only for its narrow
+  forced-colors inheritance scope. It does not close the broader foundation findings:
+  translucent semantic fills, unrestricted caller glyph styling, and incomplete exact
+  size/token contract coverage.
 - The next bounded lane is **Search execution proof**, owned by Search & Ranking as a
   read-only evidence task over the already-corrected `c6f304b` behavior. It may inspect
   and execute only against a uniquely disposable database at the exact candidate; it may
@@ -718,9 +720,10 @@ fixture, parent fingerprint, or destruction authority. The ambient URL is inadmi
 Search execution proof remains an explicit external-target gate and claims no code path.
 
 This blocker does not prevent disjoint local UI work. The next active lane is the exact
-four-path **Market Details Sheet Visual Systems** slice recorded in `LANES.md`, after the
-iconography foundation passed independent refutation. It authorizes no query, action,
-database, map, shared-target, push, or deployment change.
+five-path **Semantic iconography foundation forward correction** recorded in `LANES.md`.
+Market Details and every adoption lane remain closed until that foundation receives an
+independent no-P1/P2 verdict. No query, action, database, map, shared-target, push, or
+deployment change is authorized.
 
 
 - Aboki FX commit `37fa33d` is independently VERIFIED; its three UI paths are released.
