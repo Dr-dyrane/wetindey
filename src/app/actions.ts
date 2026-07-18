@@ -1,7 +1,7 @@
 "use server";
 
 import { db } from "@/db";
-import { areas, items, itemAliases, itemVariants, places, offersCurrent, units, observations, sources, problemReports, userProfiles, reviews, reviewAggregates } from "@/db/schema";
+import { areas, items, itemAliases, itemVariants, places, offersCurrent, units, observations, sources, problemReports, userProfiles, reviewAggregates } from "@/db/schema";
 import { eq, ilike, or, and, sql, gte, isNull, isNotNull, asc, desc } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import {
@@ -18,7 +18,6 @@ import {
   parseCoverageForPoint,
   parseSubmitProblemReport,
   parseUpdateMyProfile,
-  parseSubmitReview,
 } from "@/lib/validation";
 import { auth } from "@/lib/auth";
 import { put, del } from "@vercel/blob";
@@ -2751,64 +2750,14 @@ export async function getReviewAggregate(
   return result[0];
 }
 
-export async function submitReview(data: {
+export async function submitReview(_data: {
   reviewableType: string;
   reviewableId: string;
   rating: number;
   title?: string | null;
   body?: string | null;
 }): Promise<void> {
-  const input = parseSubmitReview(data);
-
-  const { data: session } = await auth.getSession();
-  const userId = session?.user?.id;
-  if (!userId) {
-    throw new Error("submitReview: no session, a review write is owner-scoped");
-  }
-
-  // 1. Insert the review
-  await db.insert(reviews).values({
-    userId: userId,
-    reviewableType: input.reviewableType,
-    reviewableId: input.reviewableId,
-    rating: input.rating,
-    title: input.title ?? null,
-    body: input.body ?? null,
-    moderationStatus: "approved",
-  });
-
-  // 2. Fetch all ratings for this entity to compute the new aggregate
-  const allRatings = await db
-    .select({ rating: reviews.rating })
-    .from(reviews)
-    .where(
-      and(
-        eq(reviews.reviewableType, input.reviewableType),
-        eq(reviews.reviewableId, input.reviewableId),
-        eq(reviews.moderationStatus, "approved")
-      )
-    );
-
-  const count = allRatings.length;
-  const sum = allRatings.reduce((acc, curr) => acc + curr.rating, 0);
-  const average = count > 0 ? sum / count : 0.0;
-
-  // 3. Upsert into reviewAggregates
-  await db
-    .insert(reviewAggregates)
-    .values({
-      reviewableType: input.reviewableType,
-      reviewableId: input.reviewableId,
-      ratingAverage: average,
-      ratingCount: count,
-      updatedAt: new Date(),
-    })
-    .onConflictDoUpdate({
-      target: [reviewAggregates.reviewableType, reviewAggregates.reviewableId],
-      set: {
-        ratingAverage: average,
-        ratingCount: count,
-        updatedAt: new Date(),
-      },
-    });
+  // ADR-009 defines the future domain, but its write-integrity prerequisites are
+  // not live. Keep this boundary ahead of payload parsing, auth, and database work.
+  throw new Error("REVIEWS_UNAVAILABLE");
 }

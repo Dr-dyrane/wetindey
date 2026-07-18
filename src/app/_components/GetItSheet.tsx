@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useCallback, useEffect, useState } from "react";
-import { Navigation, Share2, Copy, Phone, Star, ChevronLeft } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
+import { Navigation, Share2, Copy, Phone, Star } from "lucide-react";
 import { ModalSheet } from "@/design-system/components/ModalSheet";
 import { ListRow, ListGroup } from "@/design-system/components/ListRow";
 import { StatusBadge, type StatusKind } from "@/design-system/components/StatusBadge";
@@ -9,7 +9,6 @@ import {
   getPlaceContactPolicy,
   getReviewsForEntity,
   getReviewAggregate,
-  submitReview,
   type PlaceContactPolicy,
   type ReviewData,
   type ReviewAggregateData
@@ -342,15 +341,6 @@ export function GetItSheet({ open, onClose, target, origin, onGoThere }: GetItSh
   const [aggregate, setAggregate] = useState<ReviewAggregateData | null>(null);
   const [loadingReviews, setLoadingReviews] = useState(false);
 
-  // Review writing states
-  const [isWritingReview, setIsWritingReview] = useState(false);
-  const [rating, setRating] = useState<number>(0);
-  const [hoverRating, setHoverRating] = useState<number>(0);
-  const [reviewTitle, setReviewTitle] = useState("");
-  const [reviewBody, setReviewBody] = useState("");
-  const [submittingReview, setSubmittingReview] = useState(false);
-  const [reviewError, setReviewError] = useState<string | null>(null);
-
   const placeId = target?.placeId ?? null;
 
   // Capability detection runs after mount so the server and the first client
@@ -415,12 +405,6 @@ export function GetItSheet({ open, onClose, target, origin, onGoThere }: GetItSh
   useEffect(() => {
     if (!open) {
       setShareResult({ kind: "idle" });
-      setIsWritingReview(false);
-      setRating(0);
-      setHoverRating(0);
-      setReviewTitle("");
-      setReviewBody("");
-      setReviewError(null);
     }
   }, [open]);
 
@@ -493,47 +477,6 @@ export function GetItSheet({ open, onClose, target, origin, onGoThere }: GetItSh
     await copyToClipboard(`${text} ${url}`);
   }, [target, onClose, copyToClipboard]);
 
-  const handleReviewSubmit = useCallback(async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!placeId) return;
-    if (rating === 0) {
-      setReviewError("Please select a rating of at least 1 star.");
-      return;
-    }
-    setSubmittingReview(true);
-    setReviewError(null);
-
-    try {
-      await submitReview({
-        reviewableType: "place",
-        reviewableId: placeId,
-        rating,
-        title: reviewTitle.trim() || null,
-        body: reviewBody.trim() || null,
-      });
-
-      // Reload reviews and aggregates
-      const [list, agg] = await Promise.all([
-        getReviewsForEntity("place", placeId),
-        getReviewAggregate("place", placeId)
-      ]);
-      setReviewsList(list);
-      setAggregate(agg);
-
-      // Reset form and close writing view
-      setIsWritingReview(false);
-      setRating(0);
-      setHoverRating(0);
-      setReviewTitle("");
-      setReviewBody("");
-    } catch (err) {
-      console.error(err);
-      setReviewError(err instanceof Error ? err.message : "Failed to submit review. Are you signed in?");
-    } finally {
-      setSubmittingReview(false);
-    }
-  }, [placeId, rating, reviewTitle, reviewBody]);
-
   if (!target) return null;
 
   const where = whereabouts(target);
@@ -544,95 +487,9 @@ export function GetItSheet({ open, onClose, target, origin, onGoThere }: GetItSh
   const shareLabel = canShare ? "Share" : "Copy details";
 
   return (
-    <ModalSheet open={open} onClose={onClose} title={isWritingReview ? "Write a Review" : "Get it"} size="form">
+    <ModalSheet open={open} onClose={onClose} title="Get it" size="form">
       <div className="space-y-6 py-3">
-        {isWritingReview ? (
-          <form onSubmit={handleReviewSubmit} className="space-y-4 px-4 pb-4">
-            <button
-              type="button"
-              onClick={() => setIsWritingReview(false)}
-              className="flex items-center gap-1 text-footnote font-semibold text-status-info active:scale-95 transition-transform"
-            >
-              <ChevronLeft className="h-4 w-4" />
-              Back to place
-            </button>
-
-            <div>
-              <label className="block text-subhead font-semibold text-text-primary mb-1">
-                Tap to Rate
-              </label>
-              <div className="flex items-center gap-2">
-                {Array.from({ length: 5 }).map((_, i) => {
-                  const starVal = i + 1;
-                  const active = starVal <= (hoverRating || rating);
-                  return (
-                    <button
-                      key={i}
-                      type="button"
-                      onClick={() => setRating(starVal)}
-                      onMouseEnter={() => setHoverRating(starVal)}
-                      onMouseLeave={() => setHoverRating(0)}
-                      className={`text-amber-500 focus:outline-none transition-all duration-150 ease-out 
-                        active:scale-75 hover:scale-125
-                        ${active ? "scale-105" : "scale-100 opacity-60 hover:opacity-100"}`}
-                    >
-                      <Star
-                        className={`h-8 w-8 ${active ? "fill-current" : "text-neutral-300 dark:text-neutral-800"}`}
-                      />
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            <div className="space-y-1">
-              <label htmlFor="review-title" className="block text-subhead font-semibold text-text-primary">
-                Review Title (Optional)
-              </label>
-              <input
-                id="review-title"
-                type="text"
-                value={reviewTitle}
-                onChange={(e) => setReviewTitle(e.target.value)}
-                placeholder="Summarize your experience..."
-                maxLength={255}
-                className="w-full h-11 px-3 rounded-[14px] bg-fillSecondary text-text-primary border-none focus:ring-2 focus:ring-status-info text-body"
-              />
-            </div>
-
-            <div className="space-y-1">
-              <label htmlFor="review-body" className="block text-subhead font-semibold text-text-primary">
-                Review Details
-              </label>
-              <textarea
-                id="review-body"
-                value={reviewBody}
-                onChange={(e) => setReviewBody(e.target.value)}
-                placeholder="Share details of price correctness, product quality, availability..."
-                rows={4}
-                maxLength={2000}
-                className="w-full p-3 rounded-[14px] bg-fillSecondary text-text-primary border-none focus:ring-2 focus:ring-status-info text-body resize-none"
-              />
-            </div>
-
-            {reviewError && (
-              <p className="text-footnote text-status-unavailable font-semibold">
-                {reviewError}
-              </p>
-            )}
-
-            <div className="pt-2">
-              <button
-                type="submit"
-                disabled={submittingReview}
-                className="w-full h-12 rounded-[16px] bg-status-info text-white font-semibold flex items-center justify-center active:scale-[0.98] transition-transform disabled:opacity-50"
-              >
-                {submittingReview ? "Submitting..." : "Submit Review"}
-              </button>
-            </div>
-          </form>
-        ) : (
-          <>
+        <>
             {/* What you are about to act on. Restated because the sheet covers the
                 detail view it was opened from, and a handoff to another app should
                 never be a leap of faith about which market it is. */}
@@ -732,15 +589,11 @@ export function GetItSheet({ open, onClose, target, origin, onGoThere }: GetItSh
 
             {/* Reviews Section */}
             <div className="border-t border-fillTertiary/50 pt-5 px-4 space-y-4">
-              <div className="flex items-center justify-between">
+              <div>
                 <h3 className="text-headline text-text-primary font-bold">Reviews</h3>
-                <button
-                  type="button"
-                  onClick={() => setIsWritingReview(true)}
-                  className="text-footnote font-semibold text-status-info active:scale-95 transition-transform"
-                >
-                  Write a Review
-                </button>
+                <p className="mt-1 text-footnote text-text-secondary">
+                  New reviews are unavailable while we prepare safety and moderation safeguards.
+                </p>
               </div>
 
               {loadingReviews ? (
@@ -748,9 +601,9 @@ export function GetItSheet({ open, onClose, target, origin, onGoThere }: GetItSh
               ) : reviewsList.length === 0 ? (
                 <div className="py-8 px-4 text-center bg-fillSecondary dark:bg-fillTertiary/20 rounded-[20px] border border-dashed border-fillTertiary/40">
                   <Star className="h-7 w-7 mx-auto text-text-tertiary mb-2 opacity-40 animate-pulse" />
-                  <p className="text-subhead font-semibold text-text-secondary">No reviews yet</p>
+                  <p className="text-subhead font-semibold text-text-secondary">Reviews unavailable</p>
                   <p className="text-caption-1 text-text-tertiary mt-1 max-w-[240px] mx-auto leading-relaxed">
-                    Be the first to confirm prices, availability, and share your experience!
+                    We are preparing this feature with safety and moderation in mind.
                   </p>
                 </div>
               ) : (
@@ -818,8 +671,7 @@ export function GetItSheet({ open, onClose, target, origin, onGoThere }: GetItSh
                 </div>
               )}
             </div>
-          </>
-        )}
+        </>
       </div>
     </ModalSheet>
   );
