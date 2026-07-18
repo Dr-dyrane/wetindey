@@ -14,16 +14,38 @@ wins until an accepted ADR amends it.
 
 This document does not authorize implementation.
 
-The repository is currently under an integration freeze because:
+### Current-main audit reconciliation
 
-- migration SQL, snapshots, journal, and TypeScript schema are not one reproducible
-  lineage;
-- synthetic prices are not durably distinguishable from observed field reports;
-- the current search path contains a runtime-invalid column reference;
-- category selection is partially wired while detail, contribution, map fallback, and
-  data semantics remain Food/price-shaped;
-- write-side trust derivation exists, but read-side UI and map heuristics still disagree;
-- and active lanes overlap in `page.tsx`, `actions.ts`, profile, map, and migration files.
+The deep repository audit observed `8ebefb7`. The reconciled planning baseline is
+`b89ebba`:
+
+- D1 restored reproducible lineage through `0008`.
+- D2 added provenance in repository history and passed independent disposable migration,
+  seed, backfill, and idempotence refutation through `0009`; no shared target was migrated.
+- T1 made server-derived trust authoritative across card, detail, Get-It, and marker
+  presentation.
+- T2A now admits only `observed` evidence to confidence and labels synthetic-only fallback
+  `Demo data`; the audit's synthetic-confidence finding is therefore closed.
+- Food remains the only selectable live category. The other category rows are honest
+  unavailable context, not partial implementations.
+- The current search path still contains a runtime-invalid `item_variants.unit_id`
+  reference. That confirmed defect is the first unresolved implementation lane.
+
+The repository is an **advanced interactive alpha approaching a controlled Food pilot**,
+not an open Lagos product. The active phase is **WetinDey Food Truth & Pilot Operations**.
+
+The release truth gate remains in force because:
+
+- `searchItems()` does not match the declared item-variant schema;
+- shared environments have not received authorized `0009`, so provenance-aware code may
+  not deploy ahead of the exact target migration;
+- T2C observed-only price/range isolation and T2D SEO isolation remain;
+- public contribution lacks a transactional, idempotent, rate-limited, moderated conflict
+  policy;
+- account deletion, actionable consented seller contact, and pilot operating tools are not
+  complete;
+- and automated database, Server Action, browser, accessibility, PWA, and release checks
+  are not yet one enforced pipeline.
 
 No Trust Graph DDL, category registry, generic filter form, review work, reward work, RLS
 rollout, or broad UI refactor starts in this state.
@@ -325,8 +347,9 @@ verification, moderation, confidence, or organic rank.
 
 | ID | Debt | Gate |
 |---|---|---|
-| GOV-01 | Schema, SQL, snapshots, and migration journal are not one reproducible lineage | D1 database-lineage lane |
-| DATA-01 | Synthetic and observed rows have no durable provenance boundary | D2 provenance lane |
+| GOV-01 | **Closed:** schema, SQL, snapshots, and journal are reproducible through `0008` | D1 completed and independently refuted |
+| DATA-01 | **Repository/disposable gate closed:** provenance exists through `0009`; exact shared-target rollout remains unapplied | Separate authorized migration-before-code release gate |
+| SEARCH-01 | `searchItems()` references `item_variants.unit_id`, which does not exist in the declared schema | First Stage 0 implementation lane plus disposable DB query proof |
 | CATALOG-01 | Catalog records and reference images are seed-managed; there is no authorized item CRUD, attribution, or duplicate-merging workflow | Catalog Stewardship lane |
 | MEDIA-01 | Report evidence has no privacy, EXIF, hashing, moderation, retention, or offline-upload pipeline | Observation Evidence Media lane |
 | LIVE-01 | Six-category selector is partially wired over a Food-shaped data model | V1 containment before further expansion |
@@ -335,64 +358,76 @@ verification, moderation, confidence, or organic rank.
 | LIVE-04 | SEO hardcodes Food while category data can be broader | Truth-core SEO correction |
 | LIVE-05 | No category-scoped enforced filter contract or stale-response generation guard | Contextual capability lane |
 | TRUST-01 | Anonymous seeded Contributor reliability `98` exceeds recognized contributor `75` | V1 trust correction |
-| TRUST-02 | Write-side and read-side trust derivations disagree | One live assessment before reputation |
+| TRUST-02 | **Closed by T1:** one server assessment now drives card, detail, Get-It, and marker presentation | Preserve one assessment while T2C/T2D close |
 | TRUST-03 | `sources` conflates source kind, account binding, lifecycle, and a reputation-like scalar | V1.5 reputation design |
-| TRUST-04 | No provenance, independence-group, policy-version, or calibration record | D2 then V1.5 |
+| TRUST-04 | Provenance exists; independence group, policy version, and calibration record do not | Stage 3 reputation design after real outcomes |
 | TRUST-05 | Moderation status exists without an actor, queue, audit, or honest writer | Real moderation gate |
 | TRUST-06 | Generic verification string cannot support a truthful badge/filter | Typed assertions in V1.5 or later |
 | REVIEW-01 | Reviews are schema-only; anonymous helpful-vote uniqueness and moderation are incomplete | Keep deferred |
-| LEGAL-01 | About says price map and every price is human-observed; legal/privacy copy is draft and incomplete | Auth/UI plus human counsel handoff |
+| WRITE-01 | Contribution is non-transactional, non-idempotent, auto-approved, and lacks enforceable device/account rate and conflict policy | Stage 0 contribution-integrity lane |
+| QA-01 | CI lacks integrated migration, database, Server Action, browser, accessibility, PWA, and production-build gates | Stage 0 release-verification lane |
+| OPS-01 | No operating loop yet maintains field coverage, catalog/place corrections, disputes, freshness, and moderator audit | Stage 1 Food pilot operations |
+| SELLER-01 | Contact is consent-aware but not actionable; seller claim, hours, correction, and safe resolution are absent | Stage 1 seller contact/stewardship |
+| RELEASE-01 | Direct `main` pushes can deploy while database rollout is separately controlled | Migration-before-code gate now; protected-main/preview transition before open pilot |
+| LEGAL-01 | Product identity and demo caveats are corrected; final privacy, deletion, retention, processor, and contact terms remain draft | Product/legal lane plus human counsel |
 
 ## 8. Evolution roadmap
 
-| Release stage | Scope | Explicit exclusions |
+**Controller phase name:** WetinDey Food Truth & Pilot Operations.
+
+| Release stage | Scope | Exit condition and explicit exclusions |
 |---|---|---|
-| Freeze precondition | Reconcile owners, repair migrations, classify synthetic data, correct broken search | No graph/category/review/reward DDL |
-| V1 | Honest Food price and stock vertical, one confidence path, atomic/idempotent writes, truthful SEO/share/About handoff | No learned public reputation, generalized roles, reviews, partner API, rewards, catalog operator UI, or evidence uploads |
-| V1 containment | Expose only complete category capabilities; selected context is visible; header/filter work uses only enforced Food behavior | No empty registry or false category outcomes |
-| V1.5 | After real outcomes: scoped reputation events/snapshots, typed verification, real moderation if an actor exists, self-explanation; catalog stewardship may begin after operator authorization | No universal score, paid verification, reward program, or evidence upload without its privacy/media ADR |
-| Phase 5A | Prove one non-price vertical and extract a typed capability only from two live implementations | No EAV, generic form builder, or speculative categories |
-| V2 | Additional typed verticals, live moderated reviews, scoped partner ingest, defense-in-depth RLS, and separately approved observation evidence media | Reviews still do not become live-state evidence; evidence media never becomes catalog media automatically |
-| Long term | Calibrated per-signal policies, multi-pillar composition, privacy-preserving APIs, separately approved external reward eligibility | No fulfilment, wallets, payments, purchased status, or opaque AI truth |
+| Current checkpoint | D1 and disposable D2 complete; T1 authoritative reads complete; T2A observed-only confidence and `Demo data` presentation complete; Food-only category containment preserved | No shared `0009`, no claim of open-pilot readiness |
+| Stage 0 - Release truth gate | Fix and disposable-DB-test `searchItems()`; complete T2C observed-only projections and T2D SEO firewall; migrate an explicitly authorized staging target before provenance-aware deployment; make writes transactional/idempotent/rate-limited with contradictory-report handling; settle account deletion; create integrated release checks; run Luna refutation | The same offer is truthful and semantically aligned on card, detail, marker, Get-It, share, item/place routes, and SEO. No new category, reviews, reputation, rewards, or evidence media |
+| Stage 1 - Operational Food pilot | Source-review and field-entry tools; merchant/contact consent; catalog/unit mapping; place correction/merge; disputes/corrections; coverage/freshness dashboard; moderator identity/audit; bounded seller contact and stewardship | A bounded geography and catalog have enough current verified density for successful real errands. No Lagos-wide scale claim |
+| Stage 2 - Controlled Lagos expansion | Expand markets and merchant participation; approved scheduled ingestion; contributor training; freshness SLAs; alerts; viewport querying/clustering; funnel and wasted-trip measurement | Expand only where false-high confidence and stale coverage are measured and controlled |
+| Stage 3 - Earned reputation | Contributor and seller outcome histories, scoped expert status, corrections, appeals, earned recognitions, optional partner eligibility | Real outcomes first; no paid verification, universal score, public fraud score, or reward-driven trust |
+| Stage 4 - Yelp-like local discovery | Moderated reviews, ratings, owner replies, photos, questions, helpful votes, recommendations, and community discussion | Reviews remain distinct from current-state price/availability evidence; identity, moderation, and abuse controls required |
+| Stage 5 - First non-price vertical | Build Power as area, status, start time, last confirmation, nearby corroboration, confidence, and restoration history; extract shared capability only after Food and Power are both live | No naira, sale unit, seller-contact, or Food-form reuse for Power; no speculative generic registry |
+| Long term | Additional typed verticals, calibrated per-signal policies, privacy-preserving APIs, scoped partner ingest, separately approved evidence media and external reward eligibility | No fulfilment, wallets, payments, purchased status, or opaque AI truth |
 
 ### Dependency graph
 
 ```mermaid
 flowchart LR
-    G0["G0 ownership reconciliation"] --> D1["D1 migration lineage"]
-    G0 --> A0["A0 auth/profile closeout"]
-    D1 --> D2["D2 provenance boundary"]
-    A0 --> T1["T1 one live confidence path"]
-    D2 --> T1
-    T1 --> Q1["Q1 adversarial V1 refutation"]
-    Q1 --> PILOT["Real pilot outcomes"]
-    PILOT --> R1["R1 scoped reputation calibration"]
-    R1 --> V1P5["Typed verification and real moderation"]
-    T1 --> C0["C0 honest category containment"]
-    T1 --> CAT["Catalog Stewardship"]
-    D2 --> OEM["Observation Evidence Media"]
-    C0 --> C1["C1 Phase 5A non-price vertical"]
-    V1P5 --> REV["Live reviews"]
-    V1P5 --> PARTNER["Scoped partner ingest"]
-    REV --> REWARD["Separate reward-policy ADR"]
-    PARTNER --> REWARD
+    DONE["D1 + disposable D2 + T1 + T2A complete"] --> SEARCH["P0 repair search schema contract"]
+    SEARCH --> T2CD["T2C projections + T2D SEO"]
+    T2CD --> MIG["Authorized staging migration before code"]
+    MIG --> WRITE["Atomic + idempotent + rate-limited writes"]
+    WRITE --> QA["Integrated release verification"]
+    QA --> Q1["Luna adversarial release refutation"]
+    Q1 --> OPS["Stage 1 Food pilot operations"]
+    OPS --> PILOT["Controlled real Food outcomes"]
+    PILOT --> EXPAND["Stage 2 Lagos expansion"]
+    PILOT --> R1["Stage 3 earned reputation"]
+    R1 --> REV["Stage 4 reviews + community"]
+    EXPAND --> POWER["Stage 5 Power vertical"]
+    OPS --> CAT["Catalog Stewardship"]
+    D2["D2 provenance boundary"] --> OEM["Observation Evidence Media, separately gated"]
 ```
 
 ## 9. Lane plan and handoffs
 
 | Lane | Status | Mission | Dependencies |
 |---|---|---|---|
-| Governance / Roadmaps | Active, docs only | Review ADR-010/011, architecture delta, freeze, and handoffs | Existing governance claim |
+| Governance / Roadmaps | Active, docs only | Reconcile the `8ebefb7` deep audit against current `main`, gates, priorities, and handoffs | Existing governance claim |
 | D1 database lineage | Complete | Restored one reproducible migration history through `0008`; no Trust Graph DDL | G0 |
-| D2 provenance boundary | Active | Enforce synthetic, observed, partner, reference, and inferred origin on immutable observations | D1 and ADR-012 |
-| V1 truth core | Planned | One truthful Food path from evidence through UI, share, SEO, and outcome | A0, D1, D2 |
-| Context header containment | Blocked | Target header order, visible honest category context, enforced Food filters only | UI/map/action owners release exact paths |
+| D2 provenance boundary | Repository and disposable execution complete; shared rollout gated | Keep five-value immutable provenance and migrate only an exact authorized target before dependent code | D1 and ADR-012/015 |
+| P0 search schema repair | Active | Remove the nonexistent `item_variants.unit_id` relationship and prove the real query on a disposable database | Exclusive `src/app/actions.ts` claim |
+| V1 truth core | T1/T2A complete; T2C/T2D queued | Finish observed-only projection ranges and the SEO firewall | Search repair, D2, ADR-015 |
+| Contribution integrity | Planned Stage 0 | Transaction, idempotency, atomic conflict handling, rate policy, and contradictory-report safety | Truth-core reads plus threat model |
+| Release verification | Planned Stage 0 | One executable migration/database/action/browser/accessibility/PWA/build gate plus Luna refutation | Search, T2C/T2D, write safety |
+| Account deletion | Provider/counsel gated | Delete provider identity and approved app PII while retaining/anonymising public evidence exactly as approved | Neon capability proof and retention matrix |
+| Food pilot operations | Planned Stage 1 | Field/source review, catalog/place maintenance, correction/dispute, freshness coverage, and moderator audit | Stage 0 exit |
+| Seller contact and stewardship | Planned Stage 1 | Consented actionable contact, claim/onboarding, hours, correction, and response state | Stage 0 exit; ADR-001 fulfilment exclusion |
+| Context header containment | Planned after truth gate | Target header order, visible honest category context, enforced Food filters only | Stable Food query contract and exact UI/map/action claims |
 | Contextual category capability | Deferred Phase 5A | One non-price vertical plus typed capability extracted from two live implementations | ADR-002 Phases 0-4, V1 exit, clean migrations |
-| Catalog Stewardship | Deferred V1.5/V2 | Item CRUD, aliases, variants, units, categorisation, reference imagery, attribution, and duplicate merging | Operator authorization, catalog ADR, reference-media policy, and a real stewardship workflow |
-| Observation Evidence Media | Deferred V1.5/V2 | Report attachments, receipts, EXIF removal, privacy, hashing, size limits, moderation, retention, and offline uploads | D2, media/privacy ADR, storage decision, moderation actor, and offline threat model |
-| R1 reputation calibration | Deferred V1.5 | Append-only events and scoped projections from real outcomes | Pilot outcomes and ADR-011 acceptance |
-| Review vertical | Deferred | Identity, moderation, duplicate-vote safety, read/write/UI/tests | ADR-009/011 gates |
-| Q1 release refutation | Read-only | Attempt to disprove every trust and category claim | Candidate release |
+| Catalog Stewardship | Planned Stage 1 | Item CRUD, aliases, variants, units, categorisation, reference imagery, attribution, and duplicate merging | Operator authorization, catalog ADR, reference-media policy, and a real stewardship workflow |
+| Observation Evidence Media | Deferred Stage 2+ | Report attachments, receipts, EXIF removal, privacy, hashing, size limits, moderation, retention, and offline uploads | D2, media/privacy ADR, storage decision, moderation actor, and offline threat model |
+| R1 reputation calibration | Deferred Stage 3 | Append-only events and scoped projections from real outcomes | Pilot outcomes and ADR-011 acceptance |
+| Reviews and community | Deferred Stage 4 | Moderated reviews, ratings, media, questions, replies, helpful votes, recommendations, and discussion | Pilot outcomes, identity, moderation, duplicate-vote safety, read/write/UI/tests |
+| Power typed vertical | Deferred Stage 5 | Prove Power status without price semantics, then extract only genuinely shared capability | Food operating loop and two-live-vertical rule |
+| Q1 release refutation | Read-only at Stage 0 exit | Attempt to disprove every truth, migration, write, category, accessibility, and release claim | Candidate controlled-pilot release |
 
 No future lane owns a path until it is activated and exact files are transferred. The
 former auth/UI claim is retired; its paths require new narrow claims. Current map, trust
