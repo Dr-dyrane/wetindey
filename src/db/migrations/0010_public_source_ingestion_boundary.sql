@@ -332,12 +332,12 @@ DECLARE
 	capture_lifecycle varchar(32);
 	capture_mode varchar(32);
 	capture_category varchar(64);
-	capture_status varchar(32);
+	capture_status_value varchar(32);
 BEGIN
-	SELECT "lifecycle_state", "permitted_ingestion_mode"
+	SELECT registry_row."lifecycle_state", registry_row."permitted_ingestion_mode"
 	INTO registry_lifecycle, registry_mode
-	FROM "public_source_registry"
-	WHERE "id" = NEW."source_registry_id";
+	FROM "public_source_registry" AS registry_row
+	WHERE registry_row."id" = NEW."source_registry_id";
 
 	IF registry_lifecycle IS DISTINCT FROM 'active'
 		OR registry_mode IS DISTINCT FROM 'fetch_and_stage' THEN
@@ -345,11 +345,12 @@ BEGIN
 			USING ERRCODE = '23514';
 	END IF;
 
-	SELECT "source_registry_id", "effective_lifecycle_state",
-		"effective_ingestion_mode", "effective_source_category", "capture_status"
-	INTO capture_registry, capture_lifecycle, capture_mode, capture_category, capture_status
-	FROM "public_source_captures"
-	WHERE "id" = NEW."source_capture_id";
+	SELECT capture_row."source_registry_id", capture_row."effective_lifecycle_state",
+		capture_row."effective_ingestion_mode", capture_row."effective_source_category",
+		capture_row."capture_status"
+	INTO capture_registry, capture_lifecycle, capture_mode, capture_category, capture_status_value
+	FROM "public_source_captures" AS capture_row
+	WHERE capture_row."id" = NEW."source_capture_id";
 
 	IF capture_registry IS DISTINCT FROM NEW."source_registry_id" THEN
 		RAISE EXCEPTION 'candidate capture does not belong to source registry'
@@ -360,7 +361,7 @@ BEGIN
 		OR capture_mode IS DISTINCT FROM 'fetch_and_stage'
 		OR capture_category IS NULL
 		OR capture_category = 'unknown_unsupported'
-		OR capture_status NOT IN ('captured', 'retained_external') THEN
+		OR capture_status_value NOT IN ('captured', 'retained_external') THEN
 		RAISE EXCEPTION 'candidate capture policy does not permit staging'
 			USING ERRCODE = '23514';
 	END IF;

@@ -353,6 +353,18 @@ test("migration enforces immutable evidence, staging policy, and composite linea
     assert.match(migration, new RegExp(`${table}_reject_truncate`));
   }
   assert.match(migration, /public_food_candidates_enforce_staging_policy/);
+  const stagingPolicyFunctionMatch = migration.match(
+    /CREATE FUNCTION "enforce_public_candidate_staging_policy"\(\)[\s\S]*?\$\$;/
+  );
+  assert.ok(stagingPolicyFunctionMatch, "candidate staging policy function must exist");
+  const stagingPolicyFunction = stagingPolicyFunctionMatch[0];
+  assert.match(stagingPolicyFunction, /\bcapture_status_value\b/);
+  assert.match(stagingPolicyFunction, /capture_row\."capture_status"/);
+  assert.doesNotMatch(
+    stagingPolicyFunction,
+    /(?:SELECT|,)\s*"(?:lifecycle_state|permitted_ingestion_mode|source_registry_id|effective_lifecycle_state|effective_ingestion_mode|effective_source_category|capture_status)"\s*(?:,|INTO)/,
+    "candidate staging policy SELECT columns must be table-alias qualified"
+  );
   assert.match(migration, /public_source_captures_enforce_policy_snapshot/);
   assert.match(migration, /effective_policy_version" IS DISTINCT FROM registry_policy_version/);
   assert.match(migration, /registry_lifecycle IS DISTINCT FROM 'active'/);
