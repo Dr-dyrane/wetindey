@@ -3964,12 +3964,17 @@ Outputs:
 - user interviews;
 - and documented go/no-go decision.
 
-**Proposed nearby-user presence roadmap gate.**
-[ADR-016](docs/adr/016-nearby-user-presence.md) remains Proposed. Commit `4e25b8c7`
-contains the unsafe current implementation, and rollout remains disabled. A private,
-exactly two-account Festac pilot and any public rollout have separate Founder, migration,
-safety, authorization, kill-switch, lifecycle, and independent-refutation gates; neither
-is authorized by the roadmap.
+**Accepted nearby-user presence architecture; rollout gate remains closed.**
+[ADR-016](docs/adr/016-nearby-user-presence.md) accepts implementation architecture only:
+signed-in reciprocal opt-in, a fixed 500 m centroid, an explicit foreground lease of no
+more than 15 minutes, optional separately consented display name/avatar, and an accessible
+Community Presence Card with ephemeral rate-limited `Wave`, Block, Report, and Close.
+Commit `4e25b8c7` remains the fail-closed containment state and rollout stays disabled.
+Presence owns frozen-lineage forward migration `0012`; contribution integrity follows at
+`0013` or later. Shared migration, deployment, exactly two-account Festac pilot traffic,
+and public rollout each retain separate Founder, target-evidence, full rate-budget,
+safety, legal, kill-switch, lifecycle, and independent-refutation gates; none is
+authorized by this roadmap.
 
 ---
 
@@ -4468,6 +4473,7 @@ The team should consider pivoting the mechanism or problem when:
 | Public-source Food evidence uses an append-only review boundary | Accepted — see [ADR-013](docs/adr/013-public-source-ingestion-boundary.md) | Government, institutional, association, partner, merchant, and reviewable publication evidence is registered, captured, extracted, deduplicated, and actor-reviewed outside the live observation log. The six-table Food staging boundary is quarantined from offers and public projections. Migration generation is authorized; migration application, promotion, automatic publication, and synthetic corroboration are not |
 | Database desired state is pillar-based and shared rollout is forward-only | Accepted — see [ADR-014](docs/adr/014-pillar-baselines-and-release-migrations.md) | Canonical pillars define the intended schema; numbered Drizzle migrations are release deltas. Applied lineage and ledger evidence are immutable, fresh databases use the latest proven baseline plus later deltas, existing databases receive pending deltas only, and remote ledger reconciliation is exceptional recovery rather than deployment |
 | Live confidence admits observed evidence; synthetic data stays labelled demo | Accepted — see [ADR-015](docs/adr/015-observation-provenance-admissibility.md) | Observed is the only V1 provenance class admissible to current-state confidence. Synthetic remains visible only as zero-confidence labelled demo fallback; partner, reference, and inferred remain quarantined. No provenance-aware deployment may precede authorized target-database application of `0009` |
+| Privacy-safe nearby-user presence implementation architecture | Accepted — see [ADR-016](docs/adr/016-nearby-user-presence.md); rollout disabled | Signed-in reciprocal opt-in uses a fixed 500 m centroid and an explicit foreground lease of no more than 15 minutes. Separate consent may expose only a chosen display name/avatar to reciprocal active sharers. The accessible presence card permits ephemeral rate-limited `Wave`, Block, Report, and Close. `0011` is frozen; presence owns forward `0012`, and contribution integrity begins at `0013` or later. This acceptance does not authorize shared migration, deployment, pilot traffic, or public rollout |
 | Money & Exchange reference and Sample discovery prototype | Accepted — see [ADR-017](docs/adr/017-cbn-reference-rate-converter.md) | Frankfurter’s CBN provider supplies a national reference conversion for USD, GBP, and EUR. Generic bank/BDC points exist only to exercise map/list/filter UI and must remain unmistakably Sample; they are not businesses, licence records, directions, contacts, hours, or outlet rates. |
 
 > **Section 25 and Section 26 describe a TARGET, not the current system.** Verified 16 July 2026:
@@ -4478,19 +4484,19 @@ The team should consider pivoting the mechanism or problem when:
 
 ## 40.2 Open decisions
 
-- [ADR-016](docs/adr/016-nearby-user-presence.md): Founder decision remains open. Commit
-  `4e25b8c7` contains the unsafe current implementation and rollout remains disabled. The
-  recommended target is explicit foreground activation, a fixed 500 m centroid, a maximum
-  15-minute nonrenewing reciprocal lease, signed-in self-excluding reads within a
-  server-owned 5 km radius, maximum 50 opaque no-identity results, bidirectional block,
-  private report, private/no-store snapshots, default-off flag, database kill switch, and
-  immediate stale clearing. An exactly two-account Festac pilot is gated separately from
-    public rollout. Repair `0011` in place only if authoritative evidence proves that no
-    artifact identified as migration `0011`, under any bytes, checksum, or revision, was
-    ever fully or partially applied to any shared target. Otherwise preserve the applied
-    lineage and repair forward with `0012`. Antigravity evidence selects forward repair for
-    Preview because its shared schema contains the `0011` latitude/longitude effects while
-    its Drizzle ledger appears to reach only `0010`; in-place `0011` rewriting is forbidden.
+- [ADR-016](docs/adr/016-nearby-user-presence.md): implementation architecture is
+  accepted, but every operational gate remains open and fail-closed. Commit `4e25b8c7`
+  remains containment; no shared migration, deployment, pilot traffic, or public rollout
+  is authorized. Before an exactly two-account Festac pilot, unresolved gates include
+  exact shared-target and Production evidence, authorized forward `0012`, disposable
+  migration/security refutation, full account/device/network/interaction rate budgets,
+  an exact two-principal allowlist, default-off app flag, database kill switch, named
+  safety responder and backup, block/report retention policy, provider disclosure,
+  counsel-approved notice/retention/deletion rules, and driven foreground lifecycle
+  evidence. `0011` SQL, snapshot, journal, and hash remain frozen because Preview contains
+  its latitude/longitude effects without matching ledger evidence. Presence owns `0012`;
+  contribution integrity follows at `0013` or later. Public rollout requires a separate
+  Founder decision and fresh public-scale safety, legal, and adversarial evidence.
     Production remains UNKNOWN until directly queried. This records no ledger-repair,
     schema-equivalence, migration, or deployment authorization.
 - [ADR-010](docs/adr/010-typed-live-local-information-platform.md): detailed ontology for

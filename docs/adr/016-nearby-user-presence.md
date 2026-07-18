@@ -1,27 +1,29 @@
 # ADR-016: Privacy-safe nearby-user presence pilot
 
 **Date:** 2026-07-18
-**Status:** Proposed
+**Status:** Accepted — implementation architecture only; rollout disabled
 **Decision owner:** WetinDey Founder
 **Scope:** Consent, location minimization, reciprocal discovery, authorization, safety,
 migration ordering, and separate private-pilot and public-rollout gates
 
-> **No approval is recorded by this revision.** Commit `4e25b8c7` contains the current
-> unsafe implementation in the repository; it does not approve presence or prove runtime,
-> database, deployment, or legal readiness. Rollout remains disabled. This ADR stays
-> Proposed until the Founder makes an explicit selection and a later governance change
-> records the resulting status.
+> **Acceptance is not rollout authorization.** The Founder accepts the implementation
+> architecture in this ADR. This decision does not authorize a shared migration,
+> deployment, private-pilot traffic, or public rollout. Commit `4e25b8c7` contains the
+> fail-closed containment state; it does not prove runtime, database, provider, security,
+> operational, or legal readiness. Rollout remains disabled until every applicable gate
+> below has separate, recorded authorization and direct evidence.
 
-## Founder decision record - all choices unchecked
+## Founder decision record - architecture accepted, rollout withheld
 
-The Founder can answer with a short selection such as `A1 B1 C1 D1`. The recommended
-conservative selection is **`A1 B1 C1 D1`**. Checking a choice does not silently change
-this document from Proposed or authorize a deployment, database change, or public launch.
+On 18 July 2026 the Founder selected the conservative implementation architecture:
+**A1, B1, C1, and D1**, with the clarified boundaries recorded in this revision.
+The selection accepts engineering architecture only. It does not authorize a database
+change, deployment, pilot activation, cohort expansion, or public launch.
 
 ### A. Product boundary
 
-- [ ] **A1 - Adopt the conservative target (Recommended):** allow engineering planning
-  only for the complete boundary in this ADR. Tradeoff: lower discovery utility and more
+- [x] **A1 - Adopt the conservative target:** allow bounded implementation planning only
+  for the complete boundary in this ADR. Tradeoff: lower discovery utility and more
   foreground friction in exchange for less precision, enumeration, and contact risk.
 - [ ] **A2 - Keep containment and reject nearby-user presence:** strongest privacy
   outcome; no nearby-person utility is built.
@@ -30,29 +32,28 @@ this document from Proposed or authorize a deployment, database change, or publi
 
 ### B. Private Festac pilot rate budgets
 
-- [ ] **B1 - Require account, device, and network budgets before any pilot
-  (Recommended):** slower pilot start; keeps the private pilot on the public safety path.
-- [ ] **B2 - Explicitly defer those budgets for exactly two allowlisted accounts:** faster
-  private learning, but the Founder accepts the temporary abuse-control gap. The
-  server-enforced allowlist is hard-capped at exactly two account principals, a third
-  account must fail closed, and this exception cannot carry into a larger cohort or public
-  rollout.
+- [x] **B1 - Require account, device, and network budgets before any pilot:** slower pilot
+  start; keeps the private pilot on the public safety path. The disclosure and enforcement
+  budgets must be explicit, server-owned, tested, and recorded before either allowlisted
+  account can activate presence.
+- [ ] **B2 - Defer those budgets:** rejected. The two-account size is not an exception to
+  device, account, session, network, activation, read, interaction, or aggregate-disclosure
+  controls.
 - [ ] **B3 - Do not run the private pilot:** retain only the contained, disabled state.
 
 ### C. Migration path
 
-  - [ ] **C1 - Use the evidence-controlled `0011`/`0012` rule (Recommended):** repair
-    `0011` in place only if authoritative evidence proves that no artifact identified as
-    migration `0011`, under any bytes, checksum, or revision, was ever fully or partially
-    applied to any shared target. Otherwise preserve the applied lineage and repair forward
-    with `0012`.
+- [x] **C1 - Freeze `0011` and repair forward with presence-owned `0012`:** Preview drift
+  proves shared effects without matching ledger evidence. Preserve the current `0011` SQL,
+  snapshot, journal metadata, and hash byte-for-byte. Presence owns the forward `0012`
+  migration; contribution integrity begins at `0013` or later.
 - [ ] **C2 - Defer all presence schema work:** retain containment until the migration
   state and target authorization are available.
 
 ### D. Public rollout
 
-- [ ] **D1 - Keep public rollout unauthorized pending a separate Founder review
-  (Recommended):** a passing two-account pilot is evidence, not launch approval.
+- [x] **D1 - Keep public rollout unauthorized pending a separate Founder review:** a
+  passing two-account pilot is evidence, not launch approval.
 - [ ] **D2 - Rule out public nearby-user presence:** the private pilot, if separately
   chosen, cannot graduate into a public capability.
 
@@ -70,7 +71,7 @@ copy. It is containment only. At-rest profile coordinates and dormant presence D
 renderer remnants remain migration and later implementation concerns. No runtime,
 deployment, shared-database, or legal-readiness claim follows from the commit.
 
-While this ADR is Proposed:
+Under this accepted implementation architecture:
 
 - nearby-user presence must remain disabled;
 - no schema, migration, database, action, UI, map, background task, or deployment change
@@ -80,10 +81,10 @@ While this ADR is Proposed:
 - general local-information browsing remains anonymous. Only this sensitive presence
   projection would require a signed-in viewer.
 
-## Proposed decision
+## Decision
 
-If later accepted, WetinDey may build only a coarse, reciprocal, short-lived presence
-capability. Its entire approved meaning is:
+WetinDey may plan and implement only a coarse, reciprocal, short-lived presence capability
+behind disabled controls. Its entire approved meaning is:
 
 **"This signed-in account explicitly shared this approximate area recently."**
 
@@ -105,11 +106,14 @@ its account moves.
 | Self-exclusion | The viewer is never returned as a subject in the people snapshot |
 | Block | Either account's block excludes both accounts from each other's current and future snapshots |
 | Report | Private, purpose-bound report action available from every returned marker |
+| Presence profile | Separate explicit consent may expose only the account's chosen display name and avatar to reciprocal active sharers; presence activation does not imply this consent |
+| Interaction | An accessible Community Presence Card offers `Wave`, Block, Report, and Close; `Wave` is ephemeral, rate-limited, in-app, and never opens chat or shares contact data |
 | Radius | Server-owned maximum 5 km from the viewer's stored coarse centroid; no client center, viewport, or radius override |
 | Result cap | Maximum 50 subjects per snapshot; no count, pagination, replacement sweep, or hidden remainder |
 | Projection | Coarse centroid plus opaque per-snapshot display/action capabilities only |
-| Excluded fields | No identity, profile, handle, name, contact, avatar, reputation, verification, status, role, contribution history, or stable subject identifier |
+| Excluded fields | Except for separately consented chosen display name and avatar, no profile or identity field; never email, phone, WhatsApp, contact channel, stable auth ID, exact coordinate, precise per-user timestamp, reputation, verification, status, role, or contribution history |
 | Response | Authenticated and private with `Cache-Control: private, no-store`; memory only; never stored by the service worker or offline cache |
+| Transport | Foreground near-real-time snapshots and capability interactions use a bounded authenticated transport with explicit frequency, fan-out, retry, and payload budgets; never claim instantaneous or continuously live accuracy |
 | Controls | Default-off application feature flag and an independent server-owned database kill switch; both must allow the operation |
 | Expiry | Server rejects stale leases and capabilities; every client immediately clears the complete people snapshot when it becomes stale or invalid |
 
@@ -132,6 +136,8 @@ score, profile, or reward state.
 | Identity | Internal authenticated account continuity needed for authorization, block, and report | A field in the presence projection, physical-location proof, or verification |
 | Reputation | Separately earned history from relevant outcomes | Presence frequency, proximity, visibility priority, or a reason to reveal more data |
 | Contact-publication consent | A separate, purpose-specific decision to publish a contact channel | Implied by presence, profile, seller status, identity, or a report |
+| Presence-profile consent | A separate, revocable decision to show one chosen display name and avatar to reciprocal active sharers | Contact consent, public profile publication, verified identity, availability, safety, or permission to expose any other field |
+| Wave | A rate-limited, ephemeral in-app acknowledgement through a snapshot-bound capability | Chat, inbox, follow/friend state, contact sharing, delivery guarantee, or evidence of identity or location |
 | Rewards | Separate recognition or compensation policy | A way to buy presence, rank, precision, identity, verification, or access |
 
 Presence, blocks, reports, lease frequency, and attempted use must not change
@@ -145,7 +151,9 @@ exemption from safety controls.
 The durable preference is default off. Turning it on does not create a lease. Every lease
 requires a new foreground action that explains the audience, 500 m grid centroid,
 15-minute maximum, self-asserted and potentially stale meaning, block/report controls,
-and the absence of identity and contact fields.
+bounded near-real-time behavior, and the exact presence-profile fields—if any—separately
+consented for reciprocal active sharers. Presence activation never grants
+presence-profile consent, and neither consent grants contact publication.
 
 A lease cannot renew. A later foreground action may create a new lease only after the same
 disclosure and a fresh exact input. No saved owner location, profile coordinate, prior
@@ -183,7 +191,7 @@ A response contains no more than 50 subjects and no total count. The server must
 pagination, arbitrary-center search, marker lookup, replacement results, export, or any
 endpoint that turns the cap into an enumeration cursor.
 
-Each response is a new snapshot. Every display token and block/report capability is
+Each response is a new snapshot. Every display token and Wave/block/report capability is
 cryptographically opaque, newly minted for that snapshot, bound server-side to the signed-
 in viewer, one internal subject, one action purpose, the snapshot, and a deadline no later
 than either account's lease expiry. Tokens are not account IDs, are not stable across
@@ -194,12 +202,40 @@ The allowlisted projection is limited to:
 
 - one coarse 500 m cell centroid;
 - one opaque per-snapshot display token;
-- separate opaque block and private-report capabilities; and
+- a chosen display name and avatar only when separate presence-profile consent is active
+  for the subject at query time;
+- separate opaque Wave, block, and private-report capabilities; and
 - one response-level expiry deadline needed for immediate clearing.
 
-It includes no identity, profile, contact, avatar, reputation, verification, contribution,
-role, presence-frequency, exact-distance, exact-time, or stable-link field. Randomized or
-coarse ordering must not imply exact distance, popularity, trust, or recency.
+It includes no email, phone, WhatsApp, contact channel, stable auth ID, public profile
+link, other identity or profile field, reputation, verification, contribution, role,
+presence-frequency, exact-distance, exact coordinate, or precise per-user timestamp.
+Randomized or coarse ordering must not imply exact distance, popularity, trust, or
+recency. Withdrawal of presence-profile consent removes the chosen display name and avatar
+from every new snapshot; existing snapshots still expire or clear under the stricter
+lease deadline and cannot be refreshed from cache.
+
+## Community Presence Card and bounded interaction
+
+Tapping a returned marker opens an accessible Community Presence Card. Its focus order,
+labels, keyboard and screen-reader behavior, dismissal, and minimum touch targets must be
+driven on supported devices. The card exposes exactly `Wave`, Block, Report, and Close.
+It may show the separately consented chosen display name and avatar; otherwise it uses
+neutral, non-identifying copy.
+
+`Wave` is an ephemeral acknowledgement resolved through a purpose-bound, viewer-bound,
+subject-bound, snapshot-bound capability. It creates no chat, inbox, thread, social graph,
+contact exchange, stable recipient handle, or public count. Account, session, device, and
+network budgets bound sends and receipts; retries are idempotent; expiry, block, report
+safety stop, lease revocation, kill switch, or loss of reciprocity fails closed. The
+recipient sees only a short-lived in-app signal while actively participating and cannot
+use it to resolve the sender's auth identity or contact details.
+
+Foreground snapshots and Wave interactions may use polling, server events, or another
+bounded transport selected during implementation, but the boundary must declare and
+enforce connection, request, payload, fan-out, retry, and backoff limits. The product says
+`shared recently` or equivalent; it never promises instantaneous delivery, continuous
+tracking, exact current presence, or live/online status.
 
 ## Block, report, and safety operations
 
@@ -265,35 +301,22 @@ Migration state is a release fact, not an inference from a local file. No presen
 migration may run against a shared target without exact-target authorization and evidence
 for the applied order and bytes of `0009`, `0010`, and `0011`.
 
-  Repair `0011` in place **only if authoritative evidence proves that no artifact identified
-  as migration `0011`, under any bytes, checksum, or revision, was ever fully or partially
-  applied to any shared target**. Otherwise preserve the applied lineage and repair forward
-  with `0012`. Evidence must identify every shared development, preview, staging, and
-  production target in scope and reconcile the migration ledger, exact checksums, deployed
-  revisions, and schema state. Missing access, an unknown target, an ambiguous ledger, or
-  conflicting evidence means universal non-application has not been proved.
+Antigravity evidence records that the shared Preview schema already contains the `0011`
+latitude/longitude effects while its Drizzle ledger appears to reach only `0010`. This
+drift makes `0011` a frozen shared-effect artifact: preserve its SQL, snapshot, journal
+metadata, and hash byte-for-byte. Do not rewrite it in place and do not fabricate ledger
+evidence. Production remains **UNKNOWN** until directly queried under exact-target
+authorization. This evidence does not authorize ledger repair, establish schema
+equivalence, authorize a migration, or authorize deployment.
 
-  Antigravity evidence records that the shared Preview schema already contains the `0011`
-  latitude/longitude effects while its Drizzle ledger appears to reach only `0010`. That
-  evidence selects the forward-repair branch for Preview and forbids rewriting `0011` in
-  place. Because one shared target is enough to prevent universal non-application, the
-  release lineage must preserve `0011` and repair forward with `0012`. Production remains
-  **UNKNOWN** until it is directly queried under exact-target authorization. This evidence
-  does not authorize ledger repair, establish schema equivalence, authorize a migration, or
-  authorize deployment.
-
-If non-application is proved, regenerate and review `0011` in place under one exclusive
-schema lane before its first shared application. Do not create `0012` merely to repair an
-unapplied `0011`.
-
-  If any artifact identified as migration `0011` was fully or partially applied anywhere
-  shared, or universal non-application cannot be proved, preserve `0011` and its ledger
-  evidence byte-for-byte and create forward migration `0012`. `0012` must first disable the
-  unsafe presence path, revoke and purge its data, and drop unsafe profile-coordinate
-  storage, policies, functions, indexes, and grants. Only after that destructive boundary is
-  complete may the same reviewed release install the coarse lease, block, private-report,
-  capability, kill-switch, RLS, and least-privilege role boundary. No old exact or profile
-  coordinate may be copied or backfilled into a lease.
+Presence owns forward migration `0012`. Contribution integrity follows at `0013` or later
+and must not reuse or widen the presence migration. `0012` must first disable the unsafe
+presence path, revoke and purge its data, and drop unsafe profile-coordinate storage,
+policies, functions, indexes, and grants. Only after that destructive boundary is complete
+may the same reviewed release install the coarse lease, presence-profile consent, Wave,
+block, private-report, snapshot-capability, kill-switch, RLS, bounded-transport support,
+and least-privilege role boundary. No old exact or profile coordinate may be copied or
+backfilled into a lease.
 
 A disposable migration and security harness must prove both the relevant fresh-baseline
 path and the exact existing-lineage path selected above. It must exercise expiry,
@@ -314,16 +337,20 @@ A private pilot and public rollout are separate decisions. The private pilot is 
 small public launch and does not authorize discovery by any account outside its allowlist.
 Every gate below must have recorded evidence before the first private activation:
 
-- the Founder selection is recorded and ADR status is changed explicitly in a follow-up;
+- this accepted architecture remains distinct from an explicit private-pilot
+  authorization;
 - repository containment at `4e25b8c7` remains intact until the complete replacement
   boundary is ready;
 - an exact server allowlist contains exactly two named internal account principals and
   denies a third account before any location input or result processing;
+- the device, account, session, and network identifiers used for abuse control, their
+  processors and retention, and every activation/read/interaction/disclosure rate budget
+  are fully disclosed before either participant consents;
 - the server enforces an approved Festac geography boundary for both activation and read;
   a client viewport, label, address, or claimed neighborhood is not the geography gate;
 - both the default-off feature flag and database kill switch are implemented, exercised,
   and owned by named operators;
-- block and private report work before presence is enabled;
+- Wave rate limits, block, and private report work before presence is enabled;
 - one named safety responder, one backup, a report channel, response steps, and authority
   to stop the pilot are recorded;
 - the dedicated least-privilege database role and RLS boundary are proved with denial
@@ -331,23 +358,16 @@ Every gate below must have recorded evidence before the first private activation
 - exact migration-state proof selects the `0011` or `0012` path, and the disposable
   migration/security harness passes independently;
 - clear copy states approximate 500 m area, 15-minute maximum, self-asserted and possibly
-  stale meaning, reciprocal two-account audience, no identity/contact, and stop/block/report
-  behavior;
+  stale meaning, reciprocal two-account audience, separately consented chosen display
+  name/avatar, no contact or stable identity disclosure, bounded near-real-time behavior,
+  and Wave/stop/block/report behavior;
 - the complete foreground activation, stop, expiry, error, offline, sign-out, block,
   report, and kill-switch snapshot lifecycle is driven, not inferred from a build;
 - an independent adversarial reviewer defaults to refuted where evidence is thin and
   records no unresolved safety finding; and
-- the rate-budget mode is exactly B1 or B2. Silence is not a B2 exception.
-
-If B2 is selected, the exception defers only account/device/network activation, read, and
-aggregate disclosure budgets for this exact two-account allowlist. It does not defer
-authentication, reciprocity, explicit activation, the 500 m grid, 15-minute nonrenewing
-lease, self-exclusion, bidirectional block, private report, Festac gate, 5 km radius,
-50-response cap, opaque snapshot capabilities, private/no-store responses, least-
-privilege role, feature flag, kill switch, or immediate stale clearing. Changing either
-allowlisted account, adding a third account, widening geography, or exposing the feature
-outside the private flag ends the exception. Full budgets are required before any cohort
-expansion or public review.
+- account, session, device, network, activation, read, interaction, retry, fan-out, and
+  aggregate-disclosure budgets are documented, enforced, and directly refuted with no
+  two-account exception.
 
 ## Public rollout gates
 
@@ -378,8 +398,9 @@ No public flag may be enabled merely because two allowlisted accounts completed 
 
 - Explicit activation and a maximum 15-minute nonrenewing lease create friction and may
   make the feature too weak to justify its safety cost.
-- A fixed 500 m centroid and no identity, avatar, contact, reputation, or verification
-  fields reduce utility but also reduce targeting and false-trust cues.
+- A fixed 500 m centroid, optional separately consented display name/avatar, and exclusion
+  of contact, stable identity, reputation, and verification fields constrain utility and
+  reduce targeting and false-trust cues; sparse-cell and recognition risk still remain.
 - Reciprocity, authentication, allowlists, blocks, reports, caps, and rate budgets reduce
   abuse; they do not prove physical proximity or eliminate collusion, coercion, account
   compromise, sparse-cell identification, or Sybil risk.
@@ -400,17 +421,19 @@ must assign qualified policy/counsel owners to decide:
   records, abuse-control identifiers, processors, and cross-border handling;
 - minimum and maximum retention, access, deletion, appeal, and escalation rules for private
   reports and durable blocks; and
-- whether B2's explicit two-account rate-budget deferral is an acceptable temporary product
-  risk. Engineering can enforce the selected answer but cannot accept that risk silently.
+- the approved retention and deletion schedule for ephemeral Waves and their abuse-control
+  records. Engineering can enforce the selected answer but cannot invent it.
 
 ## Out of scope
 
 This ADR does not authorize:
 
 - fulfilment, delivery, dispatch, courier integration, tracking, cart, checkout, or payment;
-- public avatars or any avatar in a presence response;
+- public avatars or any avatar disclosed without separate, revocable presence-profile
+  consent to reciprocal active sharers;
 - claims that a live person, verified person, active user, or trusted contributor is nearby;
-- direct contact, messaging, follow/friend mechanics, or contact-publication consent;
+- direct contact, chat or messaging, follow/friend mechanics, or contact-publication
+  consent; an ephemeral rate-limited `Wave` is the only accepted interaction;
 - paid verification, purchasable reputation, priority visibility, or reward-based access;
 - broad social discovery, people search, profiles, stable links, counts, pagination, or
   exports;
