@@ -381,7 +381,11 @@ safety/integrity lanes until their separate gates are independently satisfied.
   selection, coarse area/country label only, short expiry, immediate revoke, no background
   tracking, and no automatic exact-location disclosure on interaction. Global visibility
   to “any signed-in user” is a separate high-risk privacy/legal gate and is not authorized.
-  No Remote Sharing path is claimed.
+  The future Trusted Circle audience is invite/QR-based with mutual acceptance, coarse
+  scope, expiry, and immediate revoke; it has no contact sync or global directory. It
+  remains a pathless concept, separate from Nearby Presence, pending counsel/privacy
+  approval, exact future ownership, and independent privacy refutation. No Remote Sharing
+  path is claimed.
 - Catalog Stewardship Engineer task
   `019f75a3-f38d-7893-9b82-2d6871a2563c` completed in path-scoped commit `32b15ae` over
   exactly `src/db/seed.ts` and `src/db/seedContent.ts`; an independent static refuter
@@ -442,8 +446,11 @@ safety/integrity lanes until their separate gates are independently satisfied.
   report-endpoint call sites. Dynamic/no-store HTML, environment-specific policies, Blob
   CSP, and report-only rollout remain P1/P2 dependencies. The assessment claims no path,
   authorizes no implementation, and involved no edits, tests, browser, or DB access.
-- The next conflict-free lane is H6 ADR-020 governance. Product & Data Governance
-  Architect `019f7599-0eaa-7423-9ebf-a1bfea8efe37` exclusively owns
+- The H6 ADR-020 governance handoff to Product & Data Governance Architect
+  `019f7599-0eaa-7423-9ebf-a1bfea8efe37` became stale: repeated finish prompts produced no
+  file-change or commit evidence. That employee is retired from this claim, which is
+  recovered without widening and reassigned to H6 ADR-020 Governance Worker
+  `/root/h6_adr020_governance`. The replacement exclusively owns
   `docs/adr/020-per-request-nonce-content-security-policy.md`, `DECISIONS.md`,
   `WETINDEY_BIBLE.md`, and `docs/architecture/SERVICE-ARCHITECTURE.md`. Security & Privacy
   Engineering Lead `019f75e5-8c04-74c0-9392-d9f741a7a131` is the independent refuter.
