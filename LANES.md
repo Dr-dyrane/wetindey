@@ -735,3 +735,7 @@ The former Motion diagnosis worker is no longer addressable. Mendel (`019f7638-4
 ### H20 Button color-feedback correction
 
 Huygens (`019f7642-a739-7382-9af8-4b631085b775`) inspected only `src/design-system/components/Button.tsx` and found H20 already corrected in `HEAD`: emitted `active:opacity-*` utilities are present and no dead `bg-opacity-*` or `active:bg-accent/80` remains. No edit or commit was needed; the path is released.
+
+### H31 deterministic coverage tie-break
+
+Descartes (`019f7644-8b2a-7910-8221-533a6d7afac1`) confirmed `getCoverageForPoint` still orders only by distance, so coincident active LGA/neighbourhood centroids rely on unspecified PostgreSQL row order. The bounded correction is one query-only change in `src/app/actions.ts`: retain distance first, prefer `areas.type = 'neighborhood'`, then `areas.slug ASC`. Implementation is blocked by retained Contribution ownership of `actions.ts`; no seed, live DB, migration, UI, push, or deployment change is authorized. Acceptance requires static SQL refutation plus a controlled coincident-area fixture when the path is released.
