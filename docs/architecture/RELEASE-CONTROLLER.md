@@ -215,6 +215,12 @@ safety/integrity lanes until their separate gates are independently satisfied.
   circle/avatar 32x32. HI Quality is now assigned independent visible-Safari refutation of
   this exact commit and the remaining direct-pixel evidence for `4b572e0`. The path remains
   claimed and `NO PUSH` remains until verdict, PASS, and explicit handoff.
+- HI Quality also visibly reproduced a Food search mismatch: home Rice shows a price
+  range and seven places, while search `rice` returns `No price yet / Check am`. This is
+  queued evidence intake only and owns no paths until HI Quality supplies its exact
+  evidence and the controller reconciles scope. Do not infer a cause or activate a search
+  lane yet. Keep it separate from category/Aboki and `src/app/page.tsx` hit-target
+  ownership. The prior `c6f304b` static correction is not runtime closure.
 - Nearby Presence governance completed in path-scoped commit
   `c96086007e6f379c1b686b8203deef2c7c5559c2` with independent PASS. Its exact paths were
   `WETINDEY_BIBLE.md` and `docs/adr/016-nearby-user-presence.md`, now released. ADR-016 is
