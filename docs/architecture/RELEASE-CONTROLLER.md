@@ -241,30 +241,30 @@ safety/integrity lanes until their separate gates are independently satisfied.
   attribution, permits CBN labelling only for explicit CBN backing, otherwise uses
   `Frankfurter reference`, preserves the Aboki FX name and non-transaction boundary, and
   authorizes a searchable picker with bundled non-emoji SVG flags.
-- Human Interface Design Engineer task `019f75a5-0fc6-7f40-9a0f-8097ead3b45d` now owns
-  the exclusive ADR-017 implementation lane over exactly `src/app/currency-actions.ts`,
+- Human Interface Design Engineer task `019f75a5-0fc6-7f40-9a0f-8097ead3b45d` completed
+  the exclusive ADR-017 implementation lane at
+  `ed9483c55789c0ad88bcac94befb43a1c2849463` over exactly
+  `src/app/currency-actions.ts`,
   `src/app/_data/reference-currencies.ts`, `src/app/_components/ExchangePanel.tsx`,
   `src/app/_components/CurrencyPickerSheet.tsx`, `src/app/_components/CurrencyFlag.tsx`,
-  `public/icons/currency-flags.svg`, and `public/icons/currency-flags.LICENSE.md`. The
-  sequencing condition was satisfied by `9f7b2c7`, and implementation has started. Scope
-  is a fail-closed live-catalog intersection for at most USD,
-  GBP, EUR, CAD, AUD, GHS, KES, ZAR, AED, CNY, INR, BRL, CHF, JPY, and SAR; typed
-  provider/effective-date data; truthful CBN/Frankfurter labels; amount-first calculation;
-  a searchable deduplicated Recent/Popular/All picker with device-local recents; bundled
-  licensed flags; 44px targets; reduced motion; and honest loading, catalog-empty,
-  pair-unavailable, error, offline, and attribution states. Amount egress, Sample leakage,
-  transaction/wallet/fee/recipient copy, remote flags, page/actions/general-validation
-  edits, DB/schema/migration work, tests, push, and deploy remain excluded. Require one
-  path-scoped commit, independent static refutation, then HI Quality runtime refutation
-  using the single dedicated localhost QA tab before release. The Founder-reaffirmed
+  `public/icons/currency-flags.svg`, and `public/icons/currency-flags.LICENSE.md`.
+  Independent static/diff refutation passed. The exact tree has 28px circular local SVG
+  orbs, pair-keyed rate state, a typed catalog/rate call chain, and truthful
+  provider/effective-date data. No runtime claim exists yet; retain all seven paths pending
+  the newly assigned HI Quality reused-tab runtime verdict. The Founder-reaffirmed
   visual-system rule binds this lane: primary surfaces stay monochrome/neutral so
   controlled color lives in iconography and photography; currency flags are circular local
-  SVG orbs, never emoji or rectangular flag badges.
+  SVG orbs, never emoji or rectangular flag badges. No tests, DB, push, or deploy occurred.
 - Iconography & Visual Systems Lead employee
-  `019f75cf-4d8f-7263-822b-06e846fce7ac` now performs the separate active read-only/
-  pathless wrapper-consistency audit. It owns no code until it proposes exact paths that
-  do not overlap the active seven-path Aboki lane and the controller records an exclusive
-  claim.
+  `019f75cf-4d8f-7263-822b-06e846fce7ac` completed the read-only audit. Accepted
+  direction is: ordinary actions stay neutral; status tones represent only actual states;
+  domain tones stay separate from status; shared wrappers use circular `IconOrb`;
+  authentic flags/photos/avatars may carry color; and parent targets remain 44px. Current
+  inventory ends at ADR-017. Centrally reserve `018-controlled-semantic-iconography.md`
+  for this correction and `019-contribution-integrity-and-moderation.md` for later
+  post-containment 0013 policy. Neither path nor the audit's four proposed documentation
+  paths is active. After H23 releases ADR-006, the next governance claim may be proposed;
+  `WETINDEY_BIBLE.md` remains sequentially exclusive.
 - Product & Data Governance Architect task
   `019f7599-0eaa-7423-9ebf-a1bfea8efe37` completed the H23 read-only assessment and now
   owns exactly `docs/adr/006-freshness-windows.md` for a documentation-only citation
@@ -324,8 +324,11 @@ safety/integrity lanes until their separate gates are independently satisfied.
   excluded. Require one path-scoped local commit, independent static/source refutation,
   then reused-tab browser refutation. No tests, DB, push, or deploy is authorized.
 - H38 offline search remains open but pathless and blocked while Contribution exclusively
-  owns `src/app/actions.ts` and `src/app/page.tsx`. It requires a separate exact claim
-  after those paths release.
+  owns `src/app/page.tsx`. Its old full-error-boundary description is stale: search
+  rejection is caught and `AsyncList` receives an error prop. The narrower residual is
+  that failure clears prior trustworthy rows and no `onRetry` is supplied. The future
+  one-file proposal is a retry token, retaining prior rows, and wiring the existing retry;
+  it requires a separate exact claim after `page.tsx` releases.
 - Preview schema/ledger drift remains proven and quarantined. Production identity, ledger,
   schema/RPC/RLS/grant fingerprint, migration state, compatibility, restore evidence, and
   deployment ordering remain unknown.
