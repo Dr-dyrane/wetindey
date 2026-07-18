@@ -100,9 +100,18 @@ const FOCUSABLE_SELECTOR = [
 ].join(",");
 
 function focusInitial(panel: HTMLElement | null) {
-  const preferred = panel?.querySelector<HTMLElement>("[data-autofocus]");
-  const fallback = panel?.querySelector<HTMLElement>(FOCUSABLE_SELECTOR);
-  (preferred ?? fallback)?.focus();
+  if (!panel) return;
+
+  const isEnabledVisible = (element: HTMLElement) =>
+    !element.matches("[disabled]") &&
+    !element.closest("[inert], [aria-hidden='true']") &&
+    element.offsetParent !== null;
+  const preferred = Array.from(panel.querySelectorAll<HTMLElement>("[data-autofocus]"))
+    .filter((element) => element.matches(FOCUSABLE_SELECTOR) && isEnabledVisible(element))[0];
+  const fallback = Array.from(panel.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR)).find(
+    isEnabledVisible
+  );
+  (preferred ?? fallback ?? panel).focus();
 }
 
 function trapTab(panel: HTMLElement, event: KeyboardEvent) {
