@@ -19,6 +19,7 @@ document, memo, or research note that disagrees with it.
 | [008](docs/adr/008-category-filtering-and-pillars.md) | Multi-Category Expansion and Core Pillars | Accepted; proposed amendment in ADR-010 | **Expands scope from Food to 6 pillars.** The current selector is partially wired, but a category value does not yet provide a complete typed vertical. |
 | [009](docs/adr/009-polymorphic-ratings-and-reviews.md) | Polymorphic Ratings & Reviews System | Accepted; proposed amendment in ADR-011 | **Lays schema foundation for generic reviews.** It has no live read/write capability yet and must not be treated as trust evidence or a usable rating filter. |
 | [012](docs/adr/012-observation-provenance-boundary.md) | Observation provenance is explicit and fail-closed | Accepted | **Every immutable observation is classified as synthetic, observed, partner, reference, or inferred.** Unknown and historical rows fail closed to synthetic; live writers set observed explicitly. Source type, collection method, moderation, and provenance remain separate. |
+| [013](docs/adr/013-public-source-ingestion-boundary.md) | Public-source food evidence enters an append-only review boundary | Accepted | **Public Food evidence is registered, captured, extracted, deduplicated, and reviewed in six quarantined staging tables.** It does not enter observations or public projections; migration generation is authorized, but migration application and promotion are not. |
 
 ## Proposed ADRs
 
