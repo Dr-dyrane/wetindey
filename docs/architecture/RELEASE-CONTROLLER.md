@@ -200,9 +200,19 @@ safety/integrity lanes until their separate gates are independently satisfied.
   Quality & Release Controller employee. It is event-driven, owns only `LANES.md` and this
   document, stays idle between explicit assignments, and creates no timer, recurring
   automation, duplicate task, or child task.
-- Human Interface commit `4b572e0a666648dd3f9c016616e0c6b161cb981f` remains claimed
-  and awaiting independent direct Safari light/dark and compact/desktop refutation. A
-  commit without that release handoff is not behavioral or release evidence.
+- HI Quality **REFUTED** Human Interface commit
+  `4b572e0a666648dd3f9c016616e0c6b161cb981f`: required pixels were unavailable through
+  its failed connector, and `src/app/page.tsx` retains confirmed 32x32 Add/Profile hit
+  targets. Static category/Aboki changes otherwise had no scoped defect, so
+  `src/app/_components/CategorySelectorSheet.tsx` and
+  `src/app/_components/ExchangePanel.tsx` are released unless later direct pixels find a
+  defect.
+- Exact one-file ownership of `src/app/page.tsx` transfers to Human Interface Design
+  Engineer task `019f75a5-0fc6-7f40-9a0f-8097ead3b45d`. The forward correction must make
+  Add/Profile hit regions at least 44x44 without changing visible icon/avatar scale.
+  Path-scoped commit `d82b87e11faa643840c322e6b1d9fbafd2ee356d` changed exactly
+  `src/app/page.tsx`; it still requires independent visible-Safari refutation by HI
+  Quality. The path remains unreleased until that PASS and explicit handoff.
 - Nearby Presence governance completed in path-scoped commit
   `c96086007e6f379c1b686b8203deef2c7c5559c2` with independent PASS. Its exact paths were
   `WETINDEY_BIBLE.md` and `docs/adr/016-nearby-user-presence.md`, now released. ADR-016 is
@@ -220,10 +230,11 @@ safety/integrity lanes until their separate gates are independently satisfied.
   correctness is not database state.
 - Contribution Integrity & Moderation Engineer task
   `019f75a3-f50d-7180-8e92-0a7aabd8a98c` is queued read-only/pathless pending its exact
-  containment plan. `src/app/page.tsx` remains withheld until HI commit `4b572e0` is
-  independently refuted and released. Contribution migration work is `0013` or later,
-  after presence-owned forward `0012`. Threat model, disposable integration evidence, and
-  independent refutation remain prerequisites to implementation ownership.
+  containment plan. `src/app/page.tsx` remains withheld by the HI Add/Profile 44px lane
+  until its independent visible-Safari PASS and release. Contribution migration work is
+  `0013` or later, after presence-owned forward `0012`. Threat model, disposable
+  integration evidence, and independent refutation remain prerequisites to implementation
+  ownership.
 - Preview schema/ledger drift remains proven and quarantined. Production identity, ledger,
   schema/RPC/RLS/grant fingerprint, migration state, compatibility, restore evidence, and
   deployment ordering remain unknown.
