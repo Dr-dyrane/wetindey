@@ -6,19 +6,30 @@ import {
   NBS_PACKAGE_URL,
 } from "./adapters/nbs-selected-food-price-watch";
 
+const CANONICAL_UTC_MILLISECONDS = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/;
+
+function parseRecordedAt(value: string): string {
+  if (!CANONICAL_UTC_MILLISECONDS.test(value)) {
+    throw new Error("--recorded-at must use canonical ISO-8601 UTC milliseconds (YYYY-MM-DDTHH:mm:ss.sssZ)");
+  }
+  const instant = new Date(value);
+  if (Number.isNaN(instant.valueOf()) || instant.toISOString() !== value) {
+    throw new Error("--recorded-at must be a calendar-valid canonical UTC instant");
+  }
+  return value;
+}
+
 /**
  * Retrieves the approved NBS package into memory only. It never writes package bytes,
  * captures, candidates, database rows, or live Food projections.
  */
 async function main(): Promise<void> {
   const recordedAtFlag = process.argv.indexOf("--recorded-at");
-  const recordedAt = recordedAtFlag < 0 ? undefined : process.argv[recordedAtFlag + 1];
-  if (!recordedAt) {
+  const recordedAtArgument = recordedAtFlag < 0 ? undefined : process.argv[recordedAtFlag + 1];
+  if (!recordedAtArgument) {
     throw new Error("--recorded-at requires the UTC instant recorded by the invoking scheduler");
   }
-  if (Number.isNaN(Date.parse(recordedAt)) || !recordedAt.endsWith("Z")) {
-    throw new Error("--recorded-at must be an ISO-8601 UTC timestamp");
-  }
+  const recordedAt = parseRecordedAt(recordedAtArgument);
   const response = await fetch(NBS_PACKAGE_URL, {
     headers: { accept: "application/octet-stream,application/zip;q=0.9,*/*;q=0.1" },
   });
