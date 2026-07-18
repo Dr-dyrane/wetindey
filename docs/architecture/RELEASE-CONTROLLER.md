@@ -264,7 +264,15 @@ safety/integrity lanes until their separate gates are independently satisfied.
   transaction/wallet/fee/recipient copy, remote flags, page/actions/general-validation
   edits, DB/schema/migration work, tests, push, and deploy remain excluded. Require one
   path-scoped commit, independent static refutation, then HI Quality runtime refutation
-  using the single dedicated localhost QA tab before release.
+  using the single dedicated localhost QA tab before release. The Founder-reaffirmed
+  visual-system rule binds this lane: primary surfaces stay monochrome/neutral so
+  controlled color lives in iconography and photography; currency flags are circular local
+  SVG orbs, never emoji or rectangular flag badges.
+- A separate `Iconography & Visual Systems` wrapper-consistency audit is queued
+  read-only/pathless. It owns no code until its employee proposes exact paths that do not
+  overlap the active seven-path Aboki lane and the controller records an exclusive claim.
+  This visual refinement changes no release authority: unresolved shared migration state
+  keeps the decision strictly **NO PUSH / NO DEPLOY**.
 - Nearby Presence governance completed in path-scoped commit
   `c96086007e6f379c1b686b8203deef2c7c5559c2` with independent PASS. Its exact paths were
   `WETINDEY_BIBLE.md` and `docs/adr/016-nearby-user-presence.md`, now released. ADR-016 is
