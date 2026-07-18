@@ -263,6 +263,62 @@ export async function searchItems(
       FROM live_observations
       GROUP BY item_id, item_variant_id, unit_id, place_id
     ),
+    sample_observations AS (
+      /*
+       * Demo prices are a separate, deliberately zero-confidence projection.
+       * They use the same immutable relationship, time window, and geographic
+       * scope as live observed offers, but never join the mutable offer
+       * projection. A Sample may fill an item only when that item has no live
+       * observed offer at all; the final join enforces that precedence.
+       */
+      SELECT
+        observation.id,
+        variant.item_id,
+        observation.item_variant_id,
+        observation.unit_id,
+        observation.place_id,
+        observation.price_amount,
+        observation.availability_state,
+        observation.observed_at
+      FROM ${observations} observation
+      JOIN ${itemVariants} variant ON variant.id = observation.item_variant_id
+      JOIN matched_items mi ON mi.id = variant.item_id
+      JOIN ${units} sample_unit ON sample_unit.id = observation.unit_id
+      JOIN ${places} sample_place ON sample_place.id = observation.place_id
+      WHERE observation.moderation_status <> 'rejected'
+        AND observation.provenance = 'synthetic'
+        AND observation.observed_at >=
+          now() - make_interval(hours => ${FRESHNESS_POLICY.expirationHours})
+        AND observation.observed_at <= now()
+        ${useLocation ? sql`AND ST_DWithin(sample_place.location, ${searchPoint}::geography, ${radiusM})` : sql``}
+    ),
+    sample_offers AS (
+      /*
+       * Keep sample price semantics aligned with live_offers: one offer per
+       * persisted triple, available-only price range, newest report wins for
+       * availability, and a deterministic tie-break. This CTE is never trust
+       * evidence and is never considered while an observed offer exists.
+       */
+      SELECT
+        item_id,
+        item_variant_id,
+        unit_id,
+        place_id,
+        (MIN(price_amount) FILTER (
+          WHERE availability_state = 'available'
+        ))::int AS price_min,
+        (MAX(price_amount) FILTER (
+          WHERE availability_state = 'available'
+        ))::int AS price_max,
+        (array_agg(
+          availability_state
+          ORDER BY observed_at DESC, id ASC
+        ))[1] AS availability_state,
+        MAX(observed_at) AS last_observed_at,
+        (array_agg(id ORDER BY observed_at DESC, id ASC))[1] AS latest_observation_id
+      FROM sample_observations
+      GROUP BY item_id, item_variant_id, unit_id, place_id
+    ),
     offer_units AS (
       SELECT
         item_id,
@@ -274,6 +330,20 @@ export async function searchItems(
     modal_unit AS (
       SELECT DISTINCT ON (item_id) item_id, unit_id
       FROM offer_units
+      ORDER BY item_id, offers_in_unit DESC, unit_id
+    ),
+    sample_offer_units AS (
+      SELECT
+        item_id,
+        unit_id,
+        COUNT(*) AS offers_in_unit
+      FROM sample_offers
+      GROUP BY item_id, unit_id
+    ),
+    sample_modal_unit AS (
+      /* The modal demo unit matters only when live observed offers are absent. */
+      SELECT DISTINCT ON (item_id) item_id, unit_id
+      FROM sample_offer_units
       ORDER BY item_id, offers_in_unit DESC, unit_id
     ),
     fallback_candidates AS (
@@ -396,19 +466,40 @@ export async function searchItems(
     resolved_unit AS (
       SELECT 
         mi.id AS item_id,
-        COALESCE(mu.unit_id, fallback.unit_id) AS unit_id
+        COALESCE(
+          mu.unit_id,
+          CASE
+            WHEN fallback.has_synthetic
+              AND NOT fallback.has_observed
+              AND NOT fallback.has_other_inadmissible
+            THEN sample_mu.unit_id
+          END,
+          fallback.unit_id
+        ) AS unit_id
       FROM matched_items mi
       LEFT JOIN modal_unit mu ON mu.item_id = mi.id
+      LEFT JOIN sample_modal_unit sample_mu ON sample_mu.item_id = mi.id
       LEFT JOIN fallback_relationship fallback ON fallback.item_id = mi.id
     )
     SELECT
       i.id, i.slug, i.canonical_name AS name, i.description,
       i.image_url, i.image_attribution, i.image_license, i.image_source_url,
       u.display_name                                   AS "unitLabel",
-      COALESCE(COUNT(o.item_variant_id), 0)::int       AS "offerCount",
-      COALESCE(COUNT(DISTINCT o.place_id), 0)::int     AS "placeCount",
-      MIN(o.price_min)::int                            AS "priceFrom",
-      MAX(COALESCE(o.price_max, o.price_min))::int     AS "priceTo",
+      COALESCE(
+        NULLIF(COUNT(o.item_variant_id), 0),
+        COUNT(sample.item_variant_id),
+        0
+      )::int                                           AS "offerCount",
+      COALESCE(
+        NULLIF(COUNT(DISTINCT o.place_id), 0),
+        COUNT(DISTINCT sample.place_id),
+        0
+      )::int                                           AS "placeCount",
+      COALESCE(MIN(o.price_min), MIN(sample.price_min))::int AS "priceFrom",
+      COALESCE(
+        MAX(COALESCE(o.price_max, o.price_min)),
+        MAX(COALESCE(sample.price_max, sample.price_min))
+      )::int                                           AS "priceTo",
       COALESCE(
         (array_agg(
           o.item_variant_id
@@ -453,6 +544,17 @@ export async function searchItems(
     JOIN ${units} u ON u.id = ru.unit_id
     LEFT JOIN live_offers o ON o.item_id = i.id AND o.unit_id = ru.unit_id
     LEFT JOIN fallback_trust_context fallback_trust ON fallback_trust.item_id = i.id
+    LEFT JOIN sample_offers sample
+      ON sample.item_id = i.id
+      AND sample.unit_id = ru.unit_id
+      /* Only a pure synthetic fallback can publish a visibly-labelled Sample. */
+      AND fallback_trust.has_synthetic
+      AND NOT fallback_trust.has_observed
+      AND NOT fallback_trust.has_other_inadmissible
+      /* Observed evidence always owns the item's public price projection. */
+      AND NOT EXISTS (
+        SELECT 1 FROM live_offers observed WHERE observed.item_id = i.id
+      )
     GROUP BY
       i.id,
       u.display_name,
