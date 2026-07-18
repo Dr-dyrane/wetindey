@@ -3567,7 +3567,8 @@ Default evidence visibility should be private to moderation unless explicitly ap
 Required baseline:
 
 - HTTPS;
-- secure headers and Content Security Policy;
+- secure headers and the single per-request nonce Content Security Policy accepted by
+  [ADR-020](docs/adr/020-per-request-nonce-content-security-policy.md);
 - CSRF protection for mutations;
 - strict origin checks;
 - input validation;
@@ -3578,6 +3579,18 @@ Required baseline:
 - database least privilege;
 - encrypted secrets;
 - role-based ops access;
+
+ADR-020 accepts security architecture, not runtime completion. Next 15.5.20 must receive
+the same nonce-bearing policy through cloned request headers that the browser receives on
+the response. All three raw inline scripts in `src/app/layout.tsx` and its parser-inserted
+Mapbox script require the nonce. The later enforcing change removes the static
+`vercel.json` CSP in the same commit; two enforcing policies are prohibited because they
+intersect. Nonce-bearing HTML is dynamic, private, and `no-store`.
+
+Preview begins with a production-shaped report-only policy and a real governed collector.
+Production enforcement excludes development exceptions and remains separately
+authorized. The exact Vercel Blob avatar image origin is an open CSP admission gate; no
+wildcard may be guessed. Implementation paths and deployment remain unclaimed.
 - audit logging;
 - dependency scanning;
 - and incident response contacts.
@@ -4490,6 +4503,7 @@ The team should consider pivoting the mechanism or problem when:
 | Privacy-safe nearby-user presence implementation architecture | Accepted — see [ADR-016](docs/adr/016-nearby-user-presence.md); rollout disabled | Signed-in reciprocal opt-in uses a fixed 500 m centroid and an explicit foreground lease of no more than 15 minutes. Separate consent may expose only a chosen display name/avatar to reciprocal active sharers. The accessible presence card permits ephemeral rate-limited `Wave`, Block, Report, and Close. `0011` is frozen; presence owns forward `0012`, and contribution integrity begins at `0013` or later. This acceptance does not authorize shared migration, deployment, pilot traffic, or public rollout |
 | Provider-aware Money & Exchange reference and Sample discovery prototype | Accepted — see [ADR-017](docs/adr/017-cbn-reference-rate-converter.md) | Aboki FX may consider the curated maximum set USD, GBP, EUR, CAD, AUD, GHS, KES, ZAR, AED, CNY, INR, BRL, CHF, JPY, and SAR, while showing only NGN pairs admitted by the validated server catalog. CBN labels require explicit CBN attribution; blended corridors say Frankfurter reference, with accessible provider/date attribution. The amount-first calculator and searchable picker do not exchange money or imply wallet, recipient, send, transfer, fee, or payment. Generic bank/BDC points remain unmistakably Sample and are not businesses, licences, directions, contacts, hours, or outlet rates. |
 | Controlled semantic iconography visual architecture | Accepted — see [ADR-018](docs/adr/018-controlled-semantic-iconography.md); runtime completion unverified | Primary surfaces and ordinary actions are neutral; licensed flags, photography, and avatars may retain authentic color. Domain, status, and rating tokens are separate, disabled future categories stay neutral, and only actual asserted states use confirmed/caution/unavailable/info. `IconOrb` is circular and borderless at 28/32/48 px, decorative by default, with a ≥44 px interactive parent and redundant accessible text. This supersedes provisional universal green-accent, separator, and routine border language without authorizing implementation |
+| Per-request nonce Content Security Policy architecture | Accepted — see [ADR-020](docs/adr/020-per-request-nonce-content-security-policy.md); implementation unclaimed | One request-boundary nonce policy is copied byte-identically to Next 15.5.20 request headers and the browser response. The later enforcing change removes the static Vercel CSP in the same commit, nonces all three raw layout scripts plus parser-inserted Mapbox, and serves nonce HTML dynamic/private/no-store. Report-only evidence, environment separation, exact Blob origin admission, and independent security refutation remain gates; duplicate enforcement is prohibited |
 
 > **Section 25 and Section 26 describe a TARGET, not the current system.** Verified 16 July 2026:
 > `WetinDeyModule` has zero live implementations, `src/modules/food/` is orphaned, and

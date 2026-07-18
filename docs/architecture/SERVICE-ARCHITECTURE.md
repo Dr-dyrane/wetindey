@@ -425,7 +425,7 @@ Ranked by urgency. "Missing" means: no code owns this concern, and the product c
 | **Market Operations as a service** | That Bible chapter is a runbook, not a codebase. Its entire code footprint is a `sources` row per channel and an import that calls `recordObservation({collectionMethod:'scraper'})`. |
 | **Settings service** | Exists, correctly scoped to theme, locale and radius. |
 | **Maps/location integration** | Exists as `MapboxAdapter` and is one of the better parts of the codebase. |
-| **Security as a service** | `vercel.json` already ships five headers — content-type-options, frame-options, XSS-protection, referrer-policy, permissions-policy. Only CSP is missing. Security here is M1 plus M6, not a box on a diagram. |
+| **Security as a service** | Security is not a service box. `vercel.json` ships static headers and a CSP that still permits `'unsafe-inline'`. [ADR-020](../adr/020-per-request-nonce-content-security-policy.md) accepts one later request-boundary nonce policy, not a second service or a second enforcement owner. |
 
 ---
 
@@ -1180,7 +1180,13 @@ Every phase is independently shippable and has an exit criterion someone can che
 - Per-device rate limit on both writes. A signed device cookie → one `sources` row. **Not accounts.**
 - Require **two distinct sources** before an `unavailable` flip earns `trustLevel:'high'`.
 - `resolveContact(placeId)` — server-side, discriminated union, the value column never a field on any returned type. `contactVisibility` → `pgEnum`. Delete the client-side check.
-- Add CSP to `vercel.json`. **Five headers already ship** — content-type-options, frame-options, XSS-protection, referrer-policy, permissions-policy. CSP is the only gap.
+- Implement ADR-020's single per-request nonce CSP. In the same enforcing change, remove
+  the static CSP from `vercel.json`; retain the other static security headers. Nonce all
+  three raw layout scripts and the parser-inserted Mapbox script, give Next 15.5.20 the
+  byte-identical policy on cloned request headers and the response, and make nonce-bearing
+  HTML dynamic, private, and `no-store`. Preview report-only evidence, environment
+  separation, exact Blob image-origin admission, and independent security refutation are
+  gates. No duplicate middleware, proxy, route, or platform CSP may enforce beside it.
 - Wire `report-error`'s three declared-unused scopes. Today a silently-dropped price report is invisible by construction.
 
 **Exit.** A scripted flood of well-formed `wasAvailable:false` POSTs from one device does not change any offer's `trustLevel`. `grep -rn "contactChannelValue" src/` returns hits only inside `resolveContact`'s implementation. A thrown server action produces an event ID.
