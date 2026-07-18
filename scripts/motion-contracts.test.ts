@@ -23,6 +23,15 @@ import {
   startScrollExpansionGesture,
   type WheelDetentGesture,
 } from "../src/design-system/components/BottomSheet";
+import {
+  resolveModalFocusOwnership,
+  resolveModalFocusScope,
+  resolveInitialFocusTarget,
+  resolveReturnFocusSource,
+  resolveTabFocusBoundary,
+  shouldActivateModalContainment,
+  shouldMoveInitialFocus,
+} from "../src/design-system/components/ModalSheet";
 
 function test(name: string, run: () => void) {
   try {
@@ -140,12 +149,222 @@ const bottomSheetSource = readFileSync(
 const globalCss = readFileSync(join(process.cwd(), "src/app/globals.css"), "utf8");
 
 test("the modal shell has one document Escape owner", () => {
-  assert.equal((modalSource.match(/document\.addEventListener\("keydown"/g) ?? []).length, 1);
-  assert.match(modalSource, /trapTab\(panelRef\.current, event\)/);
+  assert.equal(
+    (modalSource.match(/document\.addEventListener\("keydown", onKeyDown/g) ?? []).length,
+    1
+  );
+  assert.match(modalSource, /trapTab\(focusScope, event\)/);
+  assert.match(modalSource, /element\.inert = true/);
   assert.match(modalSource, /closest\("\[inert\], \[aria-hidden='true'\]"\)/);
-  assert.match(modalSource, /lastFocusedRef\.current\?\.focus\(\)/);
+  assert.match(modalSource, /document\.addEventListener\("keydown", onKeyDown, true\)/);
+  assert.match(modalSource, /document\.addEventListener\("focusin", onFocusIn, true\)/);
+  assert.match(modalSource, /if \(returnFocus\?\.isConnected\) returnFocus\.focus\(\)/);
   assert.match(modalSource, /window\.history\.pushState/);
   assert.match(modalSource, /window\.addEventListener\("popstate"/);
+});
+
+test("modal focus stays bounded with zero, one, or escaped focusable controls", () => {
+  assert.equal(resolveInitialFocusTarget(-1, 0), "panel");
+  assert.equal(resolveInitialFocusTarget(-1, 1), 0);
+  assert.equal(resolveInitialFocusTarget(1, 3), 1);
+
+  assert.equal(
+    resolveTabFocusBoundary({
+      focusableCount: 0,
+      activeIndex: -1,
+      activeInsidePanel: true,
+      shiftKey: false,
+    }),
+    "panel"
+  );
+  assert.equal(
+    resolveTabFocusBoundary({
+      focusableCount: 0,
+      activeIndex: -1,
+      activeInsidePanel: true,
+      shiftKey: true,
+    }),
+    "panel"
+  );
+  assert.equal(
+    resolveTabFocusBoundary({
+      focusableCount: 1,
+      activeIndex: 0,
+      activeInsidePanel: true,
+      shiftKey: false,
+    }),
+    0
+  );
+  assert.equal(
+    resolveTabFocusBoundary({
+      focusableCount: 1,
+      activeIndex: 0,
+      activeInsidePanel: true,
+      shiftKey: true,
+    }),
+    0
+  );
+  assert.equal(
+    resolveTabFocusBoundary({
+      focusableCount: 3,
+      activeIndex: -1,
+      activeInsidePanel: false,
+      shiftKey: true,
+    }),
+    2
+  );
+  assert.equal(
+    resolveTabFocusBoundary({
+      focusableCount: 3,
+      activeIndex: -1,
+      activeInsidePanel: true,
+      shiftKey: false,
+    }),
+    0
+  );
+  assert.equal(
+    resolveTabFocusBoundary({
+      focusableCount: 3,
+      activeIndex: 1,
+      activeInsidePanel: true,
+      shiftKey: false,
+    }),
+    2
+  );
+  assert.equal(
+    resolveTabFocusBoundary({
+      focusableCount: 3,
+      activeIndex: 1,
+      activeInsidePanel: true,
+      shiftKey: true,
+    }),
+    0
+  );
+  assert.equal(
+    resolveTabFocusBoundary({
+      focusableCount: 3,
+      activeIndex: 2,
+      activeInsidePanel: true,
+      shiftKey: false,
+    }),
+    0
+  );
+  assert.equal(
+    resolveTabFocusBoundary({
+      focusableCount: 3,
+      activeIndex: 0,
+      activeInsidePanel: true,
+      shiftKey: true,
+    }),
+    2
+  );
+});
+
+test("modal focus restoration prefers the active trigger or a recent pointer trigger", () => {
+  assert.equal(
+    resolveReturnFocusSource({
+      hasActiveElement: true,
+      activeIsPageRoot: false,
+      hasRecentPointerTarget: true,
+    }),
+    "pointer"
+  );
+  assert.equal(
+    resolveReturnFocusSource({
+      hasActiveElement: true,
+      activeIsPageRoot: true,
+      hasRecentPointerTarget: true,
+    }),
+    "pointer"
+  );
+  assert.equal(
+    resolveReturnFocusSource({
+      hasActiveElement: true,
+      activeIsPageRoot: true,
+      hasRecentPointerTarget: false,
+    }),
+    null
+  );
+  assert.match(
+    modalSource,
+    /document\.addEventListener\("pointerdown", recordPointerTarget, true\)/
+  );
+  assert.match(
+    modalSource,
+    /document\.addEventListener\("keydown", recordKeyboardIntent, true\)/
+  );
+  assert.doesNotMatch(modalSource, /useEffect\(\(\) => retainPointerTargetTracking/);
+});
+
+test("pushed child focus restores without a competing initial-focus move", () => {
+  assert.equal(resolveModalFocusScope("parent", "child"), "child");
+  assert.equal(resolveModalFocusScope("parent", null), "parent");
+  assert.match(
+    modalSource,
+    /if \(child !== null \|\| !childReturnFocusRef\.current\) return;/
+  );
+  assert.equal(
+    shouldMoveInitialFocus({ childOpen: false, restoringChildFocus: false }),
+    true
+  );
+  assert.equal(
+    shouldMoveInitialFocus({ childOpen: true, restoringChildFocus: false }),
+    true
+  );
+  assert.equal(
+    shouldMoveInitialFocus({ childOpen: false, restoringChildFocus: true }),
+    false
+  );
+});
+
+test("visible dialog order owns focus when the presentation snapshot lags", () => {
+  assert.equal(
+    resolveModalFocusOwnership({
+      hasVisiblePanels: true,
+      isLastVisiblePanel: true,
+      isRegisteredTop: false,
+    }),
+    true
+  );
+  assert.equal(
+    resolveModalFocusOwnership({
+      hasVisiblePanels: true,
+      isLastVisiblePanel: false,
+      isRegisteredTop: true,
+    }),
+    false
+  );
+  assert.equal(
+    resolveModalFocusOwnership({
+      hasVisiblePanels: false,
+      isLastVisiblePanel: false,
+      isRegisteredTop: true,
+    }),
+    true
+  );
+});
+
+test("modal containment follows mounted ownership instead of animation visibility", () => {
+  assert.equal(
+    shouldActivateModalContainment({ mounted: true, open: true, isFocusOwner: true }),
+    true
+  );
+  assert.equal(
+    shouldActivateModalContainment({ mounted: false, open: true, isFocusOwner: true }),
+    false
+  );
+  assert.equal(
+    shouldActivateModalContainment({ mounted: true, open: true, isFocusOwner: false }),
+    false
+  );
+  assert.equal(
+    shouldActivateModalContainment({ mounted: true, open: false, isFocusOwner: true }),
+    false
+  );
+  assert.doesNotMatch(
+    modalSource,
+    /if \(!mounted \|\| !visible(?: \|\| [^)]+)?\) return;/
+  );
 });
 
 test("SheetPicker pushes into an existing presentation shell", () => {

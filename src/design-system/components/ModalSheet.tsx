@@ -44,6 +44,56 @@ export function useModalSheetNavigation(): ModalSheetNavigation | null {
 let presentedStack: string[] = [];
 const presentationListeners = new Set<() => void>();
 const notifyPresentation = () => presentationListeners.forEach((listener) => listener());
+const POINTER_RETURN_WINDOW_MS = 1000;
+let recentPointerTarget: { element: HTMLElement; capturedAt: number } | null = null;
+const modalGlobal = globalThis as typeof globalThis & {
+  __wetindeyModalPointerTracker?: (event: PointerEvent) => void;
+  __wetindeyModalTriggerTracker?: {
+    pointerdown: (event: PointerEvent) => void;
+    keydown: () => void;
+  };
+};
+
+const recordPointerTarget = (event: PointerEvent) => {
+  if (!(event.target instanceof Element)) return;
+  const element = event.target.closest<HTMLElement>(FOCUSABLE_SELECTOR);
+  if (element && isEnabledVisible(element)) {
+    recentPointerTarget = { element, capturedAt: Date.now() };
+  }
+};
+
+const recordKeyboardIntent = () => {
+  recentPointerTarget = null;
+};
+
+if (typeof document !== "undefined") {
+  if (modalGlobal.__wetindeyModalPointerTracker) {
+    document.removeEventListener(
+      "pointerdown",
+      modalGlobal.__wetindeyModalPointerTracker,
+      true
+    );
+    delete modalGlobal.__wetindeyModalPointerTracker;
+  }
+  if (modalGlobal.__wetindeyModalTriggerTracker) {
+    document.removeEventListener(
+      "pointerdown",
+      modalGlobal.__wetindeyModalTriggerTracker.pointerdown,
+      true
+    );
+    document.removeEventListener(
+      "keydown",
+      modalGlobal.__wetindeyModalTriggerTracker.keydown,
+      true
+    );
+  }
+  document.addEventListener("pointerdown", recordPointerTarget, true);
+  document.addEventListener("keydown", recordKeyboardIntent, true);
+  modalGlobal.__wetindeyModalTriggerTracker = {
+    pointerdown: recordPointerTarget,
+    keydown: recordKeyboardIntent,
+  };
+}
 
 function registerPresentation(id: string) {
   presentedStack = [...presentedStack.filter((entry) => entry !== id), id];
@@ -116,42 +166,127 @@ function isEnabledVisible(element: HTMLElement): boolean {
   );
 }
 
+function focusableWithin(panel: HTMLElement): HTMLElement[] {
+  return Array.from(panel.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR)).filter(
+    isEnabledVisible
+  );
+}
+
+export function resolveInitialFocusTarget(
+  preferredIndex: number,
+  focusableCount: number
+): number | "panel" {
+  if (preferredIndex >= 0 && preferredIndex < focusableCount) return preferredIndex;
+  return focusableCount > 0 ? 0 : "panel";
+}
+
+export function resolveTabFocusBoundary({
+  focusableCount,
+  activeIndex,
+  activeInsidePanel,
+  shiftKey,
+}: {
+  focusableCount: number;
+  activeIndex: number;
+  activeInsidePanel: boolean;
+  shiftKey: boolean;
+}): number | "panel" {
+  if (focusableCount === 0) return "panel";
+  if (!activeInsidePanel || activeIndex < 0) return shiftKey ? focusableCount - 1 : 0;
+  return shiftKey
+    ? (activeIndex - 1 + focusableCount) % focusableCount
+    : (activeIndex + 1) % focusableCount;
+}
+
+export function resolveReturnFocusSource({
+  hasActiveElement,
+  activeIsPageRoot,
+  hasRecentPointerTarget,
+}: {
+  hasActiveElement: boolean;
+  activeIsPageRoot: boolean;
+  hasRecentPointerTarget: boolean;
+}): "active" | "pointer" | null {
+  if (hasRecentPointerTarget) return "pointer";
+  if (hasActiveElement && !activeIsPageRoot) return "active";
+  return null;
+}
+
+export function shouldMoveInitialFocus({
+  childOpen,
+  restoringChildFocus,
+}: {
+  childOpen: boolean;
+  restoringChildFocus: boolean;
+}): boolean {
+  return childOpen || !restoringChildFocus;
+}
+
+export function resolveModalFocusOwnership({
+  hasVisiblePanels,
+  isLastVisiblePanel,
+  isRegisteredTop,
+}: {
+  hasVisiblePanels: boolean;
+  isLastVisiblePanel: boolean;
+  isRegisteredTop: boolean;
+}): boolean {
+  return hasVisiblePanels ? isLastVisiblePanel : isRegisteredTop;
+}
+
+export function shouldActivateModalContainment({
+  mounted,
+  open,
+  isFocusOwner,
+}: {
+  mounted: boolean;
+  open: boolean;
+  isFocusOwner: boolean;
+}): boolean {
+  return mounted && open && isFocusOwner;
+}
+
+export function resolveModalFocusScope<T>(panel: T, child: T | null): T {
+  return child ?? panel;
+}
+
+function ownsModalFocus(modalId: string, panel: HTMLElement): boolean {
+  const visiblePanels = Array.from(
+    document.querySelectorAll<HTMLElement>(
+      "[role='dialog'][aria-modal='true'][data-motion-state='visible']"
+    )
+  );
+  return resolveModalFocusOwnership({
+    hasVisiblePanels: visiblePanels.length > 0,
+    isLastVisiblePanel: visiblePanels.at(-1) === panel,
+    isRegisteredTop: presentedStack.at(-1) === modalId,
+  });
+}
+
 function focusInitial(panel: HTMLElement | null) {
   if (!panel) return;
 
-  const preferred = Array.from(panel.querySelectorAll<HTMLElement>("[data-autofocus]"))
-    .filter((element) => element.matches(FOCUSABLE_SELECTOR) && isEnabledVisible(element))[0];
-  const fallback = Array.from(panel.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR)).find(
-    isEnabledVisible
+  const focusable = focusableWithin(panel);
+  const preferredIndex = focusable.findIndex((element) =>
+    element.hasAttribute("data-autofocus")
   );
-  (preferred ?? fallback ?? panel).focus();
+  const target = resolveInitialFocusTarget(preferredIndex, focusable.length);
+  (target === "panel" ? panel : focusable[target]!).focus();
 }
 
 function trapTab(panel: HTMLElement, event: KeyboardEvent) {
-  const focusable = Array.from(panel.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR)).filter(
-    isEnabledVisible
-  );
-  if (focusable.length === 0) {
-    event.preventDefault();
-    panel.focus();
-    return;
-  }
-
-  const first = focusable[0]!;
-  const last = focusable[focusable.length - 1]!;
+  const focusable = focusableWithin(panel);
   const current = document.activeElement;
-  if (event.shiftKey) {
-    if (current === first || !panel.contains(current)) {
-      event.preventDefault();
-      last.focus();
-    }
-    return;
-  }
+  const target = resolveTabFocusBoundary({
+    focusableCount: focusable.length,
+    activeIndex: current instanceof HTMLElement ? focusable.indexOf(current) : -1,
+    activeInsidePanel: current !== null && panel.contains(current),
+    shiftKey: event.shiftKey,
+  });
 
-  if (current === last || !panel.contains(current)) {
-    event.preventDefault();
-    first.focus();
-  }
+  event.preventDefault();
+  if (target === "panel") panel.focus();
+  if (target !== "panel") focusable[target]!.focus();
 }
 
 /**
@@ -169,11 +304,14 @@ export function ModalSheet({
   size = "page",
 }: ModalSheetProps) {
   const modalId = useId();
+  const rootRef = useRef<HTMLDivElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
+  const childPanelRef = useRef<HTMLElement>(null);
   const lastFocusedRef = useRef<HTMLElement | null>(null);
   const onCloseRef = useRef(onClose);
   const childSequence = useRef(0);
   const childHistoryRef = useRef(false);
+  const childReturnFocusRef = useRef<HTMLElement | null>(null);
   const [mounted, setMounted] = useState(open);
   const [visible, setVisible] = useState(false);
   const [child, setChild] = useState<PresentedChild | null>(null);
@@ -186,7 +324,7 @@ export function ModalSheet({
   const clearChild = useCallback(() => {
     setChild((current) => {
       if (current?.returnFocus) {
-        requestAnimationFrame(() => current.returnFocus?.focus());
+        childReturnFocusRef.current = current.returnFocus;
       }
       return null;
     });
@@ -231,6 +369,26 @@ export function ModalSheet({
   };
 
   useEffect(() => {
+    if (child !== null || !childReturnFocusRef.current) return;
+    let restoreFrame = 0;
+    const settleFrame = requestAnimationFrame(() => {
+      restoreFrame = requestAnimationFrame(() => {
+        const returnFocus = childReturnFocusRef.current;
+        childReturnFocusRef.current = null;
+        if (returnFocus?.isConnected) {
+          returnFocus.focus();
+        } else {
+          focusInitial(panelRef.current);
+        }
+      });
+    });
+    return () => {
+      cancelAnimationFrame(settleFrame);
+      if (restoreFrame !== 0) cancelAnimationFrame(restoreFrame);
+    };
+  }, [child]);
+
+  useEffect(() => {
     let frame: number | null = null;
     let timeout: number | null = null;
 
@@ -262,33 +420,133 @@ export function ModalSheet({
 
   useEffect(() => {
     if (!mounted) return;
-    lastFocusedRef.current =
+    const activeElement =
       document.activeElement instanceof HTMLElement ? document.activeElement : null;
-    return () => lastFocusedRef.current?.focus();
+    const activeIsPageRoot =
+      activeElement === document.body || activeElement === document.documentElement;
+    const pointerTarget =
+      recentPointerTarget &&
+      Date.now() - recentPointerTarget.capturedAt <= POINTER_RETURN_WINDOW_MS &&
+      recentPointerTarget.element.isConnected
+        ? recentPointerTarget.element
+        : null;
+    const returnFocusSource = resolveReturnFocusSource({
+      hasActiveElement: activeElement !== null,
+      activeIsPageRoot,
+      hasRecentPointerTarget: pointerTarget !== null,
+    });
+    lastFocusedRef.current =
+      returnFocusSource === "active"
+        ? activeElement
+        : returnFocusSource === "pointer"
+          ? pointerTarget
+          : null;
+    return () => {
+      const returnFocus = lastFocusedRef.current;
+      requestAnimationFrame(() => {
+        if (returnFocus?.isConnected) returnFocus.focus();
+      });
+    };
   }, [mounted]);
 
   useEffect(() => {
-    if (!mounted || !visible || !isTop) return;
+    if (!rootRef.current || !panelRef.current) return;
+    if (
+      !shouldActivateModalContainment({
+        mounted,
+        open,
+        isFocusOwner: ownsModalFocus(modalId, panelRef.current),
+      })
+    ) {
+      return;
+    }
+
+    const siblings = Array.from(document.body.children)
+      .filter((element): element is HTMLElement => element instanceof HTMLElement)
+      .filter((element) => element !== rootRef.current)
+      .map((element) => ({ element, wasInert: element.inert }));
+    siblings.forEach(({ element }) => {
+      element.inert = true;
+    });
+
+    return () => {
+      siblings.forEach(({ element, wasInert }) => {
+        if (element.isConnected) element.inert = wasInert;
+      });
+    };
+  }, [isTop, modalId, mounted, open]);
+
+  useEffect(() => {
+    if (!panelRef.current) return;
+    if (
+      !shouldActivateModalContainment({
+        mounted,
+        open,
+        isFocusOwner: ownsModalFocus(modalId, panelRef.current),
+      })
+    ) {
+      return;
+    }
+    if (
+      !shouldMoveInitialFocus({
+        childOpen: child !== null,
+        restoringChildFocus: childReturnFocusRef.current !== null,
+      })
+    ) {
+      return;
+    }
     const focusTimer = window.setTimeout(
-      () => focusInitial(panelRef.current),
+      () => {
+        const panel = panelRef.current;
+        if (panel && ownsModalFocus(modalId, panel)) {
+          focusInitial(resolveModalFocusScope(panel, childPanelRef.current));
+        }
+      },
       reducedMotion ? 0 : motion.duration.instant
     );
     return () => window.clearTimeout(focusTimer);
-  }, [child?.id, isTop, mounted, reducedMotion, visible]);
+  }, [child?.id, isTop, modalId, mounted, open, reducedMotion]);
 
   useEffect(() => {
-    if (!mounted || !visible || !isTop) return;
+    if (!mounted || !open) return;
     const onKeyDown = (event: KeyboardEvent) => {
+      const panel = panelRef.current;
+      if (!panel || !ownsModalFocus(modalId, panel)) return;
+      const focusScope = resolveModalFocusScope(panel, childPanelRef.current);
       if (event.key === "Escape") {
         event.preventDefault();
+        event.stopImmediatePropagation();
         requestCloseRef.current();
         return;
       }
-      if (event.key === "Tab" && panelRef.current) trapTab(panelRef.current, event);
+      if (event.key === "Tab") {
+        event.stopImmediatePropagation();
+        trapTab(focusScope, event);
+      }
     };
-    document.addEventListener("keydown", onKeyDown);
-    return () => document.removeEventListener("keydown", onKeyDown);
-  }, [isTop, mounted, visible]);
+    const onFocusIn = (event: FocusEvent) => {
+      const panel = panelRef.current;
+      const focusScope = panel
+        ? resolveModalFocusScope(panel, childPanelRef.current)
+        : null;
+      if (
+        !panel ||
+        !focusScope ||
+        !ownsModalFocus(modalId, panel) ||
+        !(event.target instanceof Node) ||
+        focusScope.contains(event.target)
+      ) {
+        return;
+      }
+      focusInitial(focusScope);
+    };
+    document.addEventListener("keydown", onKeyDown, true);
+    document.addEventListener("focusin", onFocusIn, true);
+    return () => {
+      document.removeEventListener("keydown", onKeyDown, true);
+      document.removeEventListener("focusin", onFocusIn, true);
+    };
+  }, [isTop, modalId, mounted, open]);
 
   useEffect(() => {
     const onPopState = () => {
@@ -327,7 +585,10 @@ export function ModalSheet({
   };
 
   const panel = (
-    <div className="fixed inset-0 z-50 flex flex-col justify-end md:items-center md:justify-center md:p-6">
+    <div
+      ref={rootRef}
+      className="fixed inset-0 z-50 flex flex-col justify-end md:items-center md:justify-center md:p-6"
+    >
       <button
         type="button"
         aria-label={child ? "Back to previous step" : "Dismiss"}
@@ -417,6 +678,7 @@ export function ModalSheet({
 
         {child && (
           <section
+            ref={childPanelRef}
             aria-label={child.title}
             className={`stack-surface absolute inset-0 z-10 flex min-h-0 flex-col overflow-hidden ${transition.push}`}
           >
