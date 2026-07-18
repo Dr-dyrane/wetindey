@@ -1,8 +1,8 @@
 # ADR-014: Pillar baselines and release migrations
 
-**Status:** Accepted  
-**Date:** 2026-07-17  
-**Decision owner:** WetinDey owner  
+**Status:** Accepted
+**Date:** 2026-07-17
+**Decision owner:** WetinDey owner
 **Scope:** Desired database state, Drizzle release lineage, Neon rollout, restoration, and exceptional ledger reconciliation
 
 ## Context

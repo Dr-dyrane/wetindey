@@ -1,7 +1,7 @@
 # WetinDey Service Architecture
 
 **Date:** 16 July 2026
-**Status:** **ACCEPTED — this is the architecture of record.** Ratified by [ADR-002](../adr/002-service-architecture-of-record.md) on 16 July 2026. Where this document and any other document disagree, this one wins. **Where this document and the code disagree, the code wins** and this document must be corrected.
+**Status:** **ACCEPTED — this is the architecture of record beneath accepted ADRs.** Ratified by [ADR-002](../adr/002-service-architecture-of-record.md) on 16 July 2026. Accepted ADRs are the decision authority and this document yields to them. Subject to accepted ADRs, where this document and another architecture or planning document disagree, this one wins. **Where this document and the code disagree about the current implementation, the code is evidence of what exists** and this document must be corrected; implementation drift does not silently supersede an accepted ADR.
 
 Accepted with three qualifications, from ADR-002:
 

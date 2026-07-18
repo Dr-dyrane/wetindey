@@ -1,7 +1,7 @@
 # WetinDey database bootstrap and lineage runbook
 
-**Date:** 2026-07-17  
-**Status:** Operational requirement under [ADR-014](../adr/014-pillar-baselines-and-release-migrations.md)  
+**Date:** 2026-07-17
+**Status:** Operational requirement under [ADR-014](../adr/014-pillar-baselines-and-release-migrations.md)
 **Scope:** Blank-database reconstruction, disposable validation, and lineage evidence
 
 ## Current truth
