@@ -373,7 +373,7 @@ const run = async () => {
       observations.sort((a, b) => b.at.getTime() - a.at.getTime()); // newest first
 
       await db.insert(schema.observations).values(
-        observations.map((o, i) => ({
+        observations.map((o, i): typeof schema.observations.$inferInsert => ({
           itemVariantId: variantRow.id,
           unitId: unit.id,
           placeId: place.id,
