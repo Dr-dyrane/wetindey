@@ -884,3 +884,62 @@ exact non-overlapping documentation handoff, reconciliation against current code
 accepted ADRs, and independent refutation. Contribution, iconography-runtime,
 Safari/artificial-state, shared-migration, `NO PUSH`, and `NO DEPLOY` dependencies remain
 unchanged.
+## Founder feedback routing
+
+The complete request register for this thread lives in
+`docs/product/FOUNDER-FEEDBACK.md`. Every founder complaint must receive an
+entry there and a corresponding lane status here before it is described as
+underway. A proposal is not a claim: ownership requires an exact path list,
+one accountable department/employee, acceptance criteria, and an independent
+refuter.
+
+### Department routing
+
+| Department | Current responsibility | Status |
+| --- | --- | --- |
+| Executive Leadership / Product Management | Founder feedback triage, product direction, phase order, and scope decisions | Active |
+| Program Management / Release Control | Convert feedback into bounded lanes, prevent duplicate tasks, coordinate dependencies, and release evidenced commits | Active |
+| Human Interface / Iconography | Solid semantic icon orbs, sheet hierarchy, category trigger, market-detail visual system, and light/dark accessibility refutation | Awaiting exact claims |
+| Maps Engineering | Place/market symbols, selected marker state, map visual language, and map-specific runtime refutation | Partially active; exact scope required |
+| Presence / Safety Engineering | Consent-based nearby presence, trusted people, blocks, reports, leases, and pilot gates | Blocked by execution/privacy gates |
+| Catalog Stewardship | Item CRUD, aliases, variants, units, category mapping, reference imagery, attribution, and duplicate merging | Unassigned |
+| Observation Evidence Media | Report attachments, receipts, EXIF removal, privacy, hashing, size limits, moderation, retention, and offline uploads | Unassigned |
+| Seller Platform / Identity & Access | Seller onboarding, scoped RBAC, verification, consented contact, and seller operations | Architecture approved; implementation unassigned |
+| Currency / Money Experience | Aboki FX provider-aware catalog, flags, reverse conversion, attribution, and offline states | Awaiting exact implementation claim |
+| Trust / Data Governance | Provenance admissibility, observed-only confidence, sample labelling, reputation, and source review | Stage 0 dependencies remain |
+| Security & Privacy | CSP reporting, privacy disclosures, account deletion, presence safety, redaction, retention, and independent refutation | H6 implementation awaiting owner |
+| Quality Engineering | Executable migration, contribution, browser, accessibility, PWA, and release gates | Underpowered; claim next bounded lane |
+| Developer Tools / Architecture | Live page modularisation only after correctness work, with no orphan modules | Deferred |
+| Operations / Field Data | Food pilot coverage, freshness review, field observations, merchant onboarding, and support operations | Unassigned |
+| Legal / Privacy Counsel | Final legal copy, retention, deletion, processor, consent, age, and public-presence policy decisions | External approval required |
+| Marketing / Community | Community, comments, reviews, helpful votes, and public growth loops | Deferred until Food truth loop is safe |
+
+### Immediate routing queue
+
+1. **Market Details Sheet Visual Systems**: Human Interface / Iconography;
+   exact paths must include `ItemDetailSheet.tsx`, `ListRow.tsx`,
+   `SheetPicker.tsx`, and `GetItSheet.tsx`. Preserve truth, trust, and
+   fulfilment boundaries.
+2. **Solid Icon Orb Foundation**: Human Interface / Iconography; exact paths
+   are the foundation paths recorded in the founder feedback register. Use
+   licensed solid glyphs, not an assumed Apple SF Symbols dependency.
+3. **Map Symbols and Nearby Presence**: Maps Engineering owns map rendering
+   paths; Presence / Safety owns presence data and privacy paths. Do not merge
+   these lanes or use simulated centres to unlock real peers.
+4. **Seller Onboarding and Reusable RBAC**: Seller Platform / Identity & Access;
+   architecture first, then exact server/UI/schema claims with security and
+   privacy refutation.
+5. **Aboki FX**: Currency / Money Experience; follow ADR-017 and keep provider
+   attribution, flags, catalog intersection, reverse conversion, and no
+   transaction-shaped language.
+6. **CSP Reporting**: Security & Privacy; report-only collector implementation
+   remains pending exact path ownership, redaction/retention proof, and
+   independent refutation.
+7. **Food Truth & Pilot Operations**: Trust, Quality, Operations, and Seller
+   Platform; search schema repair, observed-only trust, write safety, tests,
+   field operations, and controlled pilot precede reviews or new categories.
+
+Departments marked `Unassigned`, `Awaiting exact claims`, or `Architecture
+approved` must not edit opportunistically. The controller must either record a
+bounded claim or report the blocker. Completed lanes should be released and
+their temporary employee tasks archived rather than repeatedly spawned.
