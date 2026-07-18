@@ -265,7 +265,17 @@ safety/integrity lanes until their separate gates are independently satisfied.
   pathless wrapper-consistency audit. It owns no code until it proposes exact paths that
   do not overlap the active seven-path Aboki lane and the controller records an exclusive
   claim.
-  This visual refinement changes no release authority: unresolved shared migration state
+- Product & Data Governance Architect task
+  `019f7599-0eaa-7423-9ebf-a1bfea8efe37` completed the H23 read-only assessment and now
+  owns exactly `docs/adr/006-freshness-windows.md` for a documentation-only citation
+  repair. Remove historical numeric line examples, normalize shorthand to full path +
+  symbol references, and accurately document that `offerSignal`/`confidenceFor` present
+  server-derived trust while `searchItems`/`getPopularItems`/`getOffersNarrowed` call
+  `getOfferTrustBatch`. Preserve all 24h/72h/144h, newest-observation, ranking,
+  `TRUST_BANDS`, seed-ladder-debt, and deleted `getFoodItemCandidates` decisions. No code
+  or policy change is authorized. Require one local path-scoped commit and independent
+  static refutation; no tests, build, browser, DB, push, or deploy.
+  These documentation updates change no release authority: unresolved shared migration state
   keeps the decision strictly **NO PUSH / NO DEPLOY**.
 - Nearby Presence governance completed in path-scoped commit
   `c96086007e6f379c1b686b8203deef2c7c5559c2` with independent PASS. Its exact paths were
