@@ -11,8 +11,8 @@
  * Every price is in KOBO (naira * 100), because `observations.price_amount` and
  * `offers_current.price_min` are `integer` columns and naira with decimals in a
  * float would drift. The ceiling of a Postgres `integer` is 2,147,483,647 kobo
- * (~₦21.4m); the most expensive row here is a carton of frozen titus at
- * ₦120,000 = 12,000,000 kobo, so there is a wide margin.
+ * (~₦21.4m); every household-scale demo range below remains comfortably under
+ * that ceiling.
  *
  * The anchor is the rice row already in the seed: a 50kg bag of imported
  * parboiled rice at ₦82,000–₦92,000, which is where Lagos actually sits. Every
@@ -82,11 +82,11 @@ export interface SeedUnit {
  * order and with the same codes — replacing its literal array with this one is
  * a no-op for existing rows.
  *
- * The rest exist because the basket needs them and forcing a real item into a
- * wrong unit is a lie about its price. Bread is not sold by the kilogram; eggs
- * are sold by the crate of thirty; Maggi is sold by the sachet. Pricing a loaf
- * against `1kg_measure` would produce a number that is arithmetically fine and
- * factually nonsense.
+ * The rest exist because the consumer catalog needs them and forcing a real
+ * item into a wrong unit is a lie about its price. Bread is not sold by the
+ * kilogram; eggs are sold by the crate of thirty; Maggi is sold by the sachet.
+ * Pricing a loaf against `1kg_measure` would produce a number that is
+ * arithmetically fine and factually nonsense.
  *
  * `congo_cup` and `derica_cup` are real Lagos market measures, not inventions —
  * a congo is the ~1kg milk-cup grain measure, a derica the smaller tomato-tin
@@ -114,22 +114,14 @@ export const SEED_UNITS: SeedUnit[] = [
     notes: "The standard Lagos grain scoop, roughly a kilogram of rice or beans. Volume, so the mass it holds varies by grain."
   },
   {
-    code: "basket",
-    displayName: "Basket",
-    dimension: "count",
-    canonicalQuantity: 1,
-    notes: "The large raffia market basket used for tomatoes and pepper. Size is not standardised; treat the price as indicative of a full basket at that stall."
-  },
-  {
-    code: "25l_keg",
-    displayName: "25L keg",
+    code: "small_market_bowl",
+    displayName: "Small market bowl",
     dimension: "volume",
-    canonicalQuantity: 25,
-    notes: "Jerrycan of cooking oil, the wholesale unit."
+    canonicalQuantity: 1,
+    notes: "A small household market bowl. The measure is not standardised, so the displayed price remains an indicative demo range."
   },
   { code: "crate_30_eggs", displayName: "Crate of 30 eggs", dimension: "count", canonicalQuantity: 30 },
   { code: "loaf", displayName: "Loaf", dimension: "count", canonicalQuantity: 1 },
-  { code: "carton", displayName: "Carton", dimension: "count", canonicalQuantity: 1, notes: "Pack count differs per product — see the variant's attributes." },
   { code: "tin", displayName: "Tin", dimension: "count", canonicalQuantity: 1, notes: "Tin size differs per product — see the variant's attributes." },
   { code: "sachet", displayName: "Sachet", dimension: "count", canonicalQuantity: 1 },
   { code: "pack_500g", displayName: "500g pack", dimension: "mass", canonicalQuantity: 0.5 },
@@ -178,12 +170,14 @@ const MARKET_ONLY: PlaceType[] = ["open_market"];
 const MARKET_AND_KIOSK: PlaceType[] = ["open_market", "kiosk"];
 
 /**
- * The basket: 38 items, ~70 variants.
+ * The basket: 38 items with consumer-focused variants.
  *
  * The first eleven slugs are the ones already seeded and are untouched, because
  * `itemImages.ts` keys its verified photos off them. Reordering is safe;
  * renaming is not.
  */
+// Consumer-first policy: list ordinary household quantities before larger
+// measures; wholesale baskets, cartons, and 25L kegs are not V1 demo choices.
 export const SEED_ITEMS: SeedItem[] = [
   // ═══ Grains and staples ═══
   {
@@ -198,6 +192,13 @@ export const SEED_ITEMS: SeedItem[] = [
     ],
     variants: [
       {
+        slug: "rice-congo-loose",
+        displayName: "Loose Rice by the Congo",
+        unitCode: "congo_cup",
+        priceKobo: { min: naira(1_900), max: naira(2_500) },
+        attributes: { grade: "Parboiled", packaging: "Measured from an open bag" }
+      },
+      {
         slug: "rice-50kg-imported",
         displayName: "Imported Parboiled Rice",
         unitCode: "50kg_bag",
@@ -210,13 +211,6 @@ export const SEED_ITEMS: SeedItem[] = [
         unitCode: "50kg_bag",
         priceKobo: { min: naira(72_000), max: naira(92_000) },
         attributes: { grade: "Destoned", origin: "Nigerian", packaging: "50kg bag" }
-      },
-      {
-        slug: "rice-congo-loose",
-        displayName: "Loose Rice by the Congo",
-        unitCode: "congo_cup",
-        priceKobo: { min: naira(1_900), max: naira(2_500) },
-        attributes: { grade: "Parboiled", packaging: "Measured from an open bag" }
       }
     ]
   },
@@ -233,17 +227,17 @@ export const SEED_ITEMS: SeedItem[] = [
     ],
     variants: [
       {
+        slug: "beans-oloyin-congo",
+        displayName: "Oloyin Beans by the Congo",
+        unitCode: "congo_cup",
+        priceKobo: { min: naira(2_400), max: naira(3_100) }
+      },
+      {
         slug: "beans-oloyin-1kg",
         displayName: "Oloyin Honey Beans",
         unitCode: "1kg_measure",
         priceKobo: { min: naira(2_200), max: naira(2_800) },
         attributes: { grade: "Oloyin", packaging: "Loose, weighed" }
-      },
-      {
-        slug: "beans-oloyin-congo",
-        displayName: "Oloyin Beans by the Congo",
-        unitCode: "congo_cup",
-        priceKobo: { min: naira(2_400), max: naira(3_100) }
       },
       {
         slug: "beans-drum-1kg",
@@ -266,6 +260,12 @@ export const SEED_ITEMS: SeedItem[] = [
     ],
     variants: [
       {
+        slug: "garri-white-congo",
+        displayName: "White Garri by the Congo",
+        unitCode: "congo_cup",
+        priceKobo: { min: naira(800), max: naira(1_200) }
+      },
+      {
         slug: "garri-white-paint",
         displayName: "White Open-Market Garri",
         unitCode: "paint_bucket",
@@ -277,12 +277,6 @@ export const SEED_ITEMS: SeedItem[] = [
         unitCode: "paint_bucket",
         priceKobo: { min: naira(3_600), max: naira(4_600) },
         attributes: { grade: "Ijebu", note: "Sour, fine-grained; the drinking garri" }
-      },
-      {
-        slug: "garri-white-congo",
-        displayName: "White Garri by the Congo",
-        unitCode: "congo_cup",
-        priceKobo: { min: naira(800), max: naira(1_200) }
       }
     ]
   },
@@ -297,17 +291,17 @@ export const SEED_ITEMS: SeedItem[] = [
     ],
     variants: [
       {
+        slug: "garri-yellow-congo",
+        displayName: "Yellow Garri by the Congo",
+        unitCode: "congo_cup",
+        priceKobo: { min: naira(900), max: naira(1_400) }
+      },
+      {
         slug: "garri-yellow-paint",
         displayName: "Yellow Garri",
         unitCode: "paint_bucket",
         priceKobo: { min: naira(3_200), max: naira(4_200) },
         attributes: { grade: "Yellow", note: "Fried with palm oil, which is where the colour comes from" }
-      },
-      {
-        slug: "garri-yellow-congo",
-        displayName: "Yellow Garri by the Congo",
-        unitCode: "congo_cup",
-        priceKobo: { min: naira(900), max: naira(1_400) }
       }
     ]
   },
@@ -368,17 +362,17 @@ export const SEED_ITEMS: SeedItem[] = [
     ],
     variants: [
       {
+        slug: "ogi-wrap-single",
+        displayName: "Single Pap Wrap",
+        unitCode: "each",
+        priceKobo: { min: naira(300), max: naira(600) }
+      },
+      {
         slug: "ogi-wet-1kg",
         displayName: "Wet Pap",
         unitCode: "1kg_measure",
         priceKobo: { min: naira(1_300), max: naira(1_900) },
         attributes: { packaging: "Wrapped in leaf or nylon", note: "Perishable — a few days at most" }
-      },
-      {
-        slug: "ogi-wrap-single",
-        displayName: "Single Pap Wrap",
-        unitCode: "each",
-        priceKobo: { min: naira(300), max: naira(600) }
       }
     ]
   },
@@ -440,16 +434,16 @@ export const SEED_ITEMS: SeedItem[] = [
     ],
     variants: [
       {
-        slug: "plantain-bunch-medium",
-        displayName: "Medium Plantain Bunch",
-        unitCode: "bunch",
-        priceKobo: { min: naira(3_500), max: naira(5_500) }
-      },
-      {
         slug: "plantain-finger-single",
         displayName: "Single Plantain Finger",
         unitCode: "each",
         priceKobo: { min: naira(300), max: naira(600) }
+      },
+      {
+        slug: "plantain-bunch-medium",
+        displayName: "Medium Plantain Bunch",
+        unitCode: "bunch",
+        priceKobo: { min: naira(3_500), max: naira(5_500) }
       }
     ]
   },
@@ -464,17 +458,17 @@ export const SEED_ITEMS: SeedItem[] = [
     ],
     variants: [
       {
+        slug: "tomatoes-small-market-bowl",
+        displayName: "Small Market Bowl of Tomatoes",
+        unitCode: "small_market_bowl",
+        priceKobo: { min: naira(1_200), max: naira(2_500) }
+      },
+      {
         slug: "tomatoes-paint-bucket",
         displayName: "Paint Bucket of Tomatoes",
         unitCode: "paint_bucket",
         priceKobo: { min: naira(4_500), max: naira(8_000) },
         attributes: { note: "Swings hard with the season — cheap in glut, brutal in the dry-season gap" }
-      },
-      {
-        slug: "tomatoes-basket-large",
-        displayName: "Large Basket of Tomatoes",
-        unitCode: "basket",
-        priceKobo: { min: naira(28_000), max: naira(55_000) }
       }
     ]
   },
@@ -518,6 +512,27 @@ export const SEED_ITEMS: SeedItem[] = [
     ],
     variants: [
       {
+        slug: "pepper-rodo-small-market-bowl",
+        displayName: "Small Market Bowl of Ata Rodo",
+        unitCode: "small_market_bowl",
+        priceKobo: { min: naira(1_500), max: naira(3_000) },
+        attributes: { type: "Scotch bonnet", note: "The hot one" }
+      },
+      {
+        slug: "pepper-tatashe-small-market-bowl",
+        displayName: "Small Market Bowl of Tatashe",
+        unitCode: "small_market_bowl",
+        priceKobo: { min: naira(1_200), max: naira(2_500) },
+        attributes: { type: "Red bell", note: "Mild — carries the colour and body of a stew" }
+      },
+      {
+        slug: "pepper-shombo-small-market-bowl",
+        displayName: "Small Market Bowl of Shombo",
+        unitCode: "small_market_bowl",
+        priceKobo: { min: naira(1_000), max: naira(2_200) },
+        attributes: { type: "Cayenne", note: "Medium heat" }
+      },
+      {
         slug: "pepper-rodo-paint",
         displayName: "Ata Rodo (Scotch Bonnet)",
         unitCode: "paint_bucket",
@@ -525,23 +540,11 @@ export const SEED_ITEMS: SeedItem[] = [
         attributes: { type: "Scotch bonnet", note: "The hot one" }
       },
       {
-        slug: "pepper-rodo-basket",
-        displayName: "Basket of Ata Rodo",
-        unitCode: "basket",
-        priceKobo: { min: naira(25_000), max: naira(45_000) }
-      },
-      {
         slug: "pepper-tatashe-paint",
         displayName: "Tatashe (Red Bell Pepper)",
         unitCode: "paint_bucket",
         priceKobo: { min: naira(4_000), max: naira(7_500) },
         attributes: { type: "Red bell", note: "Mild — carries the colour and body of a stew" }
-      },
-      {
-        slug: "pepper-tatashe-basket",
-        displayName: "Basket of Tatashe",
-        unitCode: "basket",
-        priceKobo: { min: naira(20_000), max: naira(38_000) }
       },
       {
         slug: "pepper-shombo-paint",
@@ -604,17 +607,17 @@ export const SEED_ITEMS: SeedItem[] = [
     ],
     variants: [
       {
+        slug: "egusi-derica",
+        displayName: "Egusi by the Derica",
+        unitCode: "derica_cup",
+        priceKobo: { min: naira(900), max: naira(1_400) }
+      },
+      {
         slug: "egusi-ground-1kg",
         displayName: "Ground Egusi",
         unitCode: "1kg_measure",
         priceKobo: { min: naira(4_500), max: naira(6_000) },
         attributes: { form: "Ground" }
-      },
-      {
-        slug: "egusi-derica",
-        displayName: "Egusi by the Derica",
-        unitCode: "derica_cup",
-        priceKobo: { min: naira(900), max: naira(1_400) }
       }
     ]
   },
@@ -629,17 +632,17 @@ export const SEED_ITEMS: SeedItem[] = [
     ],
     variants: [
       {
+        slug: "ogbono-derica",
+        displayName: "Ogbono by the Derica",
+        unitCode: "derica_cup",
+        priceKobo: { min: naira(1_800), max: naira(2_600) }
+      },
+      {
         slug: "ogbono-ground-1kg",
         displayName: "Ground Ogbono",
         unitCode: "1kg_measure",
         priceKobo: { min: naira(9_000), max: naira(13_000) },
         attributes: { form: "Ground" }
-      },
-      {
-        slug: "ogbono-derica",
-        displayName: "Ogbono by the Derica",
-        unitCode: "derica_cup",
-        priceKobo: { min: naira(1_800), max: naira(2_600) }
       }
     ]
   },
@@ -653,16 +656,16 @@ export const SEED_ITEMS: SeedItem[] = [
     aliases: [{ alias: "ede", locale: "yo", weight: 2 }],
     variants: [
       {
-        slug: "crayfish-dried-1kg",
-        displayName: "Dried Crayfish",
-        unitCode: "1kg_measure",
-        priceKobo: { min: naira(8_000), max: naira(12_000) }
-      },
-      {
         slug: "crayfish-derica",
         displayName: "Crayfish by the Derica",
         unitCode: "derica_cup",
         priceKobo: { min: naira(1_200), max: naira(2_000) }
+      },
+      {
+        slug: "crayfish-dried-1kg",
+        displayName: "Dried Crayfish",
+        unitCode: "1kg_measure",
+        priceKobo: { min: naira(8_000), max: naira(12_000) }
       }
     ]
   },
@@ -674,16 +677,16 @@ export const SEED_ITEMS: SeedItem[] = [
     aliases: [{ alias: "okporoko", locale: "ig", weight: 3 }],
     variants: [
       {
-        slug: "stockfish-1kg",
-        displayName: "Stockfish Pieces",
-        unitCode: "1kg_measure",
-        priceKobo: { min: naira(18_000), max: naira(26_000) }
-      },
-      {
         slug: "stockfish-head-single",
         displayName: "Stockfish Head",
         unitCode: "each",
         priceKobo: { min: naira(2_500), max: naira(6_000) }
+      },
+      {
+        slug: "stockfish-1kg",
+        displayName: "Stockfish Pieces",
+        unitCode: "1kg_measure",
+        priceKobo: { min: naira(18_000), max: naira(26_000) }
       }
     ]
   },
@@ -699,16 +702,16 @@ export const SEED_ITEMS: SeedItem[] = [
     ],
     variants: [
       {
-        slug: "dried-fish-1kg",
-        displayName: "Smoked Dried Fish",
-        unitCode: "1kg_measure",
-        priceKobo: { min: naira(9_000), max: naira(14_000) }
-      },
-      {
         slug: "dried-fish-single",
         displayName: "Single Dried Fish",
         unitCode: "each",
         priceKobo: { min: naira(1_200), max: naira(2_500) }
+      },
+      {
+        slug: "dried-fish-1kg",
+        displayName: "Smoked Dried Fish",
+        unitCode: "1kg_measure",
+        priceKobo: { min: naira(9_000), max: naira(14_000) }
       }
     ]
   },
@@ -730,13 +733,6 @@ export const SEED_ITEMS: SeedItem[] = [
         unitCode: "sachet",
         priceKobo: { min: naira(300), max: naira(500) },
         attributes: { packaging: "Strip sachet" }
-      },
-      {
-        slug: "seasoning-cube-carton",
-        displayName: "Carton of Seasoning Cubes",
-        unitCode: "carton",
-        priceKobo: { min: naira(12_000), max: naira(18_000) },
-        attributes: { packaging: "Bulk carton" }
       }
     ]
   },
@@ -798,13 +794,6 @@ export const SEED_ITEMS: SeedItem[] = [
         unitCode: "paint_bucket",
         priceKobo: { min: naira(6_500), max: naira(9_000) },
         attributes: { grade: "Unbleached red" }
-      },
-      {
-        slug: "palm-oil-25l-keg",
-        displayName: "Palm Oil, 25L Keg",
-        unitCode: "25l_keg",
-        priceKobo: { min: naira(38_000), max: naira(52_000) },
-        attributes: { grade: "Unbleached red", packaging: "Wholesale jerrycan" }
       }
     ]
   },
@@ -829,13 +818,6 @@ export const SEED_ITEMS: SeedItem[] = [
         displayName: "Groundnut Oil, 5L",
         unitCode: "5l_bottle",
         priceKobo: { min: naira(9_500), max: naira(13_000) }
-      },
-      {
-        slug: "groundnut-oil-25l-keg",
-        displayName: "Groundnut Oil, 25L Keg",
-        unitCode: "25l_keg",
-        priceKobo: { min: naira(46_000), max: naira(62_000) },
-        attributes: { packaging: "Wholesale jerrycan" }
       }
     ]
   },
@@ -874,18 +856,18 @@ export const SEED_ITEMS: SeedItem[] = [
     ],
     variants: [
       {
-        slug: "tin-tomatoes-400g",
-        displayName: "400g Tin of Tomato Paste",
-        unitCode: "tin",
-        priceKobo: { min: naira(1_300), max: naira(1_800) },
-        attributes: { packaging: "400g tin" }
-      },
-      {
         slug: "tin-tomatoes-sachet-70g",
         displayName: "70g Sachet of Tomato Paste",
         unitCode: "sachet",
         priceKobo: { min: naira(300), max: naira(450) },
         attributes: { packaging: "70g sachet" }
+      },
+      {
+        slug: "tin-tomatoes-400g",
+        displayName: "400g Tin of Tomato Paste",
+        unitCode: "tin",
+        priceKobo: { min: naira(1_300), max: naira(1_800) },
+        attributes: { packaging: "400g tin" }
       }
     ]
   },
@@ -917,18 +899,18 @@ export const SEED_ITEMS: SeedItem[] = [
     ],
     variants: [
       {
-        slug: "milk-powder-tin-400g",
-        displayName: "400g Tin of Powdered Milk",
-        unitCode: "tin",
-        priceKobo: { min: naira(4_500), max: naira(6_000) },
-        attributes: { packaging: "400g tin" }
-      },
-      {
         slug: "milk-powder-sachet",
         displayName: "Milk Sachet",
         unitCode: "sachet",
         priceKobo: { min: naira(300), max: naira(450) },
         attributes: { packaging: "Single-serve sachet" }
+      },
+      {
+        slug: "milk-powder-tin-400g",
+        displayName: "400g Tin of Powdered Milk",
+        unitCode: "tin",
+        priceKobo: { min: naira(4_500), max: naira(6_000) },
+        attributes: { packaging: "400g tin" }
       }
     ]
   },
@@ -940,17 +922,17 @@ export const SEED_ITEMS: SeedItem[] = [
     aliases: [{ alias: "milo", locale: "pcm", weight: 3 }],
     variants: [
       {
+        slug: "milo-sachet",
+        displayName: "Single Sachet",
+        unitCode: "sachet",
+        priceKobo: { min: naira(250), max: naira(400) }
+      },
+      {
         slug: "milo-tin-500g",
         displayName: "500g Tin",
         unitCode: "tin",
         priceKobo: { min: naira(4_200), max: naira(5_600) },
         attributes: { packaging: "500g tin" }
-      },
-      {
-        slug: "milo-sachet",
-        displayName: "Single Sachet",
-        unitCode: "sachet",
-        priceKobo: { min: naira(250), max: naira(400) }
       }
     ]
   },
@@ -994,13 +976,6 @@ export const SEED_ITEMS: SeedItem[] = [
         unitCode: "each",
         priceKobo: { min: naira(350), max: naira(500) },
         attributes: { packaging: "70g pack" }
-      },
-      {
-        slug: "noodles-carton-40",
-        displayName: "Carton of Noodles",
-        unitCode: "carton",
-        priceKobo: { min: naira(11_500), max: naira(16_000) },
-        attributes: { packaging: "Carton", packCount: 40 }
       }
     ]
   },
@@ -1013,16 +988,9 @@ export const SEED_ITEMS: SeedItem[] = [
     variants: [
       {
         slug: "spaghetti-500g",
-        displayName: "500g Pack of Spaghetti",
+        displayName: "Single 500g Pack of Spaghetti",
         unitCode: "pack_500g",
         priceKobo: { min: naira(900), max: naira(1_400) }
-      },
-      {
-        slug: "spaghetti-carton-20",
-        displayName: "Carton of Spaghetti",
-        unitCode: "carton",
-        priceKobo: { min: naira(16_000), max: naira(24_000) },
-        attributes: { packaging: "Carton", packCount: 20 }
       }
     ]
   },
@@ -1066,16 +1034,16 @@ export const SEED_ITEMS: SeedItem[] = [
     ],
     variants: [
       {
-        slug: "eggs-crate-30",
-        displayName: "Crate of 30 Eggs",
-        unitCode: "crate_30_eggs",
-        priceKobo: { min: naira(5_500), max: naira(7_500) }
-      },
-      {
         slug: "eggs-single",
         displayName: "Single Egg",
         unitCode: "each",
         priceKobo: { min: naira(200), max: naira(280) }
+      },
+      {
+        slug: "eggs-crate-30",
+        displayName: "Crate of 30 Eggs",
+        unitCode: "crate_30_eggs",
+        priceKobo: { min: naira(5_500), max: naira(7_500) }
       }
     ]
   },
@@ -1162,13 +1130,6 @@ export const SEED_ITEMS: SeedItem[] = [
         unitCode: "1kg_measure",
         priceKobo: { min: naira(4_500), max: naira(6_500) },
         attributes: { species: "Mackerel" }
-      },
-      {
-        slug: "frozen-titus-carton",
-        displayName: "Carton of Titus",
-        unitCode: "carton",
-        priceKobo: { min: naira(85_000), max: naira(120_000) },
-        attributes: { species: "Mackerel", packaging: "20kg carton" }
       },
       {
         slug: "frozen-kote-1kg",
