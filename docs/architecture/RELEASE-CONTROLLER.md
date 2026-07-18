@@ -279,8 +279,9 @@ safety/integrity lanes until their separate gates are independently satisfied.
   `docs/architecture/SERVICE-ARCHITECTURE.md`, and `WETINDEY_BIBLE.md`. Follow-up
   independent refutation passed with no P1/P2/P3, so all four governance paths are
   released.
-- Iconography & Visual Systems Lead task `019f75cf-4d8f-7263-822b-06e846fce7ac` now
-  owns the exact twelve-path ADR-018 implementation lane: `src/app/globals.css`,
+- Iconography & Visual Systems Lead task `019f75cf-4d8f-7263-822b-06e846fce7ac`
+  completed the exact twelve-path ADR-018 implementation at
+  `69737de3a3e84d88bfe7bb906d4abdc4b7315dee`: `src/app/globals.css`,
   `tailwind.config.ts`, `src/design-system/components/IconOrb.tsx`,
   `src/design-system/components/ListRow.tsx`, `src/design-system/components/ItemCard.tsx`,
   `src/app/_components/CategorySelectorSheet.tsx`,
@@ -291,9 +292,13 @@ safety/integrity lanes until their separate gates are independently satisfied.
   ordinary actions; separate Food/Money domain tones; status only actual state; rating
   token; neutral disabled future categories; circular borderless `IconOrb` 28/32/48;
   neutral item fallback; scoped raw/status misuse and routine decorative-border removal;
-  >=44px parent targets; accessibility; and reduced motion. Exclude all seven Aboki paths,
-  `page.tsx`, `MapboxAdapter`, and DB. Require one local commit and independent static
-  refutation; no test execution, build, browser, DB, push, or deploy. HI runtime follows.
+  >=44px parent targets; accessibility; and reduced motion. Independent refutation returned
+  **NOT REFUTED** with no P1/P2; exact twelve-path scope was clean and the focused
+  iconography contract passed. All twelve implementation paths are released. Runtime
+  visual verification and independent contrast calculation remain release-evidence
+  residuals. Broader future call-site coverage stays queued and unclaimed until exact
+  disjoint paths are proposed. The completed scope excludes all seven Aboki paths,
+  `page.tsx`, `MapboxAdapter`, and DB; no build, browser, DB, push, or deploy occurred.
 - Reserve ADR-019 as `019-contribution-integrity-and-moderation.md` for later
   post-containment migration `0013` policy. ADR-018 released `WETINDEY_BIBLE.md`, but
   ADR-019 remains pathless until Contribution runtime evidence passes and a new exclusive
