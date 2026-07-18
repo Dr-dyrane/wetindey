@@ -103,10 +103,8 @@ function isDisabledByAncestorFieldset(element: HTMLElement): boolean {
   return element.closest("fieldset[disabled]") !== null;
 }
 
-function focusInitial(panel: HTMLElement | null) {
-  if (!panel) return;
-
-  const isEnabledVisible = (element: HTMLElement) =>
+function isEnabledVisible(element: HTMLElement): boolean {
+  return (
     !element.matches("[disabled]") &&
     !element.matches("[aria-disabled='true']") &&
     !element.hidden &&
@@ -114,7 +112,13 @@ function focusInitial(panel: HTMLElement | null) {
     !element.closest("[inert], [aria-hidden='true']") &&
     element.offsetParent !== null &&
     getComputedStyle(element).display !== "none" &&
-    getComputedStyle(element).visibility !== "hidden";
+    getComputedStyle(element).visibility !== "hidden"
+  );
+}
+
+function focusInitial(panel: HTMLElement | null) {
+  if (!panel) return;
+
   const preferred = Array.from(panel.querySelectorAll<HTMLElement>("[data-autofocus]"))
     .filter((element) => element.matches(FOCUSABLE_SELECTOR) && isEnabledVisible(element))[0];
   const fallback = Array.from(panel.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR)).find(
@@ -125,10 +129,7 @@ function focusInitial(panel: HTMLElement | null) {
 
 function trapTab(panel: HTMLElement, event: KeyboardEvent) {
   const focusable = Array.from(panel.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR)).filter(
-    (element) =>
-      !isDisabledByAncestorFieldset(element) &&
-      !element.closest("[inert], [aria-hidden='true']") &&
-      element.offsetParent !== null
+    isEnabledVisible
   );
   if (focusable.length === 0) {
     event.preventDefault();
