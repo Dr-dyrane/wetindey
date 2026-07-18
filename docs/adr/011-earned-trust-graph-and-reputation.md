@@ -16,17 +16,22 @@ model:
 - recognized writes resolve a source and populate `sources.user_id`;
 - recognized contributors currently start with reliability `75`, while the shared seeded
   anonymous Contributor source is `98`;
-- observation writes call `assessTrust`, but item details and map markers still use
-  competing UI heuristics;
-- `getOfferTrustBatch` has no live UI caller;
+- observation writes and the interactive read path now call one `assessTrust` model;
+- cards, item details, Get-It, and narrowed map markers receive the same server-derived
+  status and confidence answer;
 - moderation vocabulary exists without a moderator or auditable decision path;
-- provenance does not distinguish observed, reference, inferred, and synthetic data;
+- ADR-012 and migration `0009` classify synthetic, observed, partner, reference, and
+  inferred data, but `0009` remains unapplied to shared environments;
+- the current trust query still admits every non-rejected provenance class, so T1's
+  authoritative result is not yet an admissible public result;
 - `places.verification_status` is an unstructured string;
 - and review tables exist without live read/write paths, reliable anonymous vote
   uniqueness, or moderation.
 
-Identity attribution is therefore present, but earned reputation is not. Write-side trust
-derivation is present, but read-side confidence is not authoritative.
+Identity attribution and one read/write trust model are present, but earned reputation is
+not. ADR-015 now governs which evidence may enter that model. Local implementation may be
+statically refuted before rollout; deployment remains blocked behind the target
+environment's authorized `0009` application.
 
 This ADR defines an evolutionary architecture. It does not authorize a graph database,
 trust service, generic edge table, reputation schema, review launch, RLS rollout, partner
@@ -215,8 +220,9 @@ has no event history, scope, sample size, uncertainty, or policy version. The an
 `98` versus recognized `75` inversion must be corrected before reputation affects a public
 result.
 
-`offers_current.trust_level` is an interim projection. It cannot be treated as authoritative
-until every live read uses one assessment and expired/synthetic evidence is excluded.
+`offers_current.trust_level` is an interim projection. T1 now routes interactive reads
+through one assessment, but it cannot be treated as authoritative until ADR-015 excludes
+inadmissible provenance and isolates mixed synthetic/observed projections.
 
 `places.verification_status` cannot back a `Verified only` filter. Review aggregates cannot
 back a rating filter until review authenticity and moderation are live.
