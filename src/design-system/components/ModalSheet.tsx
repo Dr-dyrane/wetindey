@@ -99,11 +99,16 @@ const FOCUSABLE_SELECTOR = [
   "[tabindex]:not([tabindex='-1'])",
 ].join(",");
 
+function isDisabledByAncestorFieldset(element: HTMLElement): boolean {
+  return element.closest("fieldset[disabled]") !== null;
+}
+
 function focusInitial(panel: HTMLElement | null) {
   if (!panel) return;
 
   const isEnabledVisible = (element: HTMLElement) =>
     !element.matches("[disabled]") &&
+    !isDisabledByAncestorFieldset(element) &&
     !element.closest("[inert], [aria-hidden='true']") &&
     element.offsetParent !== null;
   const preferred = Array.from(panel.querySelectorAll<HTMLElement>("[data-autofocus]"))
@@ -116,7 +121,10 @@ function focusInitial(panel: HTMLElement | null) {
 
 function trapTab(panel: HTMLElement, event: KeyboardEvent) {
   const focusable = Array.from(panel.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR)).filter(
-    (element) => !element.closest("[inert], [aria-hidden='true']") && element.offsetParent !== null
+    (element) =>
+      !isDisabledByAncestorFieldset(element) &&
+      !element.closest("[inert], [aria-hidden='true']") &&
+      element.offsetParent !== null
   );
   if (focusable.length === 0) {
     event.preventDefault();
