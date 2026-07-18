@@ -53,6 +53,8 @@ type RateState =
 
 const CACHE_PREFIX = "wetindey:reference-rate:v2:";
 const LAST_CURRENCY_KEY = "wetindey:reference-rate:last-currency:v1";
+const SESSION_AMOUNT_KEY = "wetindey:reference-amount:v1";
+const MAX_SESSION_AMOUNT_CHARACTERS = 32;
 const MAX_AMOUNT = 1_000_000_000;
 
 const NAIRA = new Intl.NumberFormat("en-NG", {
@@ -150,6 +152,40 @@ function parseAmount(value: string): { value: number | null; error: string | nul
   return { value: amount, error: null };
 }
 
+function readSessionAmount(): string {
+  try {
+    const value = window.sessionStorage.getItem(SESSION_AMOUNT_KEY);
+    if (!value || value.length > MAX_SESSION_AMOUNT_CHARACTERS) return "";
+    const parsed = parseAmount(value);
+    return parsed.value !== null && parsed.error === null ? value : "";
+  } catch {
+    return "";
+  }
+}
+
+function writeSessionAmount(value: string) {
+  try {
+    if (value.trim() === "") {
+      window.sessionStorage.removeItem(SESSION_AMOUNT_KEY);
+      return;
+    }
+
+    const parsed = parseAmount(value);
+    if (
+      value.length <= MAX_SESSION_AMOUNT_CHARACTERS &&
+      parsed.value !== null &&
+      parsed.error === null
+    ) {
+      window.sessionStorage.setItem(SESSION_AMOUNT_KEY, value);
+      return;
+    }
+
+    window.sessionStorage.removeItem(SESSION_AMOUNT_KEY);
+  } catch {
+    // The amount remains usable in this mount when tab storage is unavailable.
+  }
+}
+
 export function ExchangePanel({
   origin,
   locations,
@@ -172,6 +208,15 @@ export function ExchangePanel({
     currencyRef.current = nextCurrency;
     setCurrency(nextCurrency);
     setRateState({ kind: "loading", cached: readCachedRate(nextCurrency) });
+  }, []);
+  const updateAmount = useCallback((nextAmount: string) => {
+    setAmount(nextAmount);
+    writeSessionAmount(nextAmount);
+  }, []);
+
+  useEffect(() => {
+    const savedAmount = readSessionAmount();
+    if (savedAmount) setAmount(savedAmount);
   }, []);
 
   useEffect(() => {
@@ -318,7 +363,7 @@ export function ExchangePanel({
               <input
                 id={amountId}
                 value={amount}
-                onChange={(event) => setAmount(event.target.value)}
+                onChange={(event) => updateAmount(event.target.value)}
                 inputMode="decimal"
                 autoComplete="off"
                 placeholder="100"
