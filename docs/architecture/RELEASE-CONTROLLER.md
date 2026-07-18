@@ -203,16 +203,18 @@ safety/integrity lanes until their separate gates are independently satisfied.
 - HI Quality **REFUTED** Human Interface commit
   `4b572e0a666648dd3f9c016616e0c6b161cb981f`: required pixels were unavailable through
   its failed connector, and `src/app/page.tsx` retains confirmed 32x32 Add/Profile hit
-  targets. Static category/Aboki changes otherwise had no scoped defect, so
+  targets. Static category/Aboki changes otherwise had no scoped defect.
   `src/app/_components/CategorySelectorSheet.tsx` and
-  `src/app/_components/ExchangePanel.tsx` are released unless later direct pixels find a
-  defect.
+  `src/app/_components/ExchangePanel.tsx` have no current write claim but remain pending
+  direct-pixel evidence.
 - Exact one-file ownership of `src/app/page.tsx` transfers to Human Interface Design
   Engineer task `019f75a5-0fc6-7f40-9a0f-8097ead3b45d`. The forward correction must make
   Add/Profile hit regions at least 44x44 without changing visible icon/avatar scale.
   Path-scoped commit `d82b87e11faa643840c322e6b1d9fbafd2ee356d` changed exactly
-  `src/app/page.tsx`; it still requires independent visible-Safari refutation by HI
-  Quality. The path remains unreleased until that PASS and explicit handoff.
+  `src/app/page.tsx`, expanding the hit regions to 44x44 while leaving the visible
+  circle/avatar 32x32. HI Quality is now assigned independent visible-Safari refutation of
+  this exact commit and the remaining direct-pixel evidence for `4b572e0`. The path remains
+  claimed and `NO PUSH` remains until verdict, PASS, and explicit handoff.
 - Nearby Presence governance completed in path-scoped commit
   `c96086007e6f379c1b686b8203deef2c7c5559c2` with independent PASS. Its exact paths were
   `WETINDEY_BIBLE.md` and `docs/adr/016-nearby-user-presence.md`, now released. ADR-016 is
@@ -243,17 +245,23 @@ safety/integrity lanes until their separate gates are independently satisfied.
   and public-rollout gates remain unresolved.
 - Founder standing authorization dated 2026-07-18 covers recurring retrieval/review of
   current attributable Lagos/Nigeria food-price news and NBS Selected Food Price Watch.
-  This approval must not be requested again. Its evidence envelope includes source links,
-  distinct timestamps, SHA-256 hashes, attribution, external raw pointers, deterministic
-  review artifacts, append-only candidate staging, and a separate provenance-aware
-  development-only current-food-news fixture. Existing seed/demo bytes remain immutable;
-  `src/db/seed.ts` is prohibited for recurring ingestion; availability may not be inferred
-  and market/place coverage may not be overstated. Source prohibition or unverifiable
-  terms, shared/production migration, live promotion, push, and deployment remain
-  separate gates. Daily automation `lagos-food-data-ingestion` is recorded as updated; the
-  controller did not create or modify it.
+  NBS review-only `active + fetch_and_stage` is standing-approved; no stale
+  approval-pending gate remains, and this approval must not be requested again. Its
+  evidence envelope includes source links, distinct timestamps, SHA-256 hashes,
+  attribution, external raw pointers, deterministic review artifacts, append-only
+  candidate staging, and a separate provenance-aware development-only current-food-news
+  fixture. Source-backed evidence never uses `Sample`; that label is synthetic/demo only.
+  Origin copy must name explicit source + geography + period grounded in the package, for
+  example `Official data · NBS · Lagos State · May 2026`. Existing seed/demo bytes remain
+  immutable; `src/db/seed.ts` is prohibited for recurring ingestion; availability may not
+  be inferred and market/place coverage may not be overstated. Source prohibition or
+  unverifiable terms, shared/production application of `0010`, live
+  publication/promotion, push, and deployment remain separate blocked approvals. Daily
+  automation `lagos-food-data-ingestion` is recorded as updated; the controller did not
+  create or modify it.
 - Sol provenance lead task `019f75a8-7eb2-7be2-9bbc-781e318bda0d` is active read-only to
-  propose exact new paths. Terra fixture engineer task
+  propose exact new paths, then advances to implementation only after those paths are
+  claimed. Terra fixture engineer task
   `019f75a8-7d3b-7482-b7e2-ce8ed35b9491` and Luna source refuter task
   `019f75a8-8062-7330-93ee-1fb0d8d4fbc5` are queued/pathless. This is lane design only:
   no fixture or implementation path is claimed until Sol returns the exact proposal.
