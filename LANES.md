@@ -6,6 +6,34 @@ anything. One owner per path, always.
 
 **Last updated:** 2026-07-18
 
+## Quality & Release Controller checkpoint RC-138
+
+Controller owner: this orchestrator, over exactly `LANES.md` and
+`docs/architecture/RELEASE-CONTROLLER.md`. The local `main` candidate is clean at
+`89482fb` and is 138 commits ahead of `origin/main` at `b89ebba`. The prior controller
+draft was not recoverable as a commit object; this is the authoritative replacement
+checkpoint.
+
+**Decision: NO PUSH / NO DEPLOY.** The ahead range is a mixed release train containing
+protected migration, presence, CSP, application, and documentation work. Preview schema/
+ledger drift is known; Production identity and migration state are unknown. No push,
+shared migration, seed, deployment, history rewrite, or release-branch construction is
+authorized by this checkpoint.
+
+### Next bounded evidence lane
+
+**Search execution proof** is next, read-only and exact-target scoped. Search & Ranking
+owns the disposable SQL/runtime refutation for the already-implemented search correction
+at `c6f304b`; it does not edit `src/app/actions.ts`, change schema, or access a shared
+database. Required evidence is a disposable target at the exact candidate, the corrected
+fallback-unit query executing against the declared schema, and an independent refutation
+of the result. After that evidence, the controller will select the next implementation
+lane. No product implementation lane is reopened by this record.
+
+Completed iconography foundation correction `89482fb` remains accepted by independent
+refutation with no P1/P2/P3; its runtime high-contrast/accessibility checks remain a
+separate validation residual, not a release authorization.
+
 ## Controller reconciliation — semantic UI and market-detail follow-up
 
 The latest consumer-surface review identified two queued workstreams that were not

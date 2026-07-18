@@ -677,6 +677,39 @@ safety/integrity lanes until their separate gates are independently satisfied.
 
 ## Bootstrap reconciliation: 2026-07-18
 
+## Checkpoint artifact `RC-2026-07-18-138`
+
+**Controller:** orchestrator, exact ownership `LANES.md` and
+`docs/architecture/RELEASE-CONTROLLER.md`
+**Candidate:** local `main` at `89482fb`; `origin/main` at `b89ebba`; clean, 138 commits
+ahead.
+**Prior-controller recovery:** the previously reported draft was not present as a
+recoverable commit object in the current repository. This entry is the authoritative
+checkpoint and does not claim that draft hash.
+
+### Release decision
+
+**NO PUSH / NO DEPLOY.** The 138-commit range is not a release unit. It mixes protected
+`0009`/`0010`/`0011` migration lineage, nearby presence work, CSP governance, application
+changes, and documentation. Preview schema/ledger drift is known and Production remains
+unknown. A clean worktree and disposable validation do not prove shared-target compatibility
+or deployment ordering. No shared migration, seed, deployment, history rewrite, or push is
+authorized.
+
+### Evidence and next lane
+
+- Iconography correction `89482fb` is independently **NOT REFUTED**, with no P1/P2/P3;
+  runtime high-contrast and accessibility validation remains residual evidence.
+- The next bounded lane is **Search execution proof**, owned by Search & Ranking as a
+  read-only evidence task over the already-corrected `c6f304b` behavior. It may inspect
+  and execute only against a uniquely disposable database at the exact candidate; it may
+  not edit `src/app/actions.ts`, change schema/migrations, or access a shared database.
+- Acceptance requires the corrected fallback-unit SQL to execute against the declared
+  schema, preserve the server-derived trust/provenance contract, and receive an
+  independent refutation. No implementation lane is reopened until that evidence is
+  returned.
+
+
 - Aboki FX commit `37fa33d` is independently VERIFIED; its three UI paths are released.
 - Search commit `c6f304b` is statically VERIFIED; `src/app/actions.ts` remains actively
   claimed only for disposable SQL execution proof.
