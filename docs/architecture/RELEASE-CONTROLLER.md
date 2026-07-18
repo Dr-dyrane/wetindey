@@ -344,10 +344,14 @@ safety/integrity lanes until their separate gates are independently satisfied.
   `2d46ff90f87c7bfe75cc3df30ae35cc10a9641971543243e9d885aa7a97ca466`; exact scope,
   historical hashes, time/geography/unit/availability/attribution, no-Sample, and no-live
   rules passed with no P1/P2. P3 only: intentional Markdown hard-break whitespace. Lane A
-  paths are released. Terra Lane B is implementation-complete at `e49782b` over its ten
-  exact reserved paths. Luna final original-source refutation is active, so all ten paths
-  remain claimed until verdict. No live effect, tests, DB, seed, schema, migration, UI,
-  push, or deploy is authorized.
+  paths are released. Luna **REFUTED** Terra Lane B commit `e49782b` with no P1 and three
+  blocking P2s: the recurring-fetch timestamp is falsely historical, the development
+  fixture validator does not read candidate artifacts, and the historical validator
+  default/contract regressed. P3: the fingerprint/ID relationship is unenforced. Luna
+  verified the source facts, package hash/size, grounded Lagos rows, and absence of Sample
+  or live effect. Terra retains all ten exact paths for a forward-only correction; do not
+  amend or release them. No tests, DB, seed, schema, migration, UI, push, or deploy is
+  authorized.
 - Decision: **NO PUSH / NO DEPLOY**. This documentation checkpoint authorizes no test,
   push, deployment, migration, seed, shared-database access, or external change.
 
