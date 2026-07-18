@@ -386,6 +386,22 @@ safety/integrity lanes until their separate gates are independently satisfied.
   remains a pathless concept, separate from Nearby Presence, pending counsel/privacy
   approval, exact future ownership, and independent privacy refutation. No Remote Sharing
   path is claimed.
+- Seller Identity, RBAC & Onboarding is a future pathless governance lane. Seller
+  registration is separate from ordinary contribution; place ownership claims need a
+  verified lifecycle; identity and business verification remain distinct from reputation.
+  Future owner/manager/staff roles require scoped permissions for prices, availability,
+  hours, contact consent, corrections, and responses plus audit, revocation, suspension,
+  and appeals. “Verified WetinDey Seller” may be earned only from approved verification
+  evidence and objective accuracy, never purchased. Seller data must not automatically
+  become live observations. Legal/privacy, auth/provider, moderation, Trust Graph, exact
+  ownership, and independent identity/moderation refutation remain gates.
+- Core vision, mission, and product-model changes require governance-document correction
+  first. A later bounded product/legal UI handoff may claim
+  `src/core/i18n/strings.ts`, `src/app/_components/AboutSheet.tsx`, and
+  `src/app/_components/LocationSheet.tsx`; it may add
+  `src/app/_components/ProfileSheet.tsx` or `src/app/page.tsx` only when entry wiring
+  changes. This record claims none of those paths, preserves current owners, and retains
+  counsel approval for final legal wording.
 - Catalog Stewardship Engineer task
   `019f75a3-f38d-7893-9b82-2d6871a2563c` completed in path-scoped commit `32b15ae` over
   exactly `src/db/seed.ts` and `src/db/seedContent.ts`; an independent static refuter
