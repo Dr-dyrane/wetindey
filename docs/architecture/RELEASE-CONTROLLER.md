@@ -373,9 +373,12 @@ safety/integrity lanes until their separate gates are independently satisfied.
   narrow one-file correction `449cb82` in
   `scripts/ingestion/fetch-nbs-selected-food-price-watch.ts`; independent implementing
   static refutation passed. Luna now rechecks exact candidate
-  `e49782b + 6ae4df9 + 449cb82`. Source facts remain PASS and all ten paths stay claimed
-  until final verdict. No tests, DB, seed, schema, migration, UI, push, or deploy is
-  authorized.
+  `e49782b + 6ae4df9 + 449cb82`. Luna returned final **PASS** with no P1/P2/P3.
+  Strict canonical injected retrieval timestamp, full candidate validation, restored
+  historical/default CLI behavior, and fingerprint/ID enforcement all passed. All ten
+  Lane B implementation paths are released. Standing recurring retrieval/review
+  authorization remains, but artifacts are review/development-only: no shared `0010`,
+  seed, publication/promotion, push, or deployment occurred or is authorized.
 - Decision: **NO PUSH / NO DEPLOY**. This documentation checkpoint authorizes no test,
   push, deployment, migration, seed, shared-database access, or external change.
 
