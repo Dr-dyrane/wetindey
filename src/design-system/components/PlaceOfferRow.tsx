@@ -123,7 +123,7 @@ function ItemArtwork({
           {status ? (
             <StatusBadge
               kind={status}
-              className="rounded-[16px] border-none bg-black/78 px-2.5 py-1 text-white
+              className="rounded-[16px] border-none bg-black/78 px-2.5 py-1
                          shadow-[0_3px_12px_rgb(0_0_0_/_0.42)] backdrop-blur-sm
                          [text-shadow:0_1px_2px_rgb(0_0_0_/_0.45)] ring-0
                          forced-colors:bg-[Canvas] forced-colors:text-[CanvasText]
