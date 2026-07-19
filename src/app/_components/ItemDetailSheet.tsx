@@ -15,6 +15,7 @@ import {
   type NarrowedOffer,
   type OfferSort,
 } from "@/app/actions";
+import { useT } from "@/core/i18n";
 
 /* ───────────────────────────────────────────────────────────────────────────
    ItemDetailSheet — the narrowing half of the core loop.
@@ -67,7 +68,7 @@ interface ItemDetailSheetProps {
   /** Named in the empty state, so "nothing found" says where it looked. */
   areaName: string;
   /** Tapping a row. The parent centres the map and dismisses this sheet. */
-  onSelectOffer: (offer: NarrowedOffer) => void;
+  onSelectOffer: (offer: NarrowedOffer, signal: OfferPresentation) => void;
   /**
    * The narrowed set, whenever it changes, so the map behind can pin exactly
    * what this list is showing.
@@ -81,7 +82,7 @@ interface ItemDetailSheetProps {
    * effect, so an identity that churns re-fires it, and a handler that sets
    * parent state would loop.
    */
-  onOffersChange?: (offers: NarrowedOffer[]) => void;
+  onOffersChange?: (offers: PresentedOffer[]) => void;
   /** page.tsx's TRANSLATIONS dict. Only the keys that already exist are used. */
   t?: Record<string, string>;
 }
@@ -106,15 +107,30 @@ function formatAge(ageHours: number | null): string {
   return days === 1 ? "yesterday" : `${days} days ago`;
 }
 
+export interface OfferPresentation {
+  kind: StatusKind;
+  label: string;
+  short: string;
+  sold: boolean;
+}
+
+export interface PresentedOffer {
+  offer: NarrowedOffer;
+  kind: StatusKind;
+}
+
 /**
- * Presentation of the server-derived trust answer.
+ * Present the server-derived trust answer using the active locale's one
+ * authoritative status vocabulary.
  *
  * Freshness windows, availability, source independence, reliability weighting,
- * and confidence bands are computed by `assessTrust` on the server. This
- * function only turns that answer into the compact words shared by offer rows,
- * Get-It, and map markers.
+ * and confidence bands remain server-owned. Synthetic evidence keeps its
+ * server-supplied provenance label verbatim.
  */
-export function offerSignal(offer: NarrowedOffer) {
+function presentOffer(
+  offer: NarrowedOffer,
+  translate: ReturnType<typeof useT>,
+): OfferPresentation {
   const observed = offer.trust.origin === "observed";
   const kind: StatusKind = observed ? offer.trust.status : "caution";
   const sold = offer.trust.availability === "unavailable";
@@ -129,7 +145,11 @@ export function offerSignal(offer: NarrowedOffer) {
   }
 
   const short =
-    kind === "unavailable" ? "E no dey" : kind === "confirmed" ? "E sure" : "Check am";
+    kind === "unavailable"
+      ? translate("item.status_unavailable")
+      : kind === "confirmed"
+        ? translate("item.status_confirmed")
+        : translate("item.status_caution");
   const age = formatAge(offer.trust.ageHours);
   const label = kind === "confirmed" ? `${short} ${age}` : `${short} · ${age}`;
 
@@ -257,6 +277,7 @@ export function ItemDetailSheet({
   onOffersChange,
   t,
 }: ItemDetailSheetProps) {
+  const translate = useT();
   const itemId = item?.id ?? null;
 
   const [variantId, setVariantId] = useState<string>(ANY);
@@ -357,13 +378,6 @@ export function ItemDetailSheet({
     void load();
   }, [load]);
 
-  // Publish the narrowed set to whoever is drawing the map behind us. Keyed on
-  // `offers` identity, which only turns over when a load actually lands — so a
-  // re-render for an unrelated reason does not republish and rebuild every pin.
-  useEffect(() => {
-    onOffersChange?.(offers);
-  }, [offers, onOffersChange]);
-
   const variantOptions = useMemo(() => {
     const opts = variants.map((v) => ({
       id: v.id,
@@ -423,12 +437,18 @@ export function ItemDetailSheet({
 
     return offers.map((offer) => ({
       offer,
-      signal: offerSignal(offer),
+      signal: presentOffer(offer, translate),
       confidence: confidenceFor(offer),
       isCheapest: offers.length > 1 && offer.id === cheapestId,
       isClosest: offers.length > 1 && offer.id === closestId,
     }));
-  }, [offers]);
+  }, [offers, translate]);
+
+  // Publish the narrowed set with the presentation kind already used by its
+  // row. The map consumes this answer without rebuilding trust or status copy.
+  useEffect(() => {
+    onOffersChange?.(rows.map(({ offer, signal }) => ({ offer, kind: signal.kind })));
+  }, [rows, onOffersChange]);
 
   const visiblePlaceCount = new Set(offers.map((offer) => offer.placeId)).size;
   const countLabel = `${visiblePlaceCount} ${t?.locations_found ?? (visiblePlaceCount === 1 ? "place" : "places")}`;
@@ -575,10 +595,10 @@ export function ItemDetailSheet({
               <button
                 key={offer.id}
                 type="button"
-                onClick={() => onSelectOffer(offer)}
+                onClick={() => onSelectOffer(offer, signal)}
                 aria-label={
                   `${offer.placeName}. ` +
-                  `${signal.sold ? "Not available" : "Available"}. ` +
+                  `${signal.sold ? translate("item.a11y_not_available") : translate("item.a11y_available")}. ` +
                   `${naira(offer.priceMin)}${offer.priceMax ? ` to ${naira(offer.priceMax)}` : ""} per ${offer.unitName}. ` +
                   `${signal.label}. ` +
                   `${formatDistance(offer.distanceM / 1000)}. ` +

@@ -46,7 +46,11 @@ import {
   EXCHANGE_SAMPLE_LOCATIONS,
   type ExchangeSampleLocation
 } from "@/app/_data/exchange-sample-locations";
-import { ItemDetailSheet, offerSignal } from "@/app/_components/ItemDetailSheet";
+import {
+  ItemDetailSheet,
+  type OfferPresentation,
+  type PresentedOffer
+} from "@/app/_components/ItemDetailSheet";
 import { PresentationHost } from "@/app/_components/PresentationHost";
 import { GetItSheet, type GetItTarget } from "@/app/_components/GetItSheet";
 import {
@@ -315,7 +319,7 @@ export default function HomePage() {
    *  places query must not blank the list with the list's own error text. */
   const [popularError, setPopularError] = useState<string | null>(null);
   /** The narrowed set ItemDetailSheet is showing. The map pins ARE this list. */
-  const [itemOffers, setItemOffers] = useState<NarrowedOffer[]>([]);
+  const [itemOffers, setItemOffers] = useState<PresentedOffer[]>([]);
   const [allPlaces, setAllPlaces] = useState<PlaceData[]>([]);
   const [placeOffers, setPlaceOffers] = useState<PlaceOffer[] | undefined>(undefined);
   const [placeOffersError, setPlaceOffersError] = useState<string | null>(null);
@@ -795,7 +799,7 @@ export default function HomePage() {
   });
 
   /** The pins are the list. See ItemDetailSheet's `onOffersChange`. */
-  const handleItemOffersChange = useEventCallback((offers: NarrowedOffer[]) => {
+  const handleItemOffersChange = useEventCallback((offers: PresentedOffer[]) => {
     setItemOffers(offers);
   });
 
@@ -813,9 +817,7 @@ export default function HomePage() {
    * what remains visible behind the modal, and the geometry any route drawn
    * between origin and offer would need.
    */
-  const handleSelectOffer = useEventCallback((offer: NarrowedOffer) => {
-    const signal = offerSignal(offer);
-
+  const handleSelectOffer = useEventCallback((offer: NarrowedOffer, signal: OfferPresentation) => {
     setDetailItem(null);
     setCameraCenter({ lat: offer.lat, lng: offer.lng });
     setGetItTarget({
@@ -915,10 +917,8 @@ export default function HomePage() {
   /**
    * Pins: the narrowed offers when there are some, otherwise every place.
    *
-   * The status comes from `offerSignal`, the same derivation the rows use ,
-   * rather than from `freshnessState` directly. Reading the column here would
-   * paint a pin green while the row beside it said "Needs checking" for the same
-   * expired offer, and nothing would tell the user which to believe.
+   * Item Detail publishes the same presentation kind its rows use, so the map
+   * consumes one answer without rebuilding trust or status copy.
    */
   const mapMarkers = useMemo(() => {
     if (activeCategory === "money") {
@@ -934,7 +934,7 @@ export default function HomePage() {
     }
 
     if (itemOffers.length > 0) {
-      return itemOffers.map((o) => ({
+      return itemOffers.map(({ offer: o, kind }) => ({
         id: o.id,
         placeId: o.placeId,
         placeName: o.placeName,
@@ -942,7 +942,7 @@ export default function HomePage() {
         lat: o.lat,
         lng: o.lng,
         address: o.address ?? "",
-        detail: { confidenceLevel: offerSignal(o).kind }
+        detail: { confidenceLevel: kind }
       }));
     }
     return allPlaces.map((p) => ({
