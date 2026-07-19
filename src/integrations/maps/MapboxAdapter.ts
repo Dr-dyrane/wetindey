@@ -124,6 +124,26 @@ export interface ScreenPoint {
   y: number;
 }
 
+export type MapStyleLifecycleState =
+  | {
+      status: "loading";
+      theme: "light" | "dark";
+      attempt: number;
+    }
+  | {
+      status: "ready";
+      theme: "light" | "dark";
+      attempt: number;
+    }
+  | {
+      status: "failed";
+      theme: "light" | "dark";
+      attempt: number;
+      reason: "error" | "timeout";
+    };
+
+type MapStyleLifecycleListener = (state: MapStyleLifecycleState) => void;
+
 interface MapProviderAdapter {
   initialize(
     container: HTMLDivElement,
@@ -132,7 +152,9 @@ interface MapProviderAdapter {
     theme?: "light" | "dark",
     padding?: MapPadding
   ): void;
+  setStyleLifecycleListener(listener: MapStyleLifecycleListener | null): void;
   setTheme(theme: "light" | "dark"): void;
+  retryStyle(): void;
   setPadding(padding: MapPadding, options?: { animate?: boolean }): void;
   getPadding(): MapPadding;
   setCenter(lat: number, lng: number): void;
@@ -159,6 +181,16 @@ const FLY_DURATION_MS = 800;
  * not as a second animation chasing the first.
  */
 const PADDING_DURATION_MS = 300;
+
+/**
+ * A style swap destroys the old basemap immediately, so an unbounded wait for
+ * `style.load` is an unbounded black canvas. Give each load one short network
+ * window and one retry. The retry stays on the SAME Map instance: Mapbox keeps
+ * its camera and DOM markers across `setStyle`, while style-owned layers are
+ * replayed from `handleStyleLoad` below.
+ */
+const STYLE_LOAD_TIMEOUT_MS = 5_000;
+const STYLE_LOAD_MAX_ATTEMPTS = 2;
 
 /**
  * How close `fitRoute` is allowed to pull in. 16.5 is a street, not a doorway.
@@ -700,11 +732,18 @@ interface MapboxMap {
   fitBounds(bounds: BoundsTuple, options?: FitBoundsOptions): void;
   project(lnglat: [number, number]): ScreenPoint;
   setStyle(style: string): void;
-  /** Only 'style.load' is used; narrow on purpose, like the rest of these. */
   on(type: "style.load", listener: () => void): void;
+  on(type: "error", listener: (event: MapboxErrorEvent) => void): void;
   off(type: "style.load", listener: () => void): void;
+  off(type: "error", listener: (event: MapboxErrorEvent) => void): void;
   isStyleLoaded(): boolean;
-  getStyle(): { layers?: { id: string; type: string }[] } | undefined;
+  getStyle():
+    | {
+        name?: string;
+        sprite?: string | { id: string; url: string }[];
+        layers?: { id: string; type: string }[];
+      }
+    | undefined;
   addSource(id: string, source: { type: "geojson"; data: RouteFeature }): void;
   /**
    * Narrowed to the only source this adapter ever adds. Accurate rather than
@@ -725,6 +764,12 @@ interface MapboxMap {
   setFilter(layer: string, filter: Expression): void;
   resize(): void;
   remove(): void;
+}
+
+interface MapboxErrorEvent {
+  error?: {
+    message?: string;
+  };
 }
 
 /**
@@ -796,6 +841,12 @@ export class MapboxAdapter implements MapProviderAdapter {
    * true from each `style.load`. It mirrors Mapbox's private `_loaded`.
    */
   private styleReady = false;
+  private styleLifecycleListener: MapStyleLifecycleListener | null = null;
+  private styleLoadListener: (() => void) | null = null;
+  private styleLoadTimer: number | null = null;
+  private styleLoadAttempt = 0;
+  private styleGeneration = 0;
+  private styleErrorObserved = false;
   private accessToken: string;
   /** Theme the live style already reflects; see setTheme. */
   private currentTheme: "light" | "dark" = "light";
@@ -816,6 +867,10 @@ export class MapboxAdapter implements MapProviderAdapter {
     return theme === "dark"
       ? "mapbox://styles/mapbox/dark-v11"
       : "mapbox://styles/mapbox/streets-v12";
+  }
+
+  public setStyleLifecycleListener(listener: MapStyleLifecycleListener | null): void {
+    this.styleLifecycleListener = listener;
   }
 
   public initialize(
@@ -845,7 +900,8 @@ export class MapboxAdapter implements MapProviderAdapter {
       zoom,
       attributionControl: false
     });
-    this.mapInstance.on("style.load", this.handleStyleLoad);
+    this.mapInstance.on("error", this.handleMapError);
+    this.beginStyleAttempt(theme, 1, false);
     // Applied as a camera call rather than a constructor option so the very
     // first frame is already padded: the opening centre must sit above the
     // sheet, not behind it.
@@ -871,15 +927,128 @@ export class MapboxAdapter implements MapProviderAdapter {
    * Markers need none of this: mapboxgl.Marker is a DOM element parked over the
    * canvas, so it is not part of the style and a style swap cannot touch it.
    *
-   * An arrow property, not a method — `off` in destroy() has to be handed the
-   * identical reference, and a bound method would produce a new one per call.
+   * Each attempt installs its own generation-bound listener. Removing the old
+   * listener stops ordinary superseded events; the generation check also makes
+   * an already-queued callback harmless after a rapid theme change.
    */
-  private handleStyleLoad = (): void => {
+  private completeStyleAttempt(
+    generation: number,
+    theme: "light" | "dark",
+    attempt: number
+  ): void {
+    if (generation !== this.styleGeneration || !this.styleMatchesTheme(theme)) return;
+
+    this.clearStyleLoadTimer();
+    this.clearStyleLoadListener();
     // Set BEFORE the applies: this event IS the fact they guard on.
     this.styleReady = true;
     this.applyCartography();
     this.applyRoute();
+    this.emitStyleLifecycle({
+      status: "ready",
+      theme,
+      attempt
+    });
+  }
+
+  /**
+   * Mapbox's `error` event also covers recoverable tile failures, so treating
+   * every event as fatal would replace a usable map with an error card. Record
+   * errors only while the style itself is pending; if `style.load` never follows,
+   * the bounded timeout retries and ultimately reports an error-backed failure.
+   */
+  private handleMapError = (_event: MapboxErrorEvent): void => {
+    if (this.styleReady || this.styleLoadTimer === null) return;
+    this.styleErrorObserved = true;
   };
+
+  private emitStyleLifecycle(state: MapStyleLifecycleState): void {
+    this.styleLifecycleListener?.(state);
+  }
+
+  private clearStyleLoadTimer(): void {
+    if (this.styleLoadTimer === null) return;
+    window.clearTimeout(this.styleLoadTimer);
+    this.styleLoadTimer = null;
+  }
+
+  private clearStyleLoadListener(): void {
+    if (!this.mapInstance || !this.styleLoadListener) return;
+    this.mapInstance.off("style.load", this.styleLoadListener);
+    this.styleLoadListener = null;
+  }
+
+  /** Confirm that a `style.load` belongs to the requested stock style. */
+  private styleMatchesTheme(theme: "light" | "dark"): boolean {
+    const style = this.mapInstance?.getStyle();
+    if (!style) return false;
+
+    const expectedId = theme === "dark" ? "dark-v11" : "streets-v12";
+    const expectedName = theme === "dark" ? "Mapbox Dark" : "Mapbox Streets";
+    if (style.name === expectedName) return true;
+
+    const spriteUrls =
+      typeof style.sprite === "string"
+        ? [style.sprite]
+        : (style.sprite?.map((sprite) => sprite.url) ?? []);
+    return spriteUrls.some((url) => url.includes(`/mapbox/${expectedId}`));
+  }
+
+  /**
+   * Observe either the constructor-owned initial style (`replaceStyle=false`)
+   * or an in-place theme/retry swap. No map reconstruction is allowed here:
+   * `setStyle` is precisely the seam that preserves camera and DOM markers.
+   */
+  private beginStyleAttempt(theme: "light" | "dark", attempt: number, replaceStyle: boolean): void {
+    const map = this.mapInstance;
+    if (!map) return;
+
+    this.clearStyleLoadTimer();
+    this.clearStyleLoadListener();
+    const generation = ++this.styleGeneration;
+    this.currentTheme = theme;
+    this.styleReady = false;
+    this.styleLoadAttempt = attempt;
+    this.styleErrorObserved = false;
+    this.emitStyleLifecycle({ status: "loading", theme, attempt });
+    const loadListener = () => this.completeStyleAttempt(generation, theme, attempt);
+    this.styleLoadListener = loadListener;
+    map.on("style.load", loadListener);
+    this.styleLoadTimer = window.setTimeout(
+      () => this.handleStyleLoadTimeout(generation),
+      STYLE_LOAD_TIMEOUT_MS
+    );
+
+    if (!replaceStyle) return;
+
+    try {
+      map.setStyle(MapboxAdapter.styleFor(theme));
+    } catch {
+      // A synchronous style rejection follows the same bounded retry policy as
+      // an asynchronous resource error; it must not escape to React's boundary.
+      this.styleErrorObserved = true;
+      this.handleStyleLoadTimeout(generation);
+    }
+  }
+
+  private handleStyleLoadTimeout(generation: number): void {
+    if (generation !== this.styleGeneration) return;
+    this.clearStyleLoadTimer();
+    this.clearStyleLoadListener();
+    if (!this.mapInstance || this.styleReady) return;
+
+    if (this.styleLoadAttempt < STYLE_LOAD_MAX_ATTEMPTS) {
+      this.beginStyleAttempt(this.currentTheme, this.styleLoadAttempt + 1, true);
+      return;
+    }
+
+    this.emitStyleLifecycle({
+      status: "failed",
+      theme: this.currentTheme,
+      attempt: this.styleLoadAttempt,
+      reason: this.styleErrorObserved ? "error" : "timeout"
+    });
+  }
 
   /**
    * Re-cut the basemap into WetinDey's map.
@@ -974,12 +1143,13 @@ export class MapboxAdapter implements MapProviderAdapter {
   public setTheme(theme: "light" | "dark"): void {
     if (!this.mapInstance) return;
     if (theme === this.currentTheme) return;
-    this.currentTheme = theme;
-    // The old style is gone from here until the new one's `style.load`. Anything
-    // added in that window throws; `handleStyleLoad` re-opens the gate and
-    // replays the route into the style that replaced it.
-    this.styleReady = false;
-    this.mapInstance.setStyle(MapboxAdapter.styleFor(theme));
+    this.beginStyleAttempt(theme, 1, true);
+  }
+
+  /** Retry a failed/pending style without replacing the map or its camera. */
+  public retryStyle(): void {
+    if (!this.mapInstance) return;
+    this.beginStyleAttempt(this.currentTheme, 1, true);
   }
 
   /**
@@ -1766,10 +1936,13 @@ export class MapboxAdapter implements MapProviderAdapter {
   }
 
   public destroy(): void {
+    this.styleGeneration += 1;
+    this.clearStyleLoadTimer();
+    this.clearStyleLoadListener();
     if (this.mapInstance) {
       this.clearMarkers();
       this.setUserPosition(null);
-      this.mapInstance.off("style.load", this.handleStyleLoad);
+      this.mapInstance.off("error", this.handleMapError);
       // No removeLayer/removeSource here. `remove()` destroys the style whole,
       // and reaching into a style mid-teardown is how you throw on the way out.
       // Markers are the exception above precisely because they are NOT the
@@ -1777,6 +1950,11 @@ export class MapboxAdapter implements MapProviderAdapter {
       this.mapInstance.remove();
       this.mapInstance = null;
     }
+    this.styleReady = false;
+    this.styleLoadAttempt = 0;
+    this.styleLoadListener = null;
+    this.styleErrorObserved = false;
+    this.styleLifecycleListener = null;
     this.routeCoords = null;
     this.routeTint = "accent";
   }

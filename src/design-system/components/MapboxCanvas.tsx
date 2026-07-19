@@ -18,6 +18,7 @@ import {
   type RouteGeometry,
   type RouteTint,
   type ScreenPoint,
+  type MapStyleLifecycleState,
   type UserPositionPrecision
 } from "@/integrations/maps/MapboxAdapter";
 import { DETENT_FRACTION, type Detent } from "./BottomSheet";
@@ -241,7 +242,10 @@ export const MapboxCanvas = forwardRef<MapCameraHandle, MapboxCanvasProps>(funct
   const containerRef = useRef<HTMLDivElement>(null);
   const adapterRef = useRef<MapboxAdapter | null>(null);
   const initialCenterRef = useRef(center);
+  /** The adapter exists; marker/camera effects may safely address it. */
   const [ready, setReady] = useState(false);
+  /** The current basemap, unlike DOM markers, is owned by the live style. */
+  const [styleStatus, setStyleStatus] = useState<MapStyleLifecycleState["status"]>("loading");
   const [failed, setFailed] = useState(false);
   /** Bumped by 'Try again'; re-runs the init effect. */
   const [attempt, setAttempt] = useState(0);
@@ -289,14 +293,33 @@ export const MapboxCanvas = forwardRef<MapCameraHandle, MapboxCanvasProps>(funct
       const accessToken = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN || "";
       const adapter = new MapboxAdapter(accessToken);
       adapterRef.current = adapter;
+      adapter.setStyleLifecycleListener((state) => {
+        if (!cancelled) setStyleStatus(state.status);
+      });
       // Read the theme at init, not at first render: ThemeContext resolves
       // localStorage in an effect, so a ref captured during render is always
       // "light" and the map would flash the wrong basemap.
       const t = document.documentElement.classList.contains("dark") ? "dark" : "light";
-      adapter.initialize(containerRef.current, initialCenterRef.current, 14.5, t, paddingRef.current);
+      try {
+        adapter.initialize(
+          containerRef.current,
+          initialCenterRef.current,
+          14.5,
+          t,
+          paddingRef.current
+        );
+      } catch {
+        adapter.destroy();
+        if (adapterRef.current === adapter) adapterRef.current = null;
+        setReady(false);
+        setStyleStatus("loading");
+        setFailed(true);
+        return;
+      }
       setFailed(false);
-      // Flips the marker effect once the adapter exists — otherwise markers
-      // added before init are silently dropped and never re-added.
+      // Flips marker/camera effects once the adapter exists. Style completion
+      // has its own state above: markers are DOM and must not be rebuilt merely
+      // because the basemap is swapping underneath them.
       setReady(true);
     });
 
@@ -448,8 +471,21 @@ export const MapboxCanvas = forwardRef<MapCameraHandle, MapboxCanvasProps>(funct
           node, so unmounting it while loading would give the adapter nothing to
           initialise into. The placeholders sit ON TOP and peel away. */}
       <div ref={containerRef} className="h-full w-full" />
-      {!ready && !failed && <MapLoading />}
-      {failed && <MapFailed onRetry={() => { setFailed(false); setAttempt((n) => n + 1); }} />}
+      {!failed && (!ready || styleStatus === "loading") && <MapLoading />}
+      {(failed || styleStatus === "failed") && (
+        <MapFailed
+          onRetry={() => {
+            if (failed) {
+              setReady(false);
+              setStyleStatus("loading");
+              setFailed(false);
+              setAttempt((n) => n + 1);
+              return;
+            }
+            adapterRef.current?.retryStyle();
+          }}
+        />
+      )}
     </div>
   );
 });
