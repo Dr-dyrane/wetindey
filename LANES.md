@@ -163,6 +163,40 @@ observations; invoke Presence deletion; tombstone only minimal safety metadata; 
 partial failure idempotently; and define retention/purge. Do not claim self-delete in UI
 until implementation evidence exists. P0 authorizes no schema, server, or UI work.
 
+#### Quality & Release: Q1 executable release verification
+
+Status: active claim awaiting QE worker. Exact path:
+
+- new `scripts/release-verification-q1-contract.test.ts`
+
+This lane owns no existing app, database, provider, or deployment path. Encode one
+deterministic candidate evidence manifest/gate that defaults **REFUTED** whenever required
+artifacts are missing or stale. It must orchestrate or validate references to—never
+duplicate—the existing migration, seed, provenance, trust, Server Action, map/sheet,
+browser, accessibility, PWA, legal, and build evidence. Forbid production builds in the
+shared `.next`; require the exact candidate commit and current-main ancestry; emit
+machine-readable `PASS` or `REFUTED` plus missing evidence. The gate verifies an evidence
+bundle; it does not itself prove runtime behavior.
+
+#### Seller and extensible account-role onboarding governance
+
+Status: Founder-approved, assigned to Product & Data Governance, and dependency-blocked
+until ADR-021 releases the shared documentation paths. Ownership activates only after that
+release. Exact future documentation paths:
+
+- new `docs/adr/022-earned-seller-and-role-onboarding.md`
+- `DECISIONS.md`
+- `WETINDEY_BIBLE.md`
+- `docs/architecture/SERVICE-ARCHITECTURE.md`
+- `docs/product/FOUNDER-FEEDBACK.md`
+
+Separate account identity, role application, business/place-control verification, earned
+seller accuracy/badge, permissions, moderation/appeal/audit, contact-publication consent,
+and reusable future RBAC onboarding. Define exact P1/P2/P3 handoffs and gates behind Food
+truth and contribution integrity. Permit no paid verification, fulfilment, schema work, or
+UI implementation. This lane is disjoint from account deletion and Presence. LANES names
+no authoritative roadmap file, so none is claimed.
+
 The Quality & Release Controller is this orchestrator thread. It is not a separate pinned
 employee task. The repeating `wetindey-orchestrator-recovery` automation is deleted and
 must not be recreated or assigned work. Portfolio auditing and Lagos Food ingestion keep
