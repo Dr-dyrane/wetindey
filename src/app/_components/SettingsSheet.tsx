@@ -1,9 +1,10 @@
 "use client";
 
 import React from "react";
-import { Sun, Moon } from "lucide-react";
+import { IconOrb } from "@/design-system/components/IconOrb";
 import { ModalSheet } from "@/design-system/components/ModalSheet";
 import { ListGroup } from "@/design-system/components/ListRow";
+import { SolidIcon } from "@/design-system/icons/SolidIcon";
 import { shippableLocales } from "@/core/i18n";
 import { haptics } from "@/lib/haptics";
 
@@ -56,7 +57,7 @@ function Segmented<T extends string>({
             aria-pressed={active}
             type="button"
             onClick={() => handleChange(o.id)}
-            className={`flex items-center justify-center gap-1.5 squircle py-1.5 text-[13px] font-medium transition duration-micro
+            className={`flex min-h-tap items-center justify-center gap-1.5 squircle py-1.5 text-[13px] font-medium transition duration-micro
               ${active ? "bg-surface text-text-primary shadow-card" : "text-text-secondary active:opacity-60"}`}
           >
             {o.label}
@@ -101,8 +102,28 @@ export function SettingsSheet({
               if (v !== theme) onToggleTheme();
             }}
             options={[
-              { id: "light", label: (<><Sun className="h-3.5 w-3.5" /> {t.light_mode}</>) },
-              { id: "dark", label: (<><Moon className="h-3.5 w-3.5" /> {t.dark_mode}</>) },
+              {
+                id: "light",
+                label: (
+                  <>
+                    <IconOrb tone="neutral">
+                      <SolidIcon name="sun" size={16} />
+                    </IconOrb>
+                    {t.light_mode}
+                  </>
+                ),
+              },
+              {
+                id: "dark",
+                label: (
+                  <>
+                    <IconOrb tone="neutral">
+                      <SolidIcon name="moon" size={16} />
+                    </IconOrb>
+                    {t.dark_mode}
+                  </>
+                ),
+              },
             ]}
           />
         </ListGroup>

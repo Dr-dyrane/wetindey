@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useRef, useState } from "react";
-import { Check, ChevronDown } from "lucide-react";
+import { SolidIcon } from "@/design-system/icons/SolidIcon";
+import { IconOrb } from "./IconOrb";
 import { ModalSheet, useModalSheetNavigation } from "./ModalSheet";
 import { transition } from "@/design-system/motion";
 
@@ -57,7 +58,9 @@ function PickerOptions({
                 )}
               </span>
               {selected && (
-                <Check className="h-5 w-5 shrink-0 text-status-info" strokeWidth={2.5} />
+                <IconOrb tone="neutral">
+                  <SolidIcon name="check" size={16} />
+                </IconOrb>
               )}
             </button>
           );
@@ -137,7 +140,9 @@ export function SheetPicker({
         >
           {selected?.label ?? placeholder}
         </span>
-        <ChevronDown className="h-4 w-4 shrink-0 text-text-tertiary" strokeWidth={2.5} />
+        <span className="shrink-0 text-text-tertiary">
+          <SolidIcon name="chevron-down" size={16} />
+        </span>
       </button>
 
       {/* Standalone use remains supported. All live call sites are inside a

@@ -1,7 +1,8 @@
 "use client";
 
 import React from "react";
-import { RefreshCw, WifiOff } from "lucide-react";
+import { IconOrb } from "./IconOrb";
+import { SolidIcon } from "@/design-system/icons/SolidIcon";
 
 /**
  * Map placeholder.
@@ -156,9 +157,9 @@ export function MapFailed({ onRetry }: { onRetry?: () => void }) {
         style={{ bottom: "var(--shell-bottom-inset, 0px)" }}
       >
         <div className="flex max-w-[280px] flex-col items-center gap-3 squircle material-thick px-5 py-4 text-center shadow-raised">
-          <span className="grid h-9 w-9 place-items-center squircle-full bg-status-caution-bg text-status-caution-fg">
-            <WifiOff className="h-[18px] w-[18px]" />
-          </span>
+          <IconOrb size={32} tone="status-caution">
+            <SolidIcon name="wifi-off" size={18} />
+          </IconOrb>
           <div>
             <p className="text-subhead font-semibold text-text-primary">Map no fit load</p>
             <p className="mt-0.5 text-footnote text-text-secondary">
@@ -168,9 +169,9 @@ export function MapFailed({ onRetry }: { onRetry?: () => void }) {
           {onRetry && (
             <button
               onClick={onRetry}
-              className="flex min-h-tap items-center gap-1.5 px-3 text-subhead font-semibold text-status-info-fg active:opacity-60"
+              className="flex min-h-tap items-center gap-1.5 px-3 text-subhead font-semibold text-text-primary active:opacity-60"
             >
-              <RefreshCw className="h-4 w-4" strokeWidth={2.5} />
+              <SolidIcon name="refresh" size={16} />
               Try again
             </button>
           )}

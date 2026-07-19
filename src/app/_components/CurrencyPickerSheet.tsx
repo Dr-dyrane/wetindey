@@ -1,8 +1,9 @@
 "use client";
 
 import React, { useMemo, useRef, useState } from "react";
-import { Check, ChevronDown, Search, X } from "lucide-react";
+import { IconOrb } from "@/design-system/components/IconOrb";
 import { ModalSheet, useModalSheetNavigation } from "@/design-system/components/ModalSheet";
+import { SolidIcon } from "@/design-system/icons/SolidIcon";
 import { transition } from "@/design-system/motion";
 import {
   POPULAR_REFERENCE_CURRENCIES,
@@ -35,11 +36,9 @@ function CurrencySearchField({
     <div
       className={`squircle-full relative flex h-11 w-full items-center overflow-hidden bg-controlFill ${transition.focus} focus-within:bg-surface-card focus-within:outline focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-focusRing`}
     >
-      <Search
-        aria-hidden="true"
-        className="pointer-events-none absolute left-3 h-4 w-4 text-text-tertiary"
-        strokeWidth={2.5}
-      />
+      <span className="pointer-events-none absolute left-3 text-text-tertiary">
+        <SolidIcon name="search" size={16} />
+      </span>
       <input
         value={value}
         onChange={(event) => onChange(event.target.value)}
@@ -55,9 +54,9 @@ function CurrencySearchField({
           aria-label="Clear currency search"
           className={`absolute right-0 grid h-11 w-11 place-items-center text-text-tertiary ${transition.press}`}
         >
-          <span className="grid h-[17px] w-[17px] place-items-center rounded-full bg-text-tertiary">
-            <X aria-hidden="true" className="h-[11px] w-[11px] text-surface" strokeWidth={3.5} />
-          </span>
+          <IconOrb tone="neutral">
+            <SolidIcon name="close" size={16} />
+          </IconOrb>
         </button>
       )}
     </div>
@@ -124,11 +123,9 @@ function CurrencyRow({
         <span className="mt-0.5 block text-footnote font-semibold text-text-secondary">{code}</span>
       </span>
       {selected && (
-        <Check
-          aria-hidden="true"
-          className="h-5 w-5 shrink-0 text-status-info"
-          strokeWidth={2.5}
-        />
+        <IconOrb tone="neutral">
+          <SolidIcon name="check" size={16} />
+        </IconOrb>
       )}
     </button>
   );
@@ -318,7 +315,9 @@ export function CurrencyPickerSheet({
       >
         {value && <CurrencyFlag code={value} />}
         <span className="text-body font-semibold">{value ?? "—"}</span>
-        <ChevronDown aria-hidden="true" className="h-4 w-4 text-text-tertiary" strokeWidth={2.5} />
+        <span className="text-text-tertiary">
+          <SolidIcon name="chevron-down" size={16} />
+        </span>
       </button>
 
       {!navigation && (

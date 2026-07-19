@@ -1,8 +1,9 @@
 "use client";
 
 import React, { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
-import { Building2, CircleDollarSign, MapPin, RefreshCw } from "lucide-react";
+import { IconOrb } from "@/design-system/components/IconOrb";
 import { Skeleton } from "@/design-system/components/Skeleton";
+import { SolidIcon } from "@/design-system/icons/SolidIcon";
 import { transition } from "@/design-system/motion";
 import {
   getReferenceCurrencyCatalog,
@@ -591,7 +592,9 @@ export function ExchangePanel({
                   onClick={retryCatalog}
                   className={`squircle min-h-tap bg-controlFill px-3 text-footnote font-semibold text-text-primary ${transition.press}`}
                 >
-                  <RefreshCw className="mr-1.5 inline h-4 w-4" aria-hidden="true" />
+                  <span className="mr-1.5 inline-flex align-middle">
+                    <SolidIcon name="refresh" size={16} />
+                  </span>
                   Try again
                 </button>
               </div>
@@ -610,7 +613,9 @@ export function ExchangePanel({
                   onClick={retryCatalog}
                   className={`squircle min-h-tap bg-controlFill px-3 text-footnote font-semibold text-text-primary ${transition.press}`}
                 >
-                  <RefreshCw className="mr-1.5 inline h-4 w-4" aria-hidden="true" />
+                  <span className="mr-1.5 inline-flex align-middle">
+                    <SolidIcon name="refresh" size={16} />
+                  </span>
                   Try again
                 </button>
               </div>
@@ -643,7 +648,9 @@ export function ExchangePanel({
                   onClick={retryRate}
                   className={`squircle min-h-tap bg-controlFill px-3 text-footnote font-semibold text-text-primary ${transition.press}`}
                 >
-                  <RefreshCw className="mr-1.5 inline h-4 w-4" aria-hidden="true" />
+                  <span className="mr-1.5 inline-flex align-middle">
+                    <SolidIcon name="refresh" size={16} />
+                  </span>
                   Try again
                 </button>
               </div>
@@ -748,7 +755,9 @@ export function ExchangePanel({
             role="status"
             className="squircle flex min-h-tap items-center gap-2.5 bg-fillTertiary px-3 py-2"
           >
-            <MapPin className="h-4 w-4 shrink-0 text-text-secondary" aria-hidden="true" />
+            <IconOrb tone="context-location">
+              <SolidIcon name="map-pin" size={16} />
+            </IconOrb>
             <p className="truncate text-footnote font-semibold text-text-secondary">
               {selectedLocation.name} selected
             </p>
@@ -771,12 +780,10 @@ export function ExchangePanel({
                   selected ? "bg-fillSecondary" : "bg-surface-card"
                 }`}
               >
-                <span className="squircle grid h-9 w-9 shrink-0 place-items-center bg-fillTertiary text-text-secondary">
-                  {location.kind === "bank" ? (
-                    <Building2 className="h-5 w-5" aria-hidden="true" />
-                  ) : (
-                    <CircleDollarSign className="h-5 w-5" aria-hidden="true" />
-                  )}
+                <span className="grid h-9 w-9 shrink-0 place-items-center">
+                  <IconOrb size={32} tone="domain-money">
+                    <SolidIcon name={location.kind === "bank" ? "building" : "money"} size={18} />
+                  </IconOrb>
                 </span>
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-body font-semibold text-text-primary">
