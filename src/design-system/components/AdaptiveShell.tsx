@@ -4,7 +4,11 @@ import React, { useCallback, useLayoutEffect, useRef } from "react";
 import { CompactShell } from "./CompactShell";
 import { RegularShell, PANEL_LEADING_OCCLUSION } from "./RegularShell";
 import { useMediaQuery } from "@/core/hooks/useMediaQuery";
-import { type Detent, type LiveSheetInset } from "./BottomSheet";
+import {
+  type Detent,
+  type LiveSheetInset,
+  type MapRetryCapability
+} from "./BottomSheet";
 
 interface AdaptiveShellProps {
   mapNode: React.ReactNode;
@@ -19,6 +23,7 @@ interface AdaptiveShellProps {
   backLabel?: string;
   activeDetent: Detent;
   setActiveDetent: (detent: Detent) => void;
+  mapRetryCapability?: MapRetryCapability | null;
 }
 
 /**
@@ -58,6 +63,7 @@ export function AdaptiveShell({
   backLabel,
   activeDetent,
   setActiveDetent,
+  mapRetryCapability,
 }: AdaptiveShellProps) {
   /**
    * Exactly ONE shell is mounted.
@@ -162,6 +168,7 @@ export function AdaptiveShell({
               activeDetent={activeDetent}
               setActiveDetent={setActiveDetent}
               onLiveInsetChange={publishLiveInset}
+              mapRetryCapability={mapRetryCapability}
             />
           )}
         </div>

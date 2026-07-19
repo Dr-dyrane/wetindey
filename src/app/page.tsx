@@ -22,7 +22,10 @@ import {
 } from "@/design-system/components/MapboxCanvas";
 import type { RouteGeometry } from "@/integrations/maps/MapboxAdapter";
 import { authClient } from "@/lib/auth-client";
-import { type Detent } from "@/design-system/components/BottomSheet";
+import {
+  type Detent,
+  type MapRetryCapability
+} from "@/design-system/components/BottomSheet";
 import { useModalPresented } from "@/design-system/components/ModalSheet";
 import { AsyncList } from "@/design-system/components/AsyncList";
 import { NigeriaLogo } from "@/design-system/components/NigeriaLogo";
@@ -162,6 +165,8 @@ export default function HomePage() {
   // Which detent the compact sheet rides at. Page-local: this component is the
   // only writer, and it hands both halves to AdaptiveShell as props.
   const [activeDetent, setActiveDetent] = useState<Detent>("medium");
+  const [mapRetryCapability, setMapRetryCapability] =
+    useState<MapRetryCapability | null>(null);
   /**
    * WHICH PLACE'S DETAIL LEVEL IS PUSHED. Null = none. That is the whole
    * meaning, and writing it always costs both halves: it gates `detailPlace`,
@@ -1041,6 +1046,7 @@ export default function HomePage() {
         detent={isRegular ? null : activeDetent}
         padding={isRegular ? { left: leadingInset } : undefined}
         sharedUsers={[]}
+        onRetryCapabilityChange={setMapRetryCapability}
       />
 
       {/* Floating controls. These sit directly on the map, so they use the
@@ -1450,6 +1456,7 @@ export default function HomePage() {
         onDetailBack={() => setDetailPlaceId(null)}
         activeDetent={activeDetent}
         setActiveDetent={setActiveDetent}
+        mapRetryCapability={mapRetryCapability}
       />
 
       {/* Progressive reveal: each task presents its own surface over the map

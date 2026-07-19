@@ -21,7 +21,11 @@ import {
   type MapStyleLifecycleState,
   type UserPositionPrecision
 } from "@/integrations/maps/MapboxAdapter";
-import { DETENT_FRACTION, type Detent } from "./BottomSheet";
+import {
+  DETENT_FRACTION,
+  type Detent,
+  type MapRetryCapability
+} from "./BottomSheet";
 import type { SharedUserLocation } from "@/app/actions";
 import { useTheme } from "@/core/context/ThemeContext";
 import {
@@ -84,6 +88,7 @@ interface MapboxCanvasProps {
    */
   routeTint?: RouteTint;
   sharedUsers?: SharedUserLocation[];
+  onRetryCapabilityChange?: (capability: MapRetryCapability | null) => void;
 }
 
 export interface MapCanvasStyleState {
@@ -255,7 +260,8 @@ export const MapboxCanvas = forwardRef<MapCameraHandle, MapboxCanvasProps>(funct
     padding,
     route = null,
     routeTint,
-    sharedUsers = []
+    sharedUsers = [],
+    onRetryCapabilityChange
   },
   ref
 ) {
@@ -494,7 +500,28 @@ export const MapboxCanvas = forwardRef<MapCameraHandle, MapboxCanvasProps>(funct
     []
   );
 
+  const retryMap = useCallback(() => {
+    if (failed) {
+      setReady(false);
+      setStyleState(INITIAL_MAP_CANVAS_STYLE_STATE);
+      setFailed(false);
+      setAttempt((currentAttempt) => currentAttempt + 1);
+      return;
+    }
+    adapterRef.current?.retryStyle();
+  }, [failed]);
+
   const overlay = mapCanvasOverlay(ready, failed, styleState);
+
+  React.useLayoutEffect(() => {
+    onRetryCapabilityChange?.(
+      overlay === "failed" ? { onRetry: retryMap } : null
+    );
+
+    return () => {
+      onRetryCapabilityChange?.(null);
+    };
+  }, [onRetryCapabilityChange, overlay, retryMap]);
 
   return (
     <div className="absolute inset-0 overflow-hidden">
@@ -504,18 +531,7 @@ export const MapboxCanvas = forwardRef<MapCameraHandle, MapboxCanvasProps>(funct
       <div ref={containerRef} className="h-full w-full" />
       {overlay === "loading" && <MapLoading />}
       {overlay === "failed" && (
-        <MapFailed
-          onRetry={() => {
-            if (failed) {
-              setReady(false);
-              setStyleState(INITIAL_MAP_CANVAS_STYLE_STATE);
-              setFailed(false);
-              setAttempt((n) => n + 1);
-              return;
-            }
-            adapterRef.current?.retryStyle();
-          }}
-        />
+        <MapFailed onRetry={retryMap} />
       )}
     </div>
   );

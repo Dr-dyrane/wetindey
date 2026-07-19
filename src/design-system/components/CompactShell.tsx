@@ -1,7 +1,12 @@
 "use client";
 
 import React, { useEffect, useRef } from "react";
-import { BottomSheet, type Detent, type LiveSheetInset } from "./BottomSheet";
+import {
+  BottomSheet,
+  type Detent,
+  type LiveSheetInset,
+  type MapRetryCapability
+} from "./BottomSheet";
 import { NavigationStack } from "./NavigationStack";
 
 interface CompactShellProps {
@@ -13,6 +18,7 @@ interface CompactShellProps {
   activeDetent: Detent;
   setActiveDetent: (detent: Detent) => void;
   onLiveInsetChange: (inset: LiveSheetInset | null) => void;
+  mapRetryCapability?: MapRetryCapability | null;
 }
 
 /**
@@ -36,6 +42,7 @@ export function CompactShell({
   activeDetent,
   setActiveDetent,
   onLiveInsetChange,
+  mapRetryCapability,
 }: CompactShellProps) {
   const hasDetail = detailNode != null;
   const hadDetail = useRef(hasDetail);
@@ -69,6 +76,7 @@ export function CompactShell({
         detent={activeDetent}
         onDetentChange={setActiveDetent}
         onLiveInsetChange={onLiveInsetChange}
+        mapRetryCapability={mapRetryCapability}
       >
         <NavigationStack
           listNode={listNode}

@@ -21,12 +21,17 @@ import {
 export type { Detent } from "@/design-system/motion";
 export { DETENT_FRACTION } from "@/design-system/motion";
 
+export interface MapRetryCapability {
+  onRetry: () => void;
+}
+
 interface BottomSheetProps {
   children: React.ReactNode;
   detent: Detent;
   onDetentChange: (detent: Detent) => void;
   /** Rendered compact-sheet geometry for map controls in the sibling layer. */
   onLiveInsetChange?: (inset: LiveSheetInset | null) => void;
+  mapRetryCapability?: MapRetryCapability | null;
 }
 
 export interface LiveSheetInset {
@@ -331,10 +336,12 @@ export function BottomSheet({
   detent,
   onDetentChange,
   onLiveInsetChange,
+  mapRetryCapability,
 }: BottomSheetProps) {
   const sideInset = ISLAND_INSET;
   const bottomInset = ISLAND_INSET;
   const sheetRef = useRef<HTMLElement>(null);
+  const handleRef = useRef<HTMLButtonElement>(null);
   const backdropRef = useRef<HTMLDivElement>(null);
   const initialPresentationRef = useRef(
     compactSheetPresentation(DETENT_FRACTION[detent], 0, sideInset, bottomInset)
@@ -1263,6 +1270,7 @@ export function BottomSheet({
         >
           <h1 className="sr-only">WetinDey</h1>
           <button
+            ref={handleRef}
             type="button"
             onClick={cycleDetent}
             aria-label={`Sheet position: ${detent}. Activate to change.`}
@@ -1270,6 +1278,25 @@ export function BottomSheet({
           >
             <span className="h-[5px] w-9 rounded-full bg-text-tertiary" />
           </button>
+
+          {mapRetryCapability ? (
+            <div className="flex min-h-11 shrink-0 items-center justify-between gap-3 px-4 pb-2">
+              <span role="status" className="text-footnote font-medium text-text-secondary">
+                Map unavailable
+              </span>
+              <button
+                type="button"
+                aria-label="Try loading map again"
+                onClick={() => {
+                  mapRetryCapability.onRetry();
+                  handleRef.current?.focus({ preventScroll: true });
+                }}
+                className={`flex min-h-tap min-w-tap shrink-0 items-center justify-center squircle px-3 text-footnote font-semibold text-accent ${transition.press}`}
+              >
+                Try again
+              </button>
+            </div>
+          ) : null}
 
           <div className="flex-1 overflow-y-auto overscroll-contain">{children}</div>
         </div>
