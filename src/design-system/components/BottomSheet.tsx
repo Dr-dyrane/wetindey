@@ -122,6 +122,57 @@ export const SHEET_RADIUS = motion.radius.sheet;
 
 const ISLAND_INSET = 10;
 
+export interface CompactSheetPresentation {
+  dockingProgress: number;
+  sideInset: number;
+  bottomGap: number;
+  surfaceBottom: string;
+  bottomRadius: number;
+}
+
+/**
+ * Keep the transform owner at one fixed size while its visible surface moves
+ * from an island to a dock. The local bottom inset cancels the outer
+ * translate, so peek and medium retain a real map-visible gap below them
+ * without re-laying out NavigationStack on every drag frame.
+ */
+export function compactSheetPresentation(
+  fraction: number,
+  viewportHeight: number,
+  islandSideInset = ISLAND_INSET,
+  islandBottomInset = ISLAND_INSET
+): CompactSheetPresentation {
+  const dockingProgress = inverseLerp(
+    DETENT_FRACTION.medium,
+    DETENT_FRACTION.large,
+    fraction
+  );
+  const islandProgress = 1 - dockingProgress;
+  const sideInset = islandSideInset * islandProgress;
+  const bottomGap = islandBottomInset * islandProgress;
+  const hiddenFraction = DETENT_FRACTION.large - fraction;
+  const surfaceBottom =
+    viewportHeight > 0
+      ? `${(hiddenFraction * viewportHeight + bottomGap).toFixed(2)}px`
+      : `calc(${(hiddenFraction * 100).toFixed(3)}dvh + ${bottomGap.toFixed(2)}px)`;
+
+  return {
+    dockingProgress,
+    sideInset,
+    bottomGap,
+    surfaceBottom,
+    bottomRadius: SHEET_RADIUS * islandProgress,
+  };
+}
+
+interface BottomSheetStyle extends React.CSSProperties {
+  "--sheet-hidden": string;
+  "--sheet-side-inset": string;
+  "--sheet-surface-bottom": string;
+  "--sheet-bottom-radius": string;
+  "--sheet-docking-progress": string;
+}
+
 type DragClaim = "horizontal" | "sheet" | "scroll" | null;
 type ScrollDirection = -1 | 1;
 
@@ -281,8 +332,13 @@ export function BottomSheet({
   onDetentChange,
   onLiveInsetChange,
 }: BottomSheetProps) {
+  const sideInset = ISLAND_INSET;
+  const bottomInset = ISLAND_INSET;
   const sheetRef = useRef<HTMLElement>(null);
   const backdropRef = useRef<HTMLDivElement>(null);
+  const initialPresentationRef = useRef(
+    compactSheetPresentation(DETENT_FRACTION[detent], 0, sideInset, bottomInset)
+  );
   const detentRef = useRef(detent);
   detentRef.current = detent;
   const liveInsetCallbackRef = useRef(onLiveInsetChange);
@@ -306,14 +362,9 @@ export function BottomSheet({
   const reducedMotion = useReducedMotion();
 
   const restingFraction = settlingFraction ?? DETENT_FRACTION[detent];
-  /* The sheet keeps one horizontal/bottom geometry at every detent. Changing
-     left, right, or bottom with a detent makes the medium→large handoff jump
-     even when those layout properties are not transitioned. Stable chrome
-     lets transform own the entire visible settle. */
-  const sideInset = ISLAND_INSET;
-  const bottomInset = ISLAND_INSET;
-  const bottomRadius = SHEET_RADIUS;
-  const isExpandedPresentation = restingFraction >= DETENT_FRACTION.large;
+  /* The outer transform box keeps one geometry at every detent. Only its
+     empty visual layers resize; NavigationStack remains fixed and clipped, so
+     the medium-to-large handoff does not re-layout content while it settles. */
   const restingBackdropOpacity =
     inverseLerp(DETENT_FRACTION.medium, DETENT_FRACTION.large, restingFraction) *
     motion.opacity.scrim;
@@ -325,6 +376,30 @@ export function BottomSheet({
       return `${(hiddenFraction * 100).toFixed(3)}vh`;
     },
     [viewportHeight]
+  );
+
+  const applyPresentation = useCallback(
+    (fraction: number) => {
+      const sheet = sheetRef.current;
+      if (!sheet) return;
+      const presentation = compactSheetPresentation(
+        fraction,
+        viewportHeightRef.current,
+        sideInset,
+        bottomInset
+      );
+      sheet.style.setProperty("--sheet-side-inset", `${presentation.sideInset.toFixed(2)}px`);
+      sheet.style.setProperty("--sheet-surface-bottom", presentation.surfaceBottom);
+      sheet.style.setProperty(
+        "--sheet-bottom-radius",
+        `${presentation.bottomRadius.toFixed(2)}px`
+      );
+      sheet.style.setProperty(
+        "--sheet-docking-progress",
+        presentation.dockingProgress.toFixed(4)
+      );
+    },
+    [bottomInset, sideInset]
   );
 
   const cancelLiveFrame = useCallback(() => {
@@ -350,18 +425,19 @@ export function BottomSheet({
   }, []);
 
   const applyFraction = useCallback(
-    (fraction: number) => {
+    (fraction: number, synchronizePresentation = true) => {
       const sheet = sheetRef.current;
       const backdrop = backdropRef.current;
       if (!sheet || !backdrop) return;
 
       sheet.style.transform = `translate3d(0, ${translateForFraction(fraction)}, 0)`;
+      if (synchronizePresentation) applyPresentation(fraction);
       const opacity =
         inverseLerp(DETENT_FRACTION.medium, DETENT_FRACTION.large, fraction) * motion.opacity.scrim;
       backdrop.style.opacity = String(opacity);
       backdrop.style.pointerEvents = opacity > 0.2 ? "auto" : "none";
     },
-    [translateForFraction]
+    [applyPresentation, translateForFraction]
   );
 
   const publishLiveInset = useCallback((fraction: number) => {
@@ -499,6 +575,7 @@ export function BottomSheet({
     function renderSettlingInset(targetFraction: number, generation: number) {
       if (!isCurrentInsetPublication(generation, insetGenerationRef.current)) return;
       const fraction = renderedFraction();
+      applyPresentation(fraction);
       publishLiveInset(fraction);
       if (Math.abs(fraction - targetFraction) < 0.0001) {
         insetFrameRef.current = null;
@@ -508,7 +585,7 @@ export function BottomSheet({
         renderSettlingInset(targetFraction, generation)
       );
     },
-    [publishLiveInset, renderedFraction]
+    [applyPresentation, publishLiveInset, renderedFraction]
   );
 
   const scheduleSettlingInset = useCallback(
@@ -567,7 +644,7 @@ export function BottomSheet({
 
         sheet.style.transition = "";
         backdrop.style.transition = "";
-        applyFraction(DETENT_FRACTION[next]);
+        applyFraction(DETENT_FRACTION[next], false);
         setSettlingFraction(DETENT_FRACTION[next]);
         const reconciledViewport = reconcileDeferredViewportHeight();
         if (snapPublicationStarter(next, detentRef.current) === "detent-effect") {
@@ -1089,6 +1166,18 @@ export function BottomSheet({
     return () => sheet.removeEventListener("wheel", onWheel, true);
   }, [cancelScrollEndFrame, detent, scrollersFrom, stepDetent]);
 
+  const initialPresentation = initialPresentationRef.current;
+  const surfaceGeometry: React.CSSProperties = {
+    left: "var(--sheet-side-inset)",
+    right: "var(--sheet-side-inset)",
+    bottom: "var(--sheet-surface-bottom)",
+    borderTopLeftRadius: SHEET_RADIUS,
+    borderTopRightRadius: SHEET_RADIUS,
+    borderBottomLeftRadius: "var(--sheet-bottom-radius)",
+    borderBottomRightRadius: "var(--sheet-bottom-radius)",
+  };
+  const interactionClip = `inset(0 var(--sheet-side-inset) var(--sheet-surface-bottom) var(--sheet-side-inset) round ${SHEET_RADIUS}px ${SHEET_RADIUS}px var(--sheet-bottom-radius) var(--sheet-bottom-radius))`;
+
   return (
     <>
       <div
@@ -1111,24 +1200,18 @@ export function BottomSheet({
           {
             height: `${DETENT_FRACTION.large * 100}dvh`,
             transform: `translate3d(0, ${translateForFraction(restingFraction)}, 0)`,
-            left: sideInset,
-            right: sideInset,
-            bottom: bottomInset,
-            borderTopLeftRadius: SHEET_RADIUS,
-            borderTopRightRadius: SHEET_RADIUS,
-            borderBottomLeftRadius: bottomRadius,
-            borderBottomRightRadius: bottomRadius,
-            boxShadow: isExpandedPresentation
-              ? "var(--motion-elevation-sheet)"
-              : "var(--motion-elevation-island)",
             willChange: isDragging ? "transform" : "auto",
             touchAction: "pan-y pinch-zoom",
             "--sheet-hidden": `${((DETENT_FRACTION.large - DETENT_FRACTION[detent]) * 100).toFixed(3)}dvh`,
-          } as React.CSSProperties
+            "--sheet-side-inset": `${initialPresentation.sideInset.toFixed(2)}px`,
+            "--sheet-surface-bottom": initialPresentation.surfaceBottom,
+            "--sheet-bottom-radius": `${initialPresentation.bottomRadius.toFixed(2)}px`,
+            "--sheet-docking-progress": initialPresentation.dockingProgress.toFixed(4),
+          } as BottomSheetStyle
         }
-        className={`pointer-events-auto absolute z-20 flex flex-col overflow-hidden ${
-          isExpandedPresentation ? "bg-surface-persistent" : "material-regular"
-        } ${isDragging ? transition.directManipulation : transition.snapSheet}`}
+        className={`pointer-events-none absolute inset-x-0 bottom-0 z-20 ${
+          isDragging ? transition.directManipulation : transition.snapSheet
+        }`}
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerUp={endDrag}
@@ -1138,17 +1221,58 @@ export function BottomSheet({
         onTouchEnd={endCancelledTouch}
         onTouchCancel={cancelCancelledTouch}
       >
-        <h1 className="sr-only">WetinDey</h1>
-        <button
-          type="button"
-          onClick={cycleDetent}
-          aria-label={`Sheet position: ${detent}. Activate to change.`}
-          className="flex w-full shrink-0 cursor-grab touch-none items-center justify-center pb-1.5 pt-2.5 active:cursor-grabbing"
-        >
-          <span className="h-[5px] w-9 rounded-full bg-text-tertiary" />
-        </button>
+        {/* Shadow cross-fades between semantic elevation rungs while the empty
+            geometry layers resize. No content participates in that layout. */}
+        <div
+          aria-hidden
+          className="absolute top-0"
+          style={{
+            ...surfaceGeometry,
+            boxShadow: "var(--motion-elevation-island)",
+            opacity: "calc(1 - var(--sheet-docking-progress))",
+          }}
+        />
+        <div
+          aria-hidden
+          className="absolute top-0"
+          style={{
+            ...surfaceGeometry,
+            boxShadow: "var(--motion-elevation-sheet)",
+            opacity: "var(--sheet-docking-progress)",
+          }}
+        />
 
-        <div className="flex-1 overflow-y-auto overscroll-contain">{children}</div>
+        {/* Material remains translucent at the map-context detents. The
+            persistent surface fades in only as the sheet reaches its dock. */}
+        <div
+          aria-hidden
+          className="material-regular absolute top-0 overflow-hidden"
+          style={surfaceGeometry}
+        >
+          <div
+            className="absolute inset-0 bg-surface-persistent"
+            style={{ opacity: "var(--sheet-docking-progress)" }}
+          />
+        </div>
+
+        {/* clip-path also clips hit testing, so the map-visible rails and
+            bottom gap remain genuine map interaction space. */}
+        <div
+          className="pointer-events-auto absolute inset-0 flex flex-col overflow-hidden"
+          style={{ clipPath: interactionClip }}
+        >
+          <h1 className="sr-only">WetinDey</h1>
+          <button
+            type="button"
+            onClick={cycleDetent}
+            aria-label={`Sheet position: ${detent}. Activate to change.`}
+            className={`flex min-h-11 w-full shrink-0 cursor-grab touch-none items-center justify-center active:cursor-grabbing active:opacity-70 ${transition.press}`}
+          >
+            <span className="h-[5px] w-9 rounded-full bg-text-tertiary" />
+          </button>
+
+          <div className="flex-1 overflow-y-auto overscroll-contain">{children}</div>
+        </div>
       </main>
     </>
   );
