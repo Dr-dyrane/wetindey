@@ -3583,6 +3583,9 @@ Required baseline:
 - database least privilege;
 - encrypted secrets;
 - role-based ops access;
+- audit logging;
+- dependency scanning;
+- and incident response contacts.
 
 ADR-020 accepts security architecture, not runtime completion. Next 15.5.20 must receive
 the same nonce-bearing policy through cloned request headers that the browser receives on
@@ -3595,9 +3598,25 @@ Preview begins with a production-shaped report-only policy and a real governed c
 Production enforcement excludes development exceptions and remains separately
 authorized. The exact Vercel Blob avatar image origin is an open CSP admission gate; no
 wildcard may be guessed. Implementation paths and deployment remain unclaimed.
-- audit logging;
-- dependency scanning;
-- and incident response contacts.
+
+### Account deletion lifecycle
+
+[ADR-021](docs/adr/021-account-deletion-lifecycle.md) accepts the deletion policy and
+forbids a false self-delete surface. A short-lived single-use challenge plus the existing
+email OTP/re-auth verifies intent. The server persists one idempotent saga, uses only
+server-side exact-branch Neon administrative Auth deletion, then retries application,
+Presence, and Blob cleanup to terminal receipts.
+
+Cleanup deletes `user_profiles`; deletes every exact `avatars/{userId}.` Blob; sets
+`sources.user_id` to `NULL`; retains observations unchanged; deletes account-linked
+ordinary `problem_reports`; invokes Presence deletion; and retains only approved minimal
+time-bounded safety tombstones with details cleared. Audit is limited to random
+request/phase identifiers, counts, attempts, outcomes, and redacted error categories and
+is purged after the approved period.
+
+Request acceptance, OTP success, missing Auth identity, or queued cleanup is not
+completion. No enabled self-delete UI or “Account deleted” claim may ship before exact
+environment capability, retry/resume, cleanup, purge, and end-to-end proof.
 
 ## 30.6 Threat model
 
@@ -4007,6 +4026,13 @@ actual caution/confirmed/unavailable assertions. Commit `284a685` is technically
 accessible but visually **NOT ACCEPTED**. Completion requires independent light/dark,
 grayscale, forced-colors, reduced-motion, 44 px, screen-reader-name, and reused-tab visual
 refutation.
+
+**Accepted account-deletion lifecycle gate.**
+[ADR-021](docs/adr/021-account-deletion-lifecycle.md) orders P1 persistence/provider
+capability, P2 retryable cleanup adapters, then P3 truthful UI and end-to-end evidence
+after corrected Presence `0012` is applied and proved on the exact target. Migration
+numbering remains controller-assigned so the separate contribution `0013+` packet is not
+silently displaced. No self-delete or completion claim precedes the complete saga.
 
 ---
 
@@ -4509,6 +4535,7 @@ The team should consider pivoting the mechanism or problem when:
 | Provider-aware Money & Exchange reference and Sample discovery prototype | Accepted — see [ADR-017](docs/adr/017-cbn-reference-rate-converter.md) | Aboki FX may consider the curated maximum set USD, GBP, EUR, CAD, AUD, GHS, KES, ZAR, AED, CNY, INR, BRL, CHF, JPY, and SAR, while showing only NGN pairs admitted by the validated server catalog. CBN labels require explicit CBN attribution; blended corridors say Frankfurter reference, with accessible provider/date attribution. The amount-first calculator and searchable picker do not exchange money or imply wallet, recipient, send, transfer, fee, or payment. Generic bank/BDC points remain unmistakably Sample and are not businesses, licences, directions, contacts, hours, or outlet rates. |
 | Controlled contextual iconography visual architecture | Accepted — see [ADR-018](docs/adr/018-controlled-semantic-iconography.md); runtime completion unverified | Stable mappings are Food warm, Money teal, navigation/location blue, contact/phone green, and rating gold; universal close/search/settings and disabled/future categories stay neutral. Actual caution/confirmed/unavailable use separate status families. The 28/32/48 px `IconOrb` has an opaque dimensional gradient, restrained sheen/depth, soft elevation, no decorative hairline, and a solid optically balanced high-contrast glyph. Authentic flags/photos/avatars are excluded. `284a685` is technically accessible but visually not accepted |
 | Per-request nonce Content Security Policy architecture | Accepted — see [ADR-020](docs/adr/020-per-request-nonce-content-security-policy.md); implementation unclaimed | One request-boundary nonce policy is copied byte-identically to Next 15.5.20 request headers and the browser response. The later enforcing change removes the static Vercel CSP in the same commit, nonces all three raw layout scripts plus parser-inserted Mapbox, and serves nonce HTML dynamic/private/no-store. Report-only evidence, environment separation, exact Blob origin admission, and independent security refutation remain gates; duplicate enforcement is prohibited |
+| Account deletion lifecycle | Accepted — see [ADR-021](docs/adr/021-account-deletion-lifecycle.md); implementation unclaimed | A persisted idempotent saga verifies fresh OTP/re-auth, deletes Auth through server-only exact-branch Neon administration, then retries profile, attribution, ordinary problem-report, Presence, and exact-prefix Blob cleanup. Observations remain unchanged; safety retention is minimal/tombstoned/details-cleared; terminal completion requires every phase receipt |
 
 > **Section 25 and Section 26 describe a TARGET, not the current system.** Verified 16 July 2026:
 > `WetinDeyModule` has zero live implementations, `src/modules/food/` is orphaned, and

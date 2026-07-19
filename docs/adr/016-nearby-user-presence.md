@@ -413,16 +413,32 @@ No public flag may be enabled merely because two allowlisted accounts completed 
 
 ## Policy questions engineering cannot decide
 
-No legal conclusion or counsel approval is recorded here. Before any pilot, the Founder
-must assign qualified policy/counsel owners to decide:
+No legal conclusion or counsel approval is recorded here. ADR-021 now settles the Founder
+product decision for account deletion: invoke idempotent Presence deletion, purge
+account-resolvable active state, and retain only minimal time-bounded safety tombstones
+with details cleared. Engineering does not need renewed Founder approval for that
+meaning. Before any pilot, qualified policy/counsel owners still decide:
 
 - who is eligible to participate, including any age or guardian rule;
 - the legal basis and exact notice for transient exact inputs, coarse leases, block/report
   records, abuse-control identifiers, processors, and cross-border handling;
-- minimum and maximum retention, access, deletion, appeal, and escalation rules for private
-  reports and durable blocks; and
+- the exact approved retention period, access, appeal, escalation, and purge operation for
+  private-report/block tombstones; and
 - the approved retention and deletion schedule for ephemeral Waves and their abuse-control
   records. Engineering can enforce the selected answer but cannot invent it.
+
+## Account deletion integration
+
+[ADR-021](021-account-deletion-lifecycle.md) governs account deletion. The Presence
+boundary is one idempotent operation that immediately revokes eligibility and purges
+leases, preferences, profile consent, snapshot capabilities, Waves, and other
+account-resolvable presence state. Blocks/reports retain only approved minimal tombstoned
+safety metadata; free text, coordinates, capabilities, display/avatar/contact fields,
+stable Auth identifiers, and unnecessary relationship details are cleared.
+
+Presence deletion is a retryable phase after Auth deletion. Partial failure cannot restore
+presence or produce “Account deleted” completion. Corrected `0012` must be applied and
+proved on the exact target before this operation is activated.
 
 ## Out of scope
 
@@ -449,5 +465,6 @@ This ADR does not authorize:
 - [ADR-003: Identity for contribution trust](003-identity-for-contribution-trust.md)
 - [ADR-011: Earned Trust Graph and reputation (Proposed)](011-earned-trust-graph-and-reputation.md)
 - [ADR-014: Pillar baselines and release migrations](014-pillar-baselines-and-release-migrations.md)
+- [ADR-021: Account deletion lifecycle](021-account-deletion-lifecycle.md)
 - [Database evolution guide](../database/README.md)
 - [Service architecture of record](../architecture/SERVICE-ARCHITECTURE.md)

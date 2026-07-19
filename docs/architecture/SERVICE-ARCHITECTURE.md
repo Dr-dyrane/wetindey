@@ -427,6 +427,19 @@ Ranked by urgency. "Missing" means: no code owns this concern, and the product c
 | **Maps/location integration** | Exists as `MapboxAdapter` and is one of the better parts of the codebase. |
 | **Security as a service** | Security is not a service box. `vercel.json` ships static headers and a CSP that still permits `'unsafe-inline'`. [ADR-020](../adr/020-per-request-nonce-content-security-policy.md) accepts one later request-boundary nonce policy, not a second service or a second enforcement owner. |
 
+**Account deletion is a cross-boundary saga, not a Profile button.**
+[ADR-021](../adr/021-account-deletion-lifecycle.md) requires fresh OTP/re-auth, persisted
+idempotent phases, server-only exact-branch Neon administrative Auth deletion, then
+retryable application, Presence, and Blob cleanup. Auth absence is not completion.
+`user_profiles` and ordinary account-linked `problem_reports` are deleted; every exact
+`avatars/{userId}.` object is deleted; `sources.user_id` becomes `NULL`; observations
+remain unchanged. Presence purges account-resolvable state and retains only approved
+minimal time-bounded safety tombstones with details cleared.
+
+The saga owns deterministic retry/manual states and minimal redacted audit. No current
+surface or provider boundary implements this contract, so an enabled self-delete control
+or completion claim would be false.
+
 ---
 
 ## 4. Recommended Services
@@ -1190,6 +1203,22 @@ Every phase is independently shippable and has an exit criterion someone can che
 - Wire `report-error`'s three declared-unused scopes. Today a silently-dropped price report is invisible by construction.
 
 **Exit.** A scripted flood of well-formed `wasAvailable:false` POSTs from one device does not change any offer's `trustLevel`. `grep -rn "contactChannelValue" src/` returns hits only inside `resolveContact`'s implementation. A thrown server action produces an event ID.
+
+### P0 account deletion lifecycle — after corrected Presence `0012`
+
+Account deletion follows ADR-021 and does not share a migration number or implementation
+claim with Presence or Contribution. Corrected `0012` must first be applied and proved on
+the exact target. The controller then assigns the next available migration after
+reconciling the separate contribution `0013+` packet.
+
+1. **P1 persistence/provider:** deletion request/phase/audit state, exact-target guards,
+   server-only Neon branch administrative deletion, and idempotent workers.
+2. **P2 cleanup:** profile, source delinking, ordinary problem-report removal, exact-prefix
+   Blob deletion, Presence deletion/tombstones, retries, redacted audit, and purge.
+3. **P3 user/release:** short-lived challenge plus existing OTP/re-auth, truthful
+   request/status/partial-failure/completion UI, and full end-to-end evidence.
+
+No public deletion UI exists until all three pass in the authorized environment.
 
 ### Phase 3 — Make the field data trustworthy (1–2 weeks)
 
