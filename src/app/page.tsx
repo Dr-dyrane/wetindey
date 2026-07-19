@@ -3,23 +3,19 @@
 import React, {
   useState,
   useEffect,
-  useLayoutEffect,
   useTransition,
   useMemo,
   useCallback,
   useRef
 } from "react";
 import { getImageProps } from "next/image";
-import { AlertTriangle, MapPin, Navigation, Sun, Moon, X, Plus, ChevronDown } from "lucide-react";
+import { AlertTriangle, MapPin, Navigation, X, Plus, ChevronDown } from "lucide-react";
 
 import { Button } from "@/design-system/components/Button";
 import { SearchField } from "@/design-system/components/SearchField";
 import { AdaptiveShell } from "@/design-system/components/AdaptiveShell";
-import {
-  MapboxCanvas,
-  MapRecenterControl,
-  type MapCameraHandle
-} from "@/design-system/components/MapboxCanvas";
+import { MapPresentation } from "@/app/_components/map-presentation/MapPresentation";
+import { useMapPresentation } from "@/app/_components/map-presentation/useMapPresentation";
 import type { RouteGeometry } from "@/integrations/maps/MapboxAdapter";
 import {
   type Detent,
@@ -93,42 +89,7 @@ interface PlaceData {
   address: string | null;
 }
 
-/**
- * The map chrome's error strip.
- *
- * `MapRecenterControl` reports a denied permission, a device that cannot fix, or
- * a timeout, and its contract says do not swallow it. There is no toast system
- * in this app and one control does not justify inventing one, so the message
- * lands here: on the map, under the pill, dismissible, and gone on its own after
- * a beat. Solid fill rather than the translucent material, this is the one
- * thing on the map that has to be read rather than seen through.
- */
-function MapNotice({ message, onDismiss }: { message: string; onDismiss: () => void }) {
-  useEffect(() => {
-    const id = window.setTimeout(onDismiss, 6000);
-    return () => window.clearTimeout(id);
-  }, [message, onDismiss]);
 
-  return (
-    <div
-      role="alert"
-      className="pointer-events-auto flex items-start gap-2 squircle bg-status-caution-bg px-3 py-2
-                 shadow-raised animate-fade-in"
-    >
-      <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-status-caution-fg" />
-      <span className="text-footnote text-status-caution-fg">{message}</span>
-      <button
-        type="button"
-        onClick={onDismiss}
-        aria-label="Dismiss"
-        className="-my-1 -mr-1 grid h-8 w-8 shrink-0 place-items-center squircle-full
-                   text-status-caution-fg active:opacity-60 transition-opacity duration-instant"
-      >
-        <X className="h-3.5 w-3.5" />
-      </button>
-    </div>
-  );
-}
 
 export default function HomePage() {
   const { theme, toggleTheme } = useTheme();
@@ -174,47 +135,7 @@ export default function HomePage() {
   // React transitions
   const [isPending, startTransition] = useTransition();
 
-  const mapCameraRef = useRef<MapCameraHandle>(null);
-
-  /**
-   * How much of the leading edge the shell's panel covers, in px.
-   *
-   * AdaptiveShell publishes this as `--shell-leading-inset` precisely so this
-   * file can pad the camera by it, otherwise a selected pin lands UNDER the
-   * panel, including the pin the user just tapped.
-   *
-   * MEASURED, not recomputed. The value is
-   * `calc(clamp(12px,1.5vw,24px) + clamp(320px,36vw,420px))`, continuous, so
-   * there is no constant to copy, and `getComputedStyle` hands back that string
-   * unresolved rather than a number. A zero-height probe styled with the
-   * variable makes the browser do the arithmetic, and a ResizeObserver on it
-   * tracks every viewport change AND the compact↔regular flip for free. Copying
-   * the clamps into JS would be a second source of truth that silently drifts
-   * the day the panel is retuned, which is exactly what happened to the
-   * hardcoded `452` this replaces (it was the old 420px panel + its 24px inset,
-   * and both numbers are gone).
-   */
-  const insetProbeRef = useRef<HTMLDivElement>(null);
-  const [leadingInset, setLeadingInset] = useState(0);
-  useLayoutEffect(() => {
-    const el = insetProbeRef.current;
-    if (!el) return;
-    const measure = () => setLeadingInset(el.getBoundingClientRect().width);
-    measure();
-    const ro = new ResizeObserver(measure);
-    ro.observe(el);
-    return () => ro.disconnect();
-  }, []);
-
-  /**
-   * The panel is up. Read from the shell's own published geometry rather than
-   * from a second copy of its media query: a `useMediaQuery("(min-width:768px)")`
-   * here would be this file guessing at a breakpoint AdaptiveShell owns, and the
-   * two would disagree the moment it moves. Zero until measured, which is the
-   * compact default, and ThemeProvider hides the tree until mount, so that
-   * frame is never seen.
-   */
-  const isRegular = leadingInset > 0;
+  const { insetProbeRef, leadingInset, isRegular } = useMapPresentation();
 
   /**
    * A presented sheet demotes an expanded one underneath it, so the map survives.
@@ -958,102 +879,29 @@ export default function HomePage() {
 
   // 1. Map node (base layer)
   const mapNode = (
-    <div className="relative w-full h-full">
-      {/* Resolves `--shell-leading-inset` to px. Zero-height and inert; it exists
-          only to be measured. Must stay inside the shell's subtree, which is
-          where the variable is set. */}
-      <div
-        ref={insetProbeRef}
-        aria-hidden
-        className="pointer-events-none absolute left-0 top-0 h-0"
-        style={{ width: "var(--shell-leading-inset, 0px)" }}
-      />
-
-      <MapboxCanvas
-        ref={mapCameraRef}
-        candidates={mapMarkers}
-        selectedPlaceId={
-          activeCategory === "money" ? selectedExchangeLocationId : detailPlaceId
-        }
-        onMarkerClick={handleMarkerSelection}
-        center={cameraCenter}
-        selfIdentity={resolvedSelfIdentity}
-        route={route}
-        /* At regular width the shell mounts no bottom sheet, so there is nothing
-           below to compensate for, but the panel covers the leading edge, and
-           without that padding a pin can be flown to and land behind it. */
-        detent={isRegular ? null : activeDetent}
-        padding={isRegular ? { left: leadingInset } : undefined}
-        sharedUsers={[]}
-        onRetryCapabilityChange={setMapRetryCapability}
-      />
-
-      {/* Floating controls. These sit directly on the map, so they use the
-          translucent material rather than a solid surface, the map needs to
-          stay legible through them. */}
-      {/* `left` clears the shell's panel rather than sitting at a flat left-4.
-          This chrome lives in the z-0 map layer, so at every regular width the
-          panel was simply drawn on top of the location pill. Pure CSS, so it
-          tracks the panel's clamp with no measurement and no resize listener. */}
-      <div
-        className="absolute right-4 z-10 flex flex-col gap-2 pointer-events-none"
-        style={{
-          top: "calc(var(--safe-area-top) + 12px)",
-          left: "calc(var(--shell-leading-inset, 0px) + 16px)"
-        }}
-      >
-        <div className="flex items-start justify-between gap-2">
-          {/* A control, not a label, hence `pointer-events-auto` against the
-              stack's `pointer-events-none`, and the tap floors. `min-w-tap` is
-              load-bearing now the label stands alone: the shortest area name in
-              the db is "Ojo", which would otherwise collapse the width under
-              44pt. The caveat for a manually picked area survives on the selected
-              row in LocationSheet, at the point where it is actionable. */}
-          <button
-            type="button"
-            onClick={() => openSurface({ kind: "location" })}
-            aria-label={`Change location, currently ${location.label}`}
-            className="pointer-events-auto flex h-11 min-w-tap items-center justify-center gap-1.5 squircle-full
-                       material-thick px-2.5 shadow-raised active:opacity-60 transition-opacity duration-instant"
-          >
-            <MapPin aria-hidden="true" className="h-4 w-4 shrink-0 text-text-secondary" strokeWidth={2.25} />
-            <span className="text-footnote font-medium text-text-primary">
-              {location.label}
-            </span>
-          </button>
-
-          <button
-            onClick={toggleTheme}
-            aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
-            className="pointer-events-auto grid h-9 w-9 shrink-0 place-items-center squircle-full
-                       material-thick shadow-raised text-text-primary
-                       active:scale-90 transition-transform duration-instant"
-          >
-            {theme === "dark" ? <Sun className="h-[18px] w-[18px]" /> : <Moon className="h-[18px] w-[18px]" />}
-          </button>
-        </div>
-
-        {locateError && <MapNotice message={locateError} onDismiss={dismissLocateError} />}
-      </div>
-
-      {/* Recenter. The shell publishes the live active detent inset; safe-area
-          padding is additive so this remains reachable on gesture-navigation
-          devices at every compact detent and on regular layouts. */}
-      <div
-        className="absolute right-4 z-10 pointer-events-none"
-        style={{
-          bottom:
-            "calc(var(--shell-bottom-inset, 0px) + env(safe-area-inset-bottom, 0px) + 16px)"
-        }}
-      >
-        <MapRecenterControl
-          /* Recenter refreshes physical evidence and moves presentation state.
-             It never mutates the persisted browsing/search context. */
-          onLocate={handleRecenter}
-          onError={(message) => setLocateError(message)}
-        />
-      </div>
-    </div>
+    <MapPresentation
+      mapMarkers={mapMarkers}
+      selectedPlaceId={
+        activeCategory === "money" ? selectedExchangeLocationId : detailPlaceId
+      }
+      onMarkerClick={handleMarkerSelection}
+      cameraCenter={cameraCenter}
+      selfIdentity={resolvedSelfIdentity}
+      route={route}
+      activeDetent={activeDetent}
+      leadingInset={leadingInset}
+      isRegular={isRegular}
+      locationLabel={location.label}
+      theme={theme}
+      toggleTheme={toggleTheme}
+      openLocationSurface={() => openSurface({ kind: "location" })}
+      handleRecenter={handleRecenter}
+      locateError={locateError}
+      setLocateError={setLocateError}
+      dismissLocateError={dismissLocateError}
+      onRetryCapabilityChange={setMapRetryCapability}
+      insetProbeRef={insetProbeRef}
+    />
   );
 
   // 2. Sheet node (left sidebar on desktop / bottom sheet on mobile)
