@@ -691,26 +691,26 @@ intact; no recurring clones are created. The GPT-5.3-Codex-Spark spawn failure
 (`reasoning.summary` host-compatibility error) is tooling evidence only. Existing employee
 tasks and the Luna fallback remain the coordination route; it does not change lane status.
 
-The systemic Production Safari/WebGL map incident remains the serialization gate for all
-page/map hot paths. Production is rolled back to the directly proven deployment, but the
-visible basemap failure reproduces there; no Market, page, Canvas, or Presence UI claim may
-widen until the release-critical Maps correction below is independently refuted and the
-exact deployment smoke passes.
+The systemic Production Safari/WebGL map incident remains a browser/production smoke gate
+for page/map hot paths. The frame-evidence source correction below is complete; no new
+runtime acceptance is implied until the exact deployment smoke passes.
 
-#### Maps release-critical frame-evidence correction — ACTIVE
+#### Maps release-critical frame-evidence correction — COMPLETE / PASS
 
 Owner: persistent Maps & Location Experience Engineer. Exclusive paths:
 
 - `src/integrations/maps/MapboxAdapter.ts`
 - `scripts/location-default-contract.test.ts`
 
-Replace Boolean frame readback with generation-bound categorical evidence: `visible`,
-`genuinely-black`, `context-unavailable/lost`, `zero-buffer`, and `read/GL-error`. Never
-classify unavailable or read-error states as black. Permit one reconstruction only for
-corroborated black/context evidence; expose a safe no-token/no-coordinate diagnostic;
-preserve the existing style timeout. Acceptance must cover visible WebGL2, genuine black,
-readback failure, context loss, zero buffer, stale generation, retry reset, and unchanged
-timeout. Serialize all other writes to these two paths until this lane closes.
+Commit `b1901fb34c7252edf6ee0dff1d2f455f4196ba0a` changed only these two paths and
+independently default-to-REFUTED **PASS**ed; focused runtime filters, ESLint, and diff check
+passed. The Safari/WebGL1 false-black diagnosis is recorded: Boolean `webgl2` readback could
+misclassify a valid WebGL1 context as black. The categorical contract now distinguishes
+`visible`, `genuinely-black`, `context-unavailable/lost`, `zero-buffer`, and `read/GL-error`;
+unavailable/read errors are never black; reconstruction occurs once only for corroborated
+black/context evidence; and the no-token/no-coordinate diagnostic is safe. Stale generation,
+retry reset, and unchanged style timeout remain covered. Browser and Production smoke are
+separate release gates; no claim is made about Safari's final OS compositor.
 
 #### Community Trust & Contribution Loop — source COMPLETE / RELEASED (local-only)
 
