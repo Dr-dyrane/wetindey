@@ -1317,7 +1317,7 @@ export default function HomePage() {
   ]);
 
   return (
-    <div className="relative w-full h-full min-h-screen overflow-hidden">
+    <div className="relative h-dvh w-full overflow-hidden">
       {/* `detailLabel` and `onDetailBack` name and pop level 1. Both are driven
           by the same `detailPlaceId` that gates `detailNode`, so the level, its
           title and its back button cannot disagree about what is open. */}
