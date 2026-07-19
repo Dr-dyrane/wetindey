@@ -34,6 +34,13 @@ The Founder-provided Dyrane Constitution v1.0 is now durable at
 refutation, and release without changing code/ADR/architecture precedence. The temporary
 four-path documentation lane is complete and all paths are released.
 
+The 19 July Production auth-email recovery is now durable under
+`docs/operations/auth-email/`. It separates request, webhook, SMTP, mailbox, branding,
+verification, and account-creation evidence; records the `10`-second Neon timeout,
+single `WetinDey <auth@wetindey.live>` sender, redeployment, embedded-logo proof, and
+exact support-address signup proof without retaining secrets or OTPs. The temporary
+five-path operations-documentation lane is complete and all paths are released.
+
 The semantic iconography foundation has now passed direct existing-tab light, dark, and
 grayscale visual refutation plus its focused contract. All five foundation paths are
 released. The persistent Iconography lead moves directly to the exact two-path Item

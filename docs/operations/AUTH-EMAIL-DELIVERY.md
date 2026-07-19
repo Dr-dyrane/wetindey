@@ -1,7 +1,10 @@
 # WetinDey authentication email delivery
 
-Status: implemented in source, deliberately inactive until the external
-configuration gate below is complete.
+Status: active in Production and Preview. The signed Neon `send.otp` webhook,
+Hostinger SMTP delivery, exact sender, embedded logo, and first-time account flow
+were re-proved on 19 July 2026. See the dedicated
+[authentication email operations package](auth-email/README.md) and
+[Production recovery evidence](auth-email/PRODUCTION-RECOVERY-2026-07-19.md).
 
 ## Provider audit
 
