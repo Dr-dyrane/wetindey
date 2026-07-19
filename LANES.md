@@ -366,22 +366,14 @@ utility lists retain their context-specific scan layouts. Independent static ref
 passed. Reused-tab visual confirmation remains a later evidence gate; no data/action/map/
 schema/copy change occurred. Release `src/design-system/components/PlaceOfferRow.tsx`.
 
-##### Human Interface — Market Details status and report-signal legibility — ACTIVE
+##### Human Interface — Market Details status and report-signal legibility — COMPLETE / STATIC PASS
 
-Owner: Controller temporary recovery claim. Exclusive path:
-`src/design-system/components/PlaceOfferRow.tsx`.
-
-Founder runtime screenshots refute the released card scan: the status chip blends into the
-image and the freshness/report cue is too faint and detached to guide a decision. Correct
-only the card hierarchy. The existing semantic chip itself, not a second wrapper or glass
-layer, must remain clearly legible over media and retain icon-plus-text meaning. Surface one
-concise, readable report-freshness cue in each regular card without restoring date,
-attribution, provenance, or other detail clutter. Price remains dominant on media, item and
-variant remain the primary text, and compact layout remains unchanged. Preserve the internal
-item-detail target, status truth, accessibility, forced colors, reduced motion, no-border
-rule, and no action/data/copy/schema/map changes. Require independent default-to-REFUTED
-source review and a path-scoped commit; reused-tab light/dark visual evidence remains a later
-gate.
+Commit `9efea5d0057fb77279f35b22ef0ebdb0234e84a0`, corrected by
+`d2f557f`, makes the direct status chip readable over media without a second glass layer while
+preserving semantic icon and ink, and promotes one concise regular-card report cue. Compact
+layout is unchanged. Independent default-to-REFUTED source review **PASS**ed; release
+`src/design-system/components/PlaceOfferRow.tsx`. Reused-tab light/dark visual evidence
+remains a later shared gate.
 
 ##### Human Interface — Market Details grid, CTA, and attribution correction — COMPLETE / PASS
 
@@ -439,20 +431,13 @@ handle-to-first-content dead space while retaining the invisible >=44x44 target,
 drag/snap, safe-area, focus/scroll handoff, and island/dock behavior. Remaining runtime
 visual verification is shared and pathless.
 
-##### Motion — compact/mid handle reservation and detent geometry — ACTIVE
+##### Motion — compact/mid handle reservation and detent geometry — COMPLETE / STATIC PASS
 
-Owner: Motion & Interaction Engineer `019f71ca-8646-7452-9171-439f5d78e71a`. Exclusive
-path: `src/design-system/components/BottomSheet.tsx`.
-
-Two independent static refuters found the released compact/mid geometry still leaves the
-absolute handle hit region over an unreserved child scroller, then changes its flex-flow
-footprint at the large detent. Correct only this boundary: retain the slim visible handle and
-its >=44x44 interaction region, but reserve its content space consistently across compact
-detents so it cannot intercept child scrolling or cause a 44px first-content shift. Preserve
-drag/snap/scroll handoff, safe areas, focus, reduced motion, modal stacking, expanded dock
-behavior, and child-owned content. No page, shell, NavigationStack, map, data, schema, copy,
-or test-path change is authorized. Require independent default-to-REFUTED source review and a
-path-scoped commit; reused-tab compact and mid visual evidence remains a later shared gate.
+Commit `92a20b0a859b9559f77d83b46dca74832800b28d` gives the slim visual handle a stable
+44px in-flow reservation, preventing it from overlaying the child scroller or changing its
+flow footprint at large detent. Independent default-to-REFUTED source review **PASS**ed;
+release `src/design-system/components/BottomSheet.tsx`. Reused-tab compact and mid gesture
+evidence remains a later shared gate.
 
 ##### Maps Canvas stale-failure recovery — COMPLETE / PASS
 
@@ -1132,13 +1117,13 @@ Source and runtime gates are released; this residual does not reopen a path. Fra
 still cannot establish Safari's final OS compositor universally.
 
 Self-avatar audit disposition: Canvas/Adapter rendering and browsing/device separation are
-already correct. The root defect is page profile invalidation after upload. **ACTIVE** under
-the persistent Maps & Location Experience Engineer: exclusively claim
-`src/app/page.tsx` and `scripts/location-default-contract.test.ts` only. Refresh the local
-profile identity after a successful avatar mutation so the already-wired self marker receives
-the current Blob URL; preserve initials only for missing or failed avatar images. Do not touch
-Canvas, Adapter, Presence, auth, Blob, schema, migrations, or shared-user behavior. Require an
-independent default-to-REFUTED review and a path-scoped commit before release.
+already correct. The page profile refresh defect is corrected at
+`b0f67d712630c029b62c67cc7e40cbb80b3818f2`: header and marker URLs are kept distinct, and
+the self marker receives the existing CSP-safe optimized URL after a successful profile/avatar
+mutation. Guest and missing/failed-image initials fallbacks remain. Independent
+default-to-REFUTED source review **PASS**ed; release `src/app/page.tsx` and
+`scripts/location-default-contract.test.ts`. Reused-tab sign-in/upload/recenter visual proof
+remains a later shared evidence gate; no Presence behavior is enabled.
 
 #### Systemic Production map incident — source correction COMPLETE / runtime evidence pathless
 
