@@ -3249,8 +3249,8 @@ names why it is not built:
 |---|---|
 | `evidence` | Media is deferred entirely. `@vercel/blob` is not a dependency and nothing imports it — see the Blob line in 40.2, demoted from Accepted the same day. When photos land, this table lands with them, and it drags EXIF stripping, content hashing and size caps with it. |
 | `trust_assessments` | It would cache a pure function. `assessTrust` (`src/lib/trust.ts`) derives trust from observations on read; persisting the result buys nothing and creates an invalidation problem that does not currently exist. |
-| `moderation_decisions` | Build it when a moderator exists. `moderation_status` is a column on `observations` and no human has ever set it. |
-| `audit_log` | Same gate. There is no operations console and no actor to attribute an action to. |
+| `moderation_decisions` | It does not exist today; `moderation_status` is a column on `observations` and no human has ever set it. ADR-022 P2 requires seller verification/moderation/appeal after P1 audit, without waiting for the future `moderator` role. Its exact schema and migration remain unclaimed. |
+| `audit_log` | It does not exist today. ADR-022 P1 requires scoped assignment/permission lifecycle audit before P2 reviewers or any future moderator role. Its exact bounded shape, retention, access, and migration remain unclaimed. |
 | `search_events` | Analytics is `@vercel/analytics`. Instrument the few events that answer a question before building a table to hold nineteen. |
 
 ## 27.3 Geographic indexes
@@ -3617,6 +3617,38 @@ is purged after the approved period.
 Request acceptance, OTP success, missing Auth identity, or queued cleanup is not
 completion. No enabled self-delete UI or “Account deleted” claim may ship before exact
 environment capability, retry/resume, cleanup, purge, and end-to-end proof.
+
+### Seller stewardship and extensible role onboarding
+
+[ADR-022](docs/adr/022-earned-seller-and-role-onboarding.md) accepts an
+application-owned, provider-independent, deny-by-default authorization architecture.
+Authentication, identity proofing, business verification, place control, a scoped role,
+contact-publication consent, seller accuracy, claim confidence, reputation, and public
+badges are separate assertions. No payment, subscription, sponsorship, or submission
+volume may purchase or accelerate identity/business verification, place-control
+approval, a role, lifecycle/status, accuracy, ranking, or a badge.
+
+Initial seller roles are owner, manager, and staff assignments over a proved business,
+place, and permission scope. Later moderator, field-operator, support, and community
+roles reuse the scoped assignment, lifecycle, appeal, and audit contracts only after
+their own least-privilege and abuse review. Unknown or stale assignments fail closed;
+provider metadata, UI visibility, and browser claims are never the authorization source.
+
+Business and place-control claims require minimized private evidence, independent review,
+expiry/re-verification, suspension/revocation, named reasons, and an appeal decided by
+someone other than the original reviewer. A role cannot approve its own verification,
+moderation, accuracy, or appeal.
+
+Contact publication is a separate, affirmative, revocable consent bound to one place,
+channel, exact value, and audience. Onboarding and verification do not publish a phone,
+WhatsApp, email, or other value. Public reads must have no value field outside the
+currently consented branch, and withdrawal makes the channel unavailable immediately.
+
+Seller accuracy may be projected only after sufficient seller-authored updates are
+evaluated against independent admissible outcomes, corrections, and disputes. Any future
+badge states its narrow place/capability scope, evidence window, sample, uncertainty, and
+expiry. Seller activity and badges never automatically increase ADR-015 Food confidence
+or turn seller-authored claims into observed evidence.
 
 ## 30.6 Threat model
 
@@ -4033,6 +4065,17 @@ capability, P2 retryable cleanup adapters, then P3 truthful UI and end-to-end ev
 after corrected Presence `0012` is applied and proved on the exact target. Migration
 numbering remains controller-assigned so the separate contribution `0013+` packet is not
 silently displaced. No self-delete or completion claim precedes the complete saga.
+
+**Accepted earned-seller and role-onboarding gate.**
+[ADR-022](docs/adr/022-earned-seller-and-role-onboarding.md) orders P1 scoped
+authorization/audit, P2 seller place-control onboarding and explicit contact consent,
+then P3 earned accuracy and separately reviewed future roles. P1 cannot begin until
+ADR-015 Food truth is wired and proved, the exact target migration lineage is reconciled,
+corrected Presence `0012` is applied and proved, and the separately controlled
+contribution-integrity migration at `0013` or later is applied and proved. The controller
+then assigns the next available seller migration; ADR-022 reserves none. No seller
+dashboard, contact publication, badge, fulfilment, provider, schema, deployment, or
+rollout is authorized by this roadmap.
 
 ---
 
@@ -4536,6 +4579,7 @@ The team should consider pivoting the mechanism or problem when:
 | Controlled contextual iconography visual architecture | Accepted — see [ADR-018](docs/adr/018-controlled-semantic-iconography.md); runtime completion unverified | Stable mappings are Food warm, Money teal, navigation/location blue, contact/phone green, and rating gold; universal close/search/settings and disabled/future categories stay neutral. Actual caution/confirmed/unavailable use separate status families. The 28/32/48 px `IconOrb` has an opaque dimensional gradient, restrained sheen/depth, soft elevation, no decorative hairline, and a solid optically balanced high-contrast glyph. Authentic flags/photos/avatars are excluded. `284a685` is technically accessible but visually not accepted |
 | Per-request nonce Content Security Policy architecture | Accepted — see [ADR-020](docs/adr/020-per-request-nonce-content-security-policy.md); implementation unclaimed | One request-boundary nonce policy is copied byte-identically to Next 15.5.20 request headers and the browser response. The later enforcing change removes the static Vercel CSP in the same commit, nonces all three raw layout scripts plus parser-inserted Mapbox, and serves nonce HTML dynamic/private/no-store. Report-only evidence, environment separation, exact Blob origin admission, and independent security refutation remain gates; duplicate enforcement is prohibited |
 | Account deletion lifecycle | Accepted — see [ADR-021](docs/adr/021-account-deletion-lifecycle.md); implementation unclaimed | A persisted idempotent saga verifies fresh OTP/re-auth, deletes Auth through server-only exact-branch Neon administration, then retries profile, attribution, ordinary problem-report, Presence, and exact-prefix Blob cleanup. Observations remain unchanged; safety retention is minimal/tombstoned/details-cleared; terminal completion requires every phase receipt |
+| Earned seller stewardship and extensible role onboarding | Accepted — see [ADR-022](docs/adr/022-earned-seller-and-role-onboarding.md); implementation unclaimed | Application-owned scoped RBAC separates Auth, business verification, place control, roles, explicit contact-publication consent, seller accuracy, Food confidence, and badges. Owner/manager/staff permissions, moderation, independent appeal, and redacted audit precede any contact or dashboard. Identity/business verification, place-control approval, roles, lifecycle/status, accuracy/ranking, and badges cannot be purchased; implementation follows Food truth, corrected `0012`, and contribution integrity at `0013` or later |
 
 > **Section 25 and Section 26 describe a TARGET, not the current system.** Verified 16 July 2026:
 > `WetinDeyModule` has zero live implementations, `src/modules/food/` is orphaned, and
@@ -4571,7 +4615,7 @@ The team should consider pivoting the mechanism or problem when:
 - Initial 8–12 items.
 - Canonical and local unit policy.
 - Evidence and catalog media policy. **Still open.** Vercel Blob is now wired for profile avatars, but identity media does not decide report evidence or item reference imagery. There is still no evidence-media table or report attachment path. Observation evidence requires private/public classification, EXIF removal, content hashing, size caps, moderation, retention, deletion, and offline behavior. Catalog imagery separately requires curation, attribution, licensing, duplicate handling, and operator authorization. Decide and build them in separate lanes.
-- Vendor/contact model. **Promoted to blocking by [ADR-001](docs/adr/001-fulfilment-is-out-of-scope.md).** Handing fulfilment to the buyer and seller makes Contact seller the terminal step of the core journey, and it currently resolves for no place at all: `contact_visibility` defaults to `private`, and the `contact_channel_kind` / `contact_channel_value` columns are read by nothing and written by nothing. Trader consent capture (Section 24) is the unbuilt precondition.
+- Seller/contact implementation. **Governed by [ADR-022](docs/adr/022-earned-seller-and-role-onboarding.md) and still blocking Contact seller.** The terminal handoff currently resolves for no place: `contact_visibility` defaults to `private`, and the contact channel columns are read by nothing and written by nothing. Place control, scoped authorization, separate per-place/per-channel/per-value/per-audience publication consent, server-side no-value-on-denial resolution, and withdrawal proof remain unbuilt. ADR-022 does not revive a generic vendor object or fulfilment.
 - Contributor compensation.
 - Public-versus-private evidence policy.
 - Final brand identity and exact contextual/status/focus token values remain open.

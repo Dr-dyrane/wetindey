@@ -82,7 +82,7 @@ A Lagos **live local information** PWA whose current V1 vertical is Food price a
 
 ### Users
 
-**Primary — the buyer, anonymous by design.** A Lagos resident deciding whether a trip to the market is worth it. Cost of a wrong answer: an hour, a bus fare, a wasted trip. Unauthenticated (`user={null}` is hardcoded), often on a mid-range Android over a thin connection. Bible Section 40.1 accepted **anonymous browse** deliberately. The same anonymous person also *contributes* — reports a price, confirms a visit. That is the product's supply.
+**Primary — the buyer, anonymous by design.** A Lagos resident deciding whether a trip to the market is worth it. Cost of a wrong answer: an hour, a bus fare, a wasted trip. Browsing requires no account, while optional email-OTP recognition exists for attribution. Bible Section 40.1 accepted **anonymous browse** deliberately. The same anonymous person may also *contribute* — reports a price, confirms a visit. That is the product's supply.
 
 The inherited mistake: **Section 40.1 accepted anonymous *browse*. Anonymous *write* was never argued for.** It came along for the ride, and it is the single largest liability in the system.
 
@@ -313,12 +313,12 @@ Nothing below is a directory today. All of it is a set of functions that share a
 
 | Concern | Reality | Where it must land |
 |---|---|---|
-| **Authorization** | Not weak — **absent**. No session, no rate limit, no per-device source. | Contribution's write API. A precondition, not a service. |
+| **Authorization** | Optional recognition exists, but application-owned scoped seller/operator authorization does not. No role assignment, permission matrix, suspension/revocation, or audit boundary implements ADR-022. | Future ADR-022 P1 after Food/contribution gates. A cross-cutting server precondition, not a service. |
 | **Idempotency** | `grep -rni 'idempot'` → one unrelated seed comment. | Contribution. One client-minted UUID plus a unique constraint fixes replay and the Bible's idempotency requirement in one stroke. |
 | **Stale treatment** | `grep lastSync` → nothing. Unimplemented. | Offers. The most serious gap, because it inverts the product's one promise. |
 | **Media / evidence** | `@vercel/blob` is **not in `package.json`**; no evidence table; the media folder is a `.gitkeep`. | Nowhere in V1. It is listed as an **Accepted** decision with zero implementation — the most misleading drift class there is. Move it to Open by ADR. |
 | **Analytics** | Two empty folders, one tag, **zero of 19 events**. | Each module emits its own. Instrument the five that gate launch and drop the other fourteen. |
-| **Identity** | `user={null}` hardcoded. Correct per the accepted anonymous-browse decision. | Stays out. Do not confuse "we need auth" with "we need users." |
+| **Identity** | Optional email-OTP recognition and profiles exist; anonymous browse remains accepted. Authentication does not prove business, place control, role, consent, or accuracy. | Attribution now; future ADR-022 assignments remain application-owned and separately gated. |
 | **The module framework** | A closed orphan pair, backed by a mock array, mandated by `AGENTS.md`, implemented by nothing. | **Delete.** See R1. |
 
 ---
@@ -353,11 +353,17 @@ Ranked by urgency. "Missing" means: no code owns this concern, and the product c
 
 **Why it is cheap.** The machinery exists on both sides and nothing connects it: `sw.js` already stamps a cached-at header, built for Mapbox's retention ceiling; `trust.ts` already keeps freshness and availability as **two separate answers** precisely so a stale treatment is expressible. The model is ready; the wire is missing.
 
-### M4 — Moderation and audit — **one module or none**
+### M4 — Food moderation and audit — **current debt; ADR-022 phases separately**
 
 **Missing:** the moderation vocabulary ships and is a lie (Section 2.4). No decisions table, no audit log, so no row records who decided — while the Bible requires that every moderation action is audited and sets a maximum moderation delay as a pilot SLA.
 
-**Audit is not separable.** An audit log with no moderation actor is a table of nulls. One module, one actor concept, one table pair.
+**Food moderation decisions need an actor and audit trail.** A generic decision record
+with no accountable reviewer is a table of nulls. However, ADR-022 supersedes the old
+“one module or none” sequencing: its P1 audits assignment and permission lifecycle before
+P2 seller verification, moderation, and appeals. Those reviewer actions then use the
+same governed actor/reason/audit contract. Neither phase waits for activation of the
+future `moderator` role, and neither authorizes an unscoped moderation module or guessed
+table pair.
 
 **And the honest outcome is probably deletion.** There is no moderator. Until there is, **stop hardcoding `'approved'` or delete the vocabulary.** A schema that *looks* moderated and is not is the worst of the three states, because the next reader trusts it.
 
@@ -365,7 +371,13 @@ Ranked by urgency. "Missing" means: no code owns this concern, and the product c
 
 **Missing:** any operator-facing screen. The app has one route; an entire Bible chapter of operations has zero code footprint.
 
-**Demoted deliberately.** An `/admin` that cannot moderate (M4 has no moderator), has no ops write path, and has no audit log is a read-only dashboard over 478 rows — and this document's own position is that Neon's SQL console *is* the reporting service. **Build it when it has a write path to own:** coverage status, `contactVisibility`, moderation decisions. That is also the only place auth is genuinely required, and it is one flavour — an env-checked operator credential gating a route group. Not OAuth, not accounts.
+**Demoted deliberately.** An `/admin` that cannot moderate (M4 has no moderator), has no
+ops write path, and has no audit log is a read-only dashboard over 478 rows — and this
+document's own position is that Neon's SQL console *is* the reporting service. **Build it
+when it has a write path to own:** coverage status, contact consent, moderation decisions.
+When authorized, ADR-022 requires application-owned scoped permissions, separation of
+duties, suspension/revocation, and audit; an env flag, provider claim, or generic
+`isOperator` check is not sufficient.
 
 **Boundary rule when it lands:** `/admin` renders other modules and owns **zero** domain logic. If it writes SQL, the module failed.
 
@@ -376,6 +388,14 @@ Ranked by urgency. "Missing" means: no code owns this concern, and the product c
 **The trigger is not an attack — it is someone doing the assigned work.** "Make Contact seller work" is exactly the commit that adds the channel value to that SELECT, and it is a commit somebody *will* be asked to make, because ADR-001 cut fulfilment and made "Contact seller" the entire exit from discovery.
 
 **Fix, ~80 lines:** one server-side `resolveContact(placeId)` returning a discriminated union — a channel value only on the `public` branch, and on every other branch **no field to leak**. `contactChannelValue` is not a field on any type that crosses the port. `contactVisibility` becomes a `pgEnum`, not `varchar(50)`. **A convention cannot hold PII; a function signature can.**
+
+**Governance correction — [ADR-022](../adr/022-earned-seller-and-role-onboarding.md).**
+The resolver is necessary but no longer sufficient. Contact publication follows proved
+place control and a current scoped permission, then a separate affirmative, revocable
+consent for one place, channel, exact value, and audience. Seller onboarding, business
+verification, or an owner/manager/staff assignment never implies publication. Withdrawal
+must remove the value from public reads immediately. ADR-022's P2 owns that lifecycle
+only after its P1 authorization boundary and the Food/contribution migration gates pass.
 
 ### M7 — Launch-gate instrumentation — **BEFORE the launch decision. Five events, not nineteen.**
 
@@ -398,9 +418,9 @@ Ranked by urgency. "Missing" means: no code owns this concern, and the product c
 | **Payments / Billing / Subscriptions** | No money changes hands. ADR-001; Bible Section 2.5. Nothing to bill for; no recurring anything. |
 | **Cart / Checkout** | Explicitly out. This is a price-and-availability app, not commerce. |
 | **Delivery / Dispatch / Courier / Logistics** | ADR-001: buyer and seller arrange it themselves. |
-| **Orgs / Teams / Multi-tenancy** | One team; users are anonymous. There is no second tenant. |
-| **User accounts / profiles** | `user={null}` is hardcoded by design; anonymous browse is an accepted decision. |
-| **Authz / RBAC** | One operator role. `if (isOperator)` is not a permissions system. |
+| **Orgs / Teams / generic Multi-tenancy** | ADR-022 accepts resource-scoped assignments, not an organizations/teams product or generic tenant platform. |
+| **Mandatory accounts / gated browse** | Optional recognition exists, but anonymous browse remains accepted. Seller or operator onboarding must not gate public reading. |
+| **Generic Authz / RBAC engine** | Superseded in part by ADR-022: bounded application-owned role assignments are accepted after Food/contribution gates; a generic policy engine, provider-metadata authority, or `if (isOperator)` shortcut remains rejected. |
 | **Session management** | A signed device cookie is not session management — folded into M1. |
 | **Notifications / Messaging** | Nothing to notify about, no identity to notify, and buyer↔seller happens off-platform. |
 | **Activity feed** | A public gamified leaderboard is forbidden. A feed is a leaderboard in a coat. |
@@ -415,13 +435,13 @@ Ranked by urgency. "Missing" means: no code owns this concern, and the product c
 | **BI / reporting** | Neon has a SQL console. That *is* the reporting service. |
 | **Backup / recovery service** | Neon has PITR; `observations` is append-only and `offers_current` is derivable. One runbook, no code. |
 | **Monitoring / logging service** | Vercel gives request logs free. Once M8 is wired, marginal pre-launch value is zero. |
-| **Privacy / compliance service** | NDPR attaches the moment a trader's phone is stored — which M6 governs. A policy doc plus one function boundary, not a module. |
+| **Privacy / compliance service** | ADR-022 makes seller evidence, contact consent, withdrawal, audit, and retention cross-cutting obligations. They require governed boundaries and evidence, not a standalone service box. |
 | **Vendor module** | Vendor-as-object and the `vendors` table are **obsoleted by ADR-001**. Contact is denormalised onto `places`. Strike `vendors` from the Bible. |
 | **`WetinDeyModule` / plugin engine** | The Bible's own words: *"Do not build a generic plugin engine before Food works."* One importer, zero users, two orphan generations. **Delete.** |
 | **Trust as its own service** | Already built and already rejected by reality — a clean batched trust API with zero callers. It is Offers' domain rule. |
 | **Availability as its own service** | Availability *is* a claim about item, place and time — that is the definition of an Offer, not a peer. |
 | **Location & Coverage as its own service** | Owns no data. It is Geo's read surface. |
-| **Seller Contact as its own service** | One consent rule and three columns. A service around a foreign key. Folded into Geo as M6. |
+| **Seller Contact as its own service** | ADR-022 expands the consent lifecycle but still does not justify a separate process or module. The public resolver stays at the place read boundary; authorization, consent, audit, and retention keep their owning boundaries. |
 | **Market Operations as a service** | That Bible chapter is a runbook, not a codebase. Its entire code footprint is a `sources` row per channel and an import that calls `recordObservation({collectionMethod:'scraper'})`. |
 | **Settings service** | Exists, correctly scoped to theme, locale and radius. |
 | **Maps/location integration** | Exists as `MapboxAdapter` and is one of the better parts of the codebase. |
@@ -439,6 +459,22 @@ minimal time-bounded safety tombstones with details cleared.
 The saga owns deterministic retry/manual states and minimal redacted audit. No current
 surface or provider boundary implements this contract, so an enabled self-delete control
 or completion claim would be false.
+
+**Seller stewardship is scoped authorization, not Auth metadata or seller trust.**
+[ADR-022](../adr/022-earned-seller-and-role-onboarding.md) separates authentication,
+business verification, place control, role permissions, contact consent, seller
+accuracy, Food confidence, and public badges. WetinDey owns current assignments and
+checks subject/resource/action scope server-side with deny-by-default semantics. Only a
+short-lived application session claim may cache a resolved assignment, and it cannot
+authorize after suspension or revocation. Auth-provider metadata never carries role
+authority.
+
+Owner, manager, and staff are place-scoped roles with different permissions. Verification
+and appeals require independent reviewers; support cannot impersonate or approve; audit
+records reasons and state changes without raw evidence or contact values. Later
+moderator, field-operator, support, and community roles reuse the mechanism only through
+separate least-privilege and abuse review. This is not a vendor service, teams product,
+generic policy engine, reputation shortcut, or fulfilment boundary.
 
 ---
 
@@ -837,7 +873,14 @@ Nine tables. One writer each — a rule violated exactly once today, and that vi
 | `observations` | **Contribution** | Indirect — `raw_payload` is unvalidated jsonb and is the natural place for PII to leak in unnoticed | writes **and an UPDATE**, seeder | Contribution, **INSERT only** | **Immutability violated.** The schema asserts "this table only ever grows"; the visit path UPDATEs a row it just inserted. `did_buy` has had a column since 0002 and still goes into jsonb under a comment that is now false. `moderation_status` defaults `pending`; every writer hardcodes `approved`. |
 | `offers_current` | **Offers** | No | **inside `submitObservation`, a Contribution action** | **Offers only, via one upsert** | **THE contested table, and the boundary that matters.** Derived by Contribution, consumed by Discovery — which is why neither may own it. Not a materialized view; a hand-maintained table recomputed inline. The unique index shipped in 0002 and there is **still no `ON CONFLICT`**, so the race it was built to surface now throws a 500 — during the reconnect drain, when concurrency peaks. `freshnessState` / `trustLevel` are Offers' columns holding trust's values, and today they are the literals `"confirmed"` / `"high"`. |
 
-**Missing tables the Bible specifies and I would not build:** `vendors` (obsoleted by ADR-001 — strike it), `evidence` (`@vercel/blob` is not a dependency; move it from Accepted to Open by ADR), `trust_assessments` (a cache of a pure function — invent it and you own an invalidation problem you created), `moderation_decisions` / `audit_log` (build when a moderator exists), `search_events` (instrument five events, not nineteen).
+**Missing tables the Bible specifies and I would not build in the current correctness
+phases:** `vendors` (obsoleted by ADR-001 — strike it), `evidence` (Food evidence media
+remains separately governed), `trust_assessments` (a cache of a pure function — invent it
+and you own an invalidation problem you created), and `search_events` (instrument five
+events, not nineteen). ADR-022 supersedes the old “audit only when a moderator exists”
+rule: its future P1 requires scoped assignment/lifecycle audit before P2 seller
+verification, moderation, or appeals. No current lane may invent those tables or their
+migration shape.
 
 **The rule that makes the rest enforceable:** one ESLint `no-restricted-imports` per module, as listed in Section 4. A boundary a linter cannot see is a comment.
 
@@ -1018,7 +1061,7 @@ export async function submitObservation(raw: unknown) {
 | 8 | **Contribution** | 3 | 1 | 2 | 0 | 1 | **1** | Both public writes are genuinely validated and the discriminated union correctly closes a real back door — and then: no auth, no rate limit, no idempotency, a queue that replays duplicates forever into an append-only table. |
 | 9 | **Offers** | 2 | 2 | 1 | 0 | 1 | **1** | The read model the entire product is served from, hand-maintained inline inside a write action a thousand lines from its readers, stamping `trustLevel:"high"` on every row, with a unique index and no `ON CONFLICT`, and a price band with no time predicate. |
 | 10 | **Trust** (`lib/trust.ts` + the two batch actions) | 0 | — | — | 0 | — | **0** | 527 correct, source-diversity-weighted, per-source-capped lines with **zero callers**. The live model is the string literal `"high"`, patched at render time by a React component. Scale, maintainability and extensibility are not scored: they are not properties of code no user can reach. |
-| 11 | **Identity / Contact** | 0 | — | 1 | 0 | 0 | **0** | Not a module, a homeless concern: `user={null}` is hardcoded, and "Contact seller" — the affordance ADR-001 leans its whole fulfilment-is-out argument on — can never fire. |
+| 11 | **Identity / Contact** | 0 | — | 1 | 0 | 0 | **0** | Optional recognition and profiles exist, but ADR-022 scoped authorization, place-control proof, contact-publication consent, and audit do not. “Contact seller” — the affordance ADR-001 relies on — still cannot fire. |
 | 12 | **Analytics** | 0 | — | — | 3 | 0 | **0** | Two empty folders and one tag; zero of nineteen events, so the launch gates have no data source. Security scores 3 only because cookieless-and-absent leaks nothing. |
 | 13 | **Media / evidence** | 0 | — | — | — | 0 | **0** | `@vercel/blob` is not a dependency, no evidence table, no code — an **Accepted** decision with zero implementation, which is the most misleading drift class in the constitution. |
 | 14 | **Module framework** | 0 | 0 | 0 | 0 | 0 | **0** | A closed orphan pair backed by a five-item mock array, mandated by `AGENTS.md`, implemented by nothing, and actively generating dead code. Negative value. |
@@ -1220,6 +1263,31 @@ reconciling the separate contribution `0013+` packet.
 
 No public deletion UI exists until all three pass in the authorized environment.
 
+### Earned seller and extensible role onboarding — after Food truth and contribution integrity
+
+[ADR-022](../adr/022-earned-seller-and-role-onboarding.md) reserves no migration number
+and authorizes no implementation. Before seller P1, ADR-015 observed-only Food truth must
+be wired and independently proved on live write/read surfaces, the exact target lineage
+must be reconciled, corrected Presence `0012` must be applied and proved, and the
+separately controlled contribution-integrity migration at `0013` or later must be applied
+and proved with attributed, idempotent, moderated writes and outcome evidence.
+
+1. **P1 authorization foundation:** controller-assigned schema/migration, app-owned role
+   templates and scoped assignments, server-side resource/action checks, suspension and
+   revocation, separation of duties, and redacted audit. No seller UI or public contact.
+2. **P2 onboarding and consent:** business and place-control claims, owner/manager/staff
+   workflows, moderation and independent appeal, explicit
+   per-place/per-channel/per-value/per-audience contact publication and withdrawal, and
+   scope-safe dashboards. Contact stays unavailable until its resolver and consent
+   lifecycle pass independently.
+3. **P3 earned accuracy and later roles:** only after sufficient independently evaluated
+   outcomes, publish a narrow expiring non-purchasable accuracy assertion, then add one
+   separately reviewed future role at a time. Seller history never automatically raises
+   Food confidence or converts seller claims into observed evidence.
+
+Every phase receives fresh exact paths, migration allocation, privacy/security/trust
+refutation, and release authority. Nothing in this roadmap permits fulfilment.
+
 ### Phase 3 — Make the field data trustworthy (1–2 weeks)
 
 **Goal.** What a contributor recorded in a market with no signal arrives once, complete, and correctly timestamped. Corruption here is permanent, which is why it outranks all remaining structure work.
@@ -1263,12 +1331,12 @@ Three overdue ADRs — **Drizzle**, **Mapbox**, **the freshness window** — all
 | Don't build | Why not |
 |---|---|
 | **Microservices, K8s, service mesh, separate deploys** | Modular monolith on Vercel. Proposing distributed infra for a pre-launch PWA is a failure, not thoroughness. |
-| **User accounts / auth / RBAC** | Anonymous browse is an accepted decision. Phase 2 needs *device identity*, not users. Do not confuse "we need auth" with "we need accounts". |
+| **Seller accounts / auth / RBAC before ADR-022 gates** | Optional recognition does not authorize seller access. Do not implement roles before Food truth, corrected `0012`, contribution-integrity `0013+`, controller-assigned migration, and exact P1 scope; anonymous browse remains accepted. |
 | **A search service** | At ~87 aliases the answer is `CREATE EXTENSION pg_trgm` plus a GIN index — and not even that yet. |
 | **The `ST_DWithin` migration on the two seq-scan predicates** | R8. At 478 offers the planner does not care. Phase 1's validators de-fang it. Schedule it; don't panic. |
 | **Media / evidence / Blob** | Photos are deferrable. When it lands it drags EXIF stripping, content hashing, size caps and IndexedDB with it — all reasons to defer. Amend the Bible instead. |
 | **IndexedDB for the queue** | localStorage is defensible for text-only payloads at this size. Pin the migration to media, not to now. |
-| **A moderation UI, decisions table, or audit log** | There is no moderator. **But stop hardcoding `'approved'`, or delete the vocabulary** — a schema that looks moderated and isn't is the worst of the three states. |
+| **Generic moderation UI or audit before its governed phase** | There is no moderator today. Stop hardcoding `'approved'` or delete the false vocabulary. ADR-022 nevertheless requires assignment/lifecycle audit in P1 and seller verification/moderation/appeal in P2; do not defer those until a future moderator role, and do not build them outside exact phased claims. |
 | **An operator surface** | M5, demoted. Until M4 gives it something to write, it is a read-only dashboard over 478 rows — and Neon's SQL console already is that. |
 | **The other 14 analytics events** | Five gate the decision. The rest is instrumentation for questions nobody is asking yet. |
 | **`/api/v1` route handlers** | Zero external consumers. Server Actions are correct. |
