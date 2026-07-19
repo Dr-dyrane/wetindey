@@ -87,7 +87,7 @@ function ItemArtwork({
     />
   ) : (
     <div
-      className="grid h-full w-full place-items-center bg-surface-sunken text-text-secondary"
+      className="grid h-full w-full place-items-center bg-fillTertiary text-text-secondary"
       aria-hidden="true"
     >
       <SolidIcon name="food" size={24} />
@@ -116,7 +116,7 @@ function ItemArtwork({
       {showImage ? (
         <span
           aria-hidden="true"
-          className="pointer-events-none absolute inset-y-0 -right-px w-3
+          className="pointer-events-none absolute inset-y-0 -right-px w-4
                      bg-gradient-to-r from-transparent to-surface-card
                      group-focus-within:opacity-0"
         />
@@ -152,7 +152,7 @@ export function PlaceOfferRow({ offer }: { offer: PlaceOffer }) {
     offer.trust?.origin === "observed"
       ? "Last observed"
       : offer.trust?.origin === "synthetic"
-        ? "Sample date"
+        ? offer.trust.provenanceLabel
         : offer.trust?.origin === "inadmissible"
           ? "Reference date"
           : "Projection date";
@@ -169,8 +169,8 @@ export function PlaceOfferRow({ offer }: { offer: PlaceOffer }) {
         onImageError={() => setImageBroken(true)}
       />
 
-      <div className="min-w-0 flex-1 py-2 pl-2.5 pr-2">
-        <div className="flex items-start justify-between gap-2">
+      <div className="min-w-0 flex-1 py-2 pl-2 pr-1.5">
+        <div className="flex items-start justify-between gap-1.5">
           <div className="min-w-0">
             <h5 className="truncate text-subhead font-semibold text-text-primary">
               {offer.itemName}
@@ -206,7 +206,7 @@ export function PlaceOfferRow({ offer }: { offer: PlaceOffer }) {
           </span>
         )}
 
-        <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-caption-2 text-text-secondary">
+        <div className="mt-1 flex flex-wrap items-center gap-x-1.5 gap-y-1 text-caption-2 text-text-secondary">
           <span>{freshnessLabel(offer)}</span>
           <span className="inline-flex items-center gap-1">
             {isSample ? <SolidIcon name="star" size={16} /> : null}
@@ -237,8 +237,8 @@ export function PlaceOfferRowSkeleton() {
                      bg-surface-card shadow-card"
         >
           <div className="w-[88px] shrink-0 animate-pulse self-stretch bg-fillTertiary" />
-          <div className="min-w-0 flex-1 space-y-2 py-2 pl-2.5 pr-2">
-            <div className="flex items-start justify-between gap-2">
+          <div className="min-w-0 flex-1 space-y-2 py-2 pl-2 pr-1.5">
+            <div className="flex items-start justify-between gap-1.5">
               <div className="h-4 w-2/5 animate-pulse rounded-full bg-fillTertiary" />
               <div className="h-4 w-1/3 animate-pulse rounded-full bg-fillTertiary" />
             </div>

@@ -1324,7 +1324,7 @@ export default function HomePage() {
     const getItAction = (
       <div
         className={`stack-surface z-10 shrink-0 ${
-          isRegular ? "static pt-1" : "static py-2"
+          isRegular ? "static pt-1" : "sticky top-0 py-2"
         }`}
       >
         <Button
@@ -1353,8 +1353,10 @@ export default function HomePage() {
 
     return (
       <div
-        data-navigation-detail-bounded
-        className="flex h-[calc(var(--navigation-detail-visible-height,100dvh)-24px)] min-h-0 flex-col gap-4 md:h-full md:overflow-hidden"
+        data-navigation-detail-bounded={isRegular || undefined}
+        className={`flex flex-col gap-3 ${
+          isRegular ? "h-full min-h-0" : "min-h-full"
+        }`}
       >
         <div className="flex shrink-0 items-start justify-between">
           <div className="flex-1 pr-4">
@@ -1390,19 +1392,27 @@ export default function HomePage() {
           </button>
         </div>
 
-        {/* Compact keeps one persistent in-flow action after the place context.
-            Prices own the only moving region beneath it, so rows never pass
-            behind the action and the translated sheet creates no blank tail. */}
+        {/* Compact keeps one sticky, in-flow action after the place context.
+            NavigationStack owns the scroll, so there is no measured inner
+            viewport or translated-sheet tail. */}
         {!isRegular ? getItAction : null}
 
         {/* What this market is currently selling. */}
-        <div className="flex min-h-0 flex-1 flex-col gap-3">
+        <div
+          className={`-mx-2 flex flex-1 flex-col gap-2 ${
+            isRegular ? "min-h-0" : ""
+          }`}
+        >
           <h4 className="shrink-0 text-footnote text-text-secondary">
             Prices in market
           </h4>
           <div
-            data-navigation-detail-scroller
-            className="min-h-0 flex-1 overflow-y-auto overscroll-y-none pr-1"
+            data-navigation-detail-scroller={isRegular || undefined}
+            className={
+              isRegular
+                ? "min-h-0 flex-1 overflow-y-auto overscroll-y-none pr-1"
+                : undefined
+            }
           >
             <AsyncList
               items={placeOffers}
