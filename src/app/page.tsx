@@ -651,6 +651,32 @@ export default function HomePage() {
     setDetailPlaceId(null);
   });
 
+  const handleSelectPlaceOffer = useEventCallback(async (offer: PlaceOffer) => {
+    const knownItem = [...(popularItems ?? []), ...searchResults].find(
+      (item) => item.name === offer.itemName
+    );
+    if (knownItem) {
+      handleSelectItem(knownItem);
+      return;
+    }
+
+    try {
+      const matches = await searchItems(offer.itemName, "food", {
+        lat: searchOrigin.lat,
+        lng: searchOrigin.lng,
+        radiusKm: activeRadiusKm
+      });
+      const targetName = offer.itemName.trim().toLocaleLowerCase("en-NG");
+      const match = matches.find(
+        (item) => item.name.trim().toLocaleLowerCase("en-NG") === targetName
+      );
+      if (match) handleSelectItem(match);
+    } catch {
+      // A failed lookup leaves the current market detail intact; it must not
+      // invent an item identity from an offer id or an external image URL.
+    }
+  });
+
   /** The pins are the list. See ItemDetailSheet's `onOffersChange`. */
   const handleItemOffersChange = useEventCallback((offers: PresentedOffer[]) => {
     setItemOffers(offers);
@@ -1162,6 +1188,10 @@ export default function HomePage() {
   const detailNode = useMemo(() => {
     if (activeCategory !== "food" || !detailPlace) return undefined;
 
+    const visitLabel = /kiosk|shop|supermarket/.test(detailPlace.placeType.toLowerCase())
+      ? "Visit shop"
+      : "Visit market";
+
     const getItAction = (
       <div
         className={`stack-surface z-10 shrink-0 ${isRegular ? "static pt-1" : "static py-2"}`}
@@ -1185,7 +1215,7 @@ export default function HomePage() {
           }
         >
           <Navigation className="h-4 w-4 mr-1.5" />
-          Get it
+          {visitLabel}
         </Button>
       </div>
     );
@@ -1248,12 +1278,14 @@ export default function HomePage() {
               subject={detailPlace.id}
               keyExtractor={(offer) => offer.id}
               className={
-                isRegular
-                  ? "grid-cols-[repeat(auto-fit,minmax(min(100%,18rem),1fr))]"
-                  : undefined
+                isRegular ? "grid-cols-2" : undefined
               }
               renderItem={(offer) => (
-                <PlaceOfferRow offer={offer} layout={isRegular ? "regular" : "compact"} />
+                <PlaceOfferRow
+                  offer={offer}
+                  layout={isRegular ? "regular" : "compact"}
+                  onSelect={() => void handleSelectPlaceOffer(offer)}
+                />
               )}
               skeleton={<PlaceOfferRowSkeleton layout={isRegular ? "regular" : "compact"} />}
               empty={{
@@ -1282,6 +1314,7 @@ export default function HomePage() {
     isPlaceOffersLoading,
     searchOrigin,
     location.label,
+    handleSelectPlaceOffer,
     setDetailPlaceId
   ]);
 

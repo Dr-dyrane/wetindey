@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
+import { ExternalLink } from "lucide-react";
 
 import type { PlaceOffer } from "@/app/actions";
 import { formatNaira } from "@/lib/money";
@@ -105,31 +106,15 @@ function ItemArtwork({
           : "group relative w-[88px] shrink-0 self-stretch md:w-[72px]"
       }
     >
-      {offer.imageSourceUrl && showImage ? (
-        <a
-          href={offer.imageSourceUrl}
-          target="_blank"
-          rel="nofollow noopener noreferrer"
-          aria-label={`Photo source for ${offer.itemName}`}
-          className={
-            isRegular
-              ? "relative block h-full min-h-tap w-full bg-transparent focus-visible:outline-2 focus-visible:outline-offset-[-3px] focus-visible:outline-accent"
-              : "relative block h-full min-h-[88px] w-[88px] bg-transparent md:min-h-[80px] md:w-[72px] focus-visible:outline-2 focus-visible:outline-offset-[-3px] focus-visible:outline-accent"
-          }
-        >
-          {artwork}
-        </a>
-      ) : (
-        <div
-          className={
-            isRegular
-              ? "relative h-full min-h-tap w-full bg-transparent"
-              : "relative h-full min-h-[88px] w-[88px] bg-transparent md:min-h-[80px] md:w-[72px]"
-          }
-        >
-          {artwork}
-        </div>
-      )}
+      <div
+        className={
+          isRegular
+            ? "relative h-full min-h-tap w-full bg-transparent"
+            : "relative h-full min-h-[88px] w-[88px] bg-transparent md:min-h-[80px] md:w-[72px]"
+        }
+      >
+        {artwork}
+      </div>
       {showImage ? (
         <span
           aria-hidden="true"
@@ -151,9 +136,11 @@ export type OfferRowLayout = "compact" | "regular";
 export function PlaceOfferRow({
   offer,
   layout = "compact",
+  onSelect,
 }: {
   offer: PlaceOffer;
   layout?: OfferRowLayout;
+  onSelect?: () => void;
 }) {
   const isRegular = layout === "regular";
   const [imageBroken, setImageBroken] = useState(false);
@@ -173,14 +160,13 @@ export function PlaceOfferRow({
       ? "Last observed"
       : "Reference date";
 
-  return (
-    <article
+  const cardContent = (
+    <div
       className={
         isRegular
-          ? "squircle-card flex min-w-0 w-full flex-col overflow-hidden bg-transparent"
-          : "squircle-card flex min-h-[88px] w-full items-stretch overflow-hidden bg-transparent md:min-h-[80px]"
+          ? "flex min-w-0 w-full flex-col text-left"
+          : "flex min-h-[88px] min-w-0 w-full items-stretch text-left md:min-h-[80px]"
       }
-      aria-label={`${offer.itemName}, ${priceLabel(offer)} per ${offer.unit}`}
     >
       <ItemArtwork
         offer={offer}
@@ -201,17 +187,13 @@ export function PlaceOfferRow({
             <h5 className="truncate text-subhead font-semibold text-text-primary">
               {offer.itemName}
             </h5>
-            <p className="truncate text-caption-1 text-text-secondary">
-              {offer.variantName}
-            </p>
+            <p className="truncate text-caption-1 text-text-secondary">{offer.variantName}</p>
           </div>
           <div className="min-w-0 max-w-[45%] shrink text-right md:max-w-[40%]">
             <p className="truncate whitespace-nowrap text-subhead font-semibold tabular-nums text-text-primary">
               {priceLabel(offer)}
             </p>
-            <p className="truncate text-caption-2 text-text-secondary">
-              / {offer.unit}
-            </p>
+            <p className="truncate text-caption-2 text-text-secondary">/ {offer.unit}</p>
           </div>
         </div>
 
@@ -240,6 +222,40 @@ export function PlaceOfferRow({
           </span>
         </div>
       </div>
+    </div>
+  );
+
+  return (
+    <article
+      className={
+        isRegular
+          ? "squircle-card relative flex min-w-0 w-full overflow-hidden bg-transparent"
+          : "squircle-card relative flex min-h-[88px] w-full items-stretch overflow-hidden bg-transparent md:min-h-[80px]"
+      }
+      aria-label={`${offer.itemName}, ${priceLabel(offer)} per ${offer.unit}`}
+    >
+      {onSelect ? (
+        <button
+          type="button"
+          onClick={onSelect}
+          className="min-h-tap min-w-0 w-full text-left focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-accent"
+        >
+          {cardContent}
+        </button>
+      ) : (
+        cardContent
+      )}
+      {showImage && offer.imageSourceUrl ? (
+        <a
+          href={offer.imageSourceUrl}
+          target="_blank"
+          rel="nofollow noopener noreferrer"
+          aria-label={`Photo source for ${offer.itemName}`}
+          className="absolute right-1.5 top-1.5 z-10 grid min-h-tap min-w-tap place-items-center rounded-full bg-fillSecondary text-text-primary shadow-sm focus-visible:outline-2 focus-visible:outline-accent"
+        >
+          <ExternalLink className="h-4 w-4" aria-hidden="true" />
+        </a>
+      ) : null}
     </article>
   );
 }
@@ -248,7 +264,7 @@ export function PlaceOfferRowSkeleton({ layout = "compact" }: { layout?: OfferRo
   const isRegular = layout === "regular";
   return (
     <div
-      className={isRegular ? "grid grid-cols-[repeat(auto-fit,minmax(min(100%,18rem),1fr))] gap-2" : "space-y-2"}
+      className={isRegular ? "grid grid-cols-2 gap-2" : "space-y-2"}
       aria-hidden="true"
     >
       {[0, 1, 2].map((index) => (
