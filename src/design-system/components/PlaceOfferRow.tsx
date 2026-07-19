@@ -80,7 +80,7 @@ function ItemArtwork({
       src={offer.imageUrl!}
       alt=""
       fill
-      sizes="88px"
+      sizes="(min-width: 768px) 72px, 88px"
       className="object-cover"
       unoptimized
       onError={onImageError}
@@ -95,21 +95,21 @@ function ItemArtwork({
   );
 
   return (
-    <figure className="group relative w-[88px] shrink-0 self-stretch">
+    <figure className="group relative w-[88px] shrink-0 self-stretch md:w-[72px]">
       {offer.imageSourceUrl && showImage ? (
         <a
           href={offer.imageSourceUrl}
           target="_blank"
           rel="nofollow noopener noreferrer"
           aria-label={`Photo source for ${offer.itemName}`}
-          className="relative block h-full min-h-[104px] w-[88px] bg-transparent
+          className="relative block h-full min-h-[104px] w-[88px] bg-transparent md:min-h-[88px] md:w-[72px]
                      focus-visible:outline-2 focus-visible:outline-offset-[-3px]
                      focus-visible:outline-accent"
         >
           {artwork}
         </a>
       ) : (
-        <div className="relative h-full min-h-[104px] w-[88px] bg-transparent">
+        <div className="relative h-full min-h-[104px] w-[88px] bg-transparent md:min-h-[88px] md:w-[72px]">
           {artwork}
         </div>
       )}
@@ -159,7 +159,7 @@ export function PlaceOfferRow({ offer }: { offer: PlaceOffer }) {
 
   return (
     <article
-      className="squircle-card flex min-h-[104px] w-full items-stretch
+      className="squircle-card flex min-h-[104px] w-full items-stretch md:min-h-[88px]
                  overflow-hidden bg-transparent"
       aria-label={`${offer.itemName}, ${priceLabel(offer)} per ${offer.unit}`}
     >
@@ -169,9 +169,9 @@ export function PlaceOfferRow({ offer }: { offer: PlaceOffer }) {
         onImageError={() => setImageBroken(true)}
       />
 
-      <div className="min-w-0 flex-1 py-2 pl-2 pr-1.5">
+      <div className="min-w-0 flex-1 py-2 pl-2 pr-1.5 md:py-1.5 md:pl-2 md:pr-1">
         <div className="flex items-start justify-between gap-1.5">
-          <div className="min-w-0">
+          <div className="min-w-0 flex-1">
             <h5 className="truncate text-subhead font-semibold text-text-primary">
               {offer.itemName}
             </h5>
@@ -179,8 +179,8 @@ export function PlaceOfferRow({ offer }: { offer: PlaceOffer }) {
               {offer.variantName}
             </p>
           </div>
-          <div className="shrink-0 text-right">
-            <p className="whitespace-nowrap text-subhead font-semibold tabular-nums text-text-primary">
+          <div className="min-w-0 max-w-[45%] shrink text-right md:max-w-[40%]">
+            <p className="truncate whitespace-nowrap text-subhead font-semibold tabular-nums text-text-primary">
               {priceLabel(offer)}
             </p>
             <p className="truncate text-caption-2 text-text-secondary">
@@ -234,10 +234,11 @@ export function PlaceOfferRowSkeleton() {
         <div
           key={index}
           className="squircle-card flex min-h-[104px] items-stretch overflow-hidden
+                     md:min-h-[88px]
                      bg-transparent"
         >
-          <div className="w-[88px] shrink-0 animate-pulse self-stretch bg-fillTertiary" />
-          <div className="min-w-0 flex-1 space-y-2 py-2 pl-2 pr-1.5">
+          <div className="w-[88px] shrink-0 animate-pulse self-stretch bg-fillTertiary md:w-[72px]" />
+          <div className="min-w-0 flex-1 space-y-2 py-2 pl-2 pr-1.5 md:py-1.5 md:pl-2 md:pr-1">
             <div className="flex items-start justify-between gap-1.5">
               <div className="h-4 w-2/5 animate-pulse rounded-full bg-fillTertiary" />
               <div className="h-4 w-1/3 animate-pulse rounded-full bg-fillTertiary" />
