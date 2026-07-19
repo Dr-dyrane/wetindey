@@ -119,16 +119,18 @@ function ItemArtwork({
         {artwork}
       </div>
       {isRegular ? (
-        <div
-          className="pointer-events-none absolute left-2 top-2 z-10 rounded-full
-                     bg-black/25 p-0.5 shadow-[0_2px_10px_rgb(0_0_0_/_0.28)]
-                     backdrop-blur-sm forced-colors:bg-[Canvas] forced-colors:p-0"
-        >
+        <div className="pointer-events-none absolute left-2 top-2 z-10">
           {status ? (
-            <StatusBadge kind={status}>{statusLabel}</StatusBadge>
+            <StatusBadge
+              kind={status}
+              className="backdrop-blur-sm shadow-[0_2px_10px_rgb(0_0_0_/_0.22)]"
+            >
+              {statusLabel}
+            </StatusBadge>
           ) : (
             <span
               className="inline-flex items-center gap-1.5 rounded-full bg-fillSecondary px-2 py-0.5 text-[11px] text-text-secondary
+                         shadow-[0_2px_10px_rgb(0_0_0_/_0.22)] backdrop-blur-sm
                          forced-colors:bg-[Canvas] forced-colors:text-[CanvasText]
                          forced-colors:outline forced-colors:outline-1 forced-colors:outline-offset-[-1px]"
             >
