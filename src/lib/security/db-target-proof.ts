@@ -353,8 +353,10 @@ export function createDbTargetProofHandler(options: {
   return async (request, environment, now = new Date()) => {
     if (environment.vercelEnvironment !== "production") return emptyResponse(404);
     if (request.method !== "POST") return emptyResponse(405);
-    if (request.headers.get("content-length") !== "0") return emptyResponse(400);
+    const contentLength = request.headers.get("content-length");
+    if (contentLength !== null && contentLength !== "0") return emptyResponse(400);
     if (request.headers.has("transfer-encoding")) return emptyResponse(400);
+    if (request.body !== null) return emptyResponse(400);
 
     const nowSeconds = Math.floor(now.getTime() / 1_000);
     let configuredToken: string;

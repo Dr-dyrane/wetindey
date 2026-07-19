@@ -40,12 +40,19 @@ function request(options: {
   authorization?: string;
   callerNonce?: string;
   body?: string;
-  omitContentLength?: boolean;
+  contentLength?: string | null;
+  transferEncoding?: string;
 } = {}): Request {
   const headers = new Headers();
-  if (!options.omitContentLength) {
-    headers.set("content-length", options.body === undefined ? "0" : String(Buffer.byteLength(options.body)));
+  const contentLength = options.contentLength === undefined
+    ? options.body === undefined
+      ? "0"
+      : String(Buffer.byteLength(options.body))
+    : options.contentLength;
+  if (contentLength !== null) {
+    headers.set("content-length", contentLength);
   }
+  if (options.transferEncoding) headers.set("transfer-encoding", options.transferEncoding);
   if (options.authorization) headers.set("authorization", options.authorization);
   if (options.callerNonce) headers.set(DB_TARGET_PROOF_NONCE_HEADER, options.callerNonce);
   return new Request("https://proof.invalid/api/internal/db-target-proof", {
@@ -136,7 +143,11 @@ async function main(): Promise<void> {
   const claimToken = atomicClaim();
   const handler = createDbTargetProofHandler({ claimToken });
   const success = await handler(
-    request({ authorization: `Bearer ${TOKEN}`, callerNonce: NONCE_A }),
+    request({
+      authorization: `Bearer ${TOKEN}`,
+      callerNonce: NONCE_A,
+      contentLength: null,
+    }),
     environment,
     NOW,
   );
@@ -152,6 +163,13 @@ async function main(): Promise<void> {
     ),
     429,
   );
+
+  const exactZeroSuccess = await createDbTargetProofHandler({ claimToken: atomicClaim() })(
+    request({ authorization: `Bearer ${TOKEN}`, callerNonce: NONCE_A }),
+    environment,
+    NOW,
+  );
+  assert.equal(exactZeroSuccess.status, 200);
   assertPrivateEmpty(
     await createDbTargetProofHandler({ claimToken })(
       request({ authorization: `Bearer ${TOKEN}`, callerNonce: NONCE_B }),
@@ -183,10 +201,31 @@ async function main(): Promise<void> {
       400,
     ],
     [
+      request({ authorization: `Bearer ${TOKEN}`, callerNonce: NONCE_A, contentLength: "00" }),
+      environment,
+      400,
+    ],
+    [
+      request({ authorization: `Bearer ${TOKEN}`, callerNonce: NONCE_A, contentLength: "1" }),
+      environment,
+      400,
+    ],
+    [
       request({
         authorization: `Bearer ${TOKEN}`,
         callerNonce: NONCE_A,
-        omitContentLength: true,
+        body: "ignored",
+        contentLength: "0",
+      }),
+      environment,
+      400,
+    ],
+    [
+      request({
+        authorization: `Bearer ${TOKEN}`,
+        callerNonce: NONCE_A,
+        contentLength: null,
+        transferEncoding: "chunked",
       }),
       environment,
       400,
