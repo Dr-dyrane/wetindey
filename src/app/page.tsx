@@ -1240,7 +1240,10 @@ export default function HomePage() {
     );
 
     return (
-      <div className="flex h-[calc(100%-max(var(--sheet-hidden,0px),var(--safe-area-bottom))-24px)] min-h-0 flex-col gap-4 md:h-full md:overflow-hidden">
+      <div
+        data-navigation-detail-bounded
+        className="flex h-[calc(var(--navigation-detail-visible-height,100dvh)-var(--safe-area-bottom)-24px)] min-h-0 flex-col gap-4 md:h-full md:overflow-hidden"
+      >
         <div className="flex shrink-0 items-start justify-between">
           <div className="flex-1 pr-4">
             <h2 className="text-headline tracking-tight text-text-primary">{detailPlace.name}</h2>

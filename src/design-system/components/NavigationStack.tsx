@@ -87,6 +87,18 @@ export function resetDetailScrollPosition(target: MutableScrollPosition | null):
 }
 
 const DETAIL_SCROLL_SELECTOR = "[data-navigation-detail-scroller]";
+const BOUNDED_DETAIL_SELECTOR = "[data-navigation-detail-bounded]";
+
+interface BoundedDetailProps {
+  "data-navigation-detail-bounded"?: true;
+}
+
+function isBoundedDetailNode(node: React.ReactNode): boolean {
+  return (
+    React.isValidElement<BoundedDetailProps>(node) &&
+    node.props["data-navigation-detail-bounded"] === true
+  );
+}
 
 /**
  * A two-level navigation stack on one surface.
@@ -138,6 +150,7 @@ export function NavigationStack({
 
   const isOpen = detailNode != null;
   const content = detailNode ?? heldDetail;
+  const isBoundedDetail = isBoundedDetailNode(content);
 
   useLayoutEffect(() => {
     const resetVisibleDetailScroll = () => {
@@ -166,6 +179,65 @@ export function NavigationStack({
       wasDetailOpenRef.current = lifecycle.cleanupOpen;
     };
   }, [isOpen]);
+
+  useLayoutEffect(() => {
+    if (!isOpen || !isBoundedDetail) return;
+    const boundedDetail =
+      detailScrollerRef.current?.querySelector<HTMLElement>(BOUNDED_DETAIL_SELECTOR);
+    if (!boundedDetail) return;
+
+    let geometryFrame = 0;
+    let sampleUntil = performance.now() + motion.duration.slow + 50;
+
+    const measureVisibleHeight = () => {
+      const viewport = window.visualViewport;
+      const visibleBottom = viewport
+        ? viewport.offsetTop + viewport.height
+        : window.innerHeight;
+      const visibleHeight = Math.max(
+        0,
+        visibleBottom - boundedDetail.getBoundingClientRect().top
+      );
+      boundedDetail.style.setProperty(
+        "--navigation-detail-visible-height",
+        `${visibleHeight}px`
+      );
+    };
+
+    const sampleGeometry = (timestamp: number) => {
+      measureVisibleHeight();
+      if (timestamp < sampleUntil) {
+        geometryFrame = requestAnimationFrame(sampleGeometry);
+      } else {
+        geometryFrame = 0;
+      }
+    };
+
+    const restartGeometrySampling = () => {
+      sampleUntil = performance.now() + motion.duration.slow + 50;
+      measureVisibleHeight();
+      if (geometryFrame === 0) {
+        geometryFrame = requestAnimationFrame(sampleGeometry);
+      }
+    };
+
+    const viewport = window.visualViewport;
+    restartGeometrySampling();
+    window.addEventListener("resize", restartGeometrySampling);
+    window.addEventListener("pointermove", measureVisibleHeight, { passive: true });
+    window.addEventListener("touchmove", measureVisibleHeight, { passive: true });
+    viewport?.addEventListener("resize", restartGeometrySampling);
+    viewport?.addEventListener("scroll", restartGeometrySampling);
+
+    return () => {
+      if (geometryFrame !== 0) cancelAnimationFrame(geometryFrame);
+      window.removeEventListener("resize", restartGeometrySampling);
+      window.removeEventListener("pointermove", measureVisibleHeight);
+      window.removeEventListener("touchmove", measureVisibleHeight);
+      viewport?.removeEventListener("resize", restartGeometrySampling);
+      viewport?.removeEventListener("scroll", restartGeometrySampling);
+    };
+  }, [content, isBoundedDetail, isOpen]);
 
   /**
    * The pop has no exit animation for free: React unmounts `detailNode` the
@@ -207,8 +279,20 @@ export function NavigationStack({
       event.target instanceof Element
         ? event.target.closest<HTMLElement>(DETAIL_SCROLL_SELECTOR)
         : null;
+    if (nestedScroller) event.stopPropagation();
     if (shouldContainTerminalScroll(nestedScroller ?? event.currentTarget, event.deltaY)) {
       event.preventDefault();
+    }
+  };
+
+  const containNestedDetailGesture = (
+    event: React.SyntheticEvent<HTMLDivElement>
+  ) => {
+    if (
+      event.target instanceof Element &&
+      event.target.closest(DETAIL_SCROLL_SELECTOR)
+    ) {
+      event.stopPropagation();
     }
   };
 
@@ -293,7 +377,19 @@ export function NavigationStack({
         <div
           ref={detailScrollerRef}
           onWheel={containTerminalWheel}
-          className={`flex-1 overflow-y-auto overscroll-y-none [overflow-anchor:none] px-6 pb-0 md:pb-[calc(var(--safe-area-bottom)+24px)] ${
+          onPointerDown={containNestedDetailGesture}
+          onPointerMove={containNestedDetailGesture}
+          onPointerUp={containNestedDetailGesture}
+          onPointerCancel={containNestedDetailGesture}
+          onTouchStart={containNestedDetailGesture}
+          onTouchMove={containNestedDetailGesture}
+          onTouchEnd={containNestedDetailGesture}
+          onTouchCancel={containNestedDetailGesture}
+          className={`flex-1 ${
+            isBoundedDetail
+              ? "overflow-hidden md:overflow-y-auto"
+              : "overflow-y-auto"
+          } overscroll-y-none [overflow-anchor:none] px-6 pb-0 md:pb-[calc(var(--safe-area-bottom)+24px)] ${
             onDetailBack && content ? "pt-2" : "pt-6"
           }`}
         >

@@ -491,19 +491,27 @@ test("compact detail uses one bounded viewport instead of a terminal reservation
   assert.equal(navigationStackSource.includes("var(--sheet-hidden"), false);
   assert.match(
     navigationStackSource,
-    /overflow-y-auto overscroll-y-none \[overflow-anchor:none\] px-6 pb-0 md:pb-\[calc\(var\(--safe-area-bottom\)\+24px\)\]/
+    /isBoundedDetail\s+\? "overflow-hidden md:overflow-y-auto"\s+: "overflow-y-auto"/
   );
   assert.match(
     pageSource,
-    /className="flex h-\[calc\(100%-max\(var\(--sheet-hidden,0px\),var\(--safe-area-bottom\)\)-24px\)\] min-h-0 flex-col gap-4 md:h-full md:overflow-hidden"/
+    /data-navigation-detail-bounded\s+className="flex h-\[calc\(var\(--navigation-detail-visible-height,100dvh\)-var\(--safe-area-bottom\)-24px\)\] min-h-0 flex-col gap-4 md:h-full md:overflow-hidden"/
   );
-  assert.equal(
-    (
-      pageSource.match(
-        /h-\[calc\(100%-max\(var\(--sheet-hidden,0px\),var\(--safe-area-bottom\)\)-24px\)\]/g
-      ) ?? []
-    ).length,
-    1
+  assert.match(
+    navigationStackSource,
+    /React\.isValidElement<BoundedDetailProps>\(node\)[\s\S]*?node\.props\["data-navigation-detail-bounded"\] === true/
+  );
+  assert.match(
+    navigationStackSource,
+    /window\.visualViewport[\s\S]*?visibleBottom - boundedDetail\.getBoundingClientRect\(\)\.top/
+  );
+  assert.match(
+    navigationStackSource,
+    /boundedDetail\.style\.setProperty\(\s+"--navigation-detail-visible-height"/
+  );
+  assert.match(
+    navigationStackSource,
+    /md:pb-\[calc\(var\(--safe-area-bottom\)\+24px\)\]/
   );
 });
 
@@ -528,6 +536,18 @@ test("compact action is in flow above the sole Prices scroller", () => {
   assert.match(
     navigationStackSource,
     /event\.target\.closest<HTMLElement>\(DETAIL_SCROLL_SELECTOR\)/
+  );
+  assert.match(
+    navigationStackSource,
+    /if \(nestedScroller\) event\.stopPropagation\(\);/
+  );
+  assert.match(
+    navigationStackSource,
+    /onPointerDown=\{containNestedDetailGesture\}[\s\S]*?onTouchCancel=\{containNestedDetailGesture\}/
+  );
+  assert.match(
+    navigationStackSource,
+    /event\.target\.closest\(DETAIL_SCROLL_SELECTOR\)[\s\S]*?event\.stopPropagation\(\)/
   );
 });
 
