@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { SolidIcon, type SolidIconName } from "@/design-system/icons/SolidIcon";
 
 export type StatusKind = "confirmed" | "caution" | "unavailable" | "info";
 
@@ -22,10 +23,20 @@ const STYLES: Record<StatusKind, { dot: string; bg: string; fg: string }> = {
   info: { dot: "bg-status-info", bg: "bg-status-info-bg", fg: "text-status-info-fg" },
 };
 
+const ICONS: Record<StatusKind, SolidIconName | null> = {
+  confirmed: "check",
+  caution: "warning",
+  unavailable: "close",
+  info: null,
+};
+
 export function StatusDot({ kind }: { kind: StatusKind }) {
   return (
     <span className="relative flex h-2 w-2 shrink-0">
-      <span className={`relative inline-flex h-2 w-2 rounded-full ${STYLES[kind].dot}`} />
+      <span
+        className={`relative inline-flex h-2 w-2 rounded-full
+                    forced-colors:bg-[CanvasText] ${STYLES[kind].dot}`}
+      />
     </span>
   );
 }
@@ -40,6 +51,7 @@ export function StatusBadge({
   className?: string;
 }) {
   const s = STYLES[kind];
+  const icon = ICONS[kind];
   return (
     <span
       /**
@@ -64,9 +76,17 @@ export function StatusBadge({
        * weight — 11px is small text at 400 or 600 alike, so nothing here trades
        * legibility for quiet.
        */
-      className={`inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[11px] ${s.bg} ${s.fg} ${className}`}
+      data-status-kind={kind}
+      className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px]
+                  forced-colors:bg-[Canvas] forced-colors:text-[CanvasText]
+                  forced-colors:outline forced-colors:outline-1
+                  forced-colors:outline-offset-[-1px] ${s.bg} ${s.fg} ${className}`}
     >
-      <span className={`h-1.5 w-1.5 rounded-full ${s.dot}`} />
+      {icon ? (
+        <SolidIcon name={icon} size={16} />
+      ) : (
+        <span className={`h-1.5 w-1.5 rounded-full forced-colors:bg-[CanvasText] ${s.dot}`} />
+      )}
       {children}
     </span>
   );

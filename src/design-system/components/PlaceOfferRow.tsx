@@ -2,10 +2,10 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import { Clock3, Wheat } from "lucide-react";
 
 import type { PlaceOffer } from "@/app/actions";
 import { formatNaira } from "@/lib/money";
+import { SolidIcon } from "@/design-system/icons/SolidIcon";
 import { StatusBadge, type StatusKind } from "./StatusBadge";
 
 const OBSERVED_DATE = new Intl.DateTimeFormat("en-NG", {
@@ -90,12 +90,12 @@ function ItemArtwork({
       className="grid h-full w-full place-items-center bg-surface-sunken text-text-secondary"
       aria-hidden="true"
     >
-      <Wheat className="h-7 w-7" strokeWidth={1.75} />
+      <SolidIcon name="food" size={24} />
     </div>
   );
 
   return (
-    <figure className="w-[88px] shrink-0 self-stretch">
+    <figure className="group relative w-[88px] shrink-0 self-stretch">
       {offer.imageSourceUrl && showImage ? (
         <a
           href={offer.imageSourceUrl}
@@ -113,6 +113,14 @@ function ItemArtwork({
           {artwork}
         </div>
       )}
+      {showImage ? (
+        <span
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-y-0 -right-px w-3
+                     bg-gradient-to-r from-transparent to-surface-card
+                     group-focus-within:opacity-0"
+        />
+      ) : null}
     </figure>
   );
 }
@@ -138,6 +146,7 @@ export function PlaceOfferRow({ offer }: { offer: PlaceOffer }) {
     offer.trust.origin === "inadmissible" ||
     offer.trust.origin === "empty";
   const status = availabilityKind(offer);
+  const isSample = offer.trust?.origin === "synthetic";
   const observedAt = OBSERVED_DATE.format(new Date(offer.lastObservedAt));
   const dateLabel =
     offer.trust?.origin === "observed"
@@ -160,7 +169,7 @@ export function PlaceOfferRow({ offer }: { offer: PlaceOffer }) {
         onImageError={() => setImageBroken(true)}
       />
 
-      <div className="min-w-0 flex-1 px-3 py-2">
+      <div className="min-w-0 flex-1 py-2 pl-2.5 pr-2">
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0">
             <h5 className="truncate text-subhead font-semibold text-text-primary">
@@ -187,19 +196,20 @@ export function PlaceOfferRow({ offer }: { offer: PlaceOffer }) {
         ) : (
           <span
             className="mt-1 inline-flex items-center gap-1.5 rounded-full
-                       bg-fillTertiary px-2 py-0.5 text-[11px] text-text-secondary"
+                       bg-fillTertiary px-2 py-0.5 text-[11px] text-text-secondary
+                       forced-colors:bg-[Canvas] forced-colors:text-[CanvasText]
+                       forced-colors:outline forced-colors:outline-1
+                       forced-colors:outline-offset-[-1px]"
           >
-            <span className="h-1.5 w-1.5 rounded-full bg-text-tertiary" />
+            <span className="h-1.5 w-1.5 rounded-full bg-text-tertiary forced-colors:bg-[CanvasText]" />
             {availabilityLabel(offer)}
           </span>
         )}
 
         <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-caption-2 text-text-secondary">
+          <span>{freshnessLabel(offer)}</span>
           <span className="inline-flex items-center gap-1">
-            <Clock3 className="h-3 w-3" aria-hidden="true" />
-            {freshnessLabel(offer)}
-          </span>
-          <span>
+            {isSample ? <SolidIcon name="star" size={16} /> : null}
             {dateLabel} {observedAt}
           </span>
           {showProvenance ? (
@@ -227,7 +237,7 @@ export function PlaceOfferRowSkeleton() {
                      bg-surface-card shadow-card"
         >
           <div className="w-[88px] shrink-0 animate-pulse self-stretch bg-fillTertiary" />
-          <div className="min-w-0 flex-1 space-y-2 px-3 py-2">
+          <div className="min-w-0 flex-1 space-y-2 py-2 pl-2.5 pr-2">
             <div className="flex items-start justify-between gap-2">
               <div className="h-4 w-2/5 animate-pulse rounded-full bg-fillTertiary" />
               <div className="h-4 w-1/3 animate-pulse rounded-full bg-fillTertiary" />
