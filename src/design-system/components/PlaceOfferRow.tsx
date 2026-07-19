@@ -28,6 +28,23 @@ function availabilityLabel(offer: PlaceOffer) {
   return "Availability unverified";
 }
 
+function availabilityKind(offer: PlaceOffer): StatusKind | null {
+  const availability = offer.trust?.availability ?? offer.availabilityState;
+  if (availability === "unavailable") return "unavailable";
+  if (availability !== "available") return null;
+
+  const freshness =
+    offer.trust?.origin === "observed"
+      ? offer.trust.freshness
+      : offer.freshnessState;
+  return freshness === "stale" ||
+    freshness === "expired" ||
+    freshness === "caution" ||
+    freshness === "unavailable"
+    ? "caution"
+    : "confirmed";
+}
+
 function freshnessLabel(offer: PlaceOffer) {
   const freshness =
     offer.trust?.origin === "observed"
@@ -120,9 +137,7 @@ export function PlaceOfferRow({ offer }: { offer: PlaceOffer }) {
     !offer.trust ||
     offer.trust.origin === "inadmissible" ||
     offer.trust.origin === "empty";
-  const status: StatusKind =
-    offer.trust?.status ??
-    (offer.availabilityState === "unavailable" ? "unavailable" : "caution");
+  const status = availabilityKind(offer);
   const observedAt = OBSERVED_DATE.format(new Date(offer.lastObservedAt));
   const dateLabel =
     offer.trust?.origin === "observed"
@@ -165,9 +180,19 @@ export function PlaceOfferRow({ offer }: { offer: PlaceOffer }) {
           </div>
         </div>
 
-        <StatusBadge kind={status} className="mt-1">
-          {availabilityLabel(offer)}
-        </StatusBadge>
+        {status ? (
+          <StatusBadge kind={status} className="mt-1">
+            {availabilityLabel(offer)}
+          </StatusBadge>
+        ) : (
+          <span
+            className="mt-1 inline-flex items-center gap-1.5 rounded-full
+                       bg-fillTertiary px-2 py-0.5 text-[11px] text-text-secondary"
+          >
+            <span className="h-1.5 w-1.5 rounded-full bg-text-tertiary" />
+            {availabilityLabel(offer)}
+          </span>
+        )}
 
         <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-caption-2 text-text-secondary">
           <span className="inline-flex items-center gap-1">
