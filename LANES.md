@@ -44,7 +44,7 @@ to idle rather than creating a replacement task.
 | Nearby Presence Platform Engineer | Available, no active path claim | Corrected-unapplied `0012` source and disposable validation completed at `d5991c9`; retain only the pathless shared-rollout gate for exact target identity, role, and scheduler proof |
 | Program Management & Functional Organization Lead | Idle | Reconcile portfolio proposals into CEO-reviewable lane candidates without editing product paths |
 | Contribution Integrity & Moderation Engineer | Available, no active path claim | Controller runtime artifact closed containment with PASS; all five paths are released. `0013+` remains planning-only behind its separate migration ordering and activation gates |
-| Human Interface Design Engineer | Active exact one-file Place Offer Row visual-quality correction | Founder visual refutation is separate from the passed Market hierarchy. Own only `src/design-system/components/PlaceOfferRow.tsx` for compact Apple-style edge-bleed media rows |
+| Human Interface Design Engineer | Place Offer Row runtime PASS; path released | Compact/regular light/dark and AX evidence passed; keyboard Tab traversal and skeleton remain unverified residuals |
 | Food Evidence Provenance & Source Governance Lead | Standing review authorization | Classify recurring NBS/current Food evidence; no live promotion or shared migration |
 | Development Food Evidence Fixture Engineer | Idle | Append-only development evidence fixture after exact artifact-path claim; never mutate recurring seed data |
 | Food Source Authenticity & Attribution Refuter | Idle refuter | Independently verify each staged source artifact against original evidence and terms |
@@ -53,7 +53,7 @@ to idle rather than creating a replacement task.
 | Maps Engineering Lead | Available; named queued self-location owner, no active path claim | H37 semantic place-marker commit `6611068` is independently NOT REFUTED and both Maps paths are released. Self-location/avatar remains unclaimed behind the active short Market Details slice and a later fresh exact handoff |
 | Client Reliability & Offline Engineer | Prepared, unclaimed | H38 one-file rejected-search containment waits for the active Market Details slice to release `src/app/page.tsx` |
 | Security & Privacy Engineering Lead | Available, no active source claim | CSP collector operations passed and all collector source paths are released. Retain pathless operations monitoring; production remains fail-open and report-only, with enforcement prohibited |
-| Motion & Interaction Engineer | Active exact three-path terminal-reservation correction | Own only `NavigationStack.tsx`, `page.tsx`, and `scripts/motion-contracts.test.ts` for the compact/regular class-only reservation contract |
+| Motion & Interaction Engineer | Terminal-reservation runtime REFUTED; exact three paths retained | Compact CTA disappears at absolute terminal and tail exceeds 24px; root-scroll measurement unverified |
 
 The Quality & Release Controller is this orchestrator thread. It is not a separate pinned
 employee task. The repeating `wetindey-orchestrator-recovery` automation is deleted and
@@ -110,8 +110,8 @@ source ownership; only rows with exact paths grant edit authority.
 | Report Price unavailable-status icon correction | **Closed / released with runtime PASS at `b93761b`** | The unavailable banner passed runtime; `src/app/_components/ReportPriceSheet.tsx` is released |
 | Confirm Visit unavailable-status icon correction | **Static PASS; runtime UNVERIFIED, exact path retained** | Persistent Iconography & Visual Systems Lead `019f75cf-4d8f-7263-822b-06e846fce7ac` retains only `src/app/_components/ConfirmVisitSheet.tsx` pending runtime |
 | Market Details hierarchy and offer surface | **`ae47513` runtime PASS; prior HI ownership released** | Hierarchy/one CTA, rows/credits, pop/reopen, and regular layout pass. `src/design-system/components/PlaceOfferRow.tsx` is released; `page.tsx` transfers only to the Motion terminal-reservation correction |
-| Market Details compact terminal CTA persistence | **Runtime REFUTED; active exact three-path Motion correction** | Dead pixels are likely NavigationStack reservation, not proven document escape. Motion owns exactly `src/design-system/components/NavigationStack.tsx`, `src/app/page.tsx`, and `scripts/motion-contracts.test.ts` |
-| Market Details — compact edge-bleed offer rows | **Active, exact one-file disjoint HI correction** | Human Interface Design Engineer `019f75a5-0fc6-7f40-9a0f-8097ead3b45d` owns only `src/design-system/components/PlaceOfferRow.tsx`. Reduce excessive row/container x-padding; existing image bleeds to leading/top/bottom edge inside the squircle; concise item/variant; compact trailing price/unit; no redundant explanatory copy. Preserve 44px, light/dark, AX, existing data/handlers/attribution. Exclude page, NavigationStack, motion contract, actions, map, DB, schema, and copy/data changes |
+| Market Details compact terminal CTA persistence | **Runtime REFUTED; exact three Motion paths retained** | Compact CTA disappears at absolute terminal and tail exceeds 24px. Final rows/full credits remain reachable; pop/reopen and regular pass; root-scroll measurement is unverified. Retain `src/design-system/components/NavigationStack.tsx`, `src/app/page.tsx`, and `scripts/motion-contracts.test.ts` |
+| Market Details — compact edge-bleed offer rows | **Runtime PASS; exact path released** | `src/design-system/components/PlaceOfferRow.tsx` passes compact/regular light/dark: edge-to-edge image clipped by outer squircle, no gutter/nested radius, compact hierarchy, readable availability/metadata/credits, no collision, logical AX order/source links. Keyboard Tab traversal unverified due Safari tooling; skeleton not observed |
 | Account deletion capability | **REFUTED provider capability; pathless** | On the exact current Neon target, authenticated fresh-session `POST /delete-user` returns `404` while unauthenticated returns `401`: the route is mounted but `user.deleteUser.enabled` is false. Emergency SQL cleanup of the disposable identity is not self-delete evidence. Founder policy remains approved; provider configuration/capability and a later app-owned orchestration/UI lane remain, with no app path claimed |
 | Corrected historical refutations | **Closed / superseded** | Do not reopen D1/D2, seed typing/H27, H23, BottomSheet, Mapbox route validation, public-source ingestion, or ADR governance already corrected and independently passed |
 
@@ -273,7 +273,7 @@ is a separate unclaimed lane. The later contextual-orb/selected-glow concept is 
 claimed completed by `6611068` and owns no path. No Presence, page/actions/location-state,
 camera-contract, schema, or migration authority follows.
 
-### Active lane: Market Details compact terminal-reservation correction
+### Retained lane: Market Details compact terminal-reservation correction
 
 The `ae47513` split runtime verdict passes market hierarchy/one CTA, rows/credits,
 pop/reopen, and regular layout. Compact terminal CTA persistence remains REFUTED. The dead
@@ -281,7 +281,7 @@ pixels are likely NavigationStack reservation and are not proven document escape
 Prior Market HI ownership is released into this atomic class-only Motion integration;
 `src/design-system/components/PlaceOfferRow.tsx` is released.
 
-The Motion & Interaction Engineer owns exactly:
+The Motion & Interaction Engineer retains exactly:
 
 - `src/design-system/components/NavigationStack.tsx`
 - `src/app/page.tsx`
@@ -299,19 +299,21 @@ hierarchy/one CTA, rows/credits, pop/reopen, and regular layout. No `BottomSheet
 actions, PlaceOfferRow, self-avatar, Presence, database, schema, or migration authority
 follows.
 
-### Active lane: Market Details compact edge-bleed offer rows
+Runtime verdict: REFUTED. Compact CTA disappears at the absolute terminal and the tail
+exceeds 24px. Final rows and full credits remain reachable; pop/reopen and regular layout
+pass. Root-scroll measurement remains unverified.
 
-The Human Interface Design Engineer
-`019f75a5-0fc6-7f40-9a0f-8097ead3b45d` owns exactly:
+### Closed lane: Market Details compact edge-bleed offer rows
+
+The Human Interface Design Engineer completed exactly:
 
 - `src/design-system/components/PlaceOfferRow.tsx`
 
-Reduce excessive row/container horizontal padding. The existing image bleeds to the
-leading, top, and bottom edge inside the squircle. Keep item/variant concise and price/unit
-compact at the trailing edge; add no redundant explanatory copy. Preserve the 44px target,
-light/dark, accessibility, existing data, handlers, and attribution. Exclude `page.tsx`,
-NavigationStack, the motion contract, actions, map, database, schema, and copy/data changes.
-This one-file visual-quality correction is disjoint from active Motion.
+Reused-tab runtime PASS covers compact/regular light/dark, edge-to-edge image clipped by
+the outer squircle with no gutter/nested radius, compact item/variant and price/unit
+hierarchy, readable availability/metadata/credits, no collision, and logical AX
+order/source links. Keyboard Tab traversal remains unverified due Safari tooling and the
+skeleton was not observed. The path is released.
 
 ### READY/BLOCKED lane: self-location avatar marker — signed-in and guest
 
@@ -442,8 +444,8 @@ yet represented as explicit lanes:
 | **H37 semantic place-marker symbols** | ✅ complete at `6611068`; independent NOT REFUTED; exact two paths released | persistent Maps Engineering Lead; independent refuter | Released: `src/design-system/components/MapboxCanvas.tsx`; `src/integrations/maps/MapboxAdapter.ts` | `placeType` now selects deterministic semantic symbols with accessible labels and generic fallback. Peer markers remain non-live because `sharedUsers={[]}` / `getSharedUserLocations()=[]`; self-avatar is separate and unclaimed. Contextual-orb/selected-glow follow-up is not claimed complete |
 | **Self-location avatar marker — signed-in and guest** | 🟡 READY/BLOCKED only on Motion release of `page.tsx`; no path claim yet | persistent Maps Engineering Lead implementation owner; Iconography & Visual Systems Lead visual reviewer; independent Privacy refuter | Intended post-release paths unchanged | Begin only after Motion runtime PASS releases `page.tsx` and a fresh claim lands |
 | **Market Details hierarchy and offer surface** | ✅ `ae47513` split runtime PASS; hierarchy ownership released | persistent Human Interface Design Engineer `019f75a5-0fc6-7f40-9a0f-8097ead3b45d`; HI Regression | — | Hierarchy/one CTA, rows/credits, pop/reopen, and regular layout pass |
-| **Market Details compact terminal-reservation correction** | 🟢 active exact three-path class-only Motion integration | Motion & Interaction Engineer; runtime refuter | `src/design-system/components/NavigationStack.tsx`; `src/app/page.tsx`; `scripts/motion-contracts.test.ts` | Compact scroller `pb-0`; regular safe-area +24px; detail root compact `max(--sheet-hidden,safe-area)+24px`, regular zero; CTA sticky top; no other structural/data/copy change |
-| **Market Details compact edge-bleed offer rows** | 🟢 active exact one-file disjoint HI correction | Human Interface Design Engineer `019f75a5-0fc6-7f40-9a0f-8097ead3b45d` | `src/design-system/components/PlaceOfferRow.tsx` | Edge-bleed existing media inside squircle, reduced x-padding, concise item/variant, compact trailing price/unit; preserve 44px/light/dark/AX/data/handlers/attribution |
+| **Market Details compact terminal-reservation correction** | 🔴 runtime REFUTED; exact three paths retained | Motion & Interaction Engineer; runtime refuter | `src/design-system/components/NavigationStack.tsx`; `src/app/page.tsx`; `scripts/motion-contracts.test.ts` | CTA disappears at absolute compact terminal and tail exceeds 24px; rows/credits reachable, pop/reopen and regular PASS; root-scroll unverified |
+| **Market Details compact edge-bleed offer rows** | ✅ reused-tab runtime PASS; path released | Human Interface Design Engineer `019f75a5-0fc6-7f40-9a0f-8097ead3b45d` | Released: `src/design-system/components/PlaceOfferRow.tsx` | Compact/regular light/dark and AX pass; keyboard Tab and skeleton remain unverified |
 
 The two retained intent-adoption evidence paths and separate one-file Confirm Visit
 correction are the only Iconography ownership created by this table. Report Price, the
@@ -656,8 +658,8 @@ paths; after they are claimed, Sol's next step is implementation.
 | **Database rollout-status evidence correction** | complete at `164a12c` plus forward correction `bb4dca4`; Lovelace follow-up PASS; path released | CEO controller / DB-status docs worker | Dated fail-closed evidence records Preview ledger through recognized `0010`, unledgered `0011`-like latitude/longitude schema drift, Production unknown, and no authorization implied | Provenance/ingestion object presence is qualified as uncorroborated external reporting; migration policy was not modified |
 | **Contribution containment and integrity** | controller runtime PASS; exact five paths released from Contribution | Contribution Integrity & Moderation Engineer; independent static/source and runtime evidence | Existing fail-closed containment plus a completed, unauthorized `0013+` planning packet covering ADR-019, schema/migration/manifest, app/ops paths, and dependencies | Runtime containment is closed. Market retains `page.tsx`; Report Price passed runtime and is released; Confirm Visit later transferred to the active exact one-file Iconography correction. The `0013+` packet remains planning-only behind separate Presence/shared-migration and activation gates. No DB/push/deploy |
 | **Market Details hierarchy and offer surface** | `ae47513` split runtime PASS; hierarchy ownership released | persistent Human Interface Design Engineer `019f75a5-0fc6-7f40-9a0f-8097ead3b45d`; HI Regression | — | Hierarchy/one CTA, rows/credits, pop/reopen, and regular layout pass |
-| **Market Details compact terminal-reservation correction** | ACTIVE exact three-path class-only Motion integration | Motion & Interaction Engineer; runtime refuter | `src/design-system/components/NavigationStack.tsx`; `src/app/page.tsx`; `scripts/motion-contracts.test.ts` | Compact `pb-0`; regular safe-area +24px; detail root owns compact reservation and regular zero; CTA sticky top; no structural/data/copy widening |
-| **Market Details compact edge-bleed offer rows** | ACTIVE exact one-file disjoint HI correction | Human Interface Design Engineer `019f75a5-0fc6-7f40-9a0f-8097ead3b45d` | `src/design-system/components/PlaceOfferRow.tsx` | Reduced x-padding; existing media edge-bleeds inside squircle; concise item/variant and compact trailing price/unit; no behavior/data/copy change |
+| **Market Details compact terminal-reservation correction** | runtime REFUTED; exact three Motion paths retained | Motion & Interaction Engineer; runtime refuter | `src/design-system/components/NavigationStack.tsx`; `src/app/page.tsx`; `scripts/motion-contracts.test.ts` | Compact terminal CTA disappears and tail exceeds 24px; final rows/full credits reachable, pop/reopen and regular PASS; root-scroll measurement unverified |
+| **Market Details compact edge-bleed offer rows** | reused-tab runtime PASS; path released | Human Interface Design Engineer `019f75a5-0fc6-7f40-9a0f-8097ead3b45d` | Released: `src/design-system/components/PlaceOfferRow.tsx` | Compact/regular light/dark and AX PASS; keyboard Tab traversal and skeleton remain unverified |
 | **H38 offline search** | assessment complete; narrow correction queued pathless behind Market Details | unassigned | Catastrophic error-boundary escape is refuted in the current tree. Confirmed residual: the `page.tsx` search catch clears prior results and `AsyncList` lacks `onRetry` | Smallest future one-file patch: retry-token state, remove the clear, add the dependency token and `onRetry` callback, preserve cancellation/finally. Browser-refuter criteria are ready; no claim until Market Details releases `page.tsx` |
 | **H6 ADR-020 nonce-CSP governance** | complete at `14aff35` + `6c74c147`; re-refutation NOT REFUTED with no P1/P2/P3; four docs released | H6 governance workers and independent refuter `019f7692-d254-7e43-a687-154876274927` | One enforcing nonce policy, request/response CSP parity, explicit `x-nonce`-alone rejection, no duplicate enforcement, dynamic/private/no-store, environment, Blob, report-only, and later-boundary contracts | Governance acceptance authorizes architecture only. No middleware/layout/Vercel implementation, Preview enforcement, Production deployment, push, or release authority follows |
 | **H6 CSP report collector and retention** | operations PASS; source paths released; pathless monitoring only | Security & Privacy Engineering Lead evidence custody | Released: collector, cleanup, sanitizer/store, `.env.example`, Cron-only `vercel.json`, focused contract | Production/Preview hold sensitive `CRON_SECRET` and `BLOB_READ_WRITE_TOKEN_PRIVATE`; the collector is pinned to its separate private Blob store with no public-avatar-store fallback. Hourly `0 * * * *` cleanup and active exact POST WAF 60/IP/60s platform-429 rule are enabled with no pending draft. Production stays fail-open/report-only; per-region counters remain residual |
@@ -867,9 +869,9 @@ in either one will conflict. **Never edit these without holding the lane that ow
 | `src/lib/validation.ts` | — | **released** after presence containment `4e25b8c7`. |
 | `src/app/_components/CategorySelectorSheet.tsx` | — | **released** after `69737de` exact-scope independent NOT REFUTED with no P1/P2 and focused contract PASS |
 | `src/app/_components/ExchangePanel.tsx` | — | **released** after the Iconography HI runtime matrix PASS; prior provider-aware implementation remains complete/released |
-| `src/design-system/components/PlaceOfferRow.tsx` | — | **active exact one-file HI compact edge-bleed visual-quality correction**; disjoint from Motion |
+| `src/design-system/components/PlaceOfferRow.tsx` | — | **released** after compact/regular light/dark and AX runtime PASS; keyboard Tab and skeleton remain residuals |
 | `src/design-system/components/ModalSheet.tsx` | — | **released** after `f19990b` and Safari refuter PASS for zero-focusable focus containment |
-| `src/design-system/components/NavigationStack.tsx`, `src/app/page.tsx`, `scripts/motion-contracts.test.ts` | — | **active exact three-path Motion terminal-reservation correction**; class-only contract, no `BottomSheet.tsx` claim |
+| `src/design-system/components/NavigationStack.tsx`, `src/app/page.tsx`, `scripts/motion-contracts.test.ts` | — | **retained/runtime REFUTED**: compact CTA disappears at absolute terminal and tail exceeds 24px; root-scroll unverified |
 | `src/app/_components/ReportPriceSheet.tsx` | — | **released** after `b93761b` unavailable-banner runtime PASS |
 | `src/app/_components/ConfirmVisitSheet.tsx` | Iconography & Visual Systems Lead `019f75cf-4d8f-7263-822b-06e846fce7ac` | **static PASS, runtime UNVERIFIED** — exact path retained |
 | `src/core/i18n/strings.ts` | — | **released** after controller runtime artifact closed Contribution containment with PASS |
@@ -933,8 +935,8 @@ in either one will conflict. **Never edit these without holding the lane that ow
 | **Contribution containment plan** | Contribution Integrity & Moderation Engineer `019f75a3-f50d-7180-8e92-0a7aabd8a98c`; independent static/source refuter; HI Quality browser refuter | ✅ controller runtime artifact PASS; exact five paths released from Contribution | — | Immediate contribution safety containment | 2026-07-18 | The runtime artifact closed Contribution ownership. Market retains `page.tsx`; Report Price passed runtime and is released; Confirm Visit later transferred to the active one-file Iconography correction. The `0013+` planning packet remains unauthorized behind separate Presence/shared-migration and activation gates. |
 | **Shared ModalSheet focus hardening** | Motion & Interaction Engineer; independent Safari refuter | ✅ final `f19990b`; Safari PASS; ModalSheet released and contract later transferred | — | Shared modal accessibility | 2026-07-18 | Zero-focusable initial/Tab/Shift+Tab containment passed Safari refutation while preserving Escape, Close, restoration, nested/pushed sheets, motion, stacking, and layout. `src/design-system/components/ModalSheet.tsx` remains released; `scripts/motion-contracts.test.ts` is now owned only by the disjoint Market Details scroll-containment sub-lane. |
 | **Market Details hierarchy and offer surface** | Human Interface Design Engineer `019f75a5-0fc6-7f40-9a0f-8097ead3b45d`; HI Regression | ✅ `ae47513` split runtime PASS; hierarchy ownership released | — | Founder-rejected compact market detail | 2026-07-18 | Hierarchy/one CTA, rows/credits, pop/reopen, and regular layout pass. |
-| **Market Details compact terminal-reservation correction** | Motion & Interaction Engineer; runtime refuter | 🟢 active exact three-path class-only integration | `src/design-system/components/NavigationStack.tsx`; `src/app/page.tsx`; `scripts/motion-contracts.test.ts` | Compact terminal CTA persistence | 2026-07-18 | Dead pixels likely NavigationStack reservation, not proven document escape. Apply the exact compact/regular padding ownership contract only. |
-| **Market Details compact edge-bleed offer rows** | Human Interface Design Engineer `019f75a5-0fc6-7f40-9a0f-8097ead3b45d` | 🟢 active exact one-file disjoint correction | `src/design-system/components/PlaceOfferRow.tsx` | Founder visual-quality refutation | 2026-07-18 | Apple-style edge-bleed existing media, reduced x-padding, concise item/variant, compact trailing price/unit; preserve 44px/light/dark/AX/data/handlers/attribution. |
+| **Market Details compact terminal-reservation correction** | Motion & Interaction Engineer; runtime refuter | 🔴 runtime REFUTED; exact three paths retained | `src/design-system/components/NavigationStack.tsx`; `src/app/page.tsx`; `scripts/motion-contracts.test.ts` | Compact terminal CTA persistence | 2026-07-18 | CTA disappears at absolute terminal and tail exceeds 24px; final rows/full credits reachable, pop/reopen and regular PASS; root-scroll measurement unverified. |
+| **Market Details compact edge-bleed offer rows** | Human Interface Design Engineer `019f75a5-0fc6-7f40-9a0f-8097ead3b45d` | ✅ reused-tab runtime PASS; path released | — | Founder visual-quality refutation | 2026-07-18 | Compact/regular light/dark and AX pass; keyboard Tab traversal unverified due Safari tooling and skeleton not observed. |
 | **Report Price unavailable-status icon correction** | Iconography & Visual Systems Lead `019f75cf-4d8f-7263-822b-06e846fce7ac`; HI Regression | ✅ `b93761b` runtime PASS; path released | — | ADR-018 status warning adoption | 2026-07-18 | Unavailable banner passed runtime. |
 | **Confirm Visit unavailable-status icon correction** | Iconography & Visual Systems Lead `019f75cf-4d8f-7263-822b-06e846fce7ac`; runtime refuter | 🟠 static PASS; runtime UNVERIFIED, path retained | `src/app/_components/ConfirmVisitSheet.tsx` | ADR-018 status warning adoption | 2026-07-18 | No release until runtime verification. |
 | **H38 offline search** | unassigned | 🟡 assessment complete; narrow correction queued pathless behind Market Details | — | Offline search resilience | 2026-07-18 | Catastrophic error-boundary escape is refuted: search rejection is caught and `AsyncList` has an error prop. Confirmed residual is limited to `page.tsx` clearing prior trustworthy rows and supplying no `onRetry`. Smallest future one-file patch adds retry-token state, removes the clear, adds the dependency token and `onRetry`, and preserves cancellation/finally. Browser-refuter criteria are ready. No path claim until Market Details releases `page.tsx`; no edits/tests occurred. |
