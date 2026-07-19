@@ -316,6 +316,15 @@ Former owner: Antigravity (External Approved Contractor - Product Engineering & 
 
 Reorganized loose docs in `docs/` root into domain subfolders (`design-system/`, `product/`, `architecture/`), created guiding READMEs for `adr/`, `architecture/`, `design-system/`, `product/`, and `operations/`, and updated all internal link references across code, tests, and markdown files. Released paths.
 
+##### LANES.md decluttering and historical lane archiving — ACTIVE
+
+Owner: Antigravity (External Approved Contractor - Product Engineering & UX Department). Exclusive paths:
+
+- `LANES.md`
+- new `docs/operations/lanes/LANES-HISTORICAL-ARCHIVE.md`
+
+Declutter LANES.md by archiving historical superseded lane entries into `docs/operations/lanes/LANES-HISTORICAL-ARCHIVE.md` while preserving active lanes, pinned employee roster, and static test contract headings in a lean root `LANES.md` file.
+
 ##### P1 authentication recovery — SUPERSEDED / PATHLESS
 
 Former owner: Authentication / Client Reliability. Former paths:
