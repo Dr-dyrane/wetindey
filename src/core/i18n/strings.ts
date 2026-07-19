@@ -181,7 +181,7 @@ export const en = {
   "profile.manage": "Manage profile",
   "profile.name_label": "Name",
   "profile.email_label": "Email",
-  "profile.email_readonly_note": "This is how you sign in.",
+  "profile.email_readonly_note": "Sign-in email.",
   "profile.contact_label": "Contact",
   "profile.contact_kind_phone": "Phone",
   "profile.contact_kind_whatsapp": "WhatsApp",
@@ -191,8 +191,8 @@ export const en = {
   "profile.saved": "Saved",
   "profile.save_error": "We no fit save your profile right now.",
   "profile.load_error": "We no fit load your profile right now.",
-  "profile.nearby_presence": "Nearby Presence",
-  "profile.not_available_yet": "Not available yet",
+  "profile.nearby_presence": "Nearby presence",
+  "profile.not_available_yet": "Unavailable",
 
   /* My reports, MyReportsSheet.tsx.
    *
@@ -285,15 +285,15 @@ export const en = {
    * Human legal review must complete those details before this becomes a notice. */
   "about.title": "About WetinDey",
   "about.lede":
-    "WetinDey helps you understand nearby local information before you leave. Food price and availability are WetinDey’s current V1 capability in south-west Lagos.",
+    "Nearby local information before you leave. Food prices and availability are V1 in south-west Lagos.",
   "about.body_what":
-    "Coverage and freshness vary. Information may be incomplete, stale, synthetic, demonstration-only or uncertain.",
+    "Coverage and freshness vary. Information can be incomplete, stale, uncertain, synthetic or for demonstration.",
   "about.body_prices":
-    "WetinDey does not sell, exchange money or deliver anything, and information should be confirmed before you travel.",
+    "WetinDey provides references, not sales, money exchange or delivery. FX references may differ from bank and exchanger rates. Confirm details before you travel.",
   "about.body_account":
-    "Browsing needs no account. Signing in is optional and can support recognized attribution and history where available.",
+    "No account is needed to browse. Sign-in is optional and can support recognized attribution and history where available.",
   "about.body_pilot":
-    "Food price and availability are the current V1 capability; other categories are not presented here as live services.",
+    "Food prices and availability are the only live V1 capability.",
 
   /* Row labels + the back affordance. `about.back` is the NavigationStack back
      row's label: it names where back goes (the About hub), the way iOS shows the
@@ -306,36 +306,35 @@ export const en = {
   /* The review marker every drafted legal surface must carry. Shown at the top
      of Terms and Privacy, in a caution tint, so it cannot be mistaken for the
      copy it guards. */
-  "about.draft_notice": "Product-accurate draft — pending human legal review",
+  "about.draft_notice": "Draft — pending human legal review",
 
   "about.terms_title": "Terms of service",
   "about.terms_intro":
-    "This is not a final legal agreement. WetinDey is a live local information service; Food price and availability are its current V1 capability.",
+    "This is not a final legal agreement. WetinDey provides live local information; Food prices and availability are V1.",
   "about.terms_prices":
     "Coverage and freshness vary. Information may be incomplete, stale, synthetic, demonstration-only or uncertain; price and availability are not guaranteed when you arrive.",
   "about.terms_fulfilment":
-    "WetinDey does not sell, exchange money, accept payment, provide checkout, deliver, dispatch or fulfil orders. Go there passes a destination to your chosen maps app; travel and any purchase are your decision.",
+    "WetinDey does not sell, exchange money, take payment, provide checkout, deliver, dispatch or fulfil orders. Go there only passes a destination to your maps app; travel and purchases remain your decision.",
   "about.terms_reporting":
     "You may contribute structured information when useful. Browsing needs no account; signing in is optional and can support recognized attribution and history where available.",
 
   "about.privacy_title": "Privacy",
   "about.privacy_intro":
-    "This is not a final legal notice. You can browse WetinDey without an account.",
+    "This is not a final legal notice. You can browse without an account.",
   "about.privacy_collect":
     "If you sign in, account information can support recognized attribution and history where available. Information you contribute may be kept with that contribution.",
   "about.privacy_device":
     "Your browser may keep preferences and cached reference-rate data on this device. When you use device location, your browser sends a coordinate to WetinDey to find nearby coverage. You can choose an area manually; it represents its centre, not your exact personal location.",
   "about.privacy_third":
-    "Go there passes destination information to the maps app you choose; that app and your browser may handle it under their own terms. This product-accurate draft will be completed through human legal review.",
+    "Go there passes destination information to your chosen maps app. That app and your browser may handle it under their own terms.",
   "about.privacy_presence":
     "Nearby Presence is not available yet. WetinDey does not currently share coarse areas or reciprocal presence between people.",
-  "about.privacy_ads": "This is not a complete retention, deletion or service-provider notice.",
+  "about.privacy_ads": "Retention, deletion and service-provider details still need legal review.",
   "about.privacy_delete":
-    "Contact support to request account deletion or another account-related action at {email}. There is no self-service deletion control today; deletion and retention details remain under review.",
+    "Email {email} for account deletion or account help. There is no self-service deletion; deletion and retention details remain under review.",
 
   "about.support_title": "Support",
-  "about.support_body":
-    "For a problem, account-related request or question, contact support. A reply may not always be possible.",
+  "about.support_body": "For problems, account requests or questions. A reply may not always be possible.",
   "about.support_cta": "Email support",
 
   /* The four reading surfaces reached from the About hub and by hash
@@ -363,22 +362,22 @@ export const en = {
     "Choose an area manually or use your device's location for nearby results. When you use device location, your browser sends a coordinate to WetinDey to find nearby coverage. A manual area represents its centre, not your exact personal location.",
   "about.how_need_title": "Choose what you need",
   "about.how_need_body":
-    "Food is WetinDey's current V1 capability. Search Food price and availability near your chosen area.",
+    "Food prices and availability are V1. Search near your chosen area.",
   "about.how_signal_title": "Read the local signal",
   "about.how_signal_body":
-    "Food results can show price, availability, place and freshness. Information may be incomplete, uncertain, synthetic or demonstration-only.",
+    "Food results can show price, availability, place and freshness. Signals can be incomplete, uncertain, synthetic or for demonstration.",
   "about.how_freshness_title": "Check freshness and source limits",
   "about.how_freshness_body":
-    "Look at freshness and any source information available. They help you judge a local signal; they do not make it a guarantee.",
+    "Check freshness and source information. They inform the signal; they do not guarantee it.",
   "about.how_maps_title": "Continue in your maps app",
   "about.how_maps_body":
-    "Go there passes destination information to the maps app you choose. WetinDey does not arrange travel, exchange money, payment, delivery or any order.",
+    "Go there passes a destination to your chosen maps app. WetinDey does not arrange travel, money exchange, payment, delivery or orders.",
   "about.how_contribute_title": "Contribute when useful",
   "about.how_contribute_body":
     "You can add structured information when useful. Browsing needs no account; signing in can support recognized attribution and history where available.",
   "about.how_confirm_title": "Confirm before travelling",
   "about.how_confirm_body":
-    "Prices and stock can change. Confirm details with the place before travelling: information does not guarantee availability when you arrive.",
+    "Prices and stock change. Confirm with the place before travelling.",
 
   "about.a11y_title": "Accessibility",
   "about.a11y_intro":
@@ -395,8 +394,7 @@ export const en = {
     "This describes how the app behaves today. It is not a claim to meet a formal accessibility standard. If something is hard to use, please tell us on the Support page.",
 
   "about.licenses_title": "Open-source licences",
-  "about.licenses_intro":
-    "WetinDey is built on open-source software. These are the main libraries it uses, and the licence each one is offered under.",
+  "about.licenses_intro": "Main open-source libraries and their licences.",
 
   "about.attributions_title": "Attributions",
   "about.attributions_photos_title": "Food photos",

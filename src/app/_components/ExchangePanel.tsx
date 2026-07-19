@@ -160,14 +160,14 @@ function parseAmount(value: string): { value: number | null; error: string | nul
       trimmed
     )
   ) {
-    return { value: null, error: "Enter numbers only." };
+    return { value: null, error: "Numbers only." };
   }
   const amount = Number(normalized);
   if (!Number.isFinite(amount) || amount <= 0) {
-    return { value: null, error: "Enter an amount greater than zero." };
+    return { value: null, error: "Enter more than zero." };
   }
   if (amount > MAX_AMOUNT) {
-    return { value: null, error: "Enter a smaller amount." };
+    return { value: null, error: "Amount is too large." };
   }
   return { value: amount, error: null };
 }
@@ -467,7 +467,7 @@ export function ExchangePanel({
             id="exchange-reference-heading"
             className="text-title-2 font-semibold text-text-primary"
           >
-            How much in Naira?
+            Naira reference
           </h2>
         </div>
 
@@ -477,7 +477,7 @@ export function ExchangePanel({
               htmlFor={amountId}
               className="mb-1.5 block text-footnote font-semibold text-text-secondary"
             >
-              Foreign amount
+              Amount
             </label>
             <div
               className={`squircle flex min-h-[64px] items-center gap-2 bg-controlFill px-3 ${transition.focus} focus-within:bg-surface-card focus-within:outline focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-focusRing`}
@@ -525,7 +525,7 @@ export function ExchangePanel({
               htmlFor={ngnAmountId}
               className="mb-1.5 block text-footnote font-semibold text-text-secondary"
             >
-              Naira amount
+              Naira
             </label>
             <div
               className={`squircle flex min-h-[64px] items-center gap-2 bg-controlFill px-3 ${transition.focus} focus-within:bg-surface-card focus-within:outline focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-focusRing`}
@@ -581,10 +581,10 @@ export function ExchangePanel({
               <div className="mt-3 space-y-3">
                 <div>
                   <p role="status" className="text-body font-semibold text-text-primary">
-                    No reference currencies available
+                    No Naira pairs
                   </p>
                   <p className="mt-1 text-footnote text-text-secondary">
-                    The current catalog returned no supported Naira pairs.
+                    Try again.
                   </p>
                 </div>
                 <button
@@ -602,10 +602,10 @@ export function ExchangePanel({
               <div className="mt-3 space-y-3">
                 <div>
                   <p role="alert" className="text-body font-semibold text-text-primary">
-                    Couldn’t load reference currencies
+                    Couldn’t load currencies
                   </p>
                   <p className="mt-1 text-footnote text-text-secondary">
-                    {offline ? "You’re offline. Reconnect and try again." : "Try again shortly."}
+                    {offline ? "Offline. Try again when connected." : "Try again."}
                   </p>
                 </div>
                 <button
@@ -630,17 +630,17 @@ export function ExchangePanel({
                   Pair unavailable
                 </p>
                 <p className="mt-1 text-footnote text-text-secondary">
-                  Choose another available currency.
+                  Choose another currency.
                 </p>
               </div>
             ) : rateState.kind === "error" ? (
               <div className="mt-3 space-y-3">
                 <div>
                   <p role="alert" className="text-body font-semibold text-text-primary">
-                    Couldn’t load this reference rate
+                    Couldn’t load rate
                   </p>
                   <p className="mt-1 text-footnote text-text-secondary">
-                    {offline ? "You’re offline. Reconnect and try again." : "Try again shortly."}
+                    {offline ? "Offline. Try again when connected." : "Try again."}
                   </p>
                 </div>
                 <button
@@ -662,7 +662,7 @@ export function ExchangePanel({
                   </p>
                   {usingSavedRate && (
                     <span className="shrink-0 text-caption-1 font-semibold text-status-caution-fg">
-                      {offline ? "Offline · Saved" : "Saved rate"}
+                      {offline ? "Saved · Offline" : "Saved"}
                     </span>
                   )}
                 </div>
@@ -678,12 +678,12 @@ export function ExchangePanel({
                   <div className="mt-2 flex items-center justify-between gap-3">
                     <p role="status" className="text-caption-1 text-status-caution-fg">
                       {offline
-                        ? "Using the saved reference while offline."
+                        ? "Offline · saved rate"
                         : catalogState.kind === "error"
-                          ? "Using the saved reference; the currency list is unavailable."
+                          ? "Currency list unavailable · saved rate"
                           : catalogState.kind === "loading"
-                            ? "Using the saved reference while currencies refresh."
-                            : "Using the saved reference while the latest rate refreshes."}
+                            ? "Updating currencies · saved rate"
+                            : "Updating rate · saved rate"}
                     </p>
                     {!offline && catalogState.kind !== "loading" && (
                       <button
@@ -704,7 +704,7 @@ export function ExchangePanel({
             id="exchange-reference-note"
             className="text-caption-1 leading-snug text-text-tertiary"
           >
-            Reference only. WetinDey does not exchange money; bank and exchanger rates may differ.
+            Reference only — no money exchange.
           </p>
         </div>
       </section>
@@ -718,7 +718,7 @@ export function ExchangePanel({
             <span className="shrink-0 text-caption-1 font-semibold text-text-tertiary">Sample</span>
           </div>
           <p className="mt-0.5 text-caption-1 leading-snug text-text-tertiary">
-            Sample places are synthetic, not verified businesses.
+            Synthetic places · not verified.
           </p>
         </div>
 
@@ -802,8 +802,8 @@ export function ExchangePanel({
 
         {locations.length === 0 && (
           <div className="squircle-card bg-fillTertiary px-4 py-6 text-center">
-            <p className="text-body font-semibold text-text-primary">No places in this filter</p>
-            <p className="mt-1 text-footnote text-text-secondary">Choose another place type.</p>
+            <p className="text-body font-semibold text-text-primary">No matching places</p>
+            <p className="mt-1 text-footnote text-text-secondary">Change filter.</p>
           </div>
         )}
       </section>

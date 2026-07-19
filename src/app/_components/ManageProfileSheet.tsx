@@ -282,7 +282,7 @@ export function ManageProfileSheet({
       onSessionChange();
     } catch (err) {
       console.error("ManageProfileSheet: failed to upload avatar", err);
-      setAvatarError("Could not upload photo. Must be PNG/JPG/WebP under 2MB.");
+      setAvatarError("Use a PNG, JPG or WebP under 2 MB.");
     } finally {
       setAvatarBusy(null);
       if (fileInputRef.current) fileInputRef.current.value = "";
@@ -300,7 +300,7 @@ export function ManageProfileSheet({
       onSessionChange();
     } catch (err) {
       console.error("ManageProfileSheet: failed to remove avatar", err);
-      setAvatarError("Could not remove photo. Check your connection.");
+      setAvatarError("Couldn’t remove photo. Try again.");
     } finally {
       setAvatarBusy(null);
     }
@@ -347,7 +347,7 @@ export function ManageProfileSheet({
                 disabled={Boolean(avatarBusy)}
                 onClick={() => fileInputRef.current?.click()}
                 className="relative block rounded-full focus:outline-none focus-ring"
-                aria-label="Upload avatar photo"
+                aria-label="Change profile photo"
               >
                 <Avatar name={name || profile.email || undefined} url={profile.avatarUrl} size={80} />
                 <div className="absolute inset-0 grid place-items-center bg-black/40 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-micro">
@@ -373,7 +373,7 @@ export function ManageProfileSheet({
                 onClick={handleAvatarRemove}
                 className="text-[13px] font-medium text-status-unavailable active:opacity-60 transition duration-micro"
               >
-                Remove Photo
+                Remove photo
               </button>
             )}
             {avatarError && (
