@@ -1204,6 +1204,7 @@ export function BottomSheet({
       <main
         ref={sheetRef}
         aria-label="Results"
+        data-sheet-shell="true"
         style={
           {
             height: `${DETENT_FRACTION.large * 100}dvh`,
@@ -1274,7 +1275,7 @@ export function BottomSheet({
             type="button"
             onClick={cycleDetent}
             aria-label={`Sheet position: ${detent}. Activate to change.`}
-            className={`flex min-h-11 w-full shrink-0 cursor-grab touch-none items-center justify-center active:cursor-grabbing active:opacity-70 ${transition.press}`}
+            className={`flex h-11 min-h-11 w-full shrink-0 cursor-grab touch-none items-center justify-center p-0 active:cursor-grabbing active:opacity-70 ${transition.press}`}
           >
             <span className="h-[5px] w-9 rounded-full bg-text-tertiary" />
           </button>

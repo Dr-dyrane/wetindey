@@ -73,7 +73,11 @@ test("BottomSheet keeps detents, clip geometry, scroll handoff, and one material
   assert.match(bottomSheet, /material-expanded-glass/);
   assert.match(bottomSheet, /material-context-island/);
   assert.match(bottomSheet, /"--stack-surface":\s*"transparent"/);
+  assert.match(bottomSheet, /data-sheet-shell/);
+  assert.match(bottomSheet, /h-11 min-h-11[^`]*p-0/);
   assert.doesNotMatch(bottomSheet, /bg-surface-persistent/);
+  assert.match(globals, /\[data-sheet-shell\] \[inert\]\[aria-hidden="true"\][\s\S]*?opacity:\s*0;/);
+  assert.match(globals, /\[data-sheet-shell\] \[inert\]\[aria-hidden="true"\][\s\S]*?pointer-events:\s*none;/);
   assert.match(bottomSheet, /clipPath: interactionClip/);
   assert.match(bottomSheet, /overscroll-contain/);
   assert.match(bottomSheet, /addEventListener\("wheel", onWheel, \{ capture: true, passive: false \}\)/);

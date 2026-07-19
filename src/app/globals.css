@@ -689,6 +689,18 @@
     background-color: var(--material-dense-glass);
   }
 
+  /**
+   * NavigationStack owns inactive-level inert/aria-hidden state. The bottom
+   * sheet scopes the paint suppression here so a transparent glass surface
+   * never reveals a previous level underneath the active one. `.motion-push`
+   * still owns the transform/opacity transition; at rest this is fully
+   * transparent and non-interactive without adding another surface.
+   */
+  [data-sheet-shell] [inert][aria-hidden="true"] {
+    opacity: 0;
+    pointer-events: none;
+  }
+
   /* Semantic transition recipes. Components import the corresponding names
      from src/design-system/motion.ts rather than reproducing a property list. */
   .motion-press {
