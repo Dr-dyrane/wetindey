@@ -1,10 +1,11 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { AlertTriangle } from "lucide-react";
+import { IconOrb } from "@/design-system/components/IconOrb";
 import { ModalSheet } from "@/design-system/components/ModalSheet";
 import { Button } from "@/design-system/components/Button";
 import { Input } from "@/design-system/components/Input";
+import { SolidIcon } from "@/design-system/icons/SolidIcon";
 import { formatNaira } from "@/lib/money";
 import { useT } from "@/core/i18n";
 
@@ -342,7 +343,14 @@ export function ConfirmVisitSheet({ open, visit, onClose, lang = "en" }: Confirm
   return (
     <ModalSheet open={open} onClose={onClose} title={t.title} size="form">
       <div className="space-y-5 px-4 py-4">
-        <Banner kind="caution" icon={<AlertTriangle className="h-4 w-4" />}>
+        <Banner
+          kind="caution"
+          icon={
+            <IconOrb size={32} tone="status-caution">
+              <SolidIcon name="warning" size={18} />
+            </IconOrb>
+          }
+        >
           <span>
             <span className="block font-semibold">{translate("contribution.paused_title")}</span>
             <span className="mt-0.5 block font-normal">{translate("contribution.paused_body")}</span>
