@@ -335,6 +335,23 @@ Full detail/provenance remains in Item Detail. No data, action, map, copy, schem
 migration changes; >=44px targets, no horizontal overflow, and no covered CTA remain
 required.
 
+##### Human Interface — Market Details information containment — COMPLETE / STATIC PASS
+
+Owner: Controller temporary recovery claim after the assigned Human Interface employee
+faulted before execution. Exact changed path:
+`src/design-system/components/PlaceOfferRow.tsx`.
+
+Founder runtime screenshots refuted the first-scan grid: the source-open control overlapped
+price/unit text and repeated metadata overwhelmed the offer hierarchy. The first correction
+separated that control, but the Founder rejected it because the card still gave source access
+more visual weight than price. This release removes source-link affordances from the card
+scan, anchors price/unit at the lower edge of regular media, and moves compact availability to
+the lower right so each card reads in a balanced diagonal. Attribution remains available in
+Item Detail; item selection continues to open WetinDey Item Detail, not an external image
+source. Independent static refutation passed. Reused-tab visual confirmation in light/dark,
+forced-colors, and focus traversal remains a later release gate; no claim of runtime visual
+PASS is made here. Release `src/design-system/components/PlaceOfferRow.tsx`.
+
 ##### Human Interface — Market Details grid, CTA, and attribution correction — COMPLETE / PASS
 
 Owner: persistent HI Engineer `019f75a5-0fc6-7f40-9a0f-8097ead3b45d`. Exclusive paths:

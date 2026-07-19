@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import { ExternalLink } from "lucide-react";
 
 import type { PlaceOffer } from "@/app/actions";
 import { formatNaira } from "@/lib/money";
@@ -72,11 +71,15 @@ function ItemArtwork({
   showImage,
   onImageError,
   layout,
+  status,
+  statusLabel,
 }: {
   offer: PlaceOffer;
   showImage: boolean;
   onImageError: () => void;
   layout: OfferRowLayout;
+  status: StatusKind | null;
+  statusLabel: string;
 }) {
   const isRegular = layout === "regular";
   const artwork = showImage ? (
@@ -115,6 +118,38 @@ function ItemArtwork({
       >
         {artwork}
       </div>
+      {isRegular ? (
+        <div className="pointer-events-none absolute left-2 top-2 z-10">
+          {status ? (
+            <StatusBadge kind={status}>{statusLabel}</StatusBadge>
+          ) : (
+            <span
+              className="inline-flex items-center gap-1.5 rounded-full bg-fillSecondary px-2 py-0.5 text-[11px] text-text-secondary
+                         forced-colors:bg-[Canvas] forced-colors:text-[CanvasText]
+                         forced-colors:outline forced-colors:outline-1 forced-colors:outline-offset-[-1px]"
+            >
+              <span className="h-1.5 w-1.5 rounded-full bg-text-tertiary forced-colors:bg-[CanvasText]" />
+              {statusLabel}
+            </span>
+          )}
+        </div>
+      ) : null}
+      {isRegular ? (
+        <>
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black/75 via-black/30 to-transparent"
+          />
+          <div className="pointer-events-none absolute bottom-2 right-2 z-10 max-w-[calc(100%-1rem)] text-right">
+            <p className="truncate text-subhead font-semibold tabular-nums text-white [text-shadow:0_1px_2px_rgb(0_0_0_/_0.72)]">
+              {priceLabel(offer)}
+            </p>
+            <p className="truncate text-caption-2 text-white/85 [text-shadow:0_1px_2px_rgb(0_0_0_/_0.72)]">
+              / {offer.unit}
+            </p>
+          </div>
+        </>
+      ) : null}
       {showImage ? (
         <span
           aria-hidden="true"
@@ -152,6 +187,7 @@ export function PlaceOfferRow({
       !imageBroken
   );
   const status = availabilityKind(offer);
+  const statusLabel = availabilityLabel(offer);
   const isSample = offer.trust?.origin === "synthetic";
   const observedAt = OBSERVED_DATE.format(new Date(offer.lastObservedAt));
   const dateLabel = isSample
@@ -164,8 +200,8 @@ export function PlaceOfferRow({
     <div
       className={
         isRegular
-          ? "flex min-w-0 w-full flex-col text-left"
-          : "flex min-h-[88px] min-w-0 w-full items-stretch text-left md:min-h-[80px]"
+          ? "relative z-0 flex min-w-0 w-full flex-col text-left"
+          : "relative z-0 flex min-h-[88px] min-w-0 w-full items-stretch text-left md:min-h-[80px]"
       }
     >
       <ItemArtwork
@@ -173,54 +209,71 @@ export function PlaceOfferRow({
         showImage={showImage}
         onImageError={() => setImageBroken(true)}
         layout={layout}
+        status={status}
+        statusLabel={statusLabel}
       />
 
       <div
         className={
           isRegular
-            ? "min-w-0 flex-1 px-2.5 py-2"
+            ? "flex min-h-[104px] min-w-0 flex-1 flex-col px-2.5 py-2"
             : "min-w-0 flex-1 py-2 pl-2 pr-1.5 md:py-1.5 md:pl-2 md:pr-1"
         }
       >
-        <div className="flex items-start justify-between gap-1.5">
-          <div className="min-w-0 flex-1">
+        {isRegular ? (
+          <>
             <h5 className="truncate text-subhead font-semibold text-text-primary">
               {offer.itemName}
             </h5>
             <p className="truncate text-caption-1 text-text-secondary">{offer.variantName}</p>
-          </div>
-          <div className="min-w-0 max-w-[45%] shrink text-right md:max-w-[40%]">
-            <p className="truncate whitespace-nowrap text-subhead font-semibold tabular-nums text-text-primary">
-              {priceLabel(offer)}
-            </p>
-            <p className="truncate text-caption-2 text-text-secondary">/ {offer.unit}</p>
-          </div>
-        </div>
-
-        {status ? (
-          <StatusBadge kind={status} className="mt-1">
-            {availabilityLabel(offer)}
-          </StatusBadge>
+            <span className="mt-auto truncate pt-2 text-caption-2 text-text-secondary">
+              {freshnessLabel(offer)}
+            </span>
+          </>
         ) : (
-          <span
-            className="mt-1 inline-flex items-center gap-1.5 rounded-full
-                       bg-fillTertiary px-2 py-0.5 text-[11px] text-text-secondary
-                       forced-colors:bg-[Canvas] forced-colors:text-[CanvasText]
-                       forced-colors:outline forced-colors:outline-1
-                       forced-colors:outline-offset-[-1px]"
-          >
-            <span className="h-1.5 w-1.5 rounded-full bg-text-tertiary forced-colors:bg-[CanvasText]" />
-            {availabilityLabel(offer)}
-          </span>
-        )}
+          <>
+            <div className="flex items-start justify-between gap-1.5">
+              <div className="min-w-0 flex-1">
+                <h5 className="truncate text-subhead font-semibold text-text-primary">
+                  {offer.itemName}
+                </h5>
+                <p className="truncate text-caption-1 text-text-secondary">{offer.variantName}</p>
+              </div>
+              <div className="min-w-0 max-w-[45%] shrink text-right md:max-w-[40%]">
+                <p className="truncate whitespace-nowrap text-subhead font-semibold tabular-nums text-text-primary">
+                  {priceLabel(offer)}
+                </p>
+                <p className="truncate text-caption-2 text-text-secondary">/ {offer.unit}</p>
+              </div>
+            </div>
 
-        <div className="mt-1 flex min-w-0 flex-wrap items-center gap-x-1.5 gap-y-1 text-caption-2 text-text-secondary">
-          <span>{freshnessLabel(offer)}</span>
-          <span className="inline-flex items-center gap-1">
-            {isSample ? <SolidIcon name="star" size={16} /> : null}
-            {dateLabel} {observedAt}
-          </span>
-        </div>
+            <div className="mt-1 flex min-w-0 items-end justify-between gap-2">
+              <div className="min-w-0 flex flex-wrap items-center gap-x-1.5 gap-y-1 text-caption-2 text-text-secondary">
+                <span>{freshnessLabel(offer)}</span>
+                <span className="inline-flex items-center gap-1">
+                  {isSample ? <SolidIcon name="star" size={16} /> : null}
+                  {dateLabel} {observedAt}
+                </span>
+              </div>
+              {status ? (
+                <StatusBadge kind={status} className="shrink-0">
+                  {statusLabel}
+                </StatusBadge>
+              ) : (
+                <span
+                  className="inline-flex shrink-0 items-center gap-1.5 rounded-full
+                             bg-fillTertiary px-2 py-0.5 text-[11px] text-text-secondary
+                             forced-colors:bg-[Canvas] forced-colors:text-[CanvasText]
+                             forced-colors:outline forced-colors:outline-1
+                             forced-colors:outline-offset-[-1px]"
+                >
+                  <span className="h-1.5 w-1.5 rounded-full bg-text-tertiary forced-colors:bg-[CanvasText]" />
+                  {statusLabel}
+                </span>
+              )}
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
@@ -238,24 +291,13 @@ export function PlaceOfferRow({
         <button
           type="button"
           onClick={onSelect}
-          className="min-h-tap min-w-0 w-full text-left focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-accent"
-        >
-          {cardContent}
-        </button>
+          aria-label={`View ${offer.itemName} details`}
+          className="absolute inset-0 z-10 min-h-tap w-full text-left focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-accent"
+        />
       ) : (
-        cardContent
+        null
       )}
-      {showImage && offer.imageSourceUrl ? (
-        <a
-          href={offer.imageSourceUrl}
-          target="_blank"
-          rel="nofollow noopener noreferrer"
-          aria-label={`Photo source for ${offer.itemName}`}
-          className="absolute right-1.5 top-1.5 z-10 grid min-h-tap min-w-tap place-items-center rounded-full bg-fillSecondary text-text-primary shadow-sm focus-visible:outline-2 focus-visible:outline-accent"
-        >
-          <ExternalLink className="h-4 w-4" aria-hidden="true" />
-        </a>
-      ) : null}
+      {cardContent}
     </article>
   );
 }
