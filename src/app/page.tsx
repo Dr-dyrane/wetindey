@@ -1263,7 +1263,7 @@ export default function HomePage() {
 
         {/* What this market is currently selling. */}
         <div className="-mx-2 flex min-h-0 flex-1 flex-col gap-2">
-          <h4 className="shrink-0 text-footnote text-text-secondary">
+          <h4 className="shrink-0 px-2 text-footnote text-text-secondary">
             Prices in market
           </h4>
           <div

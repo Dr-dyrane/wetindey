@@ -352,6 +352,21 @@ source. Independent static refutation passed. Reused-tab visual confirmation in 
 forced-colors, and focus traversal remains a later release gate; no claim of runtime visual
 PASS is made here. Release `src/design-system/components/PlaceOfferRow.tsx`.
 
+##### Human Interface — Market Details label and image-status contrast — COMPLETE / STATIC PASS
+
+Owner: Controller temporary recovery claim. Exclusive paths:
+`src/app/page.tsx` and `src/design-system/components/PlaceOfferRow.tsx`.
+
+Founder runtime review showed the section heading's leading “P” clipped and status text
+losing contrast over detailed imagery. This release restores the heading through a local
+content gutter without changing market data or scroll ownership, and adds a restrained
+local glass backing beneath the regular-card image status layer. Explicit icon-plus-text
+status meaning, price hierarchy, no-border rule, and forced-colors behavior are preserved.
+The adaptive market offer grid remains the only card expansion in this slice; discovery and
+utility lists retain their context-specific scan layouts. Independent static refutation
+passed. Reused-tab visual confirmation remains a later evidence gate; no data/action/map/
+schema/copy change occurred. Release both paths.
+
 ##### Human Interface — Market Details grid, CTA, and attribution correction — COMPLETE / PASS
 
 Owner: persistent HI Engineer `019f75a5-0fc6-7f40-9a0f-8097ead3b45d`. Exclusive paths:
