@@ -9,8 +9,9 @@ anything. One owner per path, always.
 ## Quality & Release Controller checkpoint RC-139
 
 Controller owner: this orchestrator, over exactly `LANES.md` and
-`docs/architecture/RELEASE-CONTROLLER.md`. Current `main` and `origin/main` are clean and
-aligned at `3da6b965f6fa3eb67dc975cec57bc07d9de83c7b`.
+`docs/architecture/RELEASE-CONTROLLER.md`. Current `main` and `origin/main` are aligned at
+`042efd359f8bf56fcd5470d42a975ebe6ac640d1`; the only uncommitted paths are explicitly
+claimed implementation work.
 
 **Decision: PATH-SCOPED PUSHES AUTHORIZED; DEPLOYMENT REMAINS EVIDENCE-GATED.** Independently
 refuted, path-scoped commits may move promptly to `main`; do not accumulate a private
@@ -76,10 +77,10 @@ to idle rather than creating a replacement task.
 | Food Source Authenticity & Attribution Refuter | Idle refuter | Independently verify each staged source artifact against original evidence and terms |
 | Search & Ranking Engineer | Available, no active claim | The deployed-current-main `97b74af` disposable SQL evidence gate passed and is released; remain persistent for the next bounded Search/Ranking assignment |
 | Iconography & Visual Systems Lead | Active exact one-file Confirm Visit correction; Report Price released | `b93761b` unavailable banner runtime PASS releases `ReportPriceSheet.tsx`. Own only `ConfirmVisitSheet.tsx` for the identical caution-status warning replacement |
-| Maps Engineering Lead | Available; named queued self-location owner, no active path claim | H37 semantic place-marker commit `6611068` is independently NOT REFUTED and both Maps paths are released. Self-location/avatar remains unclaimed behind the active short Market Details slice and a later fresh exact handoff |
+| Maps Engineering Lead | Active self-location/avatar and sheet-aware control vertical | Exclusively owns `page.tsx`, `MapboxCanvas.tsx`, `MapboxAdapter.ts`, optional new self-marker primitive, and focused contract |
 | Client Reliability & Offline Engineer | Prepared, unclaimed | H38 one-file rejected-search containment waits for the active Market Details slice to release `src/app/page.tsx` |
 | Security & Privacy Engineering Lead | Active ephemeral Production DB-target proof | Owns only the three temporary proof paths above; CSP collector source remains released and production CSP remains fail-open/report-only |
-| Motion & Interaction Engineer | Terminal containment runtime REFUTED; exact three paths retained | On `3da6b965`, terminal Prices scrolling still displaces the fixed header/CTA and another terminal wheel moves the outer block. Pop/reopen reset and regular CTA pass |
+| Motion & Interaction Engineer | Functional containment PASS; terminal-tail follow-up retains two paths | Retains only `NavigationStack.tsx` and `motion-contracts.test.ts`; `page.tsx` released to Maps. Remaining defect is 45–50px terminal whitespace versus 24px |
 
 The Quality & Release Controller is this orchestrator thread. It is not a separate pinned
 employee task. The repeating `wetindey-orchestrator-recovery` automation is deleted and
@@ -166,7 +167,7 @@ source ownership; only rows with exact paths grant edit authority.
 | Report Price unavailable-status icon correction | **Closed / released with runtime PASS at `b93761b`** | The unavailable banner passed runtime; `src/app/_components/ReportPriceSheet.tsx` is released |
 | Confirm Visit unavailable-status icon correction | **Static PASS; runtime UNVERIFIED, exact path retained** | Persistent Iconography & Visual Systems Lead `019f75cf-4d8f-7263-822b-06e846fce7ac` retains only `src/app/_components/ConfirmVisitSheet.tsx` pending runtime |
 | Market Details hierarchy and offer surface | **`ae47513` runtime PASS; prior HI ownership released** | Hierarchy/one CTA, rows/credits, pop/reopen, and regular layout pass. `src/design-system/components/PlaceOfferRow.tsx` is released; `page.tsx` transfers only to the Motion terminal-reservation correction |
-| Market Details compact terminal CTA persistence | **Runtime REFUTED; exact three Motion paths retained** | On `3da6b965`, terminal Prices scrolling displaces the fixed Back/title/location/Get It block and another terminal wheel moves the outer block. Pop/reopen reset and regular CTA pass. Retain `src/design-system/components/NavigationStack.tsx`, `src/app/page.tsx`, and `scripts/motion-contracts.test.ts` |
+| Market Details compact terminal CTA persistence | **Functional runtime PASS; two-path tail follow-up retained** | Fixed controls, final content/credits, overlay containment, repeated terminal scrolling, pop/reopen, and regular CTA pass through `042efd3`. Motion retains only `NavigationStack.tsx` and `motion-contracts.test.ts` for 45–50px terminal whitespace versus 24px. `page.tsx` released to Maps |
 | Market Details — Place Offer Row availability semantics | **Closed / released at `d807538`** | Current available uses explicit confirmed semantics, stale available uses caution, unavailable uses unavailable, and genuinely unknown remains neutral. Direct light evidence covered confirmed/caution/unavailable, dark evidence covered caution/unavailable, and independent static refutation found no P1/P2/P3. `src/design-system/components/PlaceOfferRow.tsx` is released |
 | Account deletion capability | **REFUTED provider capability; pathless** | On the exact current Neon target, authenticated fresh-session `POST /delete-user` returns `404` while unauthenticated returns `401`: the route is mounted but `user.deleteUser.enabled` is false. Emergency SQL cleanup of the disposable identity is not self-delete evidence. Founder policy remains approved; provider configuration/capability and a later app-owned orchestration/UI lane remain, with no app path claimed |
 | Corrected historical refutations | **Closed / superseded** | Do not reopen D1/D2, seed typing/H27, H23, BottomSheet, Mapbox route validation, public-source ingestion, or ADR governance already corrected and independently passed |
@@ -332,37 +333,25 @@ is a separate unclaimed lane. The later contextual-orb/selected-glow concept is 
 claimed completed by `6611068` and owns no path. No Presence, page/actions/location-state,
 camera-contract, schema, or migration authority follows.
 
-### Retained lane: Market Details compact terminal-reservation correction
+### Retained follow-up: Market Details terminal-tail polish
 
 The `ae47513` split runtime verdict passes market hierarchy/one CTA, rows/credits,
-pop/reopen, and regular layout. Compact terminal CTA persistence remains REFUTED. The dead
-pixels are likely NavigationStack reservation and are not proven document escape.
-Prior Market HI ownership is released into this atomic class-only Motion integration;
-`src/design-system/components/PlaceOfferRow.tsx` is released.
+pop/reopen, and regular layout. Commits `2965cf1`, `37605ee6`, and `042efd3` now also pass
+fixed compact Back/title/location/Get It, final offer/full credits, no overlay, and
+repeated-terminal-scroll containment. The only remaining runtime defect is approximately
+45–50px of blank terminal space versus the 24px target.
 
 The Motion & Interaction Engineer retains exactly:
 
 - `src/design-system/components/NavigationStack.tsx`
-- `src/app/page.tsx`
 - `scripts/motion-contracts.test.ts`
 
-Contract:
+`src/app/page.tsx` is explicitly released to Maps. Motion may not reacquire it without a
+new controller handoff. Preserve every passing interaction and correct only the measured
+terminal-tail owner. No `BottomSheet.tsx`, actions, PlaceOfferRow, self-avatar, Presence,
+database, schema, or migration authority follows.
 
-- NavigationStack compact scroller becomes `pb-0`; regular retains safe-area plus 24px.
-- The detail root owns compact `max(--sheet-hidden, safe-area) + 24px`; regular owns zero.
-- The CTA remains sticky at the top.
-- Make no other structural, data, or copy change.
-
-Acceptance rechecks compact terminal CTA persistence while preserving the passed
-hierarchy/one CTA, rows/credits, pop/reopen, and regular layout. No `BottomSheet.tsx`,
-actions, PlaceOfferRow, self-avatar, Presence, database, schema, or migration authority
-follows.
-
-Runtime verdict: REFUTED. Compact CTA disappears at the absolute terminal and the tail
-exceeds 24px. Final rows and full credits remain reachable; pop/reopen and regular layout
-pass. Root-scroll measurement remains unverified.
-
-### Active lane: Market Details Place Offer Row availability semantics
+### Closed lane: Market Details Place Offer Row availability semantics
 
 The Human Interface Design Engineer completed exactly:
 
@@ -371,23 +360,16 @@ The Human Interface Design Engineer completed exactly:
 Prior reused-tab runtime PASS covers compact/regular light/dark, edge-to-edge image clipped by
 the outer squircle with no gutter/nested radius, compact item/variant and price/unit
 hierarchy, readable availability/metadata/credits, no collision, and logical AX
-order/source links. Keyboard Tab traversal remains unverified due Safari tooling and the
-skeleton was not observed. Founder runtime color refutation reactivates this path only.
-Available/confirmed uses the existing `status-confirmed` family; unavailable uses
-`status-unavailable`; uncertain/stale uses `status-caution` when represented; neutral is
-reserved for genuinely unknown. Preserve explicit text/icon so color is not the sole
-signal, plus light/dark/grayscale/forced-colors. Do not widen data, copy, actions, or paths.
+order/source links. Commit `d807538` adds explicit confirmed/caution/unavailable semantics
+without color-only meaning and passed independent static refutation plus direct runtime
+evidence. The path is released.
 
-### READY/BLOCKED lane: self-location avatar marker — signed-in and guest
+### Active lane: self-location avatar marker — signed-in and guest
 
 The persistent Maps Engineering Lead is the named implementation owner. The Iconography &
 Visual Systems Lead is the visual reviewer, and a fresh independent Privacy refuter is
-required. This assignment reserves responsibility and start order only; it claims no path
-and authorizes no edit while Motion owns `src/app/page.tsx`. The H37 Maps paths
-are released, but they do not transfer into this queued lane without a fresh exact handoff.
-
-Implementation is READY and blocked only until the Motion runtime PASS releases
-`src/app/page.tsx`, followed by a fresh exact claim. The intended vertical slice remains:
+required. The Market Details functional contract now passes and `src/app/page.tsx` is
+released from Motion. Maps Engineering exclusively owns:
 
 - `src/app/page.tsx`
 - `src/design-system/components/MapboxCanvas.tsx`
@@ -410,7 +392,9 @@ Contract:
   or touch database, schema, or migrations.
 
 Peer presence remains a separate future slice. No push, deployment, browser, or database
-authority follows from this queued responsibility.
+authority follows from this implementation claim. Acceptance requires focused contracts,
+fresh independent source/privacy refutation, and reused-tab compact/regular light/dark/
+grayscale runtime evidence across sheet detents before release.
 
 ### Closed lane: Semantic iconography visual foundation
 
@@ -1191,7 +1175,7 @@ silently ignoring it; the disagreement is the useful part.
 | H28 | **logo / brand lane** | **`logoGeometry.ts`'s four knip-red exports are DERIVATION, not orphans — un-export them, do NOT delete them.** `NIGERIA_CENTROID`, `QUESTION_BBOX`, `QUESTION_HEIGHT`, `QUESTION_RENDERED` are flagged unused and they are the working behind `QUESTION_TRANSFORM`, which IS live. `QUESTION_HEIGHT = 420` carries the solve: *"420 lands at (463,469) (~0 off centroid), 460 at (438,461), and 500 at (371,477), 93 units off. 420 is the knee."* **Delete them to clear knip and `QUESTION_TRANSFORM` becomes a magic string nobody can re-derive.** Un-exporting keeps the reasoning in the file and clears the red — the same move you already made in `74c2f52` for five live internals. Flagging because CI is red on these and the obvious fix is the wrong one. **Verified: un-exporting clears knip (11 red → 7) and `tsc` stays green** — but it trades them for four `no-unused-vars` **lint warnings**. CI does not run lint, so it goes green; the next session will still see them. Also: the recent audit praises the logo as *"already implemented as reusable SVG geometry"* — it is implemented and **not reused**; these four have no caller. | `knip`; the derivation comments in the file. | **Open.** |
 | H30 | **the location-management session + the profile session** | **`page.tsx` is HOT right now: workflow wf_b0fbbf47 is rewriting it (presentation controller + sheet migration), and two more efforts queue behind it.** The owner has three concurrent asks landing on the same files: (1) a presentation controller in `page.tsx` + `ModalSheet.tsx` (running now); (2) "my location" management, which another session owns and which will touch `LocationSheet` / `locationStore` / `page.tsx`; (3) a Profile-modal redesign (rename Account to Profile, mini-profile + Manage-Profile CRUD) which is `ProfileSheet.tsx` + a new profile table + `actions.ts`. **All three touch `page.tsx`.** To avoid the two-workflows-one-file clobber this repo keeps hitting: the presentation spine goes FIRST and lands; then location and profile build ON TOP of the controller it produces (surfaces become `openSurface({type})`, not new `useState` flags). Location session: coordinate your `page.tsx` edits with whoever holds the presentation lane before editing, or wait for the spine commit. Profile is task #27 and is blocked on the spine. | Owner directive 2026-07-17; wf_b0fbbf47 active; tasks #25/#26/#27. | **Coordination, standing until the spine lands.** |
 | H29 | **whoever owns `SheetPicker.tsx` / the sheet system** | **Owner asked why modals stack. Named cause: `SheetPicker` IS a `ModalSheet size="form"`, and it opens over sheets.** Three live stacks: `ItemDetailSheet` (page) → picker (form); `ReportPriceSheet` (page) → picker ×4 (market/item/variant/unit); and the messy one, **`ReportProblemSheet` (form) → picker (form)** — a small modal over a small modal, which is precisely the "previous modal shows behind it" the owner is seeing. **The system already knows:** `presentedCount` in `ModalSheet.tsx` is a COUNT, not a flag, and its own comment says why — *"a flag would clear when the picker dismisses and report nothing presented"*. The primitive carries a workaround for a structure that should not exist. **Recommended fix, and the app already has the primitive: a picker should PUSH into the `NavigationStack` of the sheet that opened it**, exactly as `LocationSheet` already does for LGA drill-down (`019f3f3`). Then there is no stack to hide: one surface, one dismiss, a back affordance, and the picker inherits the parent's height for free. It is also what iOS does for form pickers — tap row, push, back. **This is a design call, not mine to take unilaterally** — filing the evidence. | Owner, 2026-07-17; `presentedCount` and its comment; six `<SheetPicker` call sites. | **Open — design call.** |
-| H31 | **active deterministic coverage tie-break; Search & Ranking Engineer owns exactly `src/app/actions.ts`** | `getCoverageForPoint` still orders active areas only by distance, so coincident LGA/neighbourhood centroids depend on unspecified PostgreSQL row order. Preserve distance first, then prefer `areas.type = 'neighborhood'`, then `areas.slug ASC`. | Persistent Search & Ranking Engineer `019f75b7-6c59-7952-bf14-b01cfbfd2793`; independent SQL refuter. | **ACTIVE.** No schema, migration, seed, UI, shared database, push, or deployment authority. Acceptance requires the exact one-query diff plus a disposable coincident-area fixture proving deterministic neighborhood preference and slug fallback. |
+| H31 | **closed / released at `261588f`** | `getCoverageForPoint` now orders by distance, then neighborhood preference, then slug. | Persistent Search & Ranking Engineer `019f75b7-6c59-7952-bf14-b01cfbfd2793`; independent SQL refuter. | Disposable action fixture proved nearer distance wins, coincident neighborhood beats LGA, and coincident neighborhoods use slug fallback. Independent refuter PASS; `src/app/actions.ts` released. |
 | H32 | **map lane (`page.tsx`)** + **whoever owns `Skeleton.tsx`** | **Slash-opacity on a colour token emits NOTHING, and two elements are currently rendering with no background at all.** `bg-fillSecondary/40` (`page.tsx:1249`) and `bg-fillTertiary/40` (`Skeleton.tsx:47`) compile to **zero CSS** — verified against the emitted sheet. This is the same structural cause as H20: every colour in `tailwind.config.ts` is a bare `var(--color-*)` string, and Tailwind cannot apply slash-opacity to a bare `var()`, so it rejects the candidate silently. **It fails quietly** — no build error, no lint, no knip; the element just has no fill. The skeleton is the visible one: a loading placeholder with no background is an invisible loading state. **Fix is either** the house pattern (a solid token) **or** teaching the tokens an `<alpha-value>` channel form — the latter is a design-system change and would also let Button tint fills again. Found by a refuter checking H20, which is the same bug in a different costume. | The emitted stylesheet: grep for the escaped class returns 0. | **Half closed 2026-07-17.** `Skeleton.tsx` is fixed — and it was **five** dead classes there, not the one filed here. The worst was line 20, the `Skeleton` primitive itself, which made **every loading state in the app** a transparent div pulsing nothing; `OfferCardSkeleton` rendered literally nothing at all. `page.tsx:1249` is untouched and continues as **H33**. |
 | H33 | **map lane (`page.tsx`)** | **H32's other half is still live, and it is the same one-line bug.** `page.tsx:1249`'s `bg-fillSecondary/40` emits **zero CSS** — that element has no background. I fixed `Skeleton.tsx`'s five instances (see the skeleton lane) but `page.tsx` is yours, so I did not touch it. The fix there is one word: drop the `/40` and let the solid fill token do the work — it is already the translucent grey the slash was reaching for, and it already flips light/dark, so any `dark:` companion becomes redundant. Do NOT reach for an `<alpha-value>` channel just for this; that is a design-system change and this is a typo-class bug. **Also worth a grep before you ship anything:** slash-opacity on ANY named colour token in this repo silently emits nothing, everywhere, forever — the failure has no build error, no lint, no knip. `grep -rnoE "bg-[a-zA-Z]+/[0-9]+" src --include="*.tsx"` is the whole audit (widen the prefix to taste); it returns exactly one hit now, and that hit is yours. | Compiled the tree with `npx tailwindcss` and grepped the escaped class: absent. | **CLOSED 2026-07-18 (`0291298`).** Owner directly authorized the fix; `bg-fillSecondary/40` → `bg-fillTertiary` at `page.tsx:1249`. Zero `bg-fillSecondary/40` left in the tree. |
 | H34 | **whoever next opens `Skeleton.tsx`** | **`OfferCardSkeleton` is the right height but the wrong box.** I fixed its invisibility and gave it the real row's surface, radius, shadow and list gap, so nothing shoves on arrival — but its internals are still an approximation: it is a vertical `space-y-4` stack, while the real offer row (`ItemDetailSheet.tsx:628`) is a horizontal flex with a leading icon and `gap-3`. `ItemCardSkeleton` in the same file traces its counterpart properly and documents why ("a skeleton that is a different height than the thing it stands in for shoves the list on arrival"). That is the standard; this one does not meet it yet. Not urgent — it is no longer invisible, and it no longer jumps. Trace the row when you are next in here. | Read both; the box models differ. | **CLOSED 2026-07-17 (`a906636`).** Traced the row column for column. The residual, that the real row can wrap and this cannot, became **H39** for the auth lane. |
@@ -1438,7 +1422,7 @@ refuter.
 | Catalog Stewardship | Item CRUD, aliases, variants, units, category mapping, reference imagery, attribution, and duplicate merging | Unassigned |
 | Observation Evidence Media | Report attachments, receipts, EXIF removal, privacy, hashing, size limits, moderation, retention, and offline uploads | Unassigned |
 | Seller Platform / Identity & Access / Email Delivery | Seller onboarding, scoped RBAC, verification, consented contact, seller operations, and auth-message delivery | Seller architecture remains unassigned; branded Neon OTP via Hostinger is completed/released through embedded-logo follow-up `712719f`, independently VERIFIED and live at Ready deployment `dpl_B7QwNqAYTToHsAXsVCM5jh1JXwRM` with fresh OTP/Gmail inline-CID proof; operational deliverability monitoring remains |
-| Currency / Money Experience | Aboki FX provider-aware catalog, flags, reverse conversion, attribution, and offline states | Awaiting exact implementation claim |
+| Currency / Money Experience | Aboki FX provider-aware catalog, flags, reverse conversion, attribution, and offline states | Bidirectional NGN conversion is implemented and released; runtime edge evidence remains, but no duplicate implementation lane is open |
 | Trust / Data Governance | Provenance admissibility, observed-only confidence, sample labelling, reputation, and source review | Stage 0 dependencies remain |
 | Security & Privacy | CSP reporting, privacy disclosures, account deletion, presence safety, redaction, retention, and independent refutation | Collector operations PASS with source paths released and pathless monitoring only; production stays fail-open/report-only. Nonce P1 and deletion capability remain separate REFUTED/pathless gates; enforcement prohibited |
 | Quality Engineering | Executable migration, contribution, browser, accessibility, PWA, and release gates | Underpowered; claim next bounded lane |
