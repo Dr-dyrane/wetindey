@@ -465,8 +465,9 @@ Liquid Glass adoption now proceeds in disjoint waves:
 
 - **Wave A — QUEUED:** `ListRow.tsx`, `ProfileSheet.tsx`, `ManageProfileSheet.tsx`,
   `SettingsSheet.tsx`. Owner: HI implementation lead.
-- **Wave B — QUEUED:** `ItemDetailSheet.tsx`, `GetItSheet.tsx`. Owner: separate HI/visual
-  implementation worker.
+- **Wave B — RELEASED / NO ACTIVE OWNERSHIP:** `ItemDetailSheet.tsx`, `GetItSheet.tsx`.
+  Historical Liquid Glass queue superseded by the released FF-025 Item Detail and Get-It
+  density slices; no current Wave B writer remains.
 ##### FF-025 density disclosure — Item Detail — COMPLETE / PASS
 
 Owner: Human Interface Design Engineer. Exclusive path:
