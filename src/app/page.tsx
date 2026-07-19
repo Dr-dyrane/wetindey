@@ -26,6 +26,10 @@ import { useModalPresented } from "@/design-system/components/ModalSheet";
 import { AsyncList } from "@/design-system/components/AsyncList";
 import { NigeriaLogo } from "@/design-system/components/NigeriaLogo";
 import { ItemCard, PhotoCredits, type ItemCardData } from "@/design-system/components/ItemCard";
+import {
+  PlaceOfferRow,
+  PlaceOfferRowSkeleton
+} from "@/design-system/components/PlaceOfferRow";
 import { SettingsSheet } from "@/app/_components/SettingsSheet";
 import { ReportPriceSheet } from "@/app/_components/ReportPriceSheet";
 import { ProfileSheet, Avatar } from "@/app/_components/ProfileSheet";
@@ -40,7 +44,6 @@ import {
 } from "@/app/_data/exchange-sample-locations";
 import { ItemDetailSheet, offerSignal } from "@/app/_components/ItemDetailSheet";
 import { PresentationHost } from "@/app/_components/PresentationHost";
-import { formatNaira } from "@/lib/money";
 import { GetItSheet, type GetItTarget } from "@/app/_components/GetItSheet";
 import {
   ConfirmVisitSheet,
@@ -64,6 +67,7 @@ import {
   getPlaceOffers,
   getInitialSubmissionData,
   getVisitContext,
+  type PlaceOffer,
   type NarrowedOffer
 } from "@/app/actions";
 import { getHaversineDistance, formatDistance } from "@/lib/geospatial";
@@ -78,17 +82,6 @@ interface PlaceData {
     lng: number;
   };
   address: string | null;
-}
-
-interface PlaceOffer {
-  id: string;
-  itemName: string;
-  variantName: string;
-  priceMin: number;
-  priceMax?: number;
-  unit: string;
-  availabilityState: string;
-  freshnessState: string;
 }
 
 /**
@@ -305,6 +298,7 @@ export default function HomePage() {
   const [allPlaces, setAllPlaces] = useState<PlaceData[]>([]);
   const [placeOffers, setPlaceOffers] = useState<PlaceOffer[] | undefined>(undefined);
   const [placeOffersError, setPlaceOffersError] = useState<string | null>(null);
+  const [placeOffersRetry, setPlaceOffersRetry] = useState(0);
   const [isSearching, setIsSearching] = useState(false);
   const [isPlaceOffersLoading, setIsPlaceOffersLoading] = useState(false);
   const [locateError, setLocateError] = useState<string | null>(null);
@@ -648,7 +642,7 @@ export default function HomePage() {
     return () => {
       cancelled = true;
     };
-  }, [detailPlaceId]);
+  }, [detailPlaceId, placeOffersRetry]);
 
   /**
    * Snapshot the claim, on the way OUT.
@@ -1216,67 +1210,56 @@ export default function HomePage() {
     if (activeCategory !== "food" || !detailPlace) return undefined;
 
     return (
-      <div className="space-y-5 h-full flex flex-col justify-between">
-        <div className="space-y-4">
-          <div className="flex items-start justify-between">
-            <div className="flex-1 pr-4">
-              <h2 className="text-headline tracking-tight text-text-primary">{detailPlace.name}</h2>
-              <p className="text-caption-1 text-text-secondary mt-1 flex items-center">
-                <MapPin className="h-3.5 w-3.5 text-accent mr-1 shrink-0" />
-                {/* From the user, not from the camera, this panel opens by
-                    tapping a pin, which centres the camera ON that pin, so
-                    measuring from `mapCenter` printed "0 m away" for every
-                    market you clicked. */}
-                {formatDistance(
-                  getHaversineDistance(
-                    searchOrigin.lat,
-                    searchOrigin.lng,
-                    detailPlace.location.lat,
-                    detailPlace.location.lng
-                  )
-                )}{" "}
-                • {detailPlace.address || `${location.label}, Lagos`}
-              </p>
-            </div>
-            <button
-              onClick={() => setDetailPlaceId(null)}
-              aria-label="Close"
-              className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-fillSecondary
-                         text-text-secondary hover:text-text-primary transition-colors"
-            >
-              <X className="h-4 w-4" />
-            </button>
+      <div className="flex h-full min-h-0 flex-col gap-4 overflow-hidden">
+        <div className="flex shrink-0 items-start justify-between">
+          <div className="flex-1 pr-4">
+            <h2 className="text-headline tracking-tight text-text-primary">{detailPlace.name}</h2>
+            <p className="text-caption-1 text-text-secondary mt-1 flex items-center">
+              <MapPin className="h-3.5 w-3.5 text-accent mr-1 shrink-0" />
+              {/* From the user, not from the camera, this panel opens by
+                  tapping a pin, which centres the camera ON that pin, so
+                  measuring from `mapCenter` printed "0 m away" for every
+                  market you clicked. */}
+              {formatDistance(
+                getHaversineDistance(
+                  searchOrigin.lat,
+                  searchOrigin.lng,
+                  detailPlace.location.lat,
+                  detailPlace.location.lng
+                )
+              )}{" "}
+              • {detailPlace.address || `${location.label}, Lagos`}
+            </p>
           </div>
+          <button
+            onClick={() => setDetailPlaceId(null)}
+            aria-label="Close"
+            className="grid min-h-tap min-w-tap shrink-0 place-items-center rounded-full
+                       text-text-secondary transition-colors hover:text-text-primary
+                       focus-visible:outline-2 focus-visible:outline-offset-2
+                       focus-visible:outline-accent"
+          >
+            <span className="grid h-8 w-8 place-items-center rounded-full bg-fillSecondary">
+              <X className="h-4 w-4" />
+            </span>
+          </button>
+        </div>
 
-          {/* What this market is currently selling. */}
-          <div className="space-y-3">
-            <h4 className="text-footnote text-text-secondary">Available prices in market</h4>
+        {/* What this market is currently selling. */}
+        <div className="flex min-h-0 flex-1 flex-col gap-3">
+          <h4 className="shrink-0 text-footnote text-text-secondary">
+            Prices in market
+          </h4>
+          <div className="min-h-0 flex-1 overflow-y-auto pr-1">
             <AsyncList
               items={placeOffers}
               isLoading={isPlaceOffersLoading}
               error={placeOffersError}
+              onRetry={() => setPlaceOffersRetry((attempt) => attempt + 1)}
               subject={detailPlace.id}
               keyExtractor={(offer) => offer.id}
-              className="max-h-[40vh] overflow-y-auto pr-1"
-              renderItem={(offer) => (
-                <div className="p-3 squircle bg-fillTertiary flex items-center justify-between">
-                  <div className="min-w-0">
-                    <div className="truncate text-caption-1 font-bold text-text-primary">
-                      {offer.itemName}
-                    </div>
-                    <div className="truncate text-caption-2 text-text-secondary mt-0.5">
-                      {offer.variantName}
-                    </div>
-                  </div>
-                  <div className="text-right shrink-0 pl-2">
-                    <div className="text-caption-1 font-black text-accent tabular-nums">
-                      {formatNaira(offer.priceMin)}
-                    </div>
-                    <div className="text-caption-2 text-text-tertiary">/ {offer.unit}</div>
-                  </div>
-                </div>
-              )}
-              /* This empty state was a bare grey pin with no words at all. */
+              renderItem={(offer) => <PlaceOfferRow offer={offer} />}
+              skeleton={<PlaceOfferRowSkeleton />}
               empty={{
                 icon: <MapPin className="h-6 w-6" />,
                 title: "No prices here yet",
@@ -1284,14 +1267,15 @@ export default function HomePage() {
               }}
               errorState={{
                 title: placeOffersError ?? "Could not load",
-                description: "Check your network and try again."
+                description: "Check your network and try again.",
+                retryLabel: "Try again"
               }}
             />
           </div>
         </div>
 
         {/* One real action, replacing two that had no onClick. */}
-        <div className="pt-4 mt-2">
+        <div className="shrink-0 pt-1">
           <Button
             variant="primary"
             size="md"

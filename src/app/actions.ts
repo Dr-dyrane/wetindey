@@ -878,7 +878,24 @@ export async function getPlaces() {
 }
 
 // 4. Fetch all current food item offers at a specific place
-export async function getPlaceOffers(placeId: string) {
+export interface PlaceOffer {
+  id: string;
+  itemName: string;
+  variantName: string;
+  priceMin: number;
+  priceMax?: number;
+  unit: string;
+  availabilityState: string;
+  freshnessState: string;
+  lastObservedAt: string;
+  imageUrl: string | null;
+  imageAttribution: string | null;
+  imageLicense: string | null;
+  imageSourceUrl: string | null;
+  trust: ReadTrust | null;
+}
+
+export async function getPlaceOffers(placeId: string): Promise<PlaceOffer[]> {
   placeId = parsePlaceOffersPlaceId(placeId);
   const results = await db
     .select({
@@ -886,24 +903,58 @@ export async function getPlaceOffers(placeId: string) {
       itemName: items.canonicalName,
       unitName: units.displayName,
       variantName: itemVariants.displayName,
+      imageUrl: items.imageUrl,
+      imageAttribution: items.imageAttribution,
+      imageLicense: items.imageLicense,
+      imageSourceUrl: items.imageSourceUrl,
     })
     .from(offersCurrent)
     .innerJoin(itemVariants, eq(offersCurrent.itemVariantId, itemVariants.id))
     .innerJoin(items, eq(itemVariants.itemId, items.id))
     .innerJoin(units, eq(offersCurrent.unitId, units.id))
-    .where(eq(offersCurrent.placeId, placeId));
+    .where(eq(offersCurrent.placeId, placeId))
+    .orderBy(
+      asc(items.canonicalName),
+      asc(itemVariants.displayName),
+      asc(units.displayName)
+    );
 
-  return results.map((r) => ({
-    id: r.offer.id,
-    itemName: r.itemName,
-    variantName: r.variantName,
-    priceMin: r.offer.priceMin,
-    priceMax: r.offer.priceMax || undefined,
-    unit: r.unitName,
-    availabilityState: r.offer.availabilityState,
-    freshnessState: r.offer.freshnessState,
-    lastObservedAt: r.offer.lastObservedAt.toISOString(),
-  }));
+  const trustByKey = await getOfferTrustBatch(
+    results.map((result) => ({
+      itemVariantId: result.offer.itemVariantId,
+      unitId: result.offer.unitId,
+      placeId: result.offer.placeId,
+    }))
+  );
+
+  return results.map((result) => {
+    const key = {
+      itemVariantId: result.offer.itemVariantId,
+      unitId: result.offer.unitId,
+      placeId: result.offer.placeId,
+    };
+
+    return {
+      id: result.offer.id,
+      itemName: result.itemName,
+      variantName: result.variantName,
+      priceMin: result.offer.priceMin,
+      priceMax: result.offer.priceMax ?? undefined,
+      unit: result.unitName,
+      availabilityState: result.offer.availabilityState,
+      freshnessState: result.offer.freshnessState,
+      lastObservedAt: result.offer.lastObservedAt.toISOString(),
+      imageUrl: result.imageUrl,
+      imageAttribution: result.imageAttribution,
+      imageLicense: result.imageLicense,
+      imageSourceUrl: result.imageSourceUrl,
+      trust: readTrustForKey(
+        trustByKey,
+        key,
+        result.offer.availabilityState
+      ),
+    };
+  });
 }
 
 /* ─────────────────────────────────────────────────────────────────────────────
