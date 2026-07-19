@@ -610,7 +610,7 @@ export function ModalSheet({
           borderBottomLeftRadius: isRegular ? SHEET_RADIUS : 0,
           borderBottomRightRadius: isRegular ? SHEET_RADIUS : 0,
         }}
-        className={`sheet-panel motion-modal-panel relative flex flex-col overflow-hidden shadow-sheet ${
+        className={`sheet-panel material-dense-glass motion-modal-panel relative flex flex-col overflow-hidden shadow-sheet ${
           visible ? transition.presentSheet : transition.dismissSheet
         } md:w-full md:max-w-[440px] md:shadow-island ${size === "page" ? "h-[94%] md:h-[min(92%,720px)]" : "max-h-[88%] md:max-h-[min(88%,640px)]"}`}
       >
@@ -680,7 +680,7 @@ export function ModalSheet({
           <section
             ref={childPanelRef}
             aria-label={child.title}
-            className={`stack-surface absolute inset-0 z-10 flex min-h-0 flex-col overflow-hidden ${transition.push}`}
+            className={`stack-surface sheet-child-surface absolute inset-0 z-10 flex min-h-0 flex-col overflow-hidden ${transition.push}`}
           >
             <header className="flex shrink-0 items-center gap-2 px-3 py-2.5">
               <button

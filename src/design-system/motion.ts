@@ -69,7 +69,8 @@ export const motion = {
     modalStart: 0.98,
   },
   blur: {
-    backdrop: 12,
+    /** ADR-026 backdrop-blur-sm target; never use this as content filter blur. */
+    backdrop: 8,
     reduced: 0,
   },
   elevation: {

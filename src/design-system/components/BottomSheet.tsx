@@ -171,6 +171,7 @@ export function compactSheetPresentation(
 }
 
 interface BottomSheetStyle extends React.CSSProperties {
+  "--stack-surface": string;
   "--sheet-hidden": string;
   "--sheet-side-inset": string;
   "--sheet-surface-bottom": string;
@@ -1209,6 +1210,9 @@ export function BottomSheet({
             transform: `translate3d(0, ${translateForFraction(restingFraction)}, 0)`,
             willChange: isDragging ? "transform" : "auto",
             touchAction: "pan-y pinch-zoom",
+            // NavigationStack's level-1 host stays transparent here so the
+            // sheet's single glass surface remains the only backdrop owner.
+            "--stack-surface": "transparent",
             "--sheet-hidden": `${((DETENT_FRACTION.large - DETENT_FRACTION[detent]) * 100).toFixed(3)}dvh`,
             "--sheet-side-inset": `${initialPresentation.sideInset.toFixed(2)}px`,
             "--sheet-surface-bottom": initialPresentation.surfaceBottom,
@@ -1249,18 +1253,14 @@ export function BottomSheet({
           }}
         />
 
-        {/* Material remains translucent at the map-context detents. The
-            persistent surface fades in only as the sheet reaches its dock. */}
+        {/* One named material owns the backdrop filter. The class changes only
+            at the committed detent, so fill alpha never animates during drag. */}
         <div
           aria-hidden
-          className="material-regular absolute top-0 overflow-hidden"
+          data-sheet-material={detent === "large" ? "expanded" : "context"}
+          className={`${detent === "large" ? "material-expanded-glass" : "material-context-island"} absolute top-0 overflow-hidden`}
           style={surfaceGeometry}
-        >
-          <div
-            className="absolute inset-0 bg-surface-persistent"
-            style={{ opacity: "var(--sheet-docking-progress)" }}
-          />
-        </div>
+        />
 
         {/* clip-path also clips hit testing, so the map-visible rails and
             bottom gap remain genuine map interaction space. */}
