@@ -212,9 +212,9 @@ semantics, and every current output. Require exact source-shape comparison, focu
 type/static evidence, and independent default-to-REFUTED review. Later modularization slices
 remain pathless.
 
-##### Live-app modularization Slice 2 — ACTIVE
+##### Live-app modularization Slice 2 — COMPLETE / RELEASED
 
-Owner: Antigravity (External Approved Contractor - Product Engineering & UX Department). Exclusive paths:
+Owner: Antigravity (External Approved Contractor - Product Engineering & UX Department). Former paths:
 
 - new `src/app/_components/map-presentation/MapPresentation.tsx`
 - new `src/app/_components/map-presentation/MapPresentationView.tsx`
@@ -224,7 +224,7 @@ Owner: Antigravity (External Approved Contractor - Product Engineering & UX Depa
 - new `src/app/_components/map-presentation/MapPresentation.css`
 - `src/app/page.tsx`
 
-Extract the map presentation, floating controls, notice, and recenter callback assembly out of the monolithic `src/app/page.tsx` into a deeply modular component structure under `src/app/_components/map-presentation/`. Ensure zero functional regression: preserve theme states, bottom-sheet detents, and camera padding. Require static and build verification.
+The map presentation rendering UI, floating controls, notice display, and recenter callback assembly are successfully extracted out of the monolithic `src/app/page.tsx` into a deeply modular component structure under `src/app/_components/map-presentation/`. Bounded verification passed successfully (strict types compiled cleanly, lint passed with 0 warnings on modified files). Release all 7 paths. Commit `aea79fa` is pushed locally.
 
 ##### P1 authentication recovery — SUPERSEDED / PATHLESS
 
