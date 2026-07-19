@@ -18,7 +18,7 @@
  *   /api/, non-GET   never touched  (server actions must reach the server)
  */
 
-const VERSION = "v4";
+const VERSION = "v5";
 
 // Everything we create is namespaced, because Cache Storage is shared per
 // origin and mapbox-gl-js keeps its own bucket here. The activate sweep uses
@@ -138,6 +138,81 @@ async function putAndTrim(cacheName, request, response) {
 async function matchIn(cacheName, request) {
   const cache = await caches.open(cacheName);
   return cache.match(request);
+}
+
+/**
+ * A cached document is only an offline shell when the code that boots it is
+ * cached with it.
+ *
+ * Next emits deployment-specific script and stylesheet URLs into the HTML.
+ * The shell and static caches span deployments, so the presence of an HTML
+ * response alone says nothing about whether those exact assets survived. A
+ * timeout used to return that response unconditionally: Safari then painted an
+ * empty document while its missing bootstrap chunks failed out of sight.
+ *
+ * Parse only literal script/link attributes. Those are the browser's critical
+ * requests; escaped copies inside the RSC payload are data, not another asset
+ * dependency. Fail closed unless the document names at least one script and
+ * one stylesheet and every same-origin `/_next/static` URL is present.
+ */
+function criticalStaticAssets(html, documentUrl) {
+  const urls = new Set();
+  let hasScript = false;
+  let hasStylesheet = false;
+  const tagPattern = /<(script|link)\b[^>]*?\b(?:src|href)=["']([^"']+)["'][^>]*>/gi;
+
+  for (const match of html.matchAll(tagPattern)) {
+    let asset;
+    try {
+      asset = new URL(match[2], documentUrl);
+    } catch {
+      continue;
+    }
+
+    if (asset.origin !== documentUrl.origin) continue;
+    if (!asset.pathname.startsWith("/_next/static/")) continue;
+
+    if (asset.pathname.endsWith(".js")) hasScript = true;
+    else if (asset.pathname.endsWith(".css")) hasStylesheet = true;
+    else continue;
+
+    urls.add(asset.href);
+  }
+
+  return {
+    urls: Array.from(urls),
+    hasScript,
+    hasStylesheet
+  };
+}
+
+async function isCompleteNavigation(response, requestUrl) {
+  const contentType = response.headers.get("content-type") || "";
+  if (!contentType.toLowerCase().includes("text/html")) return false;
+
+  const documentUrl = new URL(response.url || requestUrl);
+  const assets = criticalStaticAssets(await response.clone().text(), documentUrl);
+  if (!assets.hasScript || !assets.hasStylesheet) return false;
+
+  const cache = await caches.open(STATIC_CACHE);
+  const matches = await Promise.all(assets.urls.map((url) => cache.match(url)));
+  return matches.every(Boolean);
+}
+
+async function matchCompleteNavigation(cache, request) {
+  try {
+    const candidates = [await cache.match(request), await cache.match("/")];
+
+    for (const candidate of candidates) {
+      if (candidate && (await isCompleteNavigation(candidate, request.url))) {
+        return candidate;
+      }
+    }
+  } catch {
+    // A corrupt response or unavailable Cache Storage is not proof of a shell.
+  }
+
+  return undefined;
 }
 
 /**
@@ -328,17 +403,27 @@ self.addEventListener("fetch", (event) => {
  *     the origin hiccuped, the error page became the offline experience.
  */
 async function handleNavigate(event) {
-  const cache = await caches.open(SHELL_CACHE);
+  const cachePromise = caches.open(SHELL_CACHE);
+  const network = fetch(event.request);
 
-  const network = fetch(event.request).then((response) => {
-    if (response && response.ok) {
-      event.waitUntil(cache.put(event.request, response.clone()));
-    }
-    return response;
-  });
+  /**
+   * Register the cache write while the fetch event is still active. Calling
+   * `waitUntil` only after a late response arrives is too late when a complete
+   * cached shell has already won the race and settled `respondWith`.
+   */
+  event.waitUntil(
+    Promise.all([cachePromise, network])
+      .then(([cache, response]) =>
+        response && response.ok
+          ? cache.put(event.request, response.clone())
+          : undefined
+      )
+      .catch(() => undefined)
+  );
 
   // Surface the failure to the race, but never as an unhandled rejection.
   const networkOrNull = network.catch(() => null);
+  const cache = await cachePromise;
 
   let timer;
   const deadline = new Promise((resolve) => {
@@ -349,18 +434,19 @@ async function handleNavigate(event) {
     const winner = await Promise.race([networkOrNull, deadline]);
     if (winner && winner !== "timeout") return winner;
 
-    // Network was too slow or unreachable. Fall back to whatever we have.
-    // The cached shell can actually boot now, because /_next/static is cached.
-    const cached = (await cache.match(event.request)) || (await cache.match("/"));
+    // Network was too slow or unreachable. A document is not a fallback unless
+    // every same-origin Next script and stylesheet it names is also cached.
+    const cached = await matchCompleteNavigation(cache, event.request);
     if (cached) return cached;
 
     if (winner === "timeout") {
-      // Nothing cached to fall back to: the network is the only hope, so keep
-      // waiting rather than showing the offline page to someone who is online.
+      // No complete shell exists. The network is still in flight, so keep
+      // waiting rather than returning HTML that cannot boot.
       const late = await networkOrNull;
       if (late) return late;
     }
 
+    // A genuine network failure with no complete shell has one truthful answer.
     return (await cache.match(OFFLINE_URL)) || Response.error();
   } finally {
     clearTimeout(timer);

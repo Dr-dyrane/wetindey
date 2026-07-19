@@ -285,6 +285,12 @@ export default async function RootLayout({
          * lat=undefined` — cached JS still calling a signature the server had
          * already replaced. The app looked broken; only the cache was.
          *
+         * Registration starts as soon as this script runs. Waiting for `load`
+         * postponed the update check until after the exact bootstrap it protects,
+         * and let an older controller serve a stale shell for the whole first
+         * navigation after a deploy. `updateViaCache: "none"` makes the worker
+         * script itself revalidate from the network rather than an HTTP cache.
+         *
          * Registering in dev buys nothing — offline behaviour is a production
          * concern, testable against `next build && next start`, where the hashes
          * are real. The unregister branch matters as much as the guard: without
@@ -299,10 +305,10 @@ export default async function RootLayout({
               process.env.NODE_ENV === "production"
                 ? `
               if ('serviceWorker' in navigator) {
-                window.addEventListener('load', function() {
-                  navigator.serviceWorker.register('/sw.js').catch(function(err) {
-                    console.error('SW registration failed:', err);
-                  });
+                navigator.serviceWorker.register('/sw.js', {
+                  updateViaCache: 'none'
+                }).catch(function(err) {
+                  console.error('SW registration failed:', err);
                 });
               }
             `
