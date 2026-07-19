@@ -429,18 +429,15 @@ export function ManageProfileSheet({
           </ListGroup>
 
           <ListGroup
-            header="Location Sharing"
-            footer="Nearby location sharing is unavailable while we build the safer consent and privacy controls it needs."
+            header={t("profile.nearby_presence")}
           >
             <div className="flex min-h-tap items-center justify-between px-4 py-2">
-              <span className="text-body text-text-primary">
-                Share My Location
-              </span>
+              <span className="text-body text-text-primary">{t("profile.not_available_yet")}</span>
               <span
-                aria-label="Location sharing unavailable"
+                aria-label={t("profile.not_available_yet")}
                 className="squircle bg-fillTertiary px-3 py-1.5 text-footnote font-medium text-text-secondary"
               >
-                Unavailable
+                {t("profile.not_available_yet")}
               </span>
             </div>
           </ListGroup>

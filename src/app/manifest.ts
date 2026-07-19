@@ -17,7 +17,7 @@ export default function manifest(): MetadataRoute.Manifest {
     id: "/",
     name: "WetinDey",
     short_name: "WetinDey",
-    description: "Confirm food availability and prices in your neighborhood.",
+    description: "Check reported food prices and availability nearby.",
     start_url: "/",
     /**
      * Without an explicit scope, a link out of the app opens inside the

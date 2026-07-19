@@ -704,8 +704,7 @@ export function ExchangePanel({
             id="exchange-reference-note"
             className="text-caption-1 leading-snug text-text-tertiary"
           >
-            WetinDey does not exchange money. This is a reference estimate; banks and currency
-            exchangers may offer different rates.
+            Reference only. WetinDey does not exchange money; bank and exchanger rates may differ.
           </p>
         </div>
       </section>
@@ -719,7 +718,7 @@ export function ExchangePanel({
             <span className="shrink-0 text-caption-1 font-semibold text-text-tertiary">Sample</span>
           </div>
           <p className="mt-0.5 text-caption-1 leading-snug text-text-tertiary">
-            Map pins and places are demonstration data, not verified businesses or live rates.
+            Sample places are synthetic, not verified businesses.
           </p>
         </div>
 

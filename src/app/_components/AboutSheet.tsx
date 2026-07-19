@@ -278,6 +278,7 @@ function PrivacyPage() {
       <Paragraph>{t("about.privacy_collect")}</Paragraph>
       <Paragraph>{t("about.privacy_device")}</Paragraph>
       <Paragraph>{t("about.privacy_third")}</Paragraph>
+      <Paragraph>{t("about.privacy_presence")}</Paragraph>
       <Paragraph>{t("about.privacy_ads")}</Paragraph>
       <Paragraph>{t("about.privacy_delete", { email: SUPPORT_EMAIL })}</Paragraph>
     </div>

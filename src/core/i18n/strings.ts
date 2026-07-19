@@ -191,6 +191,8 @@ export const en = {
   "profile.saved": "Saved",
   "profile.save_error": "We no fit save your profile right now.",
   "profile.load_error": "We no fit load your profile right now.",
+  "profile.nearby_presence": "Nearby Presence",
+  "profile.not_available_yet": "Not available yet",
 
   /* My reports, MyReportsSheet.tsx.
    *
@@ -287,7 +289,7 @@ export const en = {
   "about.body_what":
     "Coverage and freshness vary. Information may be incomplete, stale, synthetic, demonstration-only or uncertain.",
   "about.body_prices":
-    "WetinDey does not sell or deliver anything, and information should be confirmed before you travel.",
+    "WetinDey does not sell, exchange money or deliver anything, and information should be confirmed before you travel.",
   "about.body_account":
     "Browsing needs no account. Signing in is optional and can support recognized attribution and history where available.",
   "about.body_pilot":
@@ -312,7 +314,7 @@ export const en = {
   "about.terms_prices":
     "Coverage and freshness vary. Information may be incomplete, stale, synthetic, demonstration-only or uncertain; price and availability are not guaranteed when you arrive.",
   "about.terms_fulfilment":
-    "WetinDey does not sell, accept payment, provide checkout, deliver, dispatch or fulfil orders. Go there passes a destination to your chosen maps app; travel and any purchase are your decision.",
+    "WetinDey does not sell, exchange money, accept payment, provide checkout, deliver, dispatch or fulfil orders. Go there passes a destination to your chosen maps app; travel and any purchase are your decision.",
   "about.terms_reporting":
     "You may contribute structured information when useful. Browsing needs no account; signing in is optional and can support recognized attribution and history where available.",
 
@@ -322,12 +324,14 @@ export const en = {
   "about.privacy_collect":
     "If you sign in, account information can support recognized attribution and history where available. Information you contribute may be kept with that contribution.",
   "about.privacy_device":
-    "You can choose an area manually. A manual area represents its centre, not your exact personal location.",
+    "Your browser may keep preferences and cached reference-rate data on this device. When you use device location, your browser sends a coordinate to WetinDey to find nearby coverage. You can choose an area manually; it represents its centre, not your exact personal location.",
   "about.privacy_third":
-    "Map and destination features may involve your browser and the maps app you choose. This product-accurate draft will be completed through human legal review.",
+    "Go there passes destination information to the maps app you choose; that app and your browser may handle it under their own terms. This product-accurate draft will be completed through human legal review.",
+  "about.privacy_presence":
+    "Nearby Presence is not available yet. WetinDey does not currently share coarse areas or reciprocal presence between people.",
   "about.privacy_ads": "This is not a complete retention, deletion or service-provider notice.",
   "about.privacy_delete":
-    "Contact support for account-related requests at {email}. The final deletion and retention process is still under review.",
+    "Contact support to request account deletion or another account-related action at {email}. There is no self-service deletion control today; deletion and retention details remain under review.",
 
   "about.support_title": "Support",
   "about.support_body":
@@ -356,7 +360,7 @@ export const en = {
   "about.how_title": "How WetinDey works",
   "about.how_area_title": "Choose your area",
   "about.how_area_body":
-    "Choose an area manually or use your device's location for nearby results. A manual area represents its centre, not your exact personal location.",
+    "Choose an area manually or use your device's location for nearby results. When you use device location, your browser sends a coordinate to WetinDey to find nearby coverage. A manual area represents its centre, not your exact personal location.",
   "about.how_need_title": "Choose what you need",
   "about.how_need_body":
     "Food is WetinDey's current V1 capability. Search Food price and availability near your chosen area.",
@@ -368,7 +372,7 @@ export const en = {
     "Look at freshness and any source information available. They help you judge a local signal; they do not make it a guarantee.",
   "about.how_maps_title": "Continue in your maps app",
   "about.how_maps_body":
-    "Go there passes a destination to the maps app you choose. WetinDey does not arrange travel, payment, delivery or any order.",
+    "Go there passes destination information to the maps app you choose. WetinDey does not arrange travel, exchange money, payment, delivery or any order.",
   "about.how_contribute_title": "Contribute when useful",
   "about.how_contribute_body":
     "You can add structured information when useful. Browsing needs no account; signing in can support recognized attribution and history where available.",
@@ -456,7 +460,7 @@ export const en = {
   "area.use_my_location": "Use my location",
   "area.locating": "Finding you…",
   "area.privacy_footer":
-    "We only use your location to pick the nearest area. It never leaves your device.",
+    "We send your location coordinate to WetinDey to pick the nearest area.",
   "area.areas_we_cover": "Areas we cover",
   "area.no_places": "No places yet",
   "area.places_one": "1 place",
@@ -702,6 +706,8 @@ const pidgin: LocaleTable = {
   "profile.saved": UNTRANSLATED,
   "profile.save_error": "We no fit save your profile right now.",
   "profile.load_error": "We no fit load your profile right now.",
+  "profile.nearby_presence": UNTRANSLATED,
+  "profile.not_available_yet": UNTRANSLATED,
 
   /* My reports.
    *
@@ -783,6 +789,7 @@ const pidgin: LocaleTable = {
   "about.privacy_collect": UNTRANSLATED,
   "about.privacy_device": UNTRANSLATED,
   "about.privacy_third": UNTRANSLATED,
+  "about.privacy_presence": UNTRANSLATED,
   "about.privacy_ads": UNTRANSLATED,
   "about.privacy_delete": UNTRANSLATED,
   "about.support_title": UNTRANSLATED,
@@ -869,7 +876,7 @@ const pidgin: LocaleTable = {
   "area.use_my_location": "Use my location",
   "area.locating": "We dey find you…",
   "area.privacy_footer":
-    "Na only to pick the area wey near you we dey use your location. E no dey comot from your phone.",
+    "We dey send your location coordinate give WetinDey to pick the area wey near you.",
   "area.areas_we_cover": "Areas wey we cover",
   "area.no_places": "No place yet",
   "area.places_one": "1 place",
@@ -1087,6 +1094,8 @@ const yoruba: LocaleTable = {
   "profile.saved": UNTRANSLATED,
   "profile.save_error": UNTRANSLATED,
   "profile.load_error": UNTRANSLATED,
+  "profile.nearby_presence": UNTRANSLATED,
+  "profile.not_available_yet": UNTRANSLATED,
 
   /* My reports. Every key, without exception, LANES H2: Yorùbá is withheld
      pending a native speaker, and no agent may stand in for one. English shows
@@ -1141,6 +1150,7 @@ const yoruba: LocaleTable = {
   "about.privacy_collect": UNTRANSLATED,
   "about.privacy_device": UNTRANSLATED,
   "about.privacy_third": UNTRANSLATED,
+  "about.privacy_presence": UNTRANSLATED,
   "about.privacy_ads": UNTRANSLATED,
   "about.privacy_delete": UNTRANSLATED,
   "about.support_title": UNTRANSLATED,
