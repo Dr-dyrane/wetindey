@@ -47,12 +47,9 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     setTheme((prev) => (prev === "light" ? "dark" : "light"));
   };
 
-  // Prevent flash or server mismatch by rendering children only after mounting
   return (
     <ThemeContext.Provider value={{ theme, toggleTheme }}>
-      <div style={{ visibility: mounted ? "visible" : "hidden" }} className="h-full">
-        {children}
-      </div>
+      <div className="h-full">{children}</div>
     </ThemeContext.Provider>
   );
 }
