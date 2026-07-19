@@ -1270,6 +1270,8 @@ export function BottomSheet({
           style={{ clipPath: interactionClip }}
         >
           <h1 className="sr-only">WetinDey</h1>
+          {/* Keep the full 44px target and move only the slim visual down so
+              its visible gap to the first row stays close to 12px. */}
           <button
             ref={handleRef}
             type="button"
@@ -1277,7 +1279,7 @@ export function BottomSheet({
             aria-label={`Sheet position: ${detent}. Activate to change.`}
             className={`flex h-11 min-h-11 w-full shrink-0 cursor-grab touch-none items-center justify-center p-0 active:cursor-grabbing active:opacity-70 ${transition.press}`}
           >
-            <span className="h-[5px] w-9 rounded-full bg-text-tertiary" />
+            <span className="relative top-2 h-[5px] w-9 rounded-full bg-text-tertiary" />
           </button>
 
           {mapRetryCapability ? (
