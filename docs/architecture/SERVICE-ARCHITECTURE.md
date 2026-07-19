@@ -83,7 +83,7 @@ A Lagos **live local information** PWA whose current V1 vertical is Food price a
 > **Both are now false.** An uncommitted change adds `@neondatabase/auth`, a route handler
 > at `src/app/api/auth/[...path]/route.ts`, and `src/lib/auth.ts` / `auth-client.ts`.
 >
-> Per the precedence rule in [AGENTS.md](../../AGENTS.md), **the code wins and this
+> Per the precedence rule in [AGENTS.md](../../.agents/AGENTS.md), **the code wins and this
 > document was the bug.** Do not "fix" the code to match the old text.
 >
 > That change is nonetheless **unresolved on scope**: it contradicts Bible Section 40.1

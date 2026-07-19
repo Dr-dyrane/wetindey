@@ -133,7 +133,7 @@ After `npm run db:seed`: 20 units · 38 items · 87 aliases · 79 variants ·
 
 ## Read these before you write code
 
-**`DECISIONS.md` first, and it is not optional.** It indexes the ADRs, and an ADR
+**`docs/DECISIONS.md` first, and it is not optional.** It indexes the ADRs, and an ADR
 beats every other document here. Then
 `docs/architecture/SERVICE-ARCHITECTURE.md` — the architecture of record — starting
 with its *Read this first* section.
@@ -144,13 +144,13 @@ If the code contradicts a document, the document is the bug — fix it, or say s
 
 | Document | What it's for |
 |---|---|
-| `DECISIONS.md` | The ADR index. **Start here.** An ADR overrides every other doc. |
+| `docs/DECISIONS.md` | The ADR index. **Start here.** An ADR overrides every other doc. |
 | `docs/architecture/SERVICE-ARCHITECTURE.md` | The architecture of record — what actually exists, with citations. |
 | `LANES.md` | Who is editing what right now. **Read before your first edit.** |
 | `docs/CONTRIBUTING.md` | The house rules, and — more usefully — why each one exists. |
 | `docs/USER-FLOW.md` | The core loop, and what's built versus what isn't. |
 | `docs/APPLE-HIG-MAPPING.md` | Where the visual language comes from, and where we chose. |
-| `WETINDEY_BIBLE.md` | The product constitution. Long. |
+| `docs/WETINDEY_BIBLE.md` | The product constitution. Long. |
 | `docs/APP-MAP.md` | **Emptied 16 July 2026** — it was substantially false. A tombstone, kept only so links do not dangle. |
 
 > This section told you to read `APP-MAP.md` first, and called it "a verified map
