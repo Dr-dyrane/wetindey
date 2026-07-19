@@ -9,6 +9,7 @@ import React, {
   useCallback,
   useRef
 } from "react";
+import { getImageProps } from "next/image";
 import { AlertTriangle, MapPin, Navigation, Sun, Moon, X, Plus, ChevronDown } from "lucide-react";
 
 import { Button } from "@/design-system/components/Button";
@@ -359,13 +360,34 @@ export default function HomePage() {
   }, [session]);
 
   const selfIdentity = useMemo(
-    () =>
-      sessionUser
-        ? {
-            name: sessionUser.name || sessionUser.email,
-            avatarUrl: userProfile?.avatarUrl ?? null
-          }
-        : null,
+    () => {
+      if (!sessionUser) return null;
+
+      const avatarUrl = userProfile?.avatarUrl;
+      let markerAvatarUrl: string | null = null;
+      if (avatarUrl) {
+        try {
+          markerAvatarUrl = getImageProps({
+            src: avatarUrl,
+            alt: "",
+            width: 64,
+            height: 64
+          }).props.src;
+        } catch {
+          // A stale or malformed stored URL must degrade to initials, not make
+          // the map page fail while Next validates the optimizer source.
+        }
+      }
+
+      return {
+        name: sessionUser.name || sessionUser.email,
+        // The map adapter owns a DOM <img>, not a Next <Image>. Send that image
+        // through the same configured, same-origin optimizer as the visible
+        // profile avatars; a raw Vercel Blob URL is outside the document's
+        // img-src policy and therefore fails before it can cover the initials.
+        avatarUrl: markerAvatarUrl
+      };
+    },
     [sessionUser, userProfile?.avatarUrl]
   );
 

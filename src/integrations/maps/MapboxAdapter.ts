@@ -1596,7 +1596,6 @@ export class MapboxAdapter implements MapProviderAdapter {
 
     if (identity?.avatarUrl) {
       const image = document.createElement("img");
-      image.src = identity.avatarUrl;
       image.alt = "";
       image.style.position = "absolute";
       image.style.inset = "0";
@@ -1604,7 +1603,12 @@ export class MapboxAdapter implements MapProviderAdapter {
       image.style.height = "100%";
       image.style.objectFit = "cover";
       image.style.zIndex = "1";
+      // Initials exist until the image proves it loaded. Success removes them
+      // even for a transparent avatar; failure removes only the image and keeps
+      // the local, accessible fallback visible.
+      image.onload = () => fallback.remove();
       image.onerror = () => image.remove();
+      image.src = identity.avatarUrl;
       orb.appendChild(image);
     }
 
