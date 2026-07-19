@@ -1034,14 +1034,21 @@ export class MapboxAdapter implements MapProviderAdapter {
   private handleStyleLoadTimeout(generation: number): void {
     if (generation !== this.styleGeneration) return;
     this.clearStyleLoadTimer();
-    this.clearStyleLoadListener();
     if (!this.mapInstance || this.styleReady) return;
 
     if (this.styleLoadAttempt < STYLE_LOAD_MAX_ATTEMPTS) {
+      // This generation is being superseded by a retry, so detach it before
+      // installing the next generation's listener.
+      this.clearStyleLoadListener();
       this.beginStyleAttempt(this.currentTheme, this.styleLoadAttempt + 1, true);
       return;
     }
 
+    // Failure is observable after the bounded attempts, but it is not terminal.
+    // A slow, otherwise valid style may still emit `style.load`; keeping this
+    // final generation's listener lets that event clear the failure overlay and
+    // restore cartography/routes without rebuilding the map. A manual retry or
+    // theme switch clears this listener and increments the generation first.
     this.emitStyleLifecycle({
       status: "failed",
       theme: this.currentTheme,
