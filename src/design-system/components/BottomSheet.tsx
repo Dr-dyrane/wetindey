@@ -126,6 +126,7 @@ export function shouldHandleTouchCancellation(
 export const SHEET_RADIUS = motion.radius.sheet;
 
 const ISLAND_INSET = 10;
+const SHEET_HANDLE_TARGET_PX = 44;
 
 export interface CompactSheetPresentation {
   dockingProgress: number;
@@ -1271,17 +1272,24 @@ export function BottomSheet({
           style={{ clipPath: interactionClip }}
         >
           <h1 className="sr-only">WetinDey</h1>
-          {/* Keep the full 44px target and move only the slim visual down so
-              its visible gap to the first row stays close to 12px. */}
-          <button
-            ref={handleRef}
-            type="button"
-            onClick={cycleDetent}
-            aria-label={`Sheet position: ${detent}. Activate to change.`}
-            className={`flex h-11 min-h-11 w-full shrink-0 cursor-grab touch-none items-center justify-center p-0 active:cursor-grabbing active:opacity-70 ${transition.press}`}
+          {/* Keep the 44px drag target stable while clipping the visual and pointer affordance. */}
+          <div
+            className="relative w-full shrink-0"
+            style={{
+              height: `${SHEET_HANDLE_TARGET_PX}px`,
+              minHeight: `${SHEET_HANDLE_TARGET_PX}px`,
+            }}
           >
-            <span className="h-[5px] w-9 rounded-full bg-text-tertiary" />
-          </button>
+            <button
+              ref={handleRef}
+              type="button"
+              onClick={cycleDetent}
+              aria-label={`Sheet position: ${detent}. Activate to change.`}
+              className={`absolute inset-0 flex cursor-grab touch-none items-center justify-center p-0 active:cursor-grabbing active:opacity-70 ${transition.press}`}
+            >
+              <span className="h-[5px] w-9 rounded-full bg-text-tertiary" />
+            </button>
+          </div>
 
           {mapRetryCapability ? (
             <div className="flex min-h-11 shrink-0 items-center justify-between gap-3 px-4 pb-2">
