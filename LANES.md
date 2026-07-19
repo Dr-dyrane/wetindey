@@ -68,7 +68,7 @@ to idle rather than creating a replacement task.
 
 | Pinned employee | Current state | Next bounded deliverable |
 |---|---|---|
-| Nearby Presence Platform Engineer | Shared/production rollout authorized; pathless technical gates remain | Corrected `0012` source/disposable proof passed at `d5991c9`. No further Founder prompt; identify Production and Preview separately and stop technically on divergence |
+| Nearby Presence Platform Engineer | Active exact five-path retention scheduler lane | Implement only the fail-closed dedicated safety-database cleanup route, helper, cadence/configuration, and focused contract recorded below |
 | Program Management & Functional Organization Lead | Idle | Reconcile portfolio proposals into CEO-reviewable lane candidates without editing product paths |
 | Contribution Integrity & Moderation Engineer | Available, no active path claim | Controller runtime artifact closed containment with PASS; all five paths are released. `0013+` remains planning-only behind its separate migration ordering and activation gates |
 | Human Interface Design Engineer | Idle; Place Offer Row hierarchy and availability semantics complete | `ecf8470` and `d807538` are on `main`; edge-bleed hierarchy and explicit confirmed/caution/unavailable semantics passed static refutation and direct runtime evidence. Path released |
@@ -77,10 +77,57 @@ to idle rather than creating a replacement task.
 | Food Source Authenticity & Attribution Refuter | Idle refuter | Independently verify each staged source artifact against original evidence and terms |
 | Search & Ranking Engineer | Available, no active claim | The deployed-current-main `97b74af` disposable SQL evidence gate passed and is released; remain persistent for the next bounded Search/Ranking assignment |
 | Iconography & Visual Systems Lead | Active exact one-file Confirm Visit correction; Report Price released | `b93761b` unavailable banner runtime PASS releases `ReportPriceSheet.tsx`. Own only `ConfirmVisitSheet.tsx` for the identical caution-status warning replacement |
-| Maps Engineering Lead | Active self-location/avatar and sheet-aware control vertical | Exclusively owns `page.tsx`, `MapboxCanvas.tsx`, `MapboxAdapter.ts`, optional new self-marker primitive, and focused contract |
+| Maps Engineering Lead | Source commits `d100299` + `d5daae3` pending independent source/runtime refutation | Retain `page.tsx`, `MapboxCanvas.tsx`, and `MapboxAdapter.ts` until PASS; no release is implied |
 | Client Reliability & Offline Engineer | Prepared, unclaimed | H38 one-file rejected-search containment waits for the active Market Details slice to release `src/app/page.tsx` |
 | Security & Privacy Engineering Lead | Active ephemeral Production DB-target proof | Owns only the three temporary proof paths above; CSP collector source remains released and production CSP remains fail-open/report-only |
 | Motion & Interaction Engineer | Functional containment PASS; terminal-tail follow-up retains two paths | Retains only `NavigationStack.tsx` and `motion-contracts.test.ts`; `page.tsx` released to Maps. Remaining defect is 45–50px terminal whitespace versus 24px |
+
+### Authoritative current active disjoint lanes — `d5daae3` reconciliation
+
+This section is the current ownership authority. Historical rows below remain evidence of
+their time and do not override these exact claims.
+
+#### Nearby Presence retention scheduler
+
+Owner: Nearby Presence Platform Engineer. Exact paths:
+
+- new `src/app/api/internal/presence/retention-cleanup/route.ts`
+- new `src/lib/presence-retention-cleanup.ts`
+- existing `vercel.json`
+- existing `.env.example`
+- new `scripts/presence/presence-retention-cleanup-contract.test.ts`
+
+Contract: GET-only and `CRON_SECRET` protected; execute exactly
+`SELECT public.presence_run_retention_cleanup()` through dedicated
+`PRESENCE_SAFETY_DATABASE_URL_UNPOOLED`; never fall back to `DATABASE_URL`; schedule
+`*/15`; remain inert and fail closed before corrected `0012` is present.
+
+#### Concise product/legal copy
+
+Status: awaiting implementation owner. Exact paths:
+
+- `src/core/i18n/strings.ts`
+- `src/app/_components/AboutSheet.tsx`
+- `src/app/_components/ExchangePanel.tsx`
+- `src/app/_components/ManageProfileSheet.tsx`
+- `src/app/manifest.ts`
+
+Exclude `src/app/page.tsx` while Maps owns it. Preserve LocationSheet transmission
+disclosure, provider/date attribution, Sample honesty, provenance/trust labels, and no
+self-delete completion promise.
+
+#### Maps source/refutation hold
+
+Source commits `d100299` and `d5daae3` are pending independent source and runtime
+refutation. The Maps Engineering Lead retains exactly `src/app/page.tsx`,
+`src/design-system/components/MapboxCanvas.tsx`, and
+`src/integrations/maps/MapboxAdapter.ts` until PASS.
+
+#### Motion terminal-tail follow-up
+
+Motion retains only `src/design-system/components/NavigationStack.tsx` and
+`scripts/motion-contracts.test.ts`. `page.tsx` belongs to Maps; no Motion ownership of it
+remains.
 
 The Quality & Release Controller is this orchestrator thread. It is not a separate pinned
 employee task. The repeating `wetindey-orchestrator-recovery` automation is deleted and
