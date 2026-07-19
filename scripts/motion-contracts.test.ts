@@ -157,6 +157,7 @@ const navigationStackSource = readFileSync(
   join(process.cwd(), "src/design-system/components/NavigationStack.tsx"),
   "utf8"
 );
+const pageSource = readFileSync(join(process.cwd(), "src/app/page.tsx"), "utf8");
 const globalCss = readFileSync(join(process.cwd(), "src/app/globals.css"), "utf8");
 
 test("the modal shell has one document Escape owner", () => {
@@ -474,6 +475,35 @@ test("level-one terminal input and programmatic scroll stay out of the document"
     navigationStackSource,
     /document\.removeEventListener\("scroll", containDocumentScroll, true\)/
   );
+});
+
+test("compact detail content solely owns the translated-sheet terminal reservation", () => {
+  const compactReservation =
+    "h-[calc(max(var(--sheet-hidden,0px),var(--safe-area-bottom))+24px)]";
+  assert.equal(navigationStackSource.includes(compactReservation), false);
+  assert.equal(pageSource.split(compactReservation).length - 1, 1);
+  assert.match(
+    navigationStackSource,
+    /pb-0 md:pb-\[calc\(var\(--safe-area-bottom\)\+24px\)\]/
+  );
+  assert.match(
+    pageSource,
+    /\{isRegular \? getItAction : null\}\s+[\s\S]*?aria-hidden\s+className="h-\[calc\(max\(var\(--sheet-hidden,0px\),var\(--safe-area-bottom\)\)\+24px\)\] shrink-0 md:hidden"/
+  );
+  assert.doesNotMatch(
+    pageSource,
+    /min-h-full[^"]*pb-\[calc\(max\(var\(--sheet-hidden/
+  );
+});
+
+test("compact sticky and regular static market actions retain one rendered branch", () => {
+  assert.match(
+    pageSource,
+    /isRegular \? "static pt-1" : "sticky top-0 py-2"/
+  );
+  assert.equal((pageSource.match(/\{!isRegular \? getItAction : null\}/g) ?? []).length, 1);
+  assert.equal((pageSource.match(/\{isRegular \? getItAction : null\}/g) ?? []).length, 1);
+  assert.equal((pageSource.match(/const getItAction = \(/g) ?? []).length, 1);
 });
 
 test("the drag path schedules DOM work instead of setting per-frame React state", () => {

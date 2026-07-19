@@ -1310,6 +1310,14 @@ export default function HomePage() {
 
         {/* Regular preserves the action's established bottom placement. */}
         {isRegular ? getItAction : null}
+
+        {/* Compact keeps the translated-sheet tail inside the sticky action's
+            content boundary. Regular retains NavigationStack's established
+            safe-area padding instead. */}
+        <div
+          aria-hidden
+          className="h-[calc(max(var(--sheet-hidden,0px),var(--safe-area-bottom))+24px)] shrink-0 md:hidden"
+        />
       </div>
     );
   }, [

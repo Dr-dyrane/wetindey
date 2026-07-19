@@ -264,31 +264,21 @@ export function NavigationStack({
         ) : null}
 
         {/*
-          The shell owns this padding because the stack is one component, so
-          there is exactly one place it is specified — and because `detailNode`
-          brings none of its own. The right island used to supply `p-6` on
-          regular only, which is precisely why handing the same node to a phone
-          would otherwise ship it unpadded.
+          Compact's bottom reservation belongs inside `detailNode`, so a sticky
+          action remains bounded through the reserved tail instead of ending
+          before it. This shell retains only the regular safe-area padding.
 
           Level 1 needs a scroller; level 0 does not, because `listNode` brings
           its own. That asymmetry is dictated by what the nodes arrive with.
 
-          The bottom padding reserves the LARGER of two strips, never their sum.
-          `--sheet-hidden` is the part of the sheet hanging below the viewport at
-          the current detent, which BottomSheet publishes because only it knows
-          the number; it starts at the viewport's bottom edge, so it already
-          spans the home indicator and adding the safe area to it would pad the
-          same 34px twice. At `large` the sheet is docked, `--sheet-hidden` is 0,
-          and the safe area is the whole reservation. 24px is the breathing room.
-          The `0px` fallback is load-bearing — the regular shell mounts this stack
-          with no BottomSheet above it, so the variable is undefined there and
-          `max()` yields the safe area alone, the padding it has always had, with
-          no branch on size class.
+          At regular size there is no BottomSheet or hidden translated tail.
+          Preserve the established safe-area reservation plus 24px breathing
+          room without making the compact scroller own a second reservation.
         */}
         <div
           ref={detailScrollerRef}
           onWheel={containTerminalWheel}
-          className={`flex-1 overflow-y-auto overscroll-y-none [overflow-anchor:none] px-6 pb-[calc(max(var(--sheet-hidden,0px),var(--safe-area-bottom))+24px)] ${
+          className={`flex-1 overflow-y-auto overscroll-y-none [overflow-anchor:none] px-6 pb-0 md:pb-[calc(var(--safe-area-bottom)+24px)] ${
             onDetailBack && content ? "pt-2" : "pt-6"
           }`}
         >
