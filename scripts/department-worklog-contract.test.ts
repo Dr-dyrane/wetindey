@@ -352,6 +352,7 @@ test("department worklogs satisfy the static handoff contract", () => {
     const allowedDigests = [
       bootstrapHash,
       "d882657acea9bd378e54520c1c1f7305dfd3009ef59b477b94ad562558132106", // bootstrap with stable self-normalized test script
+      "fc8555153382f2851e20be93ce4da5b6234ce6fdc00581e6f8c046471892f657", // bootstrap with updated CONTRIBUTING.md link
     ];
     assert.ok(allowedDigests.includes(digest(sources)), "bootstrap candidate digest must match exact 23-path bytes");
   }

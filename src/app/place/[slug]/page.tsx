@@ -17,7 +17,7 @@ import { getPlaceBySlug, getPlaceOffersForSeo, allPlaceSlugs } from "@/lib/seo-q
 
 /**
  * The place page is the second indexable route the sitemap probes for, and the
- * one `docs/USER-FLOW.md` singles out as "SEO-relevant". It is a price board for
+ * one `docs/product/USER-FLOW.md` singles out as "SEO-relevant". It is a price board for
  * one market: what is on sale, at what price, last seen when.
  *
  * ISR + `generateStaticParams`, same reasoning as the item page: fast static

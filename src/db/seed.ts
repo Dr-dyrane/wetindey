@@ -25,7 +25,7 @@ import {
  *
  * The old seed's comment said "expires in 7 days" while the code wrote 72h.
  * 72 is the number that was actually in force, so 72 it is; the comment was the
- * lie. docs/USER-FLOW.md open question 2 asks which is real — this is the
+ * lie. docs/product/USER-FLOW.md open question 2 asks which is real — this is the
  * answer until a human overrides it.
  */
 const STALE_HOURS = 24;

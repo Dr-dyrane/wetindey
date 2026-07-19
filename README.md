@@ -149,10 +149,10 @@ If the code contradicts a document, the document is the bug — fix it, or say s
 | `docs/README.md` | Documentation directory map and complete subfolder index. |
 | `LANES.md` | Who is editing what right now. **Read before your first edit.** |
 | `docs/CONTRIBUTING.md` | The house rules, and — more usefully — why each one exists. |
-| `docs/USER-FLOW.md` | The core loop, and what's built versus what isn't. |
-| `docs/APPLE-HIG-MAPPING.md` | Where the visual language comes from, and where we chose. |
+| `docs/product/USER-FLOW.md` | The core loop, and what's built versus what isn't. |
+| `docs/design-system/APPLE-HIG-MAPPING.md` | Where the visual language comes from, and where we chose. |
 | `docs/WETINDEY_BIBLE.md` | The product constitution. Long. |
-| `docs/APP-MAP.md` | **Emptied 16 July 2026** — it was substantially false. A tombstone, kept only so links do not dangle. |
+| `docs/architecture/APP-MAP.md` | **Emptied 16 July 2026** — it was substantially false. A tombstone, kept only so links do not dangle. |
 
 > This section told you to read `APP-MAP.md` first, and called it "a verified map
 > …143 claims of which 112 survived adversarial refutation". It was emptied on

@@ -292,9 +292,9 @@ Former owner: Antigravity (External Approved Contractor - Product Engineering & 
 
 Created a comprehensive documentation directory index and precedence map in `docs/README.md` and registered it in the workspace root `README.md` table to improve documentation navigation and prevent hallucination. Updated `scripts/department-worklog-contract.test.ts` to support stable self-normalized digest checking. All tests passed. Released paths.
 
-##### Documentation subfolder organization and sub-READMEs — ACTIVE
+##### Documentation subfolder organization and sub-READMEs — RELEASED / PATHLESS
 
-Owner: Antigravity (External Approved Contractor - Product Engineering & UX Department). Exclusive paths:
+Former owner: Antigravity (External Approved Contractor - Product Engineering & UX Department). Former paths:
 
 - `docs/APPLE-HIG-MAPPING.md`
 - `docs/ACCESSIBILITY.md`
@@ -314,7 +314,7 @@ Owner: Antigravity (External Approved Contractor - Product Engineering & UX Depa
 - `docs/README.md`
 - `README.md`
 
-Reorganize loose docs in `docs/` root into domain subfolders (`design-system/`, `product/`, `architecture/`), add guiding READMEs for each docs domain directory, and update all link references across the workspace.
+Reorganized loose docs in `docs/` root into domain subfolders (`design-system/`, `product/`, `architecture/`), created guiding READMEs for `adr/`, `architecture/`, `design-system/`, `product/`, and `operations/`, and updated all internal link references across code, tests, and markdown files. Released paths.
 
 ##### P1 authentication recovery — SUPERSEDED / PATHLESS
 

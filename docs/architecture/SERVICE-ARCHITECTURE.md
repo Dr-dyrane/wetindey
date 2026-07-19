@@ -1284,7 +1284,7 @@ Every phase is independently shippable and has an exit criterion someone can che
 - Delete `src/core/module-contract.ts` and `src/modules/` — harvest `getClarifications` and `formatSummary` into Discovery first.
 - Delete the ten `.gitkeep`-only capability directories under `src/core/` and `src/integrations/`. **Reassign `public/sw.js` to Platform explicitly** so it does not stay homeless when `src/core/offline/` goes.
 - Rewrite `AGENTS.md` to the real shape: `actions.ts` is the port, `src/db/queries/` is the module layer, `src/lib/*` is domain logic, `src/db/schema` is the model, `src/integrations/*` is the vendor seam.
-- Rewrite `docs/APP-MAP.md` against HEAD **or delete it**. Same for `USER-FLOW.md`'s status table; delete its "Request delivery" line — ADR-001 killed it.
+- Rewrite `APP-MAP.md` against HEAD **or delete it**. Same for `../product/USER-FLOW.md`'s status table; delete its "Request delivery" line — ADR-001 killed it.
 - Cut `xstate` + `@xstate/react` + `reportingMachine.ts` — **harvest its offline-queue design first.** Cut `jotai` into `page.tsx` state. Land on `zustand` alone.
 - Delete `Card.tsx`, `ListRowSkeleton`, `getFoodItemCandidates`.
 - Adopt the standing rule in `AGENTS.md`: **an agent that adds a capability must be allowed to edit its call site, or it must not add the capability.**

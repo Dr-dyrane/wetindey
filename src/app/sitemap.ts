@@ -59,7 +59,7 @@ export function siteOrigin(): string {
  * Whether an App Router page actually exists for a segment.
  *
  * WHY THIS IS A PROBE AND NOT A BOOLEAN: `/item/[slug]` and `/place/[slug]` do
- * not exist yet (docs/USER-FLOW.md's "Pages this implies" table marks both
+ * not exist yet (docs/product/USER-FLOW.md's "Pages this implies" table marks both
  * "Needs a URL? Yes"; the app is currently the single `/` route). Listing them
  * now would hand Google a sitemap of 404s, which is worse than no sitemap. But
  * a hand-maintained `built: false` flag is a thing someone must remember to

@@ -130,7 +130,7 @@ is a popover.** This is a map-first app on phones. The rule follows.
 Progressive reveal is **a new surface, never a swap in place** — settings and
 report present *over* the results sheet, which stays mounted behind them.
 
-See [`APPLE-HIG-MAPPING.md`](./APPLE-HIG-MAPPING.md) for the full presentation
+See [`APPLE-HIG-MAPPING.md`](./design-system/APPLE-HIG-MAPPING.md) for the full presentation
 table and the one known deviation (`SheetPicker` stacking on `ReportPriceSheet`),
 which is tracked rather than hidden.
 
