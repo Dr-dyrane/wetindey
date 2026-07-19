@@ -239,6 +239,20 @@ Owner: Antigravity (External Approved Contractor - Product Engineering & UX Depa
 
 The monolithic root page `src/app/page.tsx` is successfully strangulated and modularized into a logic hook, presentational JSX view, CSS layout, localized copy, imports manifest, and controller, preserving all developer inline comments and rollback notes. All static checks and full production build verification passed cleanly with zero warnings on the new files. Release all 6 paths. Commit `88964e1` is pushed locally.
 
+##### Live-app modularization Slice 4 — ACTIVE
+
+Owner: Antigravity (External Approved Contractor - Product Engineering & UX Department). Exclusive paths:
+
+- `src/app/page.tsx`
+- new `src/app/_components/home-page/`
+- delete `src/app/useHomePage.ts`
+- delete `src/app/HomePageView.tsx`
+- delete `src/app/imports.ts`
+- delete `src/app/copy.ts`
+- delete `src/app/HomePage.css`
+
+Organize the homepage modular files into structured subfolders under `src/app/_components/home-page/` (hooks, views, styles, copy, imports, and HomePage controller) to keep the app directory clean. Require strict static typing and build checks.
+
 ##### P1 authentication recovery — SUPERSEDED / PATHLESS
 
 Former owner: Authentication / Client Reliability. Former paths:
