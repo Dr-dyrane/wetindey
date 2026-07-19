@@ -325,6 +325,15 @@ Former owner: Antigravity (External Approved Contractor - Product Engineering & 
 
 Decluttered LANES.md from 2,888 lines down to 368 lines by archiving historical superseded lane entries into `docs/operations/lanes/LANES-HISTORICAL-ARCHIVE.md` while preserving active lanes, pinned employee roster, and static test contract headings in a lean root `LANES.md` file. All typecheck and contract tests passed cleanly. Released paths.
 
+##### Automated modularization structure verification contract — ACTIVE
+
+Owner: Antigravity (External Approved Contractor - Product Engineering & UX Department). Exclusive paths:
+
+- new `scripts/modularization-structure-contract.test.ts`
+- `LANES.md`
+
+Add an automated static verification contract in `scripts/modularization-structure-contract.test.ts` to ensure any modularized component directory under `src/app/_components/` adheres strictly to the 6-file MVC slice pattern (Controller, Hook, View, Style, Copy, Imports).
+
 #### Developer Relations & Engineering Enablement: department worklog protocol — active exact claim
 
 Owner: Developer Relations & Engineering Enablement worker
