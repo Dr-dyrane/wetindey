@@ -137,7 +137,7 @@ export type MapStyleLifecycleState =
       generation: number;
       theme: "light" | "dark";
       attempt: number;
-      reason: "error" | "timeout";
+      reason: "context" | "error" | "renderer" | "timeout";
     };
 
 type MapStyleLifecycleListener = (state: MapStyleLifecycleState) => void;
@@ -189,6 +189,16 @@ const PADDING_DURATION_MS = 300;
  */
 const STYLE_LOAD_TIMEOUT_MS = 5_000;
 const STYLE_LOAD_MAX_ATTEMPTS = 2;
+/**
+ * `style.load` proves that style-owned mutations are safe; it does not prove
+ * that Safari presented a usable WebGL frame. Give the painter one bounded
+ * window, replace the whole Map once, then fail visibly instead of looping.
+ */
+const STYLE_FRAME_TIMEOUT_MS = 5_000;
+const MAX_AUTOMATIC_MAP_RECONSTRUCTIONS = 1;
+/** The shipped dark land is ~38/255, so this rejects only genuinely black output. */
+const VISIBLE_FRAME_CHANNEL_FLOOR = 8;
+const FRAME_SAMPLE_FRACTIONS = [0.18, 0.38, 0.5, 0.62, 0.82] as const;
 
 /**
  * How close `fitRoute` is allowed to pull in. 16.5 is a street, not a doorway.
@@ -235,15 +245,16 @@ const ROUTE_TINT_TOKEN: Record<RouteTint, string> = {
   accent: "--color-accent",
   confirmed: "--color-status-confirmed",
   caution: "--color-status-caution",
-  unavailable: "--color-status-unavailable"
+  unavailable: "--color-status-unavailable",
 };
 
 const PLACE_TYPE_SYMBOLS: Record<string, string> = {
   open_market: '<path d="M4 10h16l-1-5H5l-1 5Z"/><path d="M5 10v9h14v-9"/><path d="M9 19v-5h6v5"/>',
-  supermarket: '<path d="M4 5h2l2 10h9l2-7H7"/><circle cx="9" cy="19" r="1"/><circle cx="17" cy="19" r="1"/>',
+  supermarket:
+    '<path d="M4 5h2l2 10h9l2-7H7"/><circle cx="9" cy="19" r="1"/><circle cx="17" cy="19" r="1"/>',
   kiosk: '<path d="M5 10h14v9H5z"/><path d="M4 10 6 5h12l2 5M8 14h3M13 14h3"/>',
   bank: '<path d="m3 9 9-5 9 5"/><path d="M5 10v7M9 10v7M15 10v7M19 10v7M3 19h18"/>',
-  bureau_de_change: '<path d="M7 5h10v14H7z"/><path d="M10 9h4M10 12h4M10 15h4"/>'
+  bureau_de_change: '<path d="M7 5h10v14H7z"/><path d="M10 9h4M10 12h4M10 15h4"/>',
 };
 
 const PLACE_TYPE_LABELS: Record<string, string> = {
@@ -251,7 +262,7 @@ const PLACE_TYPE_LABELS: Record<string, string> = {
   supermarket: "supermarket",
   kiosk: "kiosk",
   bank: "bank",
-  bureau_de_change: "bureau de change"
+  bureau_de_change: "bureau de change",
 };
 
 /**
@@ -345,10 +356,10 @@ const POI_BUDGET: Expression = [
     "commercial_services",
     "public_facilities",
     "arts_and_entertainment",
-    "historic"
+    "historic",
   ],
   ["step", ["zoom"], 0, 16, 1, 17, 2],
-  0
+  0,
 ];
 
 const POI_FILTER: Expression = ["<=", ["get", "filterrank"], POI_BUDGET];
@@ -381,11 +392,11 @@ const POI_SORT_KEY: Expression = [
       2,
       "medical",
       4,
-      3
+      3,
     ],
-    10
+    10,
   ],
-  ["get", "filterrank"]
+  ["get", "filterrank"],
 ];
 
 /**
@@ -409,7 +420,7 @@ const MARKET_SIZE_BUMP: Expression = [
   "case",
   ["==", ["get", "class"], "food_and_drink_stores"],
   2,
-  0
+  0,
 ];
 
 /**
@@ -426,7 +437,7 @@ const POI_TEXT_SIZE: Expression = [
   ["zoom"],
   ["+", ["step", ["get", "sizerank"], 18, 5, 12], MARKET_SIZE_BUMP],
   17,
-  ["+", ["step", ["get", "sizerank"], 18, 13, 12], MARKET_SIZE_BUMP]
+  ["+", ["step", ["get", "sizerank"], 18, 13, 12], MARKET_SIZE_BUMP],
 ];
 
 /**
@@ -445,7 +456,7 @@ const POI_ICON: Expression = [
   "case",
   ["has", "maki_beta"],
   ["coalesce", ["image", ["get", "maki_beta"]], ["image", ["get", "maki"]], ["image", "marker"]],
-  ["coalesce", ["image", ["get", "maki"]], ["image", "marker"]]
+  ["coalesce", ["image", ["get", "maki"]], ["image", "marker"]],
 ];
 
 /**
@@ -461,7 +472,7 @@ const POI_TEXT_OFFSET: Expression = [
   ["zoom"],
   ["step", ["get", "sizerank"], ["literal", [0, 0]], 5, ["literal", [0, 0.8]]],
   17,
-  ["step", ["get", "sizerank"], ["literal", [0, 0]], 13, ["literal", [0, 0.8]]]
+  ["step", ["get", "sizerank"], ["literal", [0, 0]], 13, ["literal", [0, 0.8]]],
 ];
 
 /**
@@ -505,7 +516,7 @@ const DARK_POI_COLOR: Expression = [
   "hsl(260, 55%, 72%)", // 5.54:1
   ["arts_and_entertainment", "historic", "landmark"],
   "hsl(320, 60%, 66%)", // 5.17:1
-  "hsl(210, 10%, 58%)" // 4.83:1
+  "hsl(210, 10%, 58%)", // 4.83:1
 ];
 
 /**
@@ -535,7 +546,7 @@ const LIGHT_POI_COLOR: Expression = [
   "hsl(260, 70%, 63%)",
   ["arts_and_entertainment", "historic", "landmark"],
   "hsl(320, 70%, 63%)",
-  "hsl(210, 20%, 46%)"
+  "hsl(210, 20%, 46%)",
 ];
 
 /**
@@ -573,22 +584,22 @@ const DARK_LANDUSE_FILTER: Expression = [
       "glacier",
       "pitch",
       "sand",
-      "commercial_area"
+      "commercial_area",
     ],
     true,
     "residential",
     ["step", ["zoom"], true, 12, false],
-    false
+    false,
   ],
   [
     "<=",
     [
       "-",
       ["to-number", ["get", "sizerank"]],
-      ["interpolate", ["exponential", 1.5], ["zoom"], 12, 0, 18, 14]
+      ["interpolate", ["exponential", 1.5], ["zoom"], 12, 0, 18, 14],
     ],
-    8
-  ]
+    8,
+  ],
 ];
 
 /** One flat grey becomes a landuse that means something. */
@@ -605,7 +616,7 @@ const DARK_LANDUSE_COLOR: Expression = [
   "hsl(220, 12%, 19%)",
   "glacier",
   "hsl(200, 12%, 26%)",
-  "hsl(30, 6%, 17%)"
+  "hsl(30, 6%, 17%)",
 ];
 
 /**
@@ -723,7 +734,13 @@ interface FitBoundsOptions {
   duration?: number;
 }
 
-type MapboxStyleReadinessEvent = "style.load" | "idle" | "render";
+type MapboxStyleReadinessEvent =
+  "style.load" | "idle" | "render" | "webglcontextlost" | "webglcontextrestored";
+
+interface MapboxLngLat {
+  lng: number;
+  lat: number;
+}
 
 interface MapboxMap {
   flyTo(options: MapboxCameraOptions): void;
@@ -736,6 +753,11 @@ interface MapboxMap {
    */
   fitBounds(bounds: BoundsTuple, options?: FitBoundsOptions): void;
   project(lnglat: [number, number]): ScreenPoint;
+  getCenter(): MapboxLngLat;
+  getZoom(): number;
+  getBearing(): number;
+  getPitch(): number;
+  getCanvas(): HTMLCanvasElement;
   setStyle(style: string): void;
   triggerRepaint(): void;
   on(type: MapboxStyleReadinessEvent, listener: () => void): void;
@@ -807,6 +829,8 @@ interface WindowWithMapboxgl extends Window {
       style: string;
       center: [number, number];
       zoom: number;
+      bearing?: number;
+      pitch?: number;
       attributionControl: boolean;
     }) => MapboxMap;
     Marker: new (element: HTMLDivElement) => MapboxMarker;
@@ -821,8 +845,29 @@ interface WindowWithMapboxgl extends Window {
   };
 }
 
+type MapboxGL = NonNullable<WindowWithMapboxgl["mapboxgl"]>;
+
+interface MapRecoverySnapshot {
+  camera: {
+    center: MapboxLngLat;
+    zoom: number;
+    bearing: number;
+    pitch: number;
+  };
+  markers: Set<MapboxMarker>;
+  popup: MapboxPopup | null;
+}
+
 export class MapboxAdapter implements MapProviderAdapter {
   private mapInstance: MapboxMap | null = null;
+  private mapboxgl: MapboxGL | null = null;
+  private mapContainer: HTMLDivElement | null = null;
+  /** Invalidates callbacks retained by a removed/replaced Map instance. */
+  private mapEpoch = 0;
+  private mapLifecycleOwner: MapboxMap | null = null;
+  private mapErrorListener: ((event: MapboxErrorEvent) => void) | null = null;
+  private mapContextLostListener: (() => void) | null = null;
+  private mapContextRestoredListener: (() => void) | null = null;
   private markersMap: Map<string, MapboxMarker> = new Map();
   private sharedUserMarkers: Map<string, MapboxMarker> = new Map();
   private activeUserPopup: MapboxPopup | null = null;
@@ -853,15 +898,30 @@ export class MapboxAdapter implements MapProviderAdapter {
   private styleLifecycleListener: MapStyleLifecycleListener | null = null;
   private styleReadyListener: (() => void) | null = null;
   private styleRenderListener: (() => void) | null = null;
+  /** Exact Map that owns the style listeners; never infer it from mapInstance. */
+  private styleListenerOwner: MapboxMap | null = null;
   private styleInstalledGeneration: number | null = null;
   /** A mutation-safe event emitted synchronously by the active setStyle call. */
   private pendingMutationSafeGeneration: number | null = null;
   /** Non-null only while the matching setStyle call is on the JavaScript stack. */
   private styleInstallInProgressGeneration: number | null = null;
   private styleLoadTimer: number | null = null;
+  private styleFrameTimer: number | null = null;
   private styleLoadAttempt = 0;
   private styleGeneration = 0;
   private styleErrorObserved = false;
+  private rendererErrorObserved = false;
+  private contextLost = false;
+  private contextRecoveryStyleWasReady = false;
+  private routeIsolationFailed = false;
+  private automaticMapReconstructions = 0;
+  private lastFailureReason: "context" | "error" | "renderer" | "timeout" | null = null;
+  /**
+   * Kept only if the old Map has already been removed but constructing its
+   * replacement throws. Explicit Retry can then start a fresh bounded episode
+   * without inventing a camera or losing DOM overlay identity.
+   */
+  private detachedRecoverySnapshot: MapRecoverySnapshot | null = null;
   private accessToken: string;
   /** Theme the live style already reflects; see setTheme. */
   private currentTheme: "light" | "dark" = "light";
@@ -906,21 +966,71 @@ export class MapboxAdapter implements MapProviderAdapter {
     }
 
     mapboxgl.accessToken = this.accessToken;
+    this.mapboxgl = mapboxgl;
+    this.mapContainer = container;
     this.currentTheme = theme;
     this.padding = { ...padding };
-    this.mapInstance = new mapboxgl.Map({
+    this.automaticMapReconstructions = 0;
+    this.lastFailureReason = null;
+    const map = new mapboxgl.Map({
       container,
       style: MapboxAdapter.styleFor(theme),
       center: [center.lng, center.lat],
       zoom,
-      attributionControl: false
+      attributionControl: false,
     });
-    this.mapInstance.on("error", this.handleMapError);
+    this.mapInstance = map;
+    const epoch = ++this.mapEpoch;
+    this.attachMapLifecycleListeners(map, epoch);
     this.beginStyleAttempt(theme, 1, false);
     // Applied as a camera call rather than a constructor option so the very
     // first frame is already padded: the opening centre must sit above the
     // sheet, not behind it.
-    this.mapInstance.easeTo({ padding: this.padding, essential: true, duration: 0 });
+    map.easeTo({ padding: this.padding, essential: true, duration: 0 });
+  }
+
+  private attachMapLifecycleListeners(map: MapboxMap, epoch: number): void {
+    this.detachMapLifecycleListeners();
+    const contextLostListener = () => {
+      this.handleContextLost(map, epoch);
+    };
+    const contextRestoredListener = () => {
+      this.handleContextRestored(map, epoch);
+    };
+    this.mapLifecycleOwner = map;
+    this.mapErrorListener = null;
+    this.mapContextLostListener = contextLostListener;
+    this.mapContextRestoredListener = contextRestoredListener;
+    map.on("webglcontextlost", contextLostListener);
+    map.on("webglcontextrestored", contextRestoredListener);
+  }
+
+  private installGenerationErrorListener(map: MapboxMap, epoch: number, generation: number): void {
+    const owner = this.mapLifecycleOwner;
+    if (owner && this.mapErrorListener) {
+      owner.off("error", this.mapErrorListener);
+    }
+    const errorListener = (event: MapboxErrorEvent) => {
+      this.handleMapError(event, map, epoch, generation);
+    };
+    this.mapErrorListener = errorListener;
+    map.on("error", errorListener);
+  }
+
+  private detachMapLifecycleListeners(): void {
+    const map = this.mapLifecycleOwner;
+    if (!map) return;
+    if (this.mapErrorListener) map.off("error", this.mapErrorListener);
+    if (this.mapContextLostListener) {
+      map.off("webglcontextlost", this.mapContextLostListener);
+    }
+    if (this.mapContextRestoredListener) {
+      map.off("webglcontextrestored", this.mapContextRestoredListener);
+    }
+    this.mapLifecycleOwner = null;
+    this.mapErrorListener = null;
+    this.mapContextLostListener = null;
+    this.mapContextRestoredListener = null;
   }
 
   /**
@@ -947,53 +1057,64 @@ export class MapboxAdapter implements MapProviderAdapter {
    * an already-queued callback harmless after a rapid theme change.
    */
   private styleAttemptIsInstalled(generation: number): boolean {
-    return (
-      generation === this.styleGeneration &&
-      this.styleInstalledGeneration === generation
-    );
+    return generation === this.styleGeneration && this.styleInstalledGeneration === generation;
   }
 
   /**
    * `style.load`/`idle` or a positive isStyleLoaded probe make style mutation
-   * safe. Only this path may replay cartography and stored route sources.
+   * safe. That is deliberately separate from visible readiness: production
+   * Safari can emit all three while presenting a completely black WebGL frame.
    */
   private completeMutationSafeStyleAttempt(
     generation: number,
     theme: "light" | "dark",
-    attempt: number
+    attempt: number,
+    map: MapboxMap,
+    epoch: number
   ): boolean {
-    if (!this.styleAttemptIsInstalled(generation)) return false;
+    if (!this.currentMapIs(map, epoch) || !this.styleAttemptIsInstalled(generation)) {
+      return false;
+    }
 
     this.clearStyleLoadTimer();
-    this.clearStyleReadinessListeners();
+    this.clearStyleMutationListeners();
     // Set BEFORE the applies: this event IS the fact they guard on.
     this.styleReady = true;
     this.pendingMutationSafeGeneration = null;
-    const wasUsable = this.styleUsable;
-    this.styleUsable = true;
     this.applyCartography();
-    this.applyRoute();
-    if (!wasUsable) {
-      this.emitStyleLifecycle({
-        status: "ready",
-        generation,
-        theme,
-        attempt
-      });
-    }
+    this.armStyleFrameTimer(generation, map, epoch);
+    // This requests evidence; it is never evidence itself.
+    map.triggerRepaint();
     return true;
   }
 
   /**
    * Mapbox's `error` event also covers recoverable tile failures, so treating
-   * every event as fatal would replace a usable map with an error card. Record
-   * errors only while the style itself is pending; if `style.load` never follows,
-   * the bounded timeout retries and ultimately reports an error-backed failure.
+   * every event as fatal would replace a usable map with an error card. Once a
+   * frame is pixel-proven, errors stay recoverable. Before that, retain only the
+   * fact an error happened; never log its message, which may contain request
+   * details that do not belong in diagnostics.
    */
-  private handleMapError = (_event: MapboxErrorEvent): void => {
-    if (this.styleUsable || this.styleReady || this.styleLoadTimer === null) return;
+  private handleMapError(
+    event: MapboxErrorEvent,
+    map: MapboxMap,
+    epoch: number,
+    generation: number
+  ): void {
+    if (!this.currentMapIs(map, epoch) || generation !== this.styleGeneration || this.styleUsable) {
+      return;
+    }
     this.styleErrorObserved = true;
-  };
+    const message = event.error?.message?.toLowerCase() ?? "";
+    if (message.includes("webgl") || message.includes("context") || message.includes("shader")) {
+      this.rendererErrorObserved = true;
+      this.armStyleFrameTimer(this.styleGeneration, map, epoch);
+    }
+  }
+
+  private currentMapIs(map: MapboxMap, epoch: number): boolean {
+    return this.mapInstance === map && this.mapEpoch === epoch;
+  }
 
   private emitStyleLifecycle(state: MapStyleLifecycleState): void {
     this.styleLifecycleListener?.(state);
@@ -1005,35 +1126,129 @@ export class MapboxAdapter implements MapProviderAdapter {
     this.styleLoadTimer = null;
   }
 
+  private clearStyleFrameTimer(): void {
+    if (this.styleFrameTimer === null) return;
+    window.clearTimeout(this.styleFrameTimer);
+    this.styleFrameTimer = null;
+  }
+
   private clearStyleReadinessListeners(): void {
-    const map = this.mapInstance;
+    this.clearStyleMutationListeners();
+    this.clearStyleRenderListener();
+  }
+
+  private clearStyleMutationListeners(): void {
+    const map = this.styleListenerOwner;
     if (!map) return;
     if (this.styleReadyListener) {
       map.off("style.load", this.styleReadyListener);
       map.off("idle", this.styleReadyListener);
       this.styleReadyListener = null;
     }
-    this.clearStyleRenderListener();
+    if (!this.styleRenderListener) this.styleListenerOwner = null;
   }
 
   private clearStyleRenderListener(): void {
-    if (!this.mapInstance || !this.styleRenderListener) return;
-    this.mapInstance.off("render", this.styleRenderListener);
+    const map = this.styleListenerOwner;
+    if (!map || !this.styleRenderListener) return;
+    map.off("render", this.styleRenderListener);
     this.styleRenderListener = null;
+    if (!this.styleReadyListener) this.styleListenerOwner = null;
+  }
+
+  /**
+   * Read only a bounded grid while readiness is pending. `preserveDrawingBuffer`
+   * remains false; the probe runs synchronously inside Mapbox's `render` event,
+   * immediately after Painter.render and before the browser presents the frame.
+   */
+  private frameHasVisiblePixels(map: MapboxMap): boolean {
+    try {
+      const canvas = map.getCanvas();
+      const gl = canvas.getContext("webgl2");
+      if (!gl || gl.isContextLost()) return false;
+      const width = gl.drawingBufferWidth;
+      const height = gl.drawingBufferHeight;
+      if (width <= 0 || height <= 0) return false;
+
+      const pixel = new Uint8Array(4);
+      for (const xFraction of FRAME_SAMPLE_FRACTIONS) {
+        for (const yFraction of FRAME_SAMPLE_FRACTIONS) {
+          const x = Math.min(width - 1, Math.max(0, Math.floor(width * xFraction)));
+          const y = Math.min(height - 1, Math.max(0, Math.floor(height * yFraction)));
+          gl.readPixels(x, y, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, pixel);
+          if (
+            pixel[3] > 0 &&
+            Math.max(pixel[0], pixel[1], pixel[2]) >= VISIBLE_FRAME_CHANNEL_FLOOR
+          ) {
+            return true;
+          }
+        }
+      }
+    } catch {
+      // A lost/tearing-down WebGL context may throw instead of returning black.
+    }
+    return false;
+  }
+
+  private completeUsableFrame(
+    generation: number,
+    theme: "light" | "dark",
+    attempt: number,
+    map: MapboxMap,
+    epoch: number
+  ): boolean {
+    if (
+      !this.currentMapIs(map, epoch) ||
+      generation !== this.styleGeneration ||
+      !this.styleReady ||
+      this.contextLost ||
+      this.routeIsolationFailed ||
+      !this.frameHasVisiblePixels(map)
+    ) {
+      return false;
+    }
+
+    const wasUsable = this.styleUsable;
+    this.styleUsable = true;
+    this.lastFailureReason = null;
+    this.rendererErrorObserved = false;
+    this.clearStyleFrameTimer();
+    this.clearStyleRenderListener();
+    // A retained custom route must not be allowed to prove the basemap usable.
+    // Replay only after the current style's own pixels have passed the probe;
+    // applyRoute still requires styleReady, so mutation safety is unchanged.
+    this.applyRoute();
+    if (!wasUsable) {
+      this.emitStyleLifecycle({
+        status: "ready",
+        generation,
+        theme,
+        attempt,
+      });
+    }
+    return true;
   }
 
   /**
    * `style.load` and `idle` are definitive events. `render` is deliberately
-   * only a recovery signal: a render can be an empty transitional frame, so it
-   * wins only when Mapbox also reports the current style loaded.
+   * split: a positive style probe may recover a missed mutation-safe event, but
+   * only the later framebuffer probe may expose the map.
    */
   private recognizeLoadedStyle(
     generation: number,
     theme: "light" | "dark",
-    attempt: number
+    attempt: number,
+    map: MapboxMap,
+    epoch: number
   ): boolean {
-    if (generation !== this.styleGeneration || !this.mapInstance?.isStyleLoaded()) return false;
-    return this.completeMutationSafeStyleAttempt(generation, theme, attempt);
+    if (
+      !this.currentMapIs(map, epoch) ||
+      generation !== this.styleGeneration ||
+      !map.isStyleLoaded()
+    ) {
+      return false;
+    }
+    return this.completeMutationSafeStyleAttempt(generation, theme, attempt, map, epoch);
   }
 
   /**
@@ -1044,22 +1259,32 @@ export class MapboxAdapter implements MapProviderAdapter {
   private beginStyleAttempt(theme: "light" | "dark", attempt: number, replaceStyle: boolean): void {
     const map = this.mapInstance;
     if (!map) return;
+    const epoch = this.mapEpoch;
 
     this.clearStyleLoadTimer();
+    this.clearStyleFrameTimer();
     this.clearStyleReadinessListeners();
     const generation = ++this.styleGeneration;
+    this.installGenerationErrorListener(map, epoch, generation);
     this.currentTheme = theme;
     this.styleReady = false;
     this.styleUsable = false;
     this.styleLoadAttempt = attempt;
     this.styleErrorObserved = false;
+    this.rendererErrorObserved = false;
+    this.contextLost = false;
+    this.contextRecoveryStyleWasReady = false;
+    this.routeIsolationFailed = false;
+    this.lastFailureReason = null;
     this.styleInstalledGeneration = replaceStyle ? null : generation;
     this.pendingMutationSafeGeneration = null;
     this.styleInstallInProgressGeneration = null;
     this.emitStyleLifecycle({ status: "loading", generation, theme, attempt });
 
     const readyListener = () => {
-      if (generation !== this.styleGeneration) return;
+      if (!this.currentMapIs(map, epoch) || generation !== this.styleGeneration) {
+        return;
+      }
       if (this.styleInstallInProgressGeneration === generation) {
         // JavaScript cannot interleave an older queued event while setStyle is
         // on the stack. A synchronous style.load/idle here is therefore
@@ -1070,16 +1295,21 @@ export class MapboxAdapter implements MapProviderAdapter {
       }
       // style.load and idle are Mapbox's public mutation-safe authorities.
       // Unlike isStyleLoaded(), style.load does not wait for every visible tile,
-      // so a normal slow network can uncover a real background/partial basemap
-      // without waiting for the later idle state.
-      this.completeMutationSafeStyleAttempt(generation, theme, attempt);
+      // so it may replay cartography/routes before later tile content settles.
+      this.completeMutationSafeStyleAttempt(generation, theme, attempt, map, epoch);
     };
     const renderListener = () => {
-      // Mapbox fires render after every painter pass, including a black frame
-      // whose style JSON has layers but whose basemap is not usable. Render may
-      // recover a missed loaded event, but it is never readiness by itself.
-      this.recognizeLoadedStyle(generation, theme, attempt);
+      if (!this.currentMapIs(map, epoch) || generation !== this.styleGeneration) {
+        return;
+      }
+      if (!this.styleReady) {
+        this.recognizeLoadedStyle(generation, theme, attempt, map, epoch);
+      }
+      if (this.styleReady) {
+        this.completeUsableFrame(generation, theme, attempt, map, epoch);
+      }
     };
+    this.styleListenerOwner = map;
     this.styleReadyListener = readyListener;
     this.styleRenderListener = renderListener;
     map.on("style.load", readyListener);
@@ -1111,35 +1341,35 @@ export class MapboxAdapter implements MapProviderAdapter {
 
     if (
       this.pendingMutationSafeGeneration === generation &&
-      this.completeMutationSafeStyleAttempt(generation, theme, attempt)
+      this.completeMutationSafeStyleAttempt(generation, theme, attempt, map, epoch)
     ) {
       return;
     }
 
     // setStyle can complete before its asynchronous event reaches this
     // listener. Recognize that state now instead of waiting for the timeout.
-    if (!this.recognizeLoadedStyle(generation, theme, attempt)) {
+    if (!this.recognizeLoadedStyle(generation, theme, attempt, map, epoch)) {
       // Guarantees a post-install render signal even when a cached style emitted
       // its data/load events synchronously inside setStyle.
       map.triggerRepaint();
     }
   }
 
-  private handleStyleLoadTimeout(
-    generation: number,
-    recognizeAlreadyLoaded = true
-  ): void {
+  private handleStyleLoadTimeout(generation: number, recognizeAlreadyLoaded = true): void {
     if (generation !== this.styleGeneration) return;
     this.clearStyleLoadTimer();
-    if (!this.mapInstance || this.styleReady || this.styleUsable) return;
+    const map = this.mapInstance;
+    if (!map || this.styleReady || this.styleUsable) return;
+    const epoch = this.mapEpoch;
     if (
       recognizeAlreadyLoaded &&
-      this.recognizeLoadedStyle(
-        generation,
-        this.currentTheme,
-        this.styleLoadAttempt
-      )
+      this.recognizeLoadedStyle(generation, this.currentTheme, this.styleLoadAttempt, map, epoch)
     ) {
+      return;
+    }
+
+    if (this.rendererErrorObserved) {
+      this.handleStyleFrameTimeout(generation, map, epoch);
       return;
     }
 
@@ -1156,12 +1386,226 @@ export class MapboxAdapter implements MapProviderAdapter {
     // generation's readiness listeners lets that state clear the failure
     // overlay and restore cartography/routes without rebuilding the map. A
     // manual retry or theme switch clears them and increments the generation.
+    const reason = this.styleErrorObserved ? "error" : "timeout";
+    this.lastFailureReason = reason;
     this.emitStyleLifecycle({
       status: "failed",
       generation,
       theme: this.currentTheme,
       attempt: this.styleLoadAttempt,
-      reason: this.styleErrorObserved ? "error" : "timeout"
+      reason,
+    });
+  }
+
+  private armStyleFrameTimer(generation: number, map: MapboxMap, epoch: number): void {
+    this.clearStyleFrameTimer();
+    this.styleFrameTimer = window.setTimeout(
+      () => this.handleStyleFrameTimeout(generation, map, epoch),
+      STYLE_FRAME_TIMEOUT_MS
+    );
+  }
+
+  private handleStyleFrameTimeout(generation: number, map: MapboxMap, epoch: number): void {
+    if (!this.currentMapIs(map, epoch) || generation !== this.styleGeneration || this.styleUsable) {
+      return;
+    }
+    this.clearStyleFrameTimer();
+
+    if (this.automaticMapReconstructions < MAX_AUTOMATIC_MAP_RECONSTRUCTIONS) {
+      this.automaticMapReconstructions += 1;
+      this.reconstructMap(map, epoch);
+      return;
+    }
+
+    const reason = this.contextLost ? "context" : "renderer";
+    this.lastFailureReason = reason;
+    this.emitStyleLifecycle({
+      status: "failed",
+      generation,
+      theme: this.currentTheme,
+      attempt: this.styleLoadAttempt,
+      reason,
+    });
+  }
+
+  private installContextRenderListener(generation: number, map: MapboxMap, epoch: number): void {
+    this.clearStyleRenderListener();
+    const renderListener = () => {
+      this.completeUsableFrame(generation, this.currentTheme, this.styleLoadAttempt, map, epoch);
+    };
+    this.styleListenerOwner = map;
+    this.styleRenderListener = renderListener;
+    map.on("render", renderListener);
+  }
+
+  private handleContextLost(map: MapboxMap, epoch: number): void {
+    if (!this.currentMapIs(map, epoch)) return;
+    const styleWasReady = this.styleReady;
+    const styleWasUsable = this.styleUsable;
+    this.clearStyleLoadTimer();
+    this.clearStyleFrameTimer();
+    this.clearStyleReadinessListeners();
+    const generation = ++this.styleGeneration;
+    this.installGenerationErrorListener(map, epoch, generation);
+    this.styleReady = false;
+    this.styleUsable = false;
+    this.styleInstalledGeneration = generation;
+    this.styleLoadAttempt = 1;
+    this.styleErrorObserved = false;
+    this.rendererErrorObserved = true;
+    this.contextLost = true;
+    this.contextRecoveryStyleWasReady = styleWasReady;
+    this.routeIsolationFailed = false;
+    if (styleWasUsable) this.automaticMapReconstructions = 0;
+    this.lastFailureReason = null;
+    this.emitStyleLifecycle({
+      status: "loading",
+      generation,
+      theme: this.currentTheme,
+      attempt: 1,
+    });
+    this.armStyleFrameTimer(generation, map, epoch);
+  }
+
+  private handleContextRestored(map: MapboxMap, epoch: number): void {
+    if (!this.currentMapIs(map, epoch) || !this.contextLost) return;
+    const styleWasReady = this.contextRecoveryStyleWasReady;
+    this.contextLost = false;
+    this.contextRecoveryStyleWasReady = false;
+    this.rendererErrorObserved = false;
+    if (!styleWasReady) {
+      this.beginStyleAttempt(this.currentTheme, 1, true);
+      return;
+    }
+
+    const generation = this.styleGeneration;
+    this.styleReady = true;
+    this.styleInstalledGeneration = generation;
+    this.routeIsolationFailed = !this.removeRouteForRendererProbe(map);
+    this.applyCartography();
+    this.installContextRenderListener(generation, map, epoch);
+    this.armStyleFrameTimer(generation, map, epoch);
+    map.triggerRepaint();
+  }
+
+  private reconstructMap(map: MapboxMap, epoch: number): void {
+    if (!this.currentMapIs(map, epoch) || !this.mapboxgl || !this.mapContainer) {
+      return;
+    }
+
+    let camera: MapRecoverySnapshot["camera"] | undefined;
+    try {
+      camera = {
+        center: map.getCenter(),
+        zoom: map.getZoom(),
+        bearing: map.getBearing(),
+        pitch: map.getPitch(),
+      };
+    } catch {
+      // Rebuilding without the user's actual camera would falsify map state.
+    }
+    if (!camera) {
+      this.failRendererRecovery();
+      return;
+    }
+
+    const markers = new Set<MapboxMarker>([
+      ...this.markersMap.values(),
+      ...this.sharedUserMarkers.values(),
+    ]);
+    if (this.userMarker) markers.add(this.userMarker);
+    const popup = this.activeUserPopup?.isOpen() ? this.activeUserPopup : null;
+    const snapshot: MapRecoverySnapshot = { camera, markers, popup };
+    this.detachedRecoverySnapshot = snapshot;
+
+    this.styleGeneration += 1;
+    this.clearStyleLoadTimer();
+    this.clearStyleFrameTimer();
+    this.clearStyleReadinessListeners();
+    this.detachMapLifecycleListeners();
+    this.mapEpoch += 1;
+    try {
+      map.remove();
+    } catch {
+      // Keep ownership of a Map that may still occupy the container. Explicit
+      // Retry can attempt the same teardown again; constructing beside it
+      // would create a duplicate canvas and make destroy unable to collect it.
+      this.failRendererRecovery();
+      return;
+    }
+    this.mapInstance = null;
+
+    this.installReplacementMap(snapshot);
+  }
+
+  private installReplacementMap(snapshot: MapRecoverySnapshot): void {
+    const mapboxgl = this.mapboxgl;
+    const container = this.mapContainer;
+    if (!mapboxgl || !container) {
+      this.failRendererRecovery();
+      return;
+    }
+    const theme = this.currentTheme;
+    let replacement: MapboxMap;
+    try {
+      replacement = new mapboxgl.Map({
+        container,
+        style: MapboxAdapter.styleFor(theme),
+        center: [snapshot.camera.center.lng, snapshot.camera.center.lat],
+        zoom: snapshot.camera.zoom,
+        bearing: snapshot.camera.bearing,
+        pitch: snapshot.camera.pitch,
+        attributionControl: false,
+      });
+    } catch {
+      this.failRendererRecovery();
+      return;
+    }
+
+    this.mapInstance = replacement;
+    const replacementEpoch = ++this.mapEpoch;
+    this.styleReady = false;
+    this.styleUsable = false;
+    this.contextLost = false;
+    this.contextRecoveryStyleWasReady = false;
+    this.routeIsolationFailed = false;
+    this.lastFailureReason = null;
+    this.detachedRecoverySnapshot = null;
+    this.attachMapLifecycleListeners(replacement, replacementEpoch);
+    for (const marker of snapshot.markers) {
+      try {
+        marker.addTo(replacement);
+      } catch {
+        // One stale DOM marker must not prevent the basemap from recovering.
+      }
+    }
+    if (snapshot.popup) {
+      try {
+        snapshot.popup.addTo(replacement);
+        // Removing the old Map may synchronously fire Popup's close listener,
+        // clearing this field. Reclaim ownership after the successful re-add.
+        this.activeUserPopup = snapshot.popup;
+      } catch {
+        // The popup is optional; camera, basemap and markers remain authoritative.
+      }
+    }
+    this.beginStyleAttempt(theme, 1, false);
+    replacement.easeTo({
+      padding: this.padding,
+      essential: true,
+      duration: 0,
+    });
+  }
+
+  private failRendererRecovery(): void {
+    const reason = this.contextLost ? "context" : "renderer";
+    this.lastFailureReason = reason;
+    this.emitStyleLifecycle({
+      status: "failed",
+      generation: this.styleGeneration,
+      theme: this.currentTheme,
+      attempt: this.styleLoadAttempt || 1,
+      reason,
     });
   }
 
@@ -1235,7 +1679,7 @@ export class MapboxAdapter implements MapProviderAdapter {
       6,
       0.5,
       12,
-      0.35
+      0.35,
     ]);
 
     // Commercial districts appear at all — filter first, then colour.
@@ -1258,12 +1702,42 @@ export class MapboxAdapter implements MapProviderAdapter {
   public setTheme(theme: "light" | "dark"): void {
     if (!this.mapInstance) return;
     if (theme === this.currentTheme) return;
+    this.automaticMapReconstructions = 0;
+    if (this.lastFailureReason === "context" || this.lastFailureReason === "renderer") {
+      const map = this.mapInstance;
+      const epoch = this.mapEpoch;
+      this.currentTheme = theme;
+      this.lastFailureReason = null;
+      this.reconstructMap(map, epoch);
+      return;
+    }
     this.beginStyleAttempt(theme, 1, true);
   }
 
-  /** Retry a failed/pending style without replacing the map or its camera. */
+  /**
+   * Style/network failures retry in place. Renderer/context failures require a
+   * new WebGL context, so explicit Retry begins a fresh bounded reconstruction
+   * episode rather than repainting the same broken canvas.
+   */
   public retryStyle(): void {
-    if (!this.mapInstance) return;
+    this.automaticMapReconstructions = 0;
+    if (!this.mapInstance) {
+      if (
+        this.detachedRecoverySnapshot &&
+        (this.lastFailureReason === "context" || this.lastFailureReason === "renderer")
+      ) {
+        this.lastFailureReason = null;
+        this.installReplacementMap(this.detachedRecoverySnapshot);
+      }
+      return;
+    }
+    if (this.lastFailureReason === "context" || this.lastFailureReason === "renderer") {
+      const map = this.mapInstance;
+      const epoch = this.mapEpoch;
+      this.lastFailureReason = null;
+      this.reconstructMap(map, epoch);
+      return;
+    }
     this.beginStyleAttempt(this.currentTheme, 1, true);
   }
 
@@ -1284,7 +1758,7 @@ export class MapboxAdapter implements MapProviderAdapter {
     this.mapInstance.easeTo({
       padding: this.padding,
       essential: true,
-      duration: options?.animate === false ? 0 : duration(PADDING_DURATION_MS)
+      duration: options?.animate === false ? 0 : duration(PADDING_DURATION_MS),
     });
   }
 
@@ -1307,7 +1781,7 @@ export class MapboxAdapter implements MapProviderAdapter {
       center: [lng, lat],
       padding: this.padding,
       essential: true,
-      duration: duration(FLY_DURATION_MS)
+      duration: duration(FLY_DURATION_MS),
     });
   }
 
@@ -1325,7 +1799,7 @@ export class MapboxAdapter implements MapProviderAdapter {
       zoom,
       padding: this.padding,
       essential: true,
-      duration: duration(FLY_DURATION_MS)
+      duration: duration(FLY_DURATION_MS),
     });
   }
 
@@ -1398,10 +1872,7 @@ export class MapboxAdapter implements MapProviderAdapter {
     // "Invalid LngLat object" for NaN bounds; a bad route should disappear,
     // not take down the whole React tree. Padding is checked too because it is
     // part of the same camera request and can come from measured layout state.
-    if (
-      ![west, east, south, north].every(Number.isFinite) ||
-      !isRenderablePadding(this.padding)
-    ) {
+    if (![west, east, south, north].every(Number.isFinite) || !isRenderablePadding(this.padding)) {
       return;
     }
 
@@ -1409,13 +1880,13 @@ export class MapboxAdapter implements MapProviderAdapter {
       this.mapInstance.fitBounds(
         [
           [west, south],
-          [east, north]
+          [east, north],
         ],
         {
           padding: this.padding,
           maxZoom: options?.maxZoom ?? FIT_MAX_ZOOM,
           essential: true,
-          duration: duration(FLY_DURATION_MS)
+          duration: duration(FLY_DURATION_MS),
         }
       );
     } catch {
@@ -1609,13 +2080,14 @@ export class MapboxAdapter implements MapProviderAdapter {
           el.appendChild(img);
         } else {
           // Initials fallback
-          const initials = user.name
-            .split(" ")
-            .map((n) => n[0])
-            .join("")
-            .substring(0, 2)
-            .toUpperCase() || "?";
-          
+          const initials =
+            user.name
+              .split(" ")
+              .map((n) => n[0])
+              .join("")
+              .substring(0, 2)
+              .toUpperCase() || "?";
+
           const text = document.createElement("span");
           text.textContent = initials;
           text.style.color = "#FFFFFF";
@@ -1629,7 +2101,7 @@ export class MapboxAdapter implements MapProviderAdapter {
         // Click interaction: smoothly glide camera and show premium HIG popup card
         el.addEventListener("click", (e) => {
           e.stopPropagation(); // Avoid triggering map clicks
-          
+
           this.recenterTo(user.latitude, user.longitude, 14.5);
 
           // Close existing active popup first
@@ -1643,7 +2115,8 @@ export class MapboxAdapter implements MapProviderAdapter {
           popupEl.style.alignItems = "center";
           popupEl.style.gap = "12px";
           popupEl.style.minWidth = "220px";
-          popupEl.style.fontFamily = "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif";
+          popupEl.style.fontFamily =
+            "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif";
 
           // Squirclized popup styling overrides
           const styleTag = document.createElement("style");
@@ -1690,12 +2163,13 @@ export class MapboxAdapter implements MapProviderAdapter {
             avatarImg.style.objectFit = "cover";
             avatarContainer.appendChild(avatarImg);
           } else {
-            const initials = user.name
-              .split(" ")
-              .map((n) => n[0])
-              .join("")
-              .substring(0, 2)
-              .toUpperCase() || "?";
+            const initials =
+              user.name
+                .split(" ")
+                .map((n) => n[0])
+                .join("")
+                .substring(0, 2)
+                .toUpperCase() || "?";
             const initialsSpan = document.createElement("span");
             initialsSpan.textContent = initials;
             initialsSpan.style.color = "#FFFFFF";
@@ -1746,10 +2220,18 @@ export class MapboxAdapter implements MapProviderAdapter {
             contactBtn.style.boxShadow = "var(--shadow-raised)";
             contactBtn.style.transition = "transform 0.1s ease, opacity 0.2s ease";
 
-            contactBtn.addEventListener("mouseenter", () => { contactBtn.style.opacity = "0.9"; });
-            contactBtn.addEventListener("mouseleave", () => { contactBtn.style.opacity = "1"; });
-            contactBtn.addEventListener("mousedown", () => { contactBtn.style.transform = "scale(0.98)"; });
-            contactBtn.addEventListener("mouseup", () => { contactBtn.style.transform = "scale(1)"; });
+            contactBtn.addEventListener("mouseenter", () => {
+              contactBtn.style.opacity = "0.9";
+            });
+            contactBtn.addEventListener("mouseleave", () => {
+              contactBtn.style.opacity = "1";
+            });
+            contactBtn.addEventListener("mousedown", () => {
+              contactBtn.style.transform = "scale(0.98)";
+            });
+            contactBtn.addEventListener("mouseup", () => {
+              contactBtn.style.transform = "scale(1)";
+            });
 
             if (user.contactChannelKind === "whatsapp") {
               contactBtn.textContent = "WhatsApp Message";
@@ -1777,7 +2259,7 @@ export class MapboxAdapter implements MapProviderAdapter {
             closeButton: true,
             closeOnClick: true,
             offset: 25,
-            className: "apple-squircle-popup"
+            className: "apple-squircle-popup",
           })
             .setLngLat([user.longitude, user.latitude])
             .setDOMContent(popupEl)
@@ -1862,12 +2344,15 @@ export class MapboxAdapter implements MapProviderAdapter {
     orb.style.boxShadow = "var(--shadow-raised)";
 
     const fallback = document.createElement("span");
-    fallback.textContent = identityName === "Me" ? "Me" : identityName
-      .split(/\s+/)
-      .filter(Boolean)
-      .slice(0, 2)
-      .map((part) => part[0]?.toUpperCase() ?? "")
-      .join("") || "Me";
+    fallback.textContent =
+      identityName === "Me"
+        ? "Me"
+        : identityName
+            .split(/\s+/)
+            .filter(Boolean)
+            .slice(0, 2)
+            .map((part) => part[0]?.toUpperCase() ?? "")
+            .join("") || "Me";
     fallback.style.fontSize = "11px";
     fallback.style.fontWeight = "700";
     fallback.style.lineHeight = "1";
@@ -1926,6 +2411,24 @@ export class MapboxAdapter implements MapProviderAdapter {
   }
 
   /**
+   * Context restoration retains the JavaScript style, including our route.
+   * Remove that custom paint before probing the restored framebuffer so a
+   * bright route over a black basemap cannot certify the basemap as usable.
+   */
+  private removeRouteForRendererProbe(map: MapboxMap): boolean {
+    try {
+      if (map.getLayer(ROUTE_LAYER_ID)) map.removeLayer(ROUTE_LAYER_ID);
+      if (map.getSource(ROUTE_SOURCE_ID)) map.removeSource(ROUTE_SOURCE_ID);
+      return true;
+    } catch {
+      // If isolation itself is unsafe, keep the overlay and take the bounded
+      // renderer recovery path instead of trusting contaminated pixels.
+      this.rendererErrorObserved = true;
+      return false;
+    }
+  }
+
+  /**
    * Reconcile the live style with `routeCoords`.
    *
    * Existence is asked of the map every time rather than tracked in a field.
@@ -1960,7 +2463,7 @@ export class MapboxAdapter implements MapProviderAdapter {
      * We are not guessing at Mapbox's state; we are recording the event it tells
      * us about.
      */
-    if (!this.styleReady) return;
+    if (!this.styleReady || !this.styleUsable) return;
 
     const hasLayer = Boolean(map.getLayer(ROUTE_LAYER_ID));
     const hasSource = Boolean(map.getSource(ROUTE_SOURCE_ID));
@@ -1980,7 +2483,7 @@ export class MapboxAdapter implements MapProviderAdapter {
     const data: RouteFeature = {
       type: "Feature",
       properties: {},
-      geometry: { type: "LineString", coordinates: coords }
+      geometry: { type: "LineString", coordinates: coords },
     };
 
     if (hasSource) map.getSource(ROUTE_SOURCE_ID)?.setData(data);
@@ -1997,7 +2500,7 @@ export class MapboxAdapter implements MapProviderAdapter {
         type: "line",
         source: ROUTE_SOURCE_ID,
         layout: { "line-cap": "round", "line-join": "round" },
-        paint: { "line-color": colour, "line-width": ROUTE_WIDTH_PX }
+        paint: { "line-color": colour, "line-width": ROUTE_WIDTH_PX },
       },
       this.firstSymbolLayerId(map)
     );
@@ -2051,17 +2554,25 @@ export class MapboxAdapter implements MapProviderAdapter {
 
   public destroy(): void {
     this.styleGeneration += 1;
+    this.mapEpoch += 1;
     this.clearStyleLoadTimer();
+    this.clearStyleFrameTimer();
     this.clearStyleReadinessListeners();
+    this.detachMapLifecycleListeners();
     if (this.mapInstance) {
       this.clearMarkers();
       this.setUserPosition(null);
-      this.mapInstance.off("error", this.handleMapError);
       // No removeLayer/removeSource here. `remove()` destroys the style whole,
       // and reaching into a style mid-teardown is how you throw on the way out.
       // Markers are the exception above precisely because they are NOT the
       // style's — they are DOM nodes, and nothing else would collect them.
-      this.mapInstance.remove();
+      try {
+        this.mapInstance.remove();
+      } catch {
+        // Teardown is best-effort after listeners and epochs are invalidated.
+        // Never create a replacement during destroy and never let a provider
+        // teardown exception escape into React unmount.
+      }
       this.mapInstance = null;
     }
     this.styleReady = false;
@@ -2069,10 +2580,20 @@ export class MapboxAdapter implements MapProviderAdapter {
     this.styleLoadAttempt = 0;
     this.styleReadyListener = null;
     this.styleRenderListener = null;
+    this.styleListenerOwner = null;
     this.styleInstalledGeneration = null;
     this.pendingMutationSafeGeneration = null;
     this.styleInstallInProgressGeneration = null;
     this.styleErrorObserved = false;
+    this.rendererErrorObserved = false;
+    this.contextLost = false;
+    this.contextRecoveryStyleWasReady = false;
+    this.routeIsolationFailed = false;
+    this.automaticMapReconstructions = 0;
+    this.lastFailureReason = null;
+    this.detachedRecoverySnapshot = null;
+    this.mapboxgl = null;
+    this.mapContainer = null;
     this.styleLifecycleListener = null;
     this.routeCoords = null;
     this.routeTint = "accent";
