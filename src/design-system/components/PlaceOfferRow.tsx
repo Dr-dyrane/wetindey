@@ -49,15 +49,15 @@ function freshnessLabel(offer: PlaceOffer) {
   }
 }
 
-function ItemArtwork({ offer }: { offer: PlaceOffer }) {
-  const [imageBroken, setImageBroken] = useState(false);
-  const hasLicensedImage = Boolean(
-    offer.imageUrl &&
-      offer.imageAttribution &&
-      offer.imageLicense &&
-      offer.imageSourceUrl
-  );
-  const showImage = hasLicensedImage && !imageBroken;
+function ItemArtwork({
+  offer,
+  showImage,
+  onImageError,
+}: {
+  offer: PlaceOffer;
+  showImage: boolean;
+  onImageError: () => void;
+}) {
   const artwork = showImage ? (
     <Image
       src={offer.imageUrl!}
@@ -66,7 +66,7 @@ function ItemArtwork({ offer }: { offer: PlaceOffer }) {
       sizes="76px"
       className="object-cover"
       unoptimized
-      onError={() => setImageBroken(true)}
+      onError={onImageError}
     />
   ) : (
     <div
@@ -76,11 +76,6 @@ function ItemArtwork({ offer }: { offer: PlaceOffer }) {
       <Wheat className="h-7 w-7" strokeWidth={1.75} />
     </div>
   );
-
-  const credit =
-    showImage && offer.imageAttribution
-      ? `${offer.imageAttribution}${offer.imageLicense ? ` · ${offer.imageLicense}` : ""}`
-      : null;
 
   return (
     <figure className="w-[76px] shrink-0">
@@ -101,11 +96,6 @@ function ItemArtwork({ offer }: { offer: PlaceOffer }) {
           {artwork}
         </div>
       )}
-      {credit ? (
-        <figcaption className="mt-1 break-words text-caption-2 leading-snug text-text-tertiary">
-          {credit}
-        </figcaption>
-      ) : null}
     </figure>
   );
 }
@@ -115,6 +105,17 @@ function ItemArtwork({ offer }: { offer: PlaceOffer }) {
  * availability, freshness, observation date and provenance remain attached.
  */
 export function PlaceOfferRow({ offer }: { offer: PlaceOffer }) {
+  const [imageBroken, setImageBroken] = useState(false);
+  const showImage = Boolean(
+    offer.imageUrl &&
+      offer.imageAttribution &&
+      offer.imageLicense &&
+      offer.imageSourceUrl &&
+      !imageBroken
+  );
+  const imageCredit = showImage
+    ? `${offer.imageAttribution} · ${offer.imageLicense}`
+    : null;
   const status: StatusKind =
     offer.trust?.status ??
     (offer.availabilityState === "unavailable" ? "unavailable" : "caution");
@@ -130,11 +131,16 @@ export function PlaceOfferRow({ offer }: { offer: PlaceOffer }) {
 
   return (
     <article
-      className="squircle-card flex w-full items-start gap-3 bg-surface-card p-3
+      className="squircle-card grid w-full grid-cols-[76px_minmax(0,1fr)]
+                 items-start gap-x-3 gap-y-2 bg-surface-card p-3
                  shadow-card"
       aria-label={`${offer.itemName}, ${priceLabel(offer)} per ${offer.unit}`}
     >
-      <ItemArtwork offer={offer} />
+      <ItemArtwork
+        offer={offer}
+        showImage={showImage}
+        onImageError={() => setImageBroken(true)}
+      />
 
       <div className="min-w-0 flex-1 py-0.5">
         <div className="flex items-start justify-between gap-2">
@@ -169,6 +175,12 @@ export function PlaceOfferRow({ offer }: { offer: PlaceOffer }) {
           <span>{offer.trust?.provenanceLabel ?? "No observed reports"}</span>
         </div>
       </div>
+
+      {imageCredit ? (
+        <p className="col-span-2 break-words text-caption-2 leading-snug text-text-tertiary">
+          Photo: {imageCredit}
+        </p>
+      ) : null}
     </article>
   );
 }

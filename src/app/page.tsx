@@ -1210,7 +1210,7 @@ export default function HomePage() {
     if (activeCategory !== "food" || !detailPlace) return undefined;
 
     return (
-      <div className="flex h-full min-h-0 flex-col gap-4 overflow-hidden">
+      <div className="flex min-h-full flex-col gap-4 md:h-full md:min-h-0 md:overflow-hidden">
         <div className="flex shrink-0 items-start justify-between">
           <div className="flex-1 pr-4">
             <h2 className="text-headline tracking-tight text-text-primary">{detailPlace.name}</h2>
@@ -1250,7 +1250,7 @@ export default function HomePage() {
           <h4 className="shrink-0 text-footnote text-text-secondary">
             Prices in market
           </h4>
-          <div className="min-h-0 flex-1 overflow-y-auto pr-1">
+          <div className="flex-1 pr-1 md:min-h-0 md:overflow-y-auto">
             <AsyncList
               items={placeOffers}
               isLoading={isPlaceOffersLoading}
@@ -1275,7 +1275,11 @@ export default function HomePage() {
         </div>
 
         {/* One real action, replacing two that had no onClick. */}
-        <div className="shrink-0 pt-1">
+        <div
+          className="stack-surface sticky z-10 shrink-0 py-2
+                     bottom-[calc(max(var(--sheet-hidden,0px),var(--safe-area-bottom))+24px)]
+                     md:static md:py-0 md:pt-1"
+        >
           <Button
             variant="primary"
             size="md"
