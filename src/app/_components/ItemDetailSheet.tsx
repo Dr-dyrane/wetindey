@@ -2,11 +2,12 @@
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
-import { AlertTriangle, MapPin } from "lucide-react";
+import { IconOrb } from "@/design-system/components/IconOrb";
 import { ModalSheet } from "@/design-system/components/ModalSheet";
 import { SheetPicker } from "@/design-system/components/SheetPicker";
 import { StatusDot, type StatusKind } from "@/design-system/components/StatusBadge";
 import { CardListSkeleton } from "@/design-system/components/Skeleton";
+import { SolidIcon } from "@/design-system/icons/SolidIcon";
 import { formatDistance } from "@/lib/geospatial";
 import {
   getItemNarrowingOptions,
@@ -543,9 +544,11 @@ export function ItemDetailSheet({
 
         {error ? (
           <div className="mx-4 space-y-2 squircle-card bg-surface dark:bg-surface-elevated p-5 text-center shadow-card">
-            <span className="inline-flex squircle-full bg-status-unavailable-bg p-3 text-status-unavailable-fg">
-              <AlertTriangle className="h-5 w-5" />
-            </span>
+            <div className="flex justify-center">
+              <IconOrb size={48} tone="status-unavailable">
+                <SolidIcon name="warning" size={24} />
+              </IconOrb>
+            </div>
             <p className="text-headline text-text-primary">{error}</p>
             <p className="text-footnote text-text-secondary">Check your network and try again.</p>
           </div>
@@ -555,7 +558,11 @@ export function ItemDetailSheet({
           </div>
         ) : rows.length === 0 ? (
           <div className="mx-4 space-y-2 squircle-card bg-surface dark:bg-surface-elevated p-6 text-center shadow-card">
-            <MapPin className="mx-auto h-6 w-6 text-text-tertiary" />
+            <div className="flex justify-center">
+              <IconOrb tone="context-location">
+                <SolidIcon name="map-pin" size={16} />
+              </IconOrb>
+            </div>
             <p className="text-headline text-text-primary">Nothing within {radiusKm} km</p>
             <p className="text-footnote text-text-secondary">
               No one has reported {item?.name.toLowerCase() ?? "this"} near {areaName} yet. Widen the

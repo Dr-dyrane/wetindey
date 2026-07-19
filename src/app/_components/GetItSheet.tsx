@@ -1,10 +1,12 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { Navigation, Share2, Copy, Phone, Star } from "lucide-react";
+import { Star } from "lucide-react";
+import { IconOrb } from "@/design-system/components/IconOrb";
 import { ModalSheet } from "@/design-system/components/ModalSheet";
 import { ListRow, ListGroup } from "@/design-system/components/ListRow";
 import { StatusBadge, type StatusKind } from "@/design-system/components/StatusBadge";
+import { SolidIcon } from "@/design-system/icons/SolidIcon";
 import {
   getPlaceContactPolicy,
   getReviewsForEntity,
@@ -538,7 +540,8 @@ export function GetItSheet({ open, onClose, target, origin, onGoThere }: GetItSh
 
             <ListGroup>
               <ListRow
-                icon={<Navigation />}
+                icon={<SolidIcon name="navigation" size={16} />}
+                iconTone="context-navigation"
                 label="Go there"
                 detail={platform ? mapsAppName(platform) : undefined}
                 onClick={handleGoThere}
@@ -546,9 +549,9 @@ export function GetItSheet({ open, onClose, target, origin, onGoThere }: GetItSh
               <ListRow
                 icon={
                   canShare ? (
-                    <Share2 />
+                    <SolidIcon name="share" size={16} />
                   ) : (
-                    <Copy />
+                    <SolidIcon name="copy" size={16} />
                   )
                 }
                 label={shareLabel}
@@ -578,7 +581,8 @@ export function GetItSheet({ open, onClose, target, origin, onGoThere }: GetItSh
                 dial. The row states the fact and the footer gives the reason. */}
             <ListGroup footer={contactText.footer ?? undefined}>
               <ListRow
-                icon={<Phone />}
+                icon={<SolidIcon name="phone" size={16} />}
+                iconTone="context-contact"
                 label="Contact seller"
                 detail={contactText.detail}
                 chevron={false}
@@ -598,7 +602,11 @@ export function GetItSheet({ open, onClose, target, origin, onGoThere }: GetItSh
                 <p className="text-footnote text-text-secondary py-2">Loading reviews...</p>
               ) : reviewsList.length === 0 ? (
                 <div className="rounded-[20px] bg-fillSecondary px-4 py-8 text-center">
-                  <Star className="mx-auto mb-2 h-7 w-7 text-text-tertiary opacity-40" />
+                  <div className="mb-2 flex justify-center">
+                    <IconOrb tone="rating">
+                      <SolidIcon name="star" size={16} />
+                    </IconOrb>
+                  </div>
                   <p className="text-subhead font-semibold text-text-secondary">Reviews unavailable</p>
                   <p className="text-caption-1 text-text-tertiary mt-1 max-w-[240px] mx-auto leading-relaxed">
                     We are preparing this feature with safety and moderation in mind.
