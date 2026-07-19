@@ -368,18 +368,18 @@ changing theme is not a refuted lane: Maps found all three supplied JPEGs byte-i
 usable dark map. No Canvas/Adapter code changed after `041dfb5`, and live diagnostics were
 unavailable. Remove it from refutation accounting; no Maps source claim is active.
 
-##### Motion — compact/mid sheet geometry recalibration — ACTIVE
+##### Motion — compact/mid sheet geometry recalibration — COMPLETE / STATIC PASS
 
 Owner: Controller temporary recovery claim. Exclusive path:
 `src/design-system/components/BottomSheet.tsx`.
 
-Founder screenshots establish that the prior dead-space correction did not produce an
-acceptable compact/medium result. Tighten the perceived compact/medium handle reservation
-without letting its >=44px target cover child content, and restore a restrained shared
-horizontal content gutter. Preserve expanded compact-detent and regular/desktop geometry,
-drag/snap/scroll handoff, safe areas, focus, reduced motion, modal stacking, and all
-child-owned content/data behavior. No `page.tsx`, `ModalSheet.tsx`, screen sheet, map,
-action, or data path is authorized. Independent refutation is required before release.
+Founder screenshots established that the prior dead-space correction did not produce an
+acceptable compact/medium result. Pushed `b8c35e9` removes the handle visual's downward
+offset while retaining its in-flow >=44px target, and adds a restrained compact/mid-only
+horizontal content gutter. Expanded compact-detent and regular/desktop geometry, drag/snap/
+scroll handoff, safe areas, focus, reduced motion, modal stacking, and child-owned
+content/data behavior remain unchanged. Independent diff-only refutation PASSed; runtime
+visual confirmation remains a later reused-tab gate. The path is released.
 
 ##### Motion — compact sheet dead-space correction — COMPLETE / PASS
 
