@@ -33,6 +33,8 @@ import {
   shouldMoveInitialFocus,
 } from "../src/design-system/components/ModalSheet";
 import {
+  resetDetailScrollPosition,
+  resolveDetailScrollLifecycle,
   restoreLockedScrollPosition,
   shouldContainTerminalScroll,
   shouldResetDetailScroll,
@@ -385,11 +387,37 @@ test("SheetPicker pushes into an existing presentation shell", () => {
 test("a newly pushed detail resets only its persistent level-one scroller", () => {
   assert.equal(shouldResetDetailScroll(false, true), true);
   assert.equal(shouldResetDetailScroll(true, true), false);
+  const opening = resolveDetailScrollLifecycle(false, true);
+  assert.deepEqual(opening, {
+    shouldReset: true,
+    committedOpen: true,
+    cleanupOpen: false,
+  });
+  const strictReplay = resolveDetailScrollLifecycle(opening.cleanupOpen, true);
+  assert.equal(strictReplay.shouldReset, true);
+  const asyncUpdate = resolveDetailScrollLifecycle(opening.committedOpen, true);
+  assert.equal(asyncUpdate.shouldReset, false);
+  const staleDetailPosition = { scrollTop: 420, scrollLeft: 9 };
+  assert.equal(resetDetailScrollPosition(staleDetailPosition), true);
+  assert.deepEqual(staleDetailPosition, { scrollTop: 0, scrollLeft: 0 });
+  assert.equal(resetDetailScrollPosition(staleDetailPosition), false);
+  assert.equal(resetDetailScrollPosition(null), false);
   assert.match(navigationStackSource, /ref=\{detailScrollerRef\}/);
   assert.match(
     navigationStackSource,
-    /scroller\.scrollTop = 0;\s+scroller\.scrollLeft = 0;/
+    /resetDetailScrollPosition\(detailScrollerRef\.current\);/
   );
+  assert.equal(
+    (navigationStackSource.match(/requestAnimationFrame\(\(\) => \{/g) ?? []).length,
+    2
+  );
+  assert.match(navigationStackSource, /cancelAnimationFrame\(settleFrame\)/);
+  assert.match(navigationStackSource, /cancelAnimationFrame\(restoreFrame\)/);
+  assert.match(
+    navigationStackSource,
+    /wasDetailOpenRef\.current = lifecycle\.cleanupOpen;/
+  );
+  assert.match(navigationStackSource, /\[overflow-anchor:none\]/);
   assert.doesNotMatch(navigationStackSource, /listNode[\s\S]{0,120}scrollTo/);
 });
 

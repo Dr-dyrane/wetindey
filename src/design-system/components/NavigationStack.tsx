@@ -52,6 +52,14 @@ export function shouldResetDetailScroll(previousOpen: boolean, currentOpen: bool
   return currentOpen && !previousOpen;
 }
 
+export function resolveDetailScrollLifecycle(previousOpen: boolean, currentOpen: boolean) {
+  return {
+    shouldReset: shouldResetDetailScroll(previousOpen, currentOpen),
+    committedOpen: currentOpen,
+    cleanupOpen: previousOpen,
+  };
+}
+
 export function shouldContainTerminalScroll(
   metrics: ScrollMetrics,
   deltaY: number
@@ -72,6 +80,10 @@ export function restoreLockedScrollPosition(
   target.scrollTop = lockedTop;
   target.scrollLeft = lockedLeft;
   return true;
+}
+
+export function resetDetailScrollPosition(target: MutableScrollPosition | null): boolean {
+  return target ? restoreLockedScrollPosition(target, 0, 0) : false;
 }
 
 /**
@@ -126,14 +138,24 @@ export function NavigationStack({
   const content = detailNode ?? heldDetail;
 
   useLayoutEffect(() => {
-    if (shouldResetDetailScroll(wasDetailOpenRef.current, isOpen)) {
-      const scroller = detailScrollerRef.current;
-      if (scroller) {
-        scroller.scrollTop = 0;
-        scroller.scrollLeft = 0;
-      }
+    const lifecycle = resolveDetailScrollLifecycle(wasDetailOpenRef.current, isOpen);
+    let settleFrame = 0;
+    let restoreFrame = 0;
+    if (lifecycle.shouldReset) {
+      resetDetailScrollPosition(detailScrollerRef.current);
+      settleFrame = requestAnimationFrame(() => {
+        resetDetailScrollPosition(detailScrollerRef.current);
+        restoreFrame = requestAnimationFrame(() => {
+          resetDetailScrollPosition(detailScrollerRef.current);
+        });
+      });
     }
-    wasDetailOpenRef.current = isOpen;
+    wasDetailOpenRef.current = lifecycle.committedOpen;
+    return () => {
+      if (settleFrame !== 0) cancelAnimationFrame(settleFrame);
+      if (restoreFrame !== 0) cancelAnimationFrame(restoreFrame);
+      wasDetailOpenRef.current = lifecycle.cleanupOpen;
+    };
   }, [isOpen]);
 
   /**
@@ -266,7 +288,7 @@ export function NavigationStack({
         <div
           ref={detailScrollerRef}
           onWheel={containTerminalWheel}
-          className={`flex-1 overflow-y-auto overscroll-y-none px-6 pb-[calc(max(var(--sheet-hidden,0px),var(--safe-area-bottom))+24px)] ${
+          className={`flex-1 overflow-y-auto overscroll-y-none [overflow-anchor:none] px-6 pb-[calc(max(var(--sheet-hidden,0px),var(--safe-area-bottom))+24px)] ${
             onDetailBack && content ? "pt-2" : "pt-6"
           }`}
         >
