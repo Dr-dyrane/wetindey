@@ -123,14 +123,19 @@ function ItemArtwork({
           {status ? (
             <StatusBadge
               kind={status}
-              className="backdrop-blur-sm shadow-[0_2px_10px_rgb(0_0_0_/_0.22)]"
+              className="rounded-[16px] border-none bg-black/78 px-2.5 py-1 text-white
+                         shadow-[0_3px_12px_rgb(0_0_0_/_0.42)] backdrop-blur-sm
+                         [text-shadow:0_1px_2px_rgb(0_0_0_/_0.45)] ring-0
+                         forced-colors:bg-[Canvas] forced-colors:text-[CanvasText]
+                         forced-colors:outline forced-colors:outline-1 forced-colors:outline-offset-[-1px]"
             >
               {statusLabel}
             </StatusBadge>
           ) : (
             <span
-              className="inline-flex items-center gap-1.5 rounded-full bg-fillSecondary px-2 py-0.5 text-[11px] text-text-secondary
-                         shadow-[0_2px_10px_rgb(0_0_0_/_0.22)] backdrop-blur-sm
+              className="inline-flex items-center gap-1.5 rounded-[14px] border-none bg-black/78 px-2.5 py-1 text-[11px] text-white
+                         shadow-[0_3px_12px_rgb(0_0_0_/_0.42)] backdrop-blur-sm
+                         [text-shadow:0_1px_2px_rgb(0_0_0_/_0.45)]
                          forced-colors:bg-[Canvas] forced-colors:text-[CanvasText]
                          forced-colors:outline forced-colors:outline-1 forced-colors:outline-offset-[-1px]"
             >
@@ -232,7 +237,7 @@ export function PlaceOfferRow({
               {offer.itemName}
             </h5>
             <p className="truncate text-caption-1 text-text-secondary">{offer.variantName}</p>
-            <span className="mt-auto truncate pt-2 text-caption-2 text-text-secondary">
+            <span className="mt-auto inline-flex max-w-fit items-center gap-1 rounded-[14px] border-none bg-fillSecondary px-2.5 py-1 text-[11px] font-medium text-text-primary">
               {freshnessLabel(offer)}
             </span>
           </>
