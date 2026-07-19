@@ -156,7 +156,7 @@
 <body>
   <div class="card">
     <h1>You dey offline</h1>
-    <p>We never get your prices for this phone yet. Once network come back, the map go load and e go dey work offline after that.</p>
+    <p>We never get live local information for this phone yet. Once network come back, the map go load and e go work offline after that.</p>
 
     <div class="pending" id="pending">
       <strong id="pending-count"></strong>
@@ -184,7 +184,7 @@
         if (Array.isArray(queue) && queue.length > 0) {
           var el = document.getElementById('pending');
           document.getElementById('pending-count').textContent =
-            queue.length === 1 ? '1 price report dey wait' : queue.length + ' price reports dey wait';
+            queue.length === 1 ? '1 local report dey wait' : queue.length + ' local reports dey wait';
           el.setAttribute('data-has-queue', 'true');
         }
       } catch (e) {
