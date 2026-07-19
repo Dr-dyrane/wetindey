@@ -10,7 +10,7 @@ anything. One owner per path, always.
 
 Controller owner: this orchestrator, over exactly `LANES.md` and
 `docs/architecture/RELEASE-CONTROLLER.md`. Current `main` and `origin/main` are aligned at
-`042efd359f8bf56fcd5470d42a975ebe6ac640d1`; the only uncommitted paths are explicitly
+`708845b41d83836e4905fcbc23b8b11a63e5337c`; the only uncommitted paths are explicitly
 claimed implementation work.
 
 **Decision: PATH-SCOPED PUSHES AUTHORIZED; DEPLOYMENT REMAINS EVIDENCE-GATED.** Independently
@@ -33,31 +33,15 @@ grayscale visual refutation plus its focused contract. All five foundation paths
 released. The persistent Iconography lead moves directly to the exact two-path Item
 Detail/Get-It solid-glyph adoption lane recorded below.
 
-### Active lane: ephemeral Production database-target proof
+### Closed: ephemeral Production database-target proof
 
-Owner: persistent Security & Privacy Engineering Lead
-`019f75e5-8c04-74c0-9392-d9f741a7a131`.
-
-Exact temporary source paths:
-
-- `src/app/api/internal/db-target-proof/route.ts`
-- `src/lib/security/db-target-proof.ts`
-- `scripts/db-target-proof-contract.test.ts`
-
-Purpose: resolve the Sensitive-environment ambiguity without revealing credentials. The
-route must be Production-only, `POST`-only, protected by a short-lived random bearer token
-plus caller nonce, private/no-store, rate bounded, and return only keyed HMAC fields for
-normalized connection identity and deployment identity. It must never connect to the
-database or return/log raw host, database, role, URL, password, token, identifier lengths,
-or environment values.
-
-Operations authority is limited to a staged Production-environment deployment without
-canonical-domain aliasing, comparison against the local unpooled target inside a
-non-logging process, and immediate route/token removal after proof. The old deployment
-must become unusable through token expiry. Independent security refutation is mandatory.
-This lane grants no migration, schema, seed, application-feature, canonical deployment,
-or Preview remediation authority. A match proves target identity only; corrected `0012`
-still requires separate ledger/schema/role/backup/scheduler/default-off gates.
+The isolated `785d327` HMAC proof produced an exact **MATCH** across authority, compute,
+database, principal, options, and deployment. Commit `168039f`, pushed to current main,
+removed the one-shot temporary proof route, environment, deployment, and Blob claim. No
+temporary proof path remains owned. The match satisfies target identity only; corrected
+`0012` remains separately fail-closed on ledger/schema compatibility, execution-role
+capability, default-off controls, scheduler proof, backup/evidence, and independent
+refutation.
 
 ### Pinned persistent employee roster
 
@@ -68,26 +52,34 @@ to idle rather than creating a replacement task.
 
 | Pinned employee | Current state | Next bounded deliverable |
 |---|---|---|
-| Nearby Presence Platform Engineer | Active exact five-path retention scheduler lane | Implement only the fail-closed dedicated safety-database cleanup route, helper, cadence/configuration, and focused contract recorded below |
+| Nearby Presence Platform Engineer | Production `0012` operational PASS; exact source paths released | Ledger/fingerprint/idempotence, least-privilege scheduler, cleanup/retention, default-off containment, and independent operational refutation passed; remain persistent for a later bounded assignment |
 | Program Management & Functional Organization Lead | Idle | Reconcile portfolio proposals into CEO-reviewable lane candidates without editing product paths |
-| Contribution Integrity & Moderation Engineer | Available, no active path claim | Controller runtime artifact closed containment with PASS; all five paths are released. `0013+` remains planning-only behind its separate migration ordering and activation gates |
-| Human Interface Design Engineer | Idle; Place Offer Row hierarchy and availability semantics complete | `ecf8470` and `d807538` are on `main`; edge-bleed hierarchy and explicit confirmed/caution/unavailable semantics passed static refutation and direct runtime evidence. Path released |
+| Contribution Integrity & Moderation Engineer `019f75a3-f50d-7180-8e92-0a7aabd8a98c` | Active pathless `0013` operational activation gate; all source paths released | Run Preview then Production evidence in order: exact identity/fingerprint, migration/ledger/schema/RPC/grant proof, runtime flags/role, guarded smoke, disable/rollback, and independent refutation |
+| Human Interface Design Engineer `019f75a5-0fc6-7f40-9a0f-8097ead3b45d` | Market release REFUTED; exact two paths retained | `23b5071` deployment entered `Map no fit load` and retry failed; `www.wetindey.live` is rolled back to proven `4e3820ab` while Maps determines causality without a speculative source claim |
+| HI Quality & Regression Lead | Active exact two-document acceptance governance | Produce a read-only current-violation inventory and bounded disjoint implementation/refutation proposals; preserve Maps, Presence, and ADR locks |
 | Food Evidence Provenance & Source Governance Lead | Standing review authorization | Classify recurring NBS/current Food evidence; no live promotion or shared migration |
 | Development Food Evidence Fixture Engineer | Idle | Append-only development evidence fixture after exact artifact-path claim; never mutate recurring seed data |
 | Food Source Authenticity & Attribution Refuter | Idle refuter | Independently verify each staged source artifact against original evidence and terms |
 | Search & Ranking Engineer | Available, no active claim | The deployed-current-main `97b74af` disposable SQL evidence gate passed and is released; remain persistent for the next bounded Search/Ranking assignment |
-| Iconography & Visual Systems Lead | Active exact one-file Confirm Visit correction; Report Price released | `b93761b` unavailable banner runtime PASS releases `ReportPriceSheet.tsx`. Own only `ConfirmVisitSheet.tsx` for the identical caution-status warning replacement |
-| Maps Engineering Lead | Source commits `d100299` + `d5daae3` pending independent source/runtime refutation | Retain `page.tsx`, `MapboxCanvas.tsx`, and `MapboxAdapter.ts` until PASS; no release is implied |
-| Client Reliability & Offline Engineer | Prepared, unclaimed | H38 one-file rejected-search containment waits for the active Market Details slice to release `src/app/page.tsx` |
-| Security & Privacy Engineering Lead | Active ephemeral Production DB-target proof | Owns only the three temporary proof paths above; CSP collector source remains released and production CSP remains fail-open/report-only |
-| Motion & Interaction Engineer | Functional containment PASS; terminal-tail follow-up retains two paths | Retains only `NavigationStack.tsx` and `motion-contracts.test.ts`; `page.tsx` released to Maps. Remaining defect is 45–50px terminal whitespace versus 24px |
+| Iconography & Visual Systems Lead | Iconography source lanes complete / released | `9b74a31`, `ed5a6cb`, `a2a7104`, `b93761b`, and `ae47513` are current-main ancestors; foundation, intent adoption, Report Price, and Confirm Visit source paths are released |
+| Maps & Location Experience | Active pathless systemic map incident; exact source claim pending Maps confirmation | Rollback to `4e3820ab` is verified but visible map failure persists, ruling out Market causality; likely Adapter/contract correction is not active until Maps confirms it |
+| Client Reliability & Offline Engineer `019f75d3-65d0-7033-bef7-11a83aca9723` | Bootstrap visibility complete / released with Production PASS | `d42454b` passed prompt initial shell on `dpl_Dat5W4KZz6wNYb37jcCq1DKjyKrY`; `ThemeContext.tsx` released |
+| Security & Privacy Engineering Lead | Production DB-target proof closed | Exact HMAC match is recorded; `168039f` removed every temporary proof claim. CSP collector source remains released and production CSP remains fail-open/report-only |
+| Motion & Interaction Engineer `019f71ca-8646-7452-9171-439f5d78e71a` | Idle persistent seat; no path claim | H10 is complete/released at pushed `091fe8e`; the obsolete Frameworks replacement task is not a current owner |
+| Quality & Release Controller | Idle persistent release employee | Q1 gate passed independently at pushed `569b1bb`; its script is released. Thread `019f7865-c497-71a3-89a2-4effd79b557b` remains available and must not be archived |
+| Product & Data Governance Architect `019f7599-0eaa-7423-9ebf-a1bfea8efe37` | Active exact one-file Community Trust & Contribution Loop governance | Own only new `docs/product/COMMUNITY-TRUST-AND-CONTRIBUTION-LOOP.md`; all ADRs, product code, and current lanes are read-only evidence |
+| Developer Relations & Engineering Enablement `019f7995-5b7b-7ee1-81ef-2c3a3c57b836` | Active exact documentation/process worklog protocol | Own only the recorded docs/process paths and new departmental logs; no app, ADR, package, schema, or migration authority |
+| Catalog Stewardship `019f7999-37d0-7231-8b89-0e71c2569ce2` | Active exact one-file catalog-workflow governance | Own only new `docs/product/CATALOG-STEWARDSHIP-WORKFLOW.md`; no code, schema, migration, ADR, or LANES authority |
 
 ### Authoritative current active disjoint lanes — `d5daae3` reconciliation
 
 This section is the current ownership authority. Historical rows below remain evidence of
 their time and do not override these exact claims.
 
-#### Nearby Presence retention scheduler
+Every active lane must return either its path-scoped commit or an exact, evidence-backed
+blocker; it may not retain paths through a silent or non-specific status update.
+
+#### Nearby Presence retention scheduler — closed / released
 
 Owner: Nearby Presence Platform Engineer. Exact paths:
 
@@ -97,14 +89,657 @@ Owner: Nearby Presence Platform Engineer. Exact paths:
 - existing `.env.example`
 - new `scripts/presence/presence-retention-cleanup-contract.test.ts`
 
-Contract: GET-only and `CRON_SECRET` protected; execute exactly
-`SELECT public.presence_run_retention_cleanup()` through dedicated
-`PRESENCE_SAFETY_DATABASE_URL_UNPOOLED`; never fall back to `DATABASE_URL`; schedule
-`*/15`; remain inert and fail closed before corrected `0012` is present.
+Production operational evidence now **PASS**es: the least-privilege scheduler uses the
+dedicated safety database, has the required credential/deployment, returns `204` for
+cleanup, and proves retention. It remains GET-only, `CRON_SECRET` protected, and executes
+exactly `SELECT public.presence_run_retention_cleanup()` without any `DATABASE_URL`
+fallback. Release all five paths. The reciprocal product surface remains default-off with no
+peers; this operational PASS does not wire Presence UI.
 
-#### Concise product/legal copy
+#### Nearby Presence `0012` execution-role portability correction — closed / released
 
-Status: awaiting implementation owner. Exact paths:
+Status: closed / released Production operational PASS. Former exact paths:
+
+- `src/db/pillars/90-presence-security.sql`
+- `src/db/migrations/0012_guarded_presence.sql`
+- `scripts/presence/presence-migration-contract.test.ts`
+
+Production `0012` is operational **PASS**. The exact Production ledger/hash and declared
+schema/RPC/RLS/grant fingerprint match the proven release parent; the target identity remains
+the exact HMAC match already recorded across authority, compute, database, principal,
+options, and deployment. Production idempotence, least-privilege scheduler, cleanup `204`,
+retention, default-off/no-peer containment, and independent operational refutation all
+passed. Release the three exact paths. The `0012` snapshot and journal remain byte-identical
+and every `0011` byte remains frozen.
+
+#### Nearby Presence live-readiness audit and post-`0012` vertical
+
+Status: **REFUTED** live-readiness audit; queued and pathless post-`0012` vertical under
+the persistent Nearby Presence Platform Engineer. Current truthful containment remains:
+`page.tsx` hard-passes `sharedUsers=[]`; `getSharedUserLocations` returns `[]` with no
+caller; Manage Profile says “Not available yet”; and the self avatar is wired but is not
+reciprocal Presence. The dormant shared popup violates ADR-016 and must not be wired.
+
+After corrected `0012` is applied/proved and Maps releases its locks, the atomic vertical
+may request exact claims for new `src/app/presence-actions.ts`, new
+`scripts/presence/presence-private-pilot-contract.test.ts`, new
+`src/app/_components/NearbyPresenceControl.tsx`, and new
+`src/app/_components/PresenceTapCard.tsx`; then later integration through
+`src/app/page.tsx`, `src/design-system/components/MapboxCanvas.tsx`, and
+`src/integrations/maps/MapboxAdapter.ts`; and copy through `src/core/i18n/strings.ts` and
+`src/app/_components/ManageProfileSheet.tsx`. These are queued path sets, not current
+claims. Scheduler paths are released. Never source Presence from browsing
+`mapCenter`, `locationStore`, or a saved area—only fresh server-authorized foreground GPS
+may supply it.
+
+##### Private-pilot manifest convergence — QUEUED, NOT ACTIVE
+
+Readiness is now **EVIDENCE-REFUTED**, not merely queued. Frozen `0012` exposes stable
+`subject_account_id`, `subject_lease_id`, and `wave_id`, but no opaque capability table;
+activation/report lack idempotency; the block-versus-Wave safety race is unproved; a stable
+profile avatar URL is unsuitable; and app/account-deletion wiring is absent. No Presence
+UI or code claim may activate before a forward `0014` correction after Contribution `0013`.
+Presence Platform is preparing exact paths; `0014` remains pathless until its manifest is
+returned.
+
+The four new files are not independently activatable: without a live caller they would
+violate the repository's no-dead-service/component rule. The Platform manifest must choose
+either (A) a truthful live opt-in vertical wired through an existing Profile entry in the
+same commit, with no peer-visibility claim, or (preferably) (B) the complete live path
+through page/Canvas/Adapter plus Profile/copy after the map incident releases. Every new
+action and component must have its live caller in the same change.
+
+Human Interface, Motion, and Quality & Release independently converge on the same atomic
+first vertical. Do not activate it until the Nearby Presence Platform, Security & Privacy,
+and Client Reliability manifests agree and the release-critical Maps Adapter lane closes.
+The candidate first claim is exactly:
+
+- new `src/app/presence-actions.ts`
+- new `src/app/_components/NearbyPresenceControl.tsx`
+- new `src/app/_components/PresenceTapCard.tsx`
+- new `scripts/presence/presence-private-pilot-contract.test.ts`
+
+The later integration remains separately serialized over `src/app/page.tsx`,
+`src/design-system/components/MapboxCanvas.tsx`, and
+`src/integrations/maps/MapboxAdapter.ts`; copy/profile changes remain later over
+`src/core/i18n/strings.ts` and `src/app/_components/ManageProfileSheet.tsx`. The card must
+use `ModalSheet`, never the dormant Mapbox Popup, and expose exactly Wave, Block, Report, and
+Close. It must not expose contact, stable identifiers, or coordinates. QE's P-01..P-27
+fail-closed evidence manifest is a required gate, not runtime proof. These are prepared
+paths only; no Presence source claim is active until the three remaining manifests and the
+Maps Adapter release are recorded.
+
+##### Trusted People / Remote Presence governance — PROPOSED, PATHLESS
+
+Owner: Product & Data Governance. Proposed documentation-only paths, if free:
+
+- new `docs/adr/025-trusted-people-remote-presence.md`
+- `DECISIONS.md`
+- `WETINDEY_BIBLE.md`
+- `docs/architecture/SERVICE-ARCHITECTURE.md`
+
+This proposal has no schema, migration, server, or UI authorization and does not supersede
+the `0014` technical correction gate.
+
+##### Live-app modularization manifest — QUEUED, PATHLESS
+
+This is a sequential queue, not an active claim, while map/page hot paths remain locked.
+Allocate one slice at a time and wire its live caller in the same commit:
+
+1. new `src/app/_hooks/useLocationIdentity.ts` plus `src/app/page.tsx`;
+2. new `src/app/_components/MapPresentation.tsx` plus `src/app/page.tsx`, without
+   changing `MapboxCanvas.tsx` or `MapboxAdapter.ts`;
+3. new `src/app/_components/FoodResultsPanel.tsx` plus `src/app/page.tsx`, pure rendering
+   only.
+
+Every slice must preserve camera/browsing/device separation, one map mount, stable marker
+callbacks, async states, and sheet/action transitions. Do not use orphan `src/modules/`,
+`src/db/queries/`, or trust paths. Queue these behind map recovery, self-avatar/recenter
+correction, and Presence page integration sequencing; no path is currently owned.
+
+##### Live-app modularization Slice 1 — COMPLETE / RELEASED
+
+Owner: Core / Application Architecture worker. Exclusive paths:
+
+- new `src/app/_hooks/useLocationIdentity.ts`
+- `src/app/page.tsx`
+
+Move only the current browsing/device/self-location identity state, effects, and callback
+assembly into the live hook and wire `page.tsx` to it in the same commit. No semantic change,
+new store, Presence/shared-user behavior, Mapbox/Canvas/Adapter, action, schema, or migration
+changes. Preserve provenance, accuracy, timestamps, profile/avatar invalidation, recenter
+semantics, and every current output. Require exact source-shape comparison, focused
+type/static evidence, and independent default-to-REFUTED review. Later modularization slices
+remain pathless.
+
+##### P1 authentication recovery — ACTIVE
+
+Owner: Authentication / Client Reliability. Exclusive paths:
+
+- `src/app/_components/ProfileSheet.tsx`
+- `src/core/i18n/strings.ts`
+
+Reject malformed email locally before any Neon request and map provider `INVALID_EMAIL`
+truthfully. Replace the unbounded post-OTP spinner with a bounded session-refresh/recovery
+state that cannot hang forever. Preserve existing Neon and Hostinger delivery; no provider,
+SMTP, or email-webhook changes are authorized unless separate runtime evidence proves one.
+Current evidence distinguishes malformed-email `400 INVALID_EMAIL`, first-time-plus-alias
+signup suppression, and the old-account verified-spinner hang. Require focused static and
+independent runtime refutation of the bounded recovery behavior.
+
+##### Problem-report Actions modularization — ACTIVE
+
+Owner: Software Architecture / Developer Experience. Exclusive paths:
+
+- new `src/app/problem-report-actions.ts`
+- existing `src/app/actions.ts`
+- existing `src/app/_components/ReportProblemSheet.tsx`
+
+Move only `submitProblemReport` and its parser/schema imports, then rewire the sole live
+caller in the same commit. Preserve anonymous-first/session attribution, validation,
+single-insert behavior, serialization, and error handling. No schema, migration, runtime
+flag, page, map, or Presence changes. Independent refutation must prove there is no stale
+import or dead export. Seller-contact, review, profile, location, and Food slices remain
+pathless until separately allocated. This claim is invalidated if Contribution operational
+work reports an `actions.ts` source conflict.
+
+##### Quality Engineering / Developer Tools — executable quality pipeline Slice A — COMPLETE / PASS
+
+Commit `3835efee43078926e4d32270a95445e247a25e0c` independently **VERIFIED**. Release the
+exact four paths `package.json`, `.github/workflows/ci.yml`, `scripts/quality/run-stage.mjs`,
+and `docs/quality/EXECUTABLE-QUALITY-PIPELINE.md`. The static stage honestly exposes five
+existing token violations; those are source findings, not pipeline failures. Slice B and
+Slice C remain pathless behind Slice A.
+
+##### Quality Engineering / Developer Tools — executable quality pipeline Slice B — PREPARED / PATHLESS
+
+Slice A is released. Prepare Slice B as the next disposable-database/evidence integration
+stage, but do not activate it until the controller records the exact path manifest and a
+named persistent worker. No source ownership, database execution, migration, seed run, or
+deployment is authorized by this preparation note; Slice C remains queued behind Slice B.
+
+Owner: Quality Engineering / Developer Tools. Exclusive paths:
+
+- `package.json`
+- `.github/workflows/ci.yml`
+- new `scripts/quality/run-stage.mjs`
+- new `docs/quality/EXECUTABLE-QUALITY-PIPELINE.md`
+
+Add one deterministic Node stage runner and wire existing checked-in contracts into staged
+npm/CI jobs. Preserve current scripts; use no Jest/Vitest, browser or database
+implementation in this slice; prohibit `continue-on-error`, production secrets,
+migrations, and seed runs. Require an independent default-to-REFUTED review and an
+exact-path commit. Slice B (`guard-disposable-db.mjs` plus disposable seed/Server Action
+integration scripts) and Slice C (Playwright config plus hero/accessibility/PWA specs)
+remain pathless behind Slice A.
+
+##### Product identity — OpenGraph correction — COMPLETE / PASS
+
+Owner: Marketing / Product Identity. Exclusive path: `src/app/opengraph-image.tsx`.
+
+Root OpenGraph one-file commit `4c7d115` independently **PASS**ed. Release
+`src/app/opengraph-image.tsx`; no behavior, layout, or metadata-structure changes remain.
+
+##### Product identity — offline copy correction — COMPLETE / PASS
+
+Owner: Client Reliability / Offline. Exclusive path: `public/offline.html`.
+
+Offline fallback one-file commit `3949313` (latest including both identity corrections)
+independently **PASS**ed. Release `public/offline.html`; queue semantics and offline
+behavior are unchanged.
+
+##### Human Interface — regular Market Details responsiveness correction — COMPLETE / PASS
+
+Owner: persistent HI Engineer `019f75a5-0fc6-7f40-9a0f-8097ead3b45d`. Exclusive paths:
+
+- `src/design-system/components/PlaceOfferRow.tsx`
+- `src/app/page.tsx`
+
+Commit `53ca2e0ed0e6e380249f8935d553fca96194c6ed` changed only `PlaceOfferRow.tsx` and
+independently **STATIC_PASS**ed. Release both claimed paths. It stops left imagery, text,
+and price clipping in the narrow regular panel while preserving edge-bleed imagery, concise
+hierarchy, statuses, Get It, and data semantics. Remaining runtime visual verification is a
+shared pathless Quality gate.
+
+##### Human Interface — Market Details hierarchy and responsive grid — COMPLETE / PASS
+
+Owner: persistent HI Engineer `019f75a5-0fc6-7f40-9a0f-8097ead3b45d`. Exclusive paths:
+
+- `src/app/page.tsx`
+- `src/design-system/components/PlaceOfferRow.tsx`
+
+Controller pushed `a88f29abf44d94f58e0288057bc927d7a46f55e3` to `main`; the exact two-path
+implementation independently **STATIC_PASS**ed. Release `src/app/page.tsx` and
+`src/design-system/components/PlaceOfferRow.tsx`. Runtime visual verification remains a
+pathless gate. The implementation preserves map, scroll, and navigation; removes only
+redundant top spacing; uses compact media-led single-column rows and a regular two-column
+offer grid; and keeps concise price/unit, non-color availability, and one freshness line.
+Full detail/provenance remains in Item Detail. No data, action, map, copy, schema, or
+migration changes; >=44px targets, no horizontal overflow, and no covered CTA remain
+required.
+
+##### Motion — compact sheet dead-space correction — COMPLETE / PASS
+
+Owner: Motion & Interaction Engineer. Exclusive path: `src/design-system/components/BottomSheet.tsx`.
+
+Commit `2e76199e40b4e42a324420f49398e9f228099316` changed only `BottomSheet.tsx`, passed the
+focused Liquid Glass contract, and independently **PASS**ed. Release the path. It reduces
+handle-to-first-content dead space while retaining the invisible >=44x44 target,
+drag/snap, safe-area, focus/scroll handoff, and island/dock behavior. Remaining runtime
+visual verification is shared and pathless.
+
+##### Product identity — app metadata correction — COMPLETE / PASS
+
+Owner: HI / App Shell. Exclusive path: `src/app/page.tsx`. One-file commit `2e7debd`
+independently **PASS**ed. Release the path. The correction
+remove root/category-specific browser metadata claims and use title “WetinDey: nearby live
+local information” plus description “Know before you go. Live local information near you.”
+for all categories, without capability, UI, or data behavior changes.
+
+##### Trusted People / Remote Presence governance — PROPOSED, ACTIVE DOCS CLAIM
+
+Owner: Product & Data Governance. Exact documentation paths:
+
+- new `docs/adr/025-trusted-people-remote-presence.md`
+- `DECISIONS.md`
+- `WETINDEY_BIBLE.md`
+- `docs/architecture/SERVICE-ARCHITECTURE.md`
+
+This remains Proposed governance only: no schema, migration, server, or UI authorization,
+and no override of the Presence `0014` correction gate. Require independent docs
+default-to-REFUTED review and a path-scoped commit.
+
+##### Product / Localization — manifest product-identity correction — ACTIVE
+
+Owner: Product / Localization. Exclusive path: `src/app/manifest.ts`.
+
+Replace only the stale install description that frames WetinDey as nearby Food
+prices/availability with succinct product-level language led by “Know before you go” and
+live local information. Do not imply unsupported categories are live. Preserve manifest
+identity, icons, scope, display, colors, shortcuts, and every other field. Require focused
+static refutation and one exact one-file commit.
+
+##### Product & Data Governance — ADR-026 Liquid Glass Sheet Material System — COMPLETE / PASS
+
+ADR-025 is committed/released at `cc602a087e56e5bbf9ae98b45e2f1583975e8327`, and ADR-026
+governance commit `b9b8185e8ce7af33f5a243c89d5f675ee20b9444` independently **PASS**ed.
+Release the exact four documentation paths:
+
+- new `docs/adr/026-liquid-glass-sheet-material-system.md`
+- `DECISIONS.md`
+- `WETINDEY_BIBLE.md`
+- `docs/design-system/MOTION-SYSTEM.md`
+
+The decision prohibits opaque sheet slabs except for reduced-transparency or forced-colors
+fallbacks; defines shared named materials using `backdrop-blur-sm` (~8px), never content
+`filter: blur`; restrained 110–120% or no saturation; context islands at ~58–64% alpha and
+dense docked/modal glass at ~70–82%; expanded edge-to-edge translucency; one blur layer per
+visible sheet; no nested blur/card slabs; subtle inset edge light/elevation without borders;
+transform/opacity-only animation; and light/dark, forced-colors, reduced-motion, and
+reduced-transparency behavior. This is accepted architecture; implementation remains
+separately evidenced.
+
+##### Motion & Interaction — Liquid Glass shared foundation — COMPLETE / RELEASED
+
+Owner: Motion & Interaction Engineer, with HI art direction/review. Exclusive paths:
+
+- `src/app/globals.css`
+- `src/design-system/motion.ts`
+- `src/design-system/components/BottomSheet.tsx`
+- `src/design-system/components/ModalSheet.tsx`
+- new `scripts/liquid-glass-contract.test.ts`
+
+Commit `e244d8723d66273ff71382eab3cf465842d999bb` and forward fix `b9d40ab` are now treated
+as controller-complete/released. The earlier stale-stack bleed and handle reservation
+refutation remains historical evidence; no foundation path is retained by that incident.
+
+Liquid Glass adoption now proceeds in disjoint waves:
+
+- **Wave A — QUEUED:** `ListRow.tsx`, `ProfileSheet.tsx`, `ManageProfileSheet.tsx`,
+  `SettingsSheet.tsx`. Owner: HI implementation lead.
+- **Wave B — QUEUED:** `ItemDetailSheet.tsx`, `GetItSheet.tsx`. Owner: separate HI/visual
+  implementation worker.
+- **Wave C — COMPLETE / PASS:** `src/app/page.tsx` and
+  `src/design-system/components/PlaceOfferRow.tsx`. Owner: persistent HI Engineer
+  `019f75a5-0fc6-7f40-9a0f-8097ead3b45d`.
+
+ Wave C commit `fa8b24d39e08be9aa7998a2bcf0145ddc5b589b2` independently **STATIC_PASS**ed.
+ It includes compact `pt-0`, bounded visible-height detail, one Prices scroller, an in-flow
+compact CTA, and transparent row/artwork material. Release both source paths; remaining
+runtime visual evidence is pathless.
+Production deployment `dpl_EG5LTY9XPbYLkzeWAJQcqMUyXzNq` is Ready and the custom domain
+returns HTTP 200; the Wave C runtime gate is **PASS**.
+
+Wave C scope is mobile Market Details top chrome/list state only: ensure the list begins
+below compact navigation/header rather than scrolling or painting underneath; eliminate
+inner blur/ghost over imagery; and reduce duplicated vertical reservation while preserving
+one live CTA, one scroll owner, edge-bleed imagery, semantic availability/trust, desktop
+layout, and map/data/actions. Motion retains `BottomSheet.tsx` and `globals.css` for shell
+spacing and inactive paint; HI must not touch those paths. The queued app metadata correction
+is now eligible for a later exact claim and remains queued until explicitly activated.
+
+Each wave requires no nested opaque slabs or blur, exactly one shared material layer,
+slender visuals inside >=44px targets, imagery edge blending, preserved semantic
+availability/trust, compact peek/half islands, expanded edge-to-edge translucency, and a
+separate independent default-to-REFUTED matrix. Waves A and B remain queued behind the
+foundation correction; Wave C is the sole active adoption claim.
+
+##### Founder Product/HI decision queue — Liquid Glass Sheet Material System — PATHLESS
+
+Priority: immediately after the systemic map recovery. Opaque sheet slabs are visually
+rejected. Queue a shared named translucent material system with `blur-sm`, preserved
+map/context, subtle edge light/elevation, no borders, and light/dark,
+reduced-transparency, and forced-colors support. Compact peek/half remain floating islands;
+expanded detent remains edge-to-edge. Do not permit per-component ad hoc glass or nested
+blur stacking.
+
+HI and Motion must return exact manifests before any code lane is opened. Because this
+changes a shared interaction/material pattern, create the next ADR only after the active
+ADR-025 documentation lane releases `DECISIONS.md`, `WETINDEY_BIBLE.md`, and
+`docs/architecture/SERVICE-ARCHITECTURE.md`; do not guess its number. This is a pathless
+decision queue and authorizes no implementation until those exact manifests and governance
+dependencies close.
+
+#### Contribution Integrity: `0013` operational activation — COMPLETE / PASS (default-off)
+
+Persistent Contribution employee evidence independently **PASS**ed in both environments:
+Preview deployment `dpl_2UC8gEPJ4V5sZvRd4M74fMoqFvBm` and Production deployment
+`dpl_8fZpUNgRi3zebGqy75DGt9qAQ4Kq`, using tested source `23b5071...`. The exact 14-entry
+ledger, `0013` hash
+`052769850c3d633230d9ec109c2b09067b73a686cadb7c139a613622184f0f0a`, schema fingerprint
+`3c3fbe9bb03be8c75536fff7e39583c403decf88448dd03705ed56bdcca63a13`, RLS/RPC-only and
+least-privilege controls, idempotence, and guarded-sheet/zero-record evidence all passed.
+Admission, reporting, and moderation remain explicitly **false**. Temporary evidence
+artifacts were removed. Release the operational lane; no reporting enablement follows.
+
+##### Contribution canonical client-IP proof — PATHLESS HIGH-PRIORITY RUNTIME GATE
+
+The only remaining blocker before enabling reporting is direct runtime proof that the
+canonical `x-vercel-forwarded-for` value is enforced through the Server Action. This is an
+evidence-only lane with no source-path claim and no flag change. It must independently prove
+one canonical client IP, fail closed on ambiguity, and preserve default-off behavior.
+
+Completion of the `0013` operational lane now permits exact forward Presence `0014` path
+assignment as soon as the Presence Platform manifest returns; the `0014` correction and its
+independent refutation remain required before any Presence UI activation.
+
+##### Security & Privacy — Nearby Presence architecture amendment — ACTIVE
+
+Owner: Security & Privacy Engineering Lead. Exclusive path: `docs/adr/016-nearby-user-presence.md`.
+
+Amend the accepted architecture to require purpose/viewer/snapshot/expiry-bound opaque
+capabilities; activation/report idempotency; safety-winning Wave/block/report serialization;
+revocation on expiry, block, report, stop, delete, and kill; Presence-specific random-avatar
+projection and re-keying; and no stable profile Blob URL, exact coordinates, stable IDs,
+logs, or caches. Require independent runtime and database kill switches. This is an
+architecture amendment only: no new product scope or UI authorization. Require an exact
+one-file commit and independent docs refutation.
+
+##### Nearby Presence Platform — `0014` capability migration — ACTIVE
+
+Owner: Nearby Presence Platform Engineer. Exclusive paths:
+
+- `src/db/schema/presence.ts`
+- `src/db/pillars/80-presence-services.sql`
+- `src/db/pillars/90-presence-security.sql`
+- new `src/db/migrations/0014_presence_capabilities.sql`
+- new `src/db/migrations/meta/0014_snapshot.json`
+- `src/db/migrations/meta/_journal.json` (append index 14)
+- new `scripts/presence/presence-0014-migration-contract.test.ts`
+
+Preserve every `0011`, `0012`, and `0013` byte and `src/db/schema/index.ts`. Implement
+opaque capabilities, activation/report idempotency, safety-race serialization, revocation,
+random-avatar projection, no stable response IDs or exact coordinates, and runtime plus
+database kill switches. Require blank and `0013→0014` PG17 disposable migration,
+idempotence, rollback, privilege/RLS/grants, concurrency-race, 5km/50/500m, no-leak, and
+independent default-to-REFUTED proof. No app/UI, shared-database, or deployment work is
+authorized by this source lane.
+
+#### Contribution Integrity: `0013+` governance ratification — closed / released
+
+Commit `708845b41d83836e4905fcbc23b8b11a63e5337c` independently **STATIC_PASS**ed and is
+pushed to `origin/main`. Release exactly:
+
+- `docs/adr/019-contribution-integrity-and-moderation.md`
+- `WETINDEY_BIBLE.md`
+
+The accepted contract covers atomic, idempotent pending observations; rate limits;
+moderation and audit; approved-only projection; and the invariants that unavailable forbids
+price and one report never blanks a result. Founder approvals for reports and location
+sharing are complete. `0013+` Phase 1 is now fully source-integrated after the closed
+Presence operational PASS. It is not owner-blocked. No later phase or Production application
+is claimed.
+
+#### Contribution Integrity: `0013` Phase 1 — Schema/RPC — fully source-integrated / released
+
+Commit `2b2643c748732cd9958c83e056e5a6f0204a92f1` is pushed to `origin/main`. Its SQL,
+snapshot, journal, and ten-path database evidence independently **PASS**ed, and all
+disposable PostgreSQL and PGlite resources were cleaned. Forward one-file manifest fix
+`e0c07852e5fea013e9941004c68d60063116c802` passed Quality and is pushed to `origin/main`.
+It corrects only `parent_commit`; every SQL, snapshot, journal, hash, and frozen byte is
+unchanged. Release the remaining manifest path:
+
+- `src/db/migrations/meta/0013_release_manifest.json`
+
+Every other former Phase 1 path is released:
+
+- `src/db/schema/index.ts`
+- `src/db/pillars/40-contribution-integrity.sql`
+- `src/db/pillars/60-contribution-moderation.sql`
+- `src/db/pillars/80-contribution-services.sql`
+- `src/db/pillars/90-contribution-security.sql`
+- `src/db/migrations/0013_contribution_integrity.sql`
+- `src/db/migrations/meta/0013_snapshot.json`
+- `src/db/migrations/meta/_journal.json`
+- `scripts/contributions/contribution-migration-contract.test.ts`
+
+The fully source-integrated boundary covers only ADR-019 Schema/RPC: desired state, forward
+`0013` delta, constraints, grants, transactional admission/projection RPCs, release
+metadata, and its focused contract. Preserve every `0012` byte, including its frozen
+snapshot and journal entry.
+
+Source completion does not itself prove an applied shared target. Founder authorization now
+permits deterministic shared-environment execution subject to the active pathless operational
+activation gate below. Reporting and moderation remain default-off unless that gate proves the
+exact target, runtime flags, and guarded behavior. No client re-enable, offline queue, or new
+source path is authorized by source completion alone.
+
+#### Contribution Integrity: Phase 2A Server Action/read boundary — source complete / released
+
+Commit `30f2ecdc6431684427e93860a2b32eecebfe8dc7` is Quality-PASSed and pushed to
+`origin/main`. Release the former exact paths:
+
+- `src/app/actions.ts`
+- `src/lib/validation.ts`
+- new `src/lib/contributions/runtime.ts`
+- `scripts/contributions/contribution-actions-contract.test.ts`
+
+The server Action/read boundary is source-complete and released. Reporting/moderation stay
+disabled/default-off; no client path is active. Runtime activation is the exact pathless
+operational lane below: the remaining gates are exact-target `0013` application, target
+fingerprint, runtime credentials/HMAC, and proof that Vercel overwrites
+`x-vercel-forwarded-for` to one canonical client IP. This does not authorize a source rewrite,
+public mutation, or client re-enable.
+Later client activation is separate and adds `src/app/page.tsx`,
+`src/app/_components/ReportPriceSheet.tsx`, `src/core/i18n/strings.ts`, and a
+contribution-UI contract; `ConfirmVisitSheet.tsx` remains contained and outside this claim.
+
+#### Contribution Integrity: queued `0013+` four-phase claim packet
+
+Status: Phase 1 and Phase 2A server/read source are fully integrated and released; Phase 2
+runtime activation is pathless/gated; later phases remain queued and pathless. Preserve
+these four disjoint phases in order:
+
+1. **Schema-RPC:** the later `0013+` desired-state/migration, constraints, grants, and
+   transactional admission/projection RPC boundary.
+2. **Server Action/read boundary:** fail-closed server admission, idempotency/rate/audit
+   handling, and the approved-only read/projection boundary.
+3. **Moderation UI:** the independently authorized moderation and audit surface.
+4. **Client re-enable:** first `src/app/_components/ReportPriceSheet.tsx`, then
+   `src/app/_components/ConfirmVisitSheet.tsx`; never re-enable both as one atomic claim.
+
+No later phase has an active exact claim. Every later phase remains unclaimed until a later
+controller allocates exact, non-overlapping paths. `src/app/page.tsx` remains unclaimed by
+this packet, and offline queues remain unchanged.
+
+#### CEO orchestration checkpoint — private-pilot priority and release serialization
+
+Presence `0012` is operational **PASS**. Private-pilot implementation is the next
+priority, but no Presence Platform, Human Interface, Security, Client Reliability, Motion,
+or QE source claim is activated until that department returns an exact path manifest and
+dependency-backed acceptance/refuter gate. This queue is deliberately pathless while
+manifests are pending; it does not authorize edits to page/map hot paths.
+
+The current roster has one pinned persistent employee per department. Completed or refuted
+duplicate employee tasks are archived/non-current while their historical evidence remains
+intact; no recurring clones are created. The GPT-5.3-Codex-Spark spawn failure
+(`reasoning.summary` host-compatibility error) is tooling evidence only. Existing employee
+tasks and the Luna fallback remain the coordination route; it does not change lane status.
+
+The systemic Production Safari/WebGL map incident remains the serialization gate for all
+page/map hot paths. Production is rolled back to the directly proven deployment, but the
+visible basemap failure reproduces there; no Market, page, Canvas, or Presence UI claim may
+widen until the release-critical Maps correction below is independently refuted and the
+exact deployment smoke passes.
+
+#### Maps release-critical frame-evidence correction — ACTIVE
+
+Owner: persistent Maps & Location Experience Engineer. Exclusive paths:
+
+- `src/integrations/maps/MapboxAdapter.ts`
+- `scripts/location-default-contract.test.ts`
+
+Replace Boolean frame readback with generation-bound categorical evidence: `visible`,
+`genuinely-black`, `context-unavailable/lost`, `zero-buffer`, and `read/GL-error`. Never
+classify unavailable or read-error states as black. Permit one reconstruction only for
+corroborated black/context evidence; expose a safe no-token/no-coordinate diagnostic;
+preserve the existing style timeout. Acceptance must cover visible WebGL2, genuine black,
+readback failure, context loss, zero buffer, stale generation, retry reset, and unchanged
+timeout. Serialize all other writes to these two paths until this lane closes.
+
+#### Community Trust & Contribution Loop — source COMPLETE / RELEASED (local-only)
+
+Exact path `docs/product/COMMUNITY-TRUST-AND-CONTRIBUTION-LOOP.md` is released at commit
+`170de61674c702e7f22d50d5bb83fe77b28339a3`; independent default-to-REFUTED review is
+**VERIFIED**. The commit is present on local `main` and current main is one docs commit
+ahead of `origin/main`; it is intentionally **not marked pushed** while Production remains
+rolled back for the systemic map incident. No implementation, schema, migration, or runtime
+claim follows from this documentation release.
+
+#### Contribution Integrity: `0013` operational activation — active pathless gate
+
+Owner: persistent Contribution Integrity & Moderation Engineer
+`019f75a3-f50d-7180-8e92-0a7aabd8a98c`. This is an operational-only lane: every released
+`0013` Phase 1 and Phase 2A source path remains released and must not be reopened unless the
+operational refuter proves a code defect.
+
+Execute Preview first and Production second, identifying each target independently. For each,
+require fail-closed proof of exact authority/compute/database/principal/options/deployment
+identity and target fingerprint; migration, ledger, schema, RPC, and grant compatibility;
+runtime execution role and default-off flags; guarded Report Price and Confirm Visit smoke;
+moderation/default-off behavior; rollback or disable evidence; and independent refutation.
+The gate also requires the canonical-client-IP forwarding proof before any report admission is
+treated as runtime-ready. A Preview/Production divergence is a technical stop, not an approval
+request. No source path, schema amendment, migration rewrite, UI/client re-enable, or public
+activation follows without a refuted defect or separately recorded result.
+
+#### Product direction: canonical catalog versus immutable observations
+
+Canonical product/item CRUD belongs to Catalog Stewardship and is distinct from immutable
+Observation reporting. A missing-item submission must follow a reviewed catalog-request path;
+an observation/report must never create a catalog row. This records product direction only and
+allocates no schema, API, RLS, UI, migration, or implementation path.
+
+#### Catalog Stewardship workflow — active exact docs-only claim
+
+Owner: Catalog Stewardship worker `019f7999-37d0-7231-8b89-0e71c2569ce2`. The sole write
+path is new `docs/product/CATALOG-STEWARDSHIP-WORKFLOW.md`.
+
+Deliver an executable role/UI/operations contract separating canonical item, alias, variant,
+unit, category, and reference-imagery CRUD; duplicate merge/revision; seller proposals; and
+contributor missing-item requests from immutable Observation reporting. No code, schema,
+migration, ADR, or `LANES.md` path ownership follows. Require an independent docs refutation
+and one path-scoped commit.
+
+#### Human Interface density and containment program — pathless / inventory first
+
+Owner: HI Quality & Regression Lead for a read-only current-violation inventory. This program
+owns no implementation path and does not reopen or widen Market Details, Maps, Frameworks, or
+Iconography claims. Future work requires separately sequenced, exact non-overlapping claims.
+
+The standing acceptance frame distinguishes at least 44×44 CSS-pixel hit regions from visible
+geometry: ordinary buttons/pills should usually present slender 28–36px wider-than-tall
+squircles; icon-orb visuals remain 28–32px inside their targets; square visuals are for true
+icons or avatars. The inventory must identify unnecessary nested cards/pills/tiles and vertical
+padding, borders or sharp contrast where subtle semantic surfaces should provide depth, imagery
+that should edge-bleed/blend, and missing real press/motion with reduced-motion fallback. It
+must also assess compact peek/half floating-island behavior and expanded edge-to-edge sheets.
+Apple HIG governs behavior and accessibility; Shop is density/hierarchy reference only, never
+an asset or trade-dress source. A Market Details PASS alone does not close this cross-surface
+program.
+
+#### Founder audit: browsing context and progressive information-to-action seams — closed / released
+
+Commit `6c8ec737b50abede6c375fbec959f26c56a7fb0e` is integrated on `origin/main` immediately
+after Market Details commit `493aac1e30a44c57ab375c0c87d5aa6b423fbb8f`; Quality returned
+**PUSH BOTH IN ORDER**. Release exactly:
+
+- new `docs/adr/023-browsing-context-and-device-location.md`
+- new `docs/adr/024-progressive-information-to-action-seams.md`
+- `DECISIONS.md`
+- `WETINDEY_BIBLE.md`
+- `docs/architecture/SERVICE-ARCHITECTURE.md`
+- `docs/USER-FLOW.md`
+
+`docs/adr/001-fulfilment-is-out-of-scope.md` and
+`docs/adr/005-mapbox-is-the-map-provider.md` remain byte-for-byte identical. The audit
+must reconcile corrected code-truth drift and current call graphs; record P1 privacy
+findings and required-now containment; define the staged capability boundary; distinguish
+schema now, later, and unnecessary; and specify the required tests.
+
+ADR-023 is now **Accepted** architecture for the Founder-directed truthful four-location
+model. ADR-024 remains **Proposed**; ADR-001 remains binding, and cart, courier, or tracking
+seams require separate explicit authorization. Neither ADR creates a code, schema,
+migration, UI, provider, deployment, or implementation claim. The Maps employee may submit
+a later truthful-location reconciliation only as a fresh, disjoint exact claim.
+
+The ADR-023 filename alert is stale and closed: canonical
+`docs/adr/023-browsing-context-and-device-location.md` is already pushed in `6c8ec737` and
+the six-document governance claim is released.
+
+#### Human Interface: Apple Maps/HIG acceptance governance
+
+Status: active exact docs-only claim under the persistent HI Quality & Regression Lead.
+Exact paths:
+
+- `docs/research/APPLE-MAPS-HIG-BENCHMARK.md`
+- `docs/product/FOUNDER-FEEDBACK.md`
+
+Create the read-only current-violation inventory and the missing exact LANES correspondence
+for **FF-024**, then route only bounded, disjoint implementation or refutation lanes. Use
+Apple HIG interaction behavior as a benchmark and Shop only as a density/hierarchy
+reference—never copy assets or trade dress. The full Founder acceptance frame requires:
+
+- floating-island compact peek/half sheets that preserve map context, with expanded detents
+  docked edge-to-edge;
+- at least 44×44 CSS px hit regions with slimmer visible control surfaces;
+- real press/release behavior and reduced-motion alternatives;
+- reducing unnecessary nested containment while preserving ADR-018 semantic cards, pills,
+  and badges;
+- image blending/bleed into backgrounds as a runtime-evidence requirement;
+- semantic material/elevation depth with no borders or sharp contrast; and
+- solid, optically balanced contextual glyphs that are labeled and never rely on color
+  alone.
+
+Future proposals remain sequenced and pathless until the controller allocates exact,
+non-overlapping claims. Preserve all current Presence, Contribution/ADR, and Maps locks and
+existing ADRs; this claim grants no source, schema, migration, asset, or runtime
+implementation authority.
+
+#### Concise product/legal copy — source complete / released
+
+Commit `10df634d55d14ab8b0959915363aace141042fcb` is Quality-PASSed and pushed to
+`origin/main`. Release the exact claimed paths, including unchanged `AboutSheet.tsx`:
 
 - `src/core/i18n/strings.ts`
 - `src/app/_components/AboutSheet.tsx`
@@ -112,40 +747,401 @@ Status: awaiting implementation owner. Exact paths:
 - `src/app/_components/ManageProfileSheet.tsx`
 - `src/app/manifest.ts`
 
-Exclude `src/app/page.tsx` while Maps owns it. Preserve LocationSheet transmission
-disclosure, provider/date attribution, Sample honesty, provenance/trust labels, and no
-self-delete completion promise.
+The completed source preserves LocationSheet transmission disclosure, provider/date
+attribution, Sample honesty, provenance/trust labels, and no self-delete completion promise.
+It does not imply a legal-policy change, account-deletion capability claim, provider change,
+schema/migration, or Presence copy activation.
 
-#### Maps source/refutation hold
+#### H26 typography hierarchy correction — closed / released
 
-Source commits `d100299` and `d5daae3` are pending independent source and runtime
-refutation. The Maps Engineering Lead retains exactly `src/app/page.tsx`,
-`src/design-system/components/MapboxCanvas.tsx`, and
-`src/integrations/maps/MapboxAdapter.ts` until PASS.
+Status: source complete / released under the persistent Human Interface Design Engineer
+`019f75a5-0fc6-7f40-9a0f-8097ead3b45d`. Exact paths:
 
-#### Motion terminal-tail follow-up
+- `src/app/page.tsx`
+- `src/app/_components/ProfileSheet.tsx`
 
-Motion retains only `src/design-system/components/NavigationStack.tsx` and
-`scripts/motion-contracts.test.ts`. `page.tsx` belongs to Maps; no Motion ownership of it
-remains.
+Remove caption-level bold/black emphasis and unnecessary semibold Profile action-link
+emphasis. Preserve all behavior, copy, status hierarchy, accessibility, layout, and
+functional semantics. No map, actions, database, schema, migration, or other styling-system
+widening followed. H26 source commit `d99d57a` is complete and released: Production
+deployment `dpl_Dat5W4KZz6wNYb37jcCq1DKjyKrY` promptly rendered the shell and passed the
+signed-in Profile open/close check.
 
-#### Frameworks: live sheet inset publication
+#### H5 Item Detail observed-status label authority — source complete / runtime gate pathless
 
-Status: active claim awaiting Frameworks worker. Exact paths:
+Owner: persistent Human Interface Design Engineer
+`019f75a5-0fc6-7f40-9a0f-8097ead3b45d`. Exact paths:
+
+- `src/app/_components/ItemDetailSheet.tsx`
+- `src/app/page.tsx`
+
+Commit `cfd5d011405978a5770f53855953c6fc824c0656` passed independent HI Quality and is
+pushed to `origin/main`. It removed exported hardcoded `offerSignal` label authority and
+resolves observed labels through
+the authoritative `item.status_*` keys already present in the read-only
+`src/core/i18n/strings.ts`. Update the page consumer without recreating copy or client-side
+trust calculation. Preserve Sample provenance plus independent availability and ARIA
+semantics. Release both source paths. The remaining deployment/HI runtime matrix is pathless;
+no MapboxAdapter, location-contract, database, schema, migration, action, or other path is
+authorized.
+
+Production deployment `dpl_2YE5sw7RT4QRnvQ8eCktVXoK7dGV` at `cfd5d011` is
+Ready, aliased, and HTTP 200. AX evidence proves Sample availability/status separation,
+the exact Item Detail → Get It presentation, and stable narrowed markers. The visible-pixel
+matrix is **REFUTED**: the reused Safari tab again exposed Item Detail/Get It in AX without
+painting them over the black basemap, and no observed item was available to exercise localized
+observed labels. This is a pathless visible rerun sequenced after systemic Safari renderer
+recovery in a known-onscreen reused tab; it does not reopen either released H5 source path.
+
+#### Market Details visual-structure refinement — source complete / released
+
+Source paths are released; the earlier `a185777` runtime evidence remains a pathless
+historical refutation (compact sticky Get It could overlay rows and runtime/image evidence
+was absent). Forward `23b5071` passed source review. No current writer or artifact retains
+`src/app/page.tsx` or `src/design-system/components/PlaceOfferRow.tsx` for this refinement;
+the page collision is cleared.
+
+Owner: persistent Human Interface Design Engineer
+`019f75a5-0fc6-7f40-9a0f-8097ead3b45d`. Exact exclusive paths:
+
+- `src/app/page.tsx`
+- `src/design-system/components/PlaceOfferRow.tsx`
+
+Preserve live data, actions, navigation, and the released H5 presentation. Reduce excessive
+panel/list horizontal padding; make existing row imagery blend and bleed to the row edge
+without borders or abrupt nested tiles; create concise hierarchy for item, variant, price/unit,
+provenance/trust, and availability; and use existing semantic status families so available and
+unavailable are visually and non-color distinguishable. Remove artificial list-height/dead-zone
+behaviour only in these paths. Keep the Get It CTA sticky and in flow without obscuring content.
+Preserve at least 44px interactions and light/dark compact/regular behaviour.
+
+Do not edit `NavigationStack.tsx`, motion contracts, Mapbox, actions, strings, schema,
+migrations, or copy/data sources; do not introduce new copy. Focused source, visual, and
+accessibility refutation plus reused-tab compact/regular light/dark evidence are required before
+release. This exact claim is disjoint from the active Maps Adapter/location-contract correction.
+Independent runtime evidence for `a185777` was **REFUTED** with no P1: compact sticky Get It
+could overlay rows, and runtime/image evidence was absent. Forward commit
+`23b507106a5ca73d6d5e19688368f2f9b27b18fe`, on parent `a185777`, changes only
+`src/app/page.tsx`; the combined two-path source had fresh independent **PASS** with no P1/P2
+and both commits are pushed to `origin/main`. The exact `23b5071` Production deployment
+`dpl_6sg4...` is **release-REFUTED**: it visibly entered `Map no fit load`, and one retry
+failed identically. The controller rolled `www.wetindey.live` back to directly proven
+`dpl_AFXoZbv2FyLWvzCNAQEXu452fcBS` / `4e3820ab`; current main is ahead of live Production.
+The verified rollback still shows visible map failure on `4e3820ab`, ruling out Market
+causality. Retain the Market paths only as delayed deployment/visual evidence, not for a
+further Market correction. Keep Production on the prior deployment and block further
+pushes/deployments until Maps resolves the systemic incident and a corrected candidate passes.
+Do not create a source claim until Maps returns exact paths. No NavigationStack, Mapbox,
+actions, strings, schema, migration, or copy path is authorized.
+
+#### Community Trust & Contribution Loop governance — active exact claim
+
+Owner: Product & Data Governance Architect `019f7599-0eaa-7423-9ebf-a1bfea8efe37`.
+The sole write path is new `docs/product/COMMUNITY-TRUST-AND-CONTRIBUTION-LOOP.md`.
+ADR-011, ADR-016, ADR-019, ADR-022, `WETINDEY_BIBLE.md`, current profile/contribution/
+presence/review code, and this ledger are read-only evidence. No implementation, schema,
+migration, API, RLS, or UI path is claimed.
+
+Deliver an implemented-versus-missing audit and staged product contract. It must cover immediate
+contributor impact feedback; public profile trust markers that separate identity, reputation,
+and claim confidence; earned scoped badges; transparent impact counts rather than purchasable or
+transferable points; no follower count as a V1 trust proxy; structured Thank/Helpful/Confirm/
+Report interactions before unrestricted messaging; area/place/item follows before person follows;
+reviews/comments distinct from live observations; and direct messaging deferred behind block/
+report, anti-spam, age/privacy, retention, moderation, and Presence separation. Specify V1,
+V1.5, and V2 sequencing, abuse invariants, analytics, exact future schema/API/RLS/UI path
+proposals, dependencies, and acceptance evidence. The document is a governance contract only;
+future paths remain proposals until separately allocated.
+
+#### Developer Relations & Engineering Enablement: department worklog protocol — active exact claim
+
+Owner: Developer Relations & Engineering Enablement worker
+`019f7995-5b7b-7ee1-81ef-2c3a3c57b836`. Exclusive paths:
+
+- `AGENTS.md`
+- `docs/CONTRIBUTING.md`
+- `docs/operations/WETINDEY-OPERATING-SYSTEM.md`
+- new `docs/operations/DEPARTMENT-WORKLOG-PROTOCOL.md`
+- new `docs/operations/BRANCH-HANDOFF-TEMPLATE.md`
+- new `docs/operations/departments/README.md`
+- new `docs/operations/departments/executive-product.md`
+- new `docs/operations/departments/program-release.md`
+- new `docs/operations/departments/human-interface.md`
+- new `docs/operations/departments/maps-location.md`
+- new `docs/operations/departments/presence-safety.md`
+- new `docs/operations/departments/contribution-integrity.md`
+- new `docs/operations/departments/trust-data-governance.md`
+- new `docs/operations/departments/catalog-stewardship.md`
+- new `docs/operations/departments/seller-identity-access.md`
+- new `docs/operations/departments/security-privacy.md`
+- new `docs/operations/departments/quality-release.md`
+- new `docs/operations/departments/client-reliability-offline.md`
+- new `docs/operations/departments/operations-field-data.md`
+- new `docs/operations/departments/legal-policy.md`
+- new `docs/operations/departments/community-growth.md`
+- new `docs/operations/departments/developer-experience.md`
+- new `scripts/department-worklog-contract.test.ts`
+
+Objective: establish one durable log per active functional home plus an exact branch-handoff
+packet and protocol, without creating a shared hot log. Preserve the precedence of code,
+ADRs, architecture of record, Git evidence, and `LANES.md`. No app, schema, migration,
+package, or ADR path is in scope.
+
+#### Maps & Location Experience — truthful private self-location vertical
+
+Status: source and exact-deployment recovery complete / released under persistent engineer
+`019f787c-4f49-78b0-aaa2-bd403d721a1d`. Commit
+`95830d2f91022a3f4ead2c0922f5f958e30d126b` is independently **PASS**ed, Quality-PASSed,
+and pushed to `origin/main`; Production deployment
+`dpl_DgvDiLH5LKYRetnWT6JmEWpKWEro` is **REFUTED only on theme lifecycle**. Forward fix
+`f198de7beb53cfb8a3fb6031fac7c91dea4029c7` is Quality-PASSed and pushed to `origin/main`,
+but its exact Production smoke at `dpl_6h9WLAk3Bbrrj8zXyBH3UpoddeQX` is again **REFUTED**:
+initial dark passed and dark→light retained the failure overlay for 30 seconds. The forward
+systemic Safari/WebGL recovery is independently **PASS**ed and integrated at
+`4e3820abf775a5a1f4d50cef2a2bdedd2815da85`; release its exact source paths:
+
+- `src/integrations/maps/MapboxAdapter.ts`
+- `scripts/location-default-contract.test.ts`
+
+Release the other eight truthful-location paths:
+
+- `src/core/state/locationStore.ts`
+- `src/core/state/globalStore.ts`
+- `src/app/_components/LocationSheet.tsx`
+- `src/app/page.tsx`
+- `src/design-system/components/MapboxCanvas.tsx`
+- `src/app/_components/GetItSheet.tsx`
+- `src/lib/directions.ts`
+- `src/app/actions.ts`
+
+Self marker and device state expire after five minutes. Route-origin disclosure requires an
+explicitly refreshed device fix no older than 60 seconds; otherwise directions remain
+destination-only. Preserve truthful precise/approximate presentation, local signed-in or
+guest identity fallback, accessibility, and map/sheet safety. Reciprocal Presence stays
+default-off and unwired: no Presence, schema, migration, peer, database, or rollout path is
+in this claim. Exact Production verdict: signed-in real avatar, approximate identity,
+browsing separation, Get-It disclosure, and regular layout **PASS**; guest, precise,
+recenter freshness, and compact evidence remain **UNVERIFIED**. The sole current refutation
+is theme lifecycle. `MapboxAdapter.ts` and `scripts/location-default-contract.test.ts`
+remain retained for a real callback-boundary forward correction; no separate Maps claim is
+created. Production candidate `5b9314d` remains **REFUTED**: public transport and assets
+were healthy while Safari's initial app shell was black; after bootstrap resumed, the Adapter
+declared ready but the basemap stayed black. The Maps engineer retains only the same two
+paths for a forward readiness correction. `cc2c195` Production is **REFUTED**: markers
+render, but the basemap remains completely black after 30 seconds with no Map failure overlay.
+A clean replacement Production Safari tab against
+`dpl_Dat5W4KZz6wNYb37jcCq1DKjyKrY` / `cc2c19560dfb422617311c1412d5407b9f1c1c23`
+reproduced the same result with shell, markers, controls, and attribution present. This
+disproves a stale-tab-only classification. The `4e3820abf775a5a1f4d50cef2a2bdedd2815da85`
+recovery is now independently PASSed and on `origin/main`. Exact deployment
+`dpl_AFXoZbv2FyLWvzCNAQEXu452fcBS` for that SHA is Ready, aliased, HTTP 200, and **PASS**:
+visible outcome A stayed complete. One compositor-capture tear was transient and nonpersistent.
+Source and runtime gates are released; this residual does not reopen a path. Framebuffer proof
+still cannot establish Safari's final OS compositor universally.
+
+Self-avatar audit disposition: Canvas/Adapter rendering and browsing/device separation are
+already correct. The root defect is page profile invalidation after upload. Queue, but do not
+activate while Market Details owns `src/app/page.tsx`, the exact future two-path correction:
+`src/app/page.tsx` and `scripts/location-default-contract.test.ts` only.
+
+#### Systemic Production map incident — active pathless diagnosis
+
+The rollback to `dpl_AFXoZbv2FyLWvzCNAQEXu452fcBS` / `4e3820ab` is verified, but the visible
+map failure persists there; this rules out the Market Details candidate as causal. Production
+stays on that prior deployment. Controller evidence indicates that `frameHasVisiblePixels()`
+hard-codes `getContext("webgl2")`, treating a valid Safari/Mapbox WebGL1 context as black or
+failed. Await Maps confirmation before allocating code. If confirmed, activate exactly
+`src/integrations/maps/MapboxAdapter.ts` and `scripts/location-default-contract.test.ts` only;
+do not widen to page, Market, or Canvas unless Maps proves it necessary.
+
+Sidecar audit disposition: **H31** is independently complete and released at `261588f`
+(`fix(coverage): stabilize nearest area ties`), an ancestor of current main. Its
+`getCoverageForPoint` `nearestRows` ordering is distance ascending, neighbourhood
+descending, then slug ascending. It is not a Maps correction and retains no path.
+
+#### Client Reliability: H38 search retry — source complete / released
+
+Commit `66234ed7206ed6d78bb98ee12afc555e5292933c` is Quality-PASSed and pushed to
+`origin/main`. Release `src/app/page.tsx`: its explicit search-retry nonce/action and
+contained AsyncList error presentation preserve prior results, query, browsing location,
+category, and stale-response cancellation, without automatic `online` retry. Runtime
+fault-injection evidence remains a separate pathless gate. This is not a Maps or
+Contribution claim and creates no server, database, schema, migration, or deployment path.
+
+#### Client Reliability: bootstrap visibility fail-closed correction — urgent active exact claim
+
+Owner: Client Reliability & Offline Engineer `019f75d3-65d0-7033-bef7-11a83aca9723`.
+Own exactly `src/core/context/ThemeContext.tsx`. The blocking head script already establishes
+theme, but ThemeProvider applies `visibility:hidden` to the whole application until its
+effect marks the tree mounted, creating a fail-closed black shell when Next JS does not
+bootstrap. Remove only that whole-tree visibility gate; preserve theme synchronization and
+the user theme toggle. No layout, map, H26, provider, schema, migration, or service-worker
+path is authorized. Required independent executable bootstrap-failure refutation proves HTML
+remains visible with Next JS blocked, followed by normal light/dark hydration correctness.
+Theme fail-open commit `d42454b` is complete and released: Production deployment
+`dpl_Dat5W4KZz6wNYb37jcCq1DKjyKrY` promptly rendered the initial shell.
+
+#### H10 large-detent typed sheet-hosted retry — source complete / runtime gate pathless
+
+Owner: Frameworks replacement worker
+`019f78bd-c1f0-7cf1-bd02-a7517d689506`. Exact paths:
+
+- `src/design-system/components/BottomSheet.tsx`
+- `src/design-system/components/CompactShell.tsx`
+- `src/design-system/components/AdaptiveShell.tsx`
+- `src/design-system/components/MapboxCanvas.tsx`
+- `src/app/page.tsx`
+
+`MapboxCanvas` publishes a typed retry capability or `null`; `page.tsx` holds it;
+`AdaptiveShell` forwards it only for compact layouts; `CompactShell` forwards it to
+`BottomSheet`; and `BottomSheet` renders an in-flow retry target of at least 44 CSS px at
+peek, half, and large. No `MutationObserver`, `querySelector`, synthetic click, MapLoader,
+or MapboxAdapter change is authorized. Preserve original map chrome, regular behavior, map
+insets, detents, focus, and reduced motion. The prior one-file handoff is blocked with no
+code remaining and is superseded by this exact typed five-path claim.
+
+Quality independently PASSed the paint-synchronous correction. Exact five-path commit
+`091fe8e` is pushed to `origin/main`; release all five source paths. The Safari recovery
+deployment now passes, but H10 retry remains a pathless evidence gate: no visible failed map
+state occurred, so the retry was not honestly exercised. No source path is retained.
+
+Maps & Location Experience owns location accuracy/provenance; self and peer marker
+semantics; camera/route framing; map-control occlusion; clustering/viewport scaling; and
+map performance. Human Interface must sign off jointly on visual hierarchy, iconography,
+accessibility, light/dark/grayscale, compact/regular layouts, and reused-tab runtime.
+Neither Maps nor Human Interface may independently declare the combined experience
+complete.
+
+#### Maps path retention detail
+
+Only the ten paths in the truthful private self-location vertical above are retained by
+Maps. The prior page-only retention is superseded; no other Maps or Presence path transfers.
+
+Bounded implementation must return focused contracts and an independent refutation. Only
+after the active Frameworks/Motion sheet-hierarchy work settles may the combined reused-tab
+Human Interface evidence run.
+
+#### Maps & Location: dark-style recovery — closed / released
+
+Commit `1427270cbb605781dd4ef4e32aad9ae7f4034c44` independently **PASS**ed, received the
+release-controller push, and is on `origin/main`. Release exactly:
+
+- `src/design-system/components/MapboxCanvas.tsx`
+- `src/integrations/maps/MapboxAdapter.ts`
+
+The settled Safari diagnosis was **REFUTED**: dark-style loading could leave the map style
+unrecovered. The released correction covers theme-style loading/completion and bounded
+timeout/error recovery while preserving camera state and DOM markers. `page.tsx`, panels,
+and every other map, Presence, schema, migration, and database path remain outside this
+completed claim.
+
+#### Regular-panel blank diagnosis — HI/Frameworks, pathless
+
+The blank regular panel is a separate Human Interface/Frameworks diagnosis, not a Maps
+defect and not part of the dark-style recovery claim. It owns no source path pending a
+read-only current-violation inventory and an exact disjoint HI/Frameworks handoff.
+
+#### Frameworks: sheet hierarchy and detent presentation — source integrated / released
+
+Commit `ca64de66299c245b85c1a7ba01a8690f722129ae` is Quality-PUSHed and on `origin/main`.
+Release the four authorized paths:
+
+- `src/design-system/components/BottomSheet.tsx`
+- `src/design-system/components/RegularShell.tsx`
+- `src/design-system/components/CompactShell.tsx`
+- `src/design-system/components/AdaptiveShell.tsx`
+
+Make compact peek and half detents floating islands that preserve map context, while the
+expanded compact detent docks edge-to-edge. The handle must have a hit region of at least
+44 CSS px while retaining a slim visible handle. Use semantic material/elevation without a
+border or sharp contrast. Preserve live map insets, focus behavior, and reduced motion. No
+page, map, Presence, schema, migration, data, copy, or unrelated sheet authority follows.
+
+The candidate changes only `BottomSheet.tsx`; the other three authorized shells are
+unchanged. Focused inset evidence passed 11/11, ESLint, geometry, and path guards passed,
+and independent review returned **NOT REFUTED**. Runtime evidence remains queued and does
+not retain the released source paths.
+
+#### Release P1: custom-domain blank — closed / released
+
+Commit `d5cdc89d9ed54575b467a8f6c2733750f4fdf661` is pushed to `origin/main` by explicit
+commit reference. Independent review returned **NOT REFUTED** and controller metadata is
+verified. Release exactly:
+
+- `public/sw.js`
+- `src/app/layout.tsx`
+
+The v5 strategy validates a cached shell's critical same-origin script-and-stylesheet closure
+before fallback; lets incomplete timeout await in-flight network; uses only a complete shell
+or offline page for genuine failure; and registers immediately in Production with
+`updateViaCache: "none"`, while preserving development unregister, API/non-GET bypass, and
+bounded Mapbox/photo caches. The deterministic A→B prompt/slow/failure complete/incomplete
+cases and independent refutation passed.
+
+Production rollout-transition smoke **PASS**ed on deployment
+`dpl_FZcUd85ejwWBmpgWtHcDcFp2X29f`; the already-controlling v4-worker residual is closed.
+No source or operational path remains retained.
+
+Mapbox forward commit `1b86e81705982f0b1d8336d2ad4dc6fe6ac90b80` is integrated but
+Production-**REFUTED**: the dark/light lifecycle leaves a stale failure overlay despite the
+basemap rendering. Map lifecycle remains open only in the exact two-path Maps
+callback-boundary correction. This is separate from the closed custom-domain and Presence
+operational PASSes.
+
+#### Market Details: offer-row and status hierarchy refinement — closed / released
+
+Commit `493aac1e30a44c57ab375c0c87d5aa6b423fbb8f` is integrated on `origin/main` before the
+governance commit above. Release exactly:
+
+- `src/design-system/components/PlaceOfferRow.tsx`
+- `src/design-system/components/StatusBadge.tsx`
+
+The completed refinement preserves edge-bleed imagery, reduced excess horizontal padding
+and nested containment, succinct hierarchy, and explicit non-color available/unavailable
+cues. The `page.tsx` Market collision is cleared. No page, data, copy, action, map,
+database, schema, or migration path remains retained by this completed claim.
+
+#### Maps & Location: synthetic default-location collision correction — closed / released
+
+Commit `8f4461a98a59e7d442d008a7e1460d79a5e77ca2` independently PASSed and is pushed to
+`origin/main`. Release exactly:
+
+- `src/db/lagosSouthWest.ts`
+- `src/core/state/locationStore.ts`
+- `scripts/location-default-contract.test.ts`
+
+The synthetic `PRIMARY_LOCATION` default now uses the canonical Festac area centre at
+`6.465500, 3.279000`, avoiding the 5.96m demo-24-Road-Stalls collision. Hydration
+normalizes only v1 and malformed-v2 persisted default-provenance state; manual, simulated,
+and device-GPS positions are preserved, and market data is unchanged. This closed slice
+remains disjoint from retained `src/app/page.tsx` and
+`src/integrations/maps/MapboxAdapter.ts` runtime work and every active Presence path.
+
+#### Motion terminal-tail follow-up — closed / released
+
+Commit `2ca2bfe` is pushed. Direct reused-tab runtime PASS recorded a 23px terminal tail,
+fixed controls, full final attribution, and stable repeated terminal gestures. Release
+`src/design-system/components/NavigationStack.tsx` and `scripts/motion-contracts.test.ts`;
+`page.tsx` remains with Maps.
+
+#### Frameworks: live sheet inset publication — closed / released
+
+Commit `713565bba0f9872e17239629613678483755e915` is pushed to `origin/main` and
+independently PASSed. Release these exact paths:
 
 - `src/design-system/components/BottomSheet.tsx`
 - `src/design-system/components/CompactShell.tsx`
 - `src/design-system/components/AdaptiveShell.tsx`
 - new `scripts/live-sheet-inset-contract.test.ts`
 
-Publish the actual continuously changing BottomSheet `liveFraction` and pixel inset during
-drag and snap to the shared shell CSS variable consumed by the map control. Preserve
-regular layout at zero inset, additive safe-area behavior, detents, keyboard/focus, and
-motion. Do not touch page, map, or Presence paths. This exact Frameworks boundary closes
-the Maps refuter P2 once implemented and independently refuted; this governance claim does
-not claim implementation.
+The implementation publishes the continuously changing BottomSheet `liveFraction` and
+pixel inset during drag and snap to the shared shell CSS variable consumed by the map
+control, while preserving regular layout at zero inset, additive safe-area behavior,
+detents, keyboard/focus, and motion. It touched no page, map, or Presence path. The
+dependent runtime residual—live map-control placement through drag and all detents—remains
+part of the still-active combined Maps+HI gate; it is not a Frameworks path claim.
 
-#### Account deletion lifecycle P0 governance
+#### Account deletion lifecycle P0 governance — closed / released
 
 Owner: persistent Product & Data Governance Architect. Founder policy approval is already
 recorded. Exact documentation paths:
@@ -157,32 +1153,33 @@ recorded. Exact documentation paths:
 - `docs/architecture/SERVICE-ARCHITECTURE.md`
 - `docs/product/FOUNDER-FEEDBACK.md`
 
-Codify the confirmed server-only Neon branch admin-deletion saga: OTP/re-auth challenge;
-delete profile, avatar, and problem-report PII; unlink sources while retaining
-observations; invoke Presence deletion; tombstone only minimal safety metadata; reconcile
-partial failure idempotently; and define retention/purge. Do not claim self-delete in UI
-until implementation evidence exists. P0 authorizes no schema, server, or UI work.
+Commit `ff624e7` is pushed and accepts the confirmed server-only Neon branch
+admin-deletion saga: OTP/re-auth challenge; delete profile, avatar, and problem-report PII;
+unlink sources while retaining observations; invoke Presence deletion; tombstone only
+minimal safety metadata; reconcile partial failure idempotently; and define retention/purge.
+The P0 documentation paths are released. Account-deletion implementation waits for
+post-`0012` work and claims no schema, server, or UI path.
 
-#### Quality & Release: Q1 executable release verification
+#### Quality & Release: Q1 executable release verification — closed / released
 
-Status: active claim awaiting QE worker. Exact path:
+Commit `569b1bb0c2693247463c8766b7dbc151c2537e8b` independently PASSed and is pushed to
+`origin/main`. Release the exact path:
 
 - new `scripts/release-verification-q1-contract.test.ts`
 
-This lane owns no existing app, database, provider, or deployment path. Encode one
-deterministic candidate evidence manifest/gate that defaults **REFUTED** whenever required
-artifacts are missing or stale. It must orchestrate or validate references to—never
-duplicate—the existing migration, seed, provenance, trust, Server Action, map/sheet,
-browser, accessibility, PWA, legal, and build evidence. Forbid production builds in the
-shared `.next`; require the exact candidate commit and current-main ancestry; emit
-machine-readable `PASS` or `REFUTED` plus missing evidence. The gate verifies an evidence
-bundle; it does not itself prove runtime behavior.
+The deterministic candidate evidence manifest/gate defaults **REFUTED** when required
+artifacts are missing or stale; it references rather than duplicates the migration, seed,
+provenance, trust, Server Action, map/sheet, browser, accessibility, PWA, legal, and build
+evidence; forbids production builds in the shared `.next`; requires the exact candidate
+commit and current-main ancestry; and emits machine-readable `PASS` or `REFUTED` plus
+missing evidence. It verifies an evidence bundle rather than proving runtime itself. The
+persistent Quality & Release Controller thread `019f7865-c497-71a3-89a2-4effd79b557b` is
+now idle and remains available; do not archive it.
 
-#### Seller and extensible account-role onboarding governance
+#### Seller and extensible account-role onboarding governance — closed / released
 
-Status: Founder-approved, assigned to Product & Data Governance, and dependency-blocked
-until ADR-021 releases the shared documentation paths. Ownership activates only after that
-release. Exact future documentation paths:
+Commit `655a18b` is pushed and independently **NOT_REFUTED**. Release these five
+documentation paths:
 
 - new `docs/adr/022-earned-seller-and-role-onboarding.md`
 - `DECISIONS.md`
@@ -190,12 +1187,43 @@ release. Exact future documentation paths:
 - `docs/architecture/SERVICE-ARCHITECTURE.md`
 - `docs/product/FOUNDER-FEEDBACK.md`
 
-Separate account identity, role application, business/place-control verification, earned
-seller accuracy/badge, permissions, moderation/appeal/audit, contact-publication consent,
-and reusable future RBAC onboarding. Define exact P1/P2/P3 handoffs and gates behind Food
-truth and contribution integrity. Permit no paid verification, fulfilment, schema work, or
-UI implementation. This lane is disjoint from account deletion and Presence. LANES names
-no authoritative roadmap file, so none is claimed.
+The released governance separates account identity, role application, business/place-control
+verification, earned seller accuracy/badge, permissions, moderation/appeal/audit,
+contact-publication consent, and reusable future RBAC onboarding. It permits no paid
+verification, fulfilment, schema work, or UI implementation. LANES names no authoritative
+roadmap file, so none is claimed.
+
+Exact future handoffs and gates:
+
+- **Before P1:** ADR-015 observed-only Food truth must be wired and independently proved
+  across live contribution and read surfaces; the target's applied migration lineage through
+  provenance and ingestion must be proved; corrected Presence `0012` must be applied and
+  proved on that target; and the separately controlled contribution-integrity migration at
+  `0013` or later must be applied and proved with attributed, idempotent, moderated writes
+  and outcome evidence. Only then may the controller assign the next available seller
+  migration; ADR-022 reserves none.
+- **P1 — authorization foundation:** a future exact claim may cover subject,
+  role-template, permission, scoped-assignment, lifecycle, and audit desired state; the
+  next controller-assigned migration plus snapshot/journal evidence; server-side
+  deny-by-default authorization and resource-scope checks; suspension/revocation
+  propagation and separation-of-duties constraints; and disposable blank/upgrade,
+  cross-scope denial, stale-session, and audit refutation. It owns no seller onboarding UI,
+  verification decision, contact publication, seller badge, fulfilment, or shared rollout.
+- **P2 — seller onboarding, consent, and operations, after P1:** business and place-control
+  claim/evidence workflows; owner, manager, and staff invitation/acceptance within proved
+  scope; moderation, conflict, suspension, revocation, expiry, and independent appeal;
+  explicit per-place/per-channel/per-value/per-audience contact-publication and withdrawal
+  consent; bounded seller dashboard reads and writes; and privacy, retention, rate-limit,
+  account-takeover, and cross-place end-to-end refutation. P2 authorizes no accuracy badge;
+  public contact stays off until its exact consent and server-return boundary independently
+  passes.
+- **P3 — earned accuracy and later roles, after P2 and sufficient independently evaluated
+  seller outcomes:** calibrated seller-accuracy projection with published scope, window,
+  sample, and uncertainty; narrow, expiring, non-purchasable public badge copy;
+  manipulation, related-account, moderation, appeal, grayscale/accessibility, and public
+  comprehension refutation; and one separately claimed future role at a time using the
+  extensibility checklist. No P3 assertion may alter Food confidence or ranking without its
+  own accepted trust decision and evidence.
 
 The Quality & Release Controller is this orchestrator thread. It is not a separate pinned
 employee task. The repeating `wetindey-orchestrator-recovery` automation is deleted and
@@ -269,22 +1297,24 @@ source ownership; only rows with exact paths grant edit authority.
 | Lane / evidence | Current disposition | Ownership and boundary |
 |---|---|---|
 | Semantic iconography visual foundation | **Closed / released with runtime PASS** | Existing-tab light/dark/grayscale Category screenshots prove dimensional Food-warm and Money-teal mapping, neutral disabled/future categories, solid-glyph legibility, and no rainbow spill. Focused contract PASS covers the 44px token, forced-colors/reduced-motion, and glow semantics. All five paths are released; runtime forced-colors emulation remains evidence residual only |
-| Contribution containment/integrity (`495750a`) | **Closed / released with controller runtime PASS** | The runtime artifact released all five Contribution paths. Market retains `page.tsx`; Report Price passed runtime and is released; Confirm Visit later transferred to the active exact one-file Iconography correction |
+| Contribution containment/integrity (`495750a`) | **Closed / released with controller runtime PASS** | The runtime artifact released all five Contribution paths. Report Price and Confirm Visit are later closed/released at `b93761b` and `ae47513`; no continuing Iconography claim follows |
+| Contribution Integrity `0013+` governance ratification | **Closed / released with STATIC_PASS** | Commit `708845b` released `docs/adr/019-contribution-integrity-and-moderation.md` and `WETINDEY_BIBLE.md`. The accepted atomic/idempotent pending-observation, rate-limit, moderation/audit, approved-only-projection, unavailable-forbids-price, and no-one-report-blanking contract is governance-ready. Implementation remains technically sequenced after the active corrected `0012` commit/result, not an owner approval |
 | Modal zero-focusable/focus restoration | **Closed / released with Safari PASS** | Commit `f19990b` is on `origin/main`; Safari refutation passed. `ModalSheet.tsx` remains released; `scripts/motion-contracts.test.ts` later transferred to the disjoint Market Details scroll-containment sub-lane |
 | Production nonce CSP | **REFUTED / pathless upstream adapter gate; three source paths released** | Ready Preview `dpl_DXZqqwy3srE6E6Ju8XLJ968otyf7` proved `_middleware` Lambda `nodejs24.x`; two authenticated fresh HTML requests each had 29 scripts, only six app-authored nonced and 23 bare Next bootstrap/Flight/chunk scripts. Exactly one unchanged enforcing CSP plus one report-only CSP and no internal headers. Experimental source was reverted and all three paths are clean. Keep the collector report-only and prohibit enforcement; reopen only on new Next/Vercel adapter or version evidence |
 | H37 semantic place-marker symbols | **Closed / released with independent NOT REFUTED** | Commit `6611068` is on `origin/main` and both `src/design-system/components/MapboxCanvas.tsx` and `src/integrations/maps/MapboxAdapter.ts` are released. `sharedUsers={[]}` and `getSharedUserLocations()=[]` mean peer avatar markers are not live; self-avatar is a separate unclaimed lane. Further contextual-orb/selected-glow work is not claimed complete and owns no path |
 | Identity & Email Delivery — branded Neon Auth OTP | **Closed / released with VERIFIED monochrome logo production evidence** | After the approved monochrome correction, Founder-requested embedded-logo follow-up `712719f` is pushed on `origin/main` over exactly `src/lib/auth-email.ts`, new `src/lib/auth-email-logo.ts`, and `scripts/auth-email-contracts.test.ts`. The fixed 96×96 monochrome PNG uses CID `wetindey-logo@auth.wetindey.live` with no remote image URL; focused contract PASS and independent final VERIFIED with no P1/P2/P3. Production `dpl_B7QwNqAYTToHsAXsVCM5jh1JXwRM` is Ready/aliased; fresh OTP POST returned `200`, and Gmail confirmed the new unread inline image. Every implementation and follow-up path is released; process-local caches, cross-instance Message-ID limits, provider Beta status, SPF/DKIM/DMARC monitoring, and email-client rendering remain operational follow-up |
-| Nearby Presence forward `0012` | **Source closed/released; shared/production rollout AUTHORIZED subject to fail-closed technical gates** | `d5991c9` source/disposable validation is complete. No further Founder prompt. Identify Production and Preview separately; require exact identity, ledger/schema compatibility, execution-role capability, default-off kill switch, scheduler proof, backup/evidence, and independent refutation. Divergence is a technical stop |
+| Nearby Presence forward `0012` | **Closed / released with Production operational PASS** | Production ledger/hash and declared schema/RPC/RLS/grant fingerprint match the proven release parent; target identity HMAC matches authority, compute, database, principal, options, and deployment. Idempotence, least-privilege scheduler, cleanup `204`, retention, default-off/no-peer containment, and independent operational refutation passed. Source paths are released; `0012` snapshot/journal and all `0011` bytes remain frozen. The overall Production custom-domain/map P1 is separate and does not refute Presence |
+| Nearby Presence live-readiness | **REFUTED; post-`0012` vertical queued/pathless** | `page.tsx` passes `sharedUsers=[]`; `getSharedUserLocations` returns `[]` with no caller; Manage Profile truthfully says “Not available yet”; self avatar is not reciprocal Presence; dormant shared popup violates ADR-016 and must not be wired. After applied/proved `0012` and Maps release, request the atomic new action/contract/control/card paths, then page/canvas/adapter integration and strings/ManageProfile copy. Scheduler paths remain retained. Never use browsing `mapCenter`, `locationStore`, or saved area as Presence input—only fresh server-authorized foreground GPS |
 | Search/provenance disposable SQL (`97b74af`) | **Closed / released with PASS** | Deployed-current-main proof passed strengthened unavailable and contradictory cases with exact cleanup. Search & Ranking remains persistent and available; no path or execution gate remains claimed |
-| HI category/Aboki plus Add/Profile | **Pathless release evidence** | Scoped UI changes passed. Reopen only combined Safari keyboard and artificial loading/error/cache/empty-state evidence; implementation paths remain released |
+| HI category/Aboki plus Add/Profile | **Queued pathless release evidence behind Maps theme PASS** | Scoped UI changes passed. Do not reopen the combined Safari keyboard and artificial loading/error/cache/empty-state evidence until the retained Maps theme overlay correction passes Production; implementation paths remain released |
 | Historical interaction validation | **Pathless Q1 evidence/refutation** | Recheck category coherence, popular/detail count, route/fallback/handoff only where no newer runtime evidence supersedes the old failure; claim no implementation path |
-| Iconography intent adoption — remaining sheets and MapLoader | **Partial runtime PASS; three paths released, two retained for evidence** | HI runtime matrix passed `SettingsSheet.tsx`, `CurrencyPickerSheet.tsx`, and `ExchangePanel.tsx`; release them. Retain `src/design-system/components/SheetPicker.tsx` as runtime-unverified and `src/design-system/components/MapLoader.tsx` as loaded-state-only with edge states unverified |
+| Iconography intent adoption — remaining sheets and MapLoader | **Closed / released at `a2a7104`** | All five source paths are current-main integrated; no retained intent-adoption ownership remains |
 | Report Price unavailable-status icon correction | **Closed / released with runtime PASS at `b93761b`** | The unavailable banner passed runtime; `src/app/_components/ReportPriceSheet.tsx` is released |
-| Confirm Visit unavailable-status icon correction | **Static PASS; runtime UNVERIFIED, exact path retained** | Persistent Iconography & Visual Systems Lead `019f75cf-4d8f-7263-822b-06e846fce7ac` retains only `src/app/_components/ConfirmVisitSheet.tsx` pending runtime |
-| Market Details hierarchy and offer surface | **`ae47513` runtime PASS; prior HI ownership released** | Hierarchy/one CTA, rows/credits, pop/reopen, and regular layout pass. `src/design-system/components/PlaceOfferRow.tsx` is released; `page.tsx` transfers only to the Motion terminal-reservation correction |
-| Market Details compact terminal CTA persistence | **Functional runtime PASS; two-path tail follow-up retained** | Fixed controls, final content/credits, overlay containment, repeated terminal scrolling, pop/reopen, and regular CTA pass through `042efd3`. Motion retains only `NavigationStack.tsx` and `motion-contracts.test.ts` for 45–50px terminal whitespace versus 24px. `page.tsx` released to Maps |
+| Confirm Visit unavailable-status icon correction | **Closed / released at `ae47513`** | The current-main ancestor completes the exact `src/app/_components/ConfirmVisitSheet.tsx` source slice; no continuing ownership remains |
+| Market Details hierarchy and offer surface | **`ae47513` runtime PASS; prior HI ownership released** | Hierarchy/one CTA, rows/credits, pop/reopen, and regular layout pass. `src/design-system/components/PlaceOfferRow.tsx` and `page.tsx` are released; H26 subsequently closed at `d99d57a` |
+| Market Details compact terminal CTA persistence | **Closed / released with direct reused-tab runtime PASS** | `2ca2bfe` is pushed. A 23px terminal tail, fixed controls, full final attribution, and stable repeated terminal gestures passed. `NavigationStack.tsx`, `motion-contracts.test.ts`, and `page.tsx` are released; H26 subsequently closed at `d99d57a` |
 | Market Details — Place Offer Row availability semantics | **Closed / released at `d807538`** | Current available uses explicit confirmed semantics, stale available uses caution, unavailable uses unavailable, and genuinely unknown remains neutral. Direct light evidence covered confirmed/caution/unavailable, dark evidence covered caution/unavailable, and independent static refutation found no P1/P2/P3. `src/design-system/components/PlaceOfferRow.tsx` is released |
-| Account deletion capability | **REFUTED provider capability; pathless** | On the exact current Neon target, authenticated fresh-session `POST /delete-user` returns `404` while unauthenticated returns `401`: the route is mounted but `user.deleteUser.enabled` is false. Emergency SQL cleanup of the disposable identity is not self-delete evidence. Founder policy remains approved; provider configuration/capability and a later app-owned orchestration/UI lane remain, with no app path claimed |
+| Account deletion capability | **REFUTED provider capability; P0 governance accepted and released** | On the exact current Neon target, authenticated fresh-session `POST /delete-user` returns `404` while unauthenticated returns `401`: the route is mounted but `user.deleteUser.enabled` is false. Emergency SQL cleanup of the disposable identity is not self-delete evidence. `ff624e7` accepts the P0 lifecycle documentation; post-`0012` implementation still requires provider capability/configuration and a later app-owned orchestration/UI lane, with no app path claimed |
 | Corrected historical refutations | **Closed / superseded** | Do not reopen D1/D2, seed typing/H27, H23, BottomSheet, Mapbox route validation, public-source ingestion, or ADR governance already corrected and independently passed |
 
 ### Closed lane: corrected-unapplied Nearby Presence `0012`
@@ -461,10 +1491,11 @@ The Motion & Interaction Engineer retains exactly:
 - `src/design-system/components/NavigationStack.tsx`
 - `scripts/motion-contracts.test.ts`
 
-`src/app/page.tsx` is explicitly released to Maps. Motion may not reacquire it without a
-new controller handoff. Preserve every passing interaction and correct only the measured
-terminal-tail owner. No `BottomSheet.tsx`, actions, PlaceOfferRow, self-avatar, Presence,
-database, schema, or migration authority follows.
+`src/app/page.tsx` was released when the terminal-tail lane closed, H26 later closed, and H5
+is now source-complete. Motion may not reacquire it without a new controller handoff. Preserve every
+passing interaction and correct only the measured terminal-tail owner. No `BottomSheet.tsx`,
+actions, PlaceOfferRow, self-avatar, Presence, database, schema, or migration authority
+follows.
 
 ### Closed lane: Market Details Place Offer Row availability semantics
 
@@ -479,37 +1510,13 @@ order/source links. Commit `d807538` adds explicit confirmed/caution/unavailable
 without color-only meaning and passed independent static refutation plus direct runtime
 evidence. The path is released.
 
-### Active lane: self-location avatar marker — signed-in and guest
+### Superseded lane: self-location avatar marker — signed-in and guest
 
-The persistent Maps Engineering Lead is the named implementation owner. The Iconography &
-Visual Systems Lead is the visual reviewer, and a fresh independent Privacy refuter is
-required. The Market Details functional contract now passes and `src/app/page.tsx` is
-released from Motion. Maps Engineering exclusively owns:
-
-- `src/app/page.tsx`
-- `src/design-system/components/MapboxCanvas.tsx`
-- `src/integrations/maps/MapboxAdapter.ts`
-- new `src/design-system/components/SelfLocationMarker.tsx` only if implementation proves
-  the component useful
-- new `scripts/map-self-location-contract.test.ts`
-
-Contract:
-
-- A signed-in self marker uses the uploaded avatar or a local initials fallback.
-- A guest self marker uses a bundled or locally generated “me” fallback; no external
-  avatar-generator request is permitted.
-- Precise GPS receives bounded precise treatment. Approximate or area location retains a
-  recognizable identity orb plus a diffuse accuracy halo; blur must never replace identity
-  or imply false precision.
-- Screen-reader labels must state truthful self/location semantics. The marker must remain
-  legible in light, dark, and grayscale and must not obstruct the map experience.
-- The slice must not publish the guest or self marker to peers, authorize Presence rollout,
-  or touch database, schema, or migrations.
-
-Peer presence remains a separate future slice. No push, deployment, browser, or database
-authority follows from this implementation claim. Acceptance requires focused contracts,
-fresh independent source/privacy refutation, and reused-tab compact/regular light/dark/
-grayscale runtime evidence across sheet detents before release.
+The prior page-only self-avatar retention is superseded by the current exact ten-path
+truthful private self-location vertical above. Its signed-in/local-fallback, guest-local
+fallback, precise/approximate identity, accessibility, and no-peer-publication principles
+remain constraints, but it owns no path independently. Reciprocal Presence remains a
+separate, default-off and unwired future vertical.
 
 ### Closed lane: Semantic iconography visual foundation
 
@@ -538,26 +1545,19 @@ Commit `ed5a6cb` changed exactly:
 The first live `SolidIcon` adoption and semantic unavailable `IconOrb` received static
 PASS and combined runtime PASS. Both exact paths are released.
 
-### Partially closed lane: Iconography intent adoption — remaining sheets and MapLoader
+### Closed lane: Iconography intent adoption — remaining sheets and MapLoader
 
-The persistent Iconography & Visual Systems Lead
-`019f75cf-4d8f-7263-822b-06e846fce7ac` completed the HI runtime matrix. PASS releases
-exactly:
+Current-main ancestor `a2a7104` completed the five-path source slice. Release exactly:
 
 - `src/app/_components/SettingsSheet.tsx`
 - `src/app/_components/CurrencyPickerSheet.tsx`
 - `src/app/_components/ExchangePanel.tsx`
+- `src/design-system/components/SheetPicker.tsx`
+- `src/design-system/components/MapLoader.tsx`
 
-Two paths remain retained for evidence:
-
-- `src/design-system/components/SheetPicker.tsx` — runtime-unverified
-- `src/design-system/components/MapLoader.tsx` — loaded state observed; edge states
-  unverified
-
-The ADR-018 contract remains in force for those two retained paths: contextual
-dimensional solid orbs, neutral universal utilities, authentic currency flags unchanged,
-and no copy, data, actions, interactions, layout, or motion changes. The three passing
-paths above have no continuing ownership.
+The ADR-018 contract remains in force: contextual dimensional solid orbs, neutral universal
+utilities, authentic currency flags unchanged, and no copy, data, actions, interactions,
+layout, or motion changes. No intent-adoption source path remains owned.
 
 ### Closed lane: Report Price unavailable-status icon correction
 
@@ -567,14 +1567,13 @@ Implementation commit `b93761b` is pushed and the unavailable banner passed runt
 
 The path is released.
 
-### Retained lane: Confirm Visit unavailable-status icon correction
+### Closed lane: Confirm Visit unavailable-status icon correction
 
-Static refutation passed, but runtime remains unverified. The persistent Iconography &
-Visual Systems Lead `019f75cf-4d8f-7263-822b-06e846fce7ac` retains exactly:
+Current-main ancestor `ae47513` completes and releases:
 
 - `src/app/_components/ConfirmVisitSheet.tsx`
 
-The correction remains unreleased until runtime verifies the unavailable-state warning.
+No Confirm Visit source path remains owned.
 
 ### Closed lane: Modal zero-focusable focus containment
 
@@ -599,20 +1598,24 @@ yet represented as explicit lanes:
 | Lane | Status | Required ownership | Scope and gate |
 |---|---|---|---|
 | **Semantic iconography visual foundation** | ✅ runtime and focused-contract PASS; exact five paths released | persistent Iconography & Visual Systems Lead; independent visual/accessibility refuter | Released: `src/app/globals.css`; `tailwind.config.ts`; `src/design-system/components/IconOrb.tsx`; `src/design-system/icons/SolidIcon.tsx`; `scripts/iconography-contracts.test.ts` | Existing-tab light/dark/grayscale proves Food warm, Money teal, neutral disabled/future, solid-glyph legibility, and no rainbow spill. Contract covers 44px, forced-colors/reduced-motion, and glow semantics; runtime forced-colors emulation remains residual only |
-| **Iconography solid-glyph adoption — Item Detail/Get-It** | ✅ `ed5a6cb`; static + combined runtime PASS; exact two paths released | persistent Iconography & Visual Systems Lead `019f75cf-4d8f-7263-822b-06e846fce7ac`; static/runtime refuters | Released: `src/app/_components/ItemDetailSheet.tsx`; `src/app/_components/GetItSheet.tsx` | First live `SolidIcon` adoption and semantic unavailable `IconOrb` passed; no continuing ownership |
-| **Iconography intent adoption — remaining sheets and MapLoader** | 🟠 HI runtime matrix PASS for three released paths; two evidence paths retained | persistent Iconography & Visual Systems Lead `019f75cf-4d8f-7263-822b-06e846fce7ac`; visual/AX refuter | Released: `src/app/_components/SettingsSheet.tsx`, `src/app/_components/CurrencyPickerSheet.tsx`, `src/app/_components/ExchangePanel.tsx`. Retained: `src/design-system/components/SheetPicker.tsx`, `src/design-system/components/MapLoader.tsx` | SheetPicker remains runtime-unverified. MapLoader has loaded-state evidence only; edge states remain unverified. ADR-018 and no-behavior-change contracts remain |
+| **Iconography solid-glyph adoption — Item Detail/Get-It** | ✅ `ed5a6cb`; static + combined runtime PASS; iconography slice released | persistent Iconography & Visual Systems Lead `019f75cf-4d8f-7263-822b-06e846fce7ac`; static/runtime refuters | Released: `src/app/_components/GetItSheet.tsx`; `ItemDetailSheet.tsx` is separately released by H5 `cfd5d01` | First live `SolidIcon` adoption and semantic unavailable `IconOrb` passed; no continuing Iconography ownership |
+| **Iconography intent adoption — remaining sheets and MapLoader** | ✅ complete / released at `a2a7104` | persistent Iconography & Visual Systems Lead `019f75cf-4d8f-7263-822b-06e846fce7ac` | Released: `src/app/_components/SettingsSheet.tsx`, `src/app/_components/CurrencyPickerSheet.tsx`, `src/app/_components/ExchangePanel.tsx`, `src/design-system/components/SheetPicker.tsx`, `src/design-system/components/MapLoader.tsx` | No continuing ownership |
 | **Report Price unavailable-status icon correction** | ✅ `b93761b` runtime PASS; exact path released | persistent Iconography & Visual Systems Lead `019f75cf-4d8f-7263-822b-06e846fce7ac`; HI Regression | Released: `src/app/_components/ReportPriceSheet.tsx` | Unavailable banner passed runtime |
-| **Confirm Visit unavailable-status icon correction** | 🟠 static PASS; runtime UNVERIFIED, path retained | persistent Iconography & Visual Systems Lead `019f75cf-4d8f-7263-822b-06e846fce7ac`; runtime refuter | `src/app/_components/ConfirmVisitSheet.tsx` | No release until runtime verification |
+| **Confirm Visit unavailable-status icon correction** | ✅ complete / released at `ae47513` | persistent Iconography & Visual Systems Lead `019f75cf-4d8f-7263-822b-06e846fce7ac` | Released: `src/app/_components/ConfirmVisitSheet.tsx` | No continuing ownership |
 | **H37 semantic place-marker symbols** | ✅ complete at `6611068`; independent NOT REFUTED; exact two paths released | persistent Maps Engineering Lead; independent refuter | Released: `src/design-system/components/MapboxCanvas.tsx`; `src/integrations/maps/MapboxAdapter.ts` | `placeType` now selects deterministic semantic symbols with accessible labels and generic fallback. Peer markers remain non-live because `sharedUsers={[]}` / `getSharedUserLocations()=[]`; self-avatar is separate and unclaimed. Contextual-orb/selected-glow follow-up is not claimed complete |
-| **Self-location avatar marker — signed-in and guest** | 🟡 READY/BLOCKED only on Motion release of `page.tsx`; no path claim yet | persistent Maps Engineering Lead implementation owner; Iconography & Visual Systems Lead visual reviewer; independent Privacy refuter | Intended post-release paths unchanged | Begin only after Motion runtime PASS releases `page.tsx` and a fresh claim lands |
+| **Systemic Production map incident** | 🔴 active pathless diagnosis; no source claim yet | Maps & Location Experience persistent engineer `019f787c-4f49-78b0-aaa2-bd403d721a1d` | Likely `src/integrations/maps/MapboxAdapter.ts`; `scripts/location-default-contract.test.ts` pending Maps confirmation | Verified rollback to `4e3820ab` still visibly fails, ruling out Market causality. Evidence points to WebGL2-only framebuffer inspection misclassifying valid Safari/Mapbox WebGL1; no page, Market, or Canvas widening without proof |
+| **Client Reliability bootstrap visibility** | ✅ complete / released with Production PASS | Client Reliability & Offline Engineer `019f75d3-65d0-7033-bef7-11a83aca9723`; independent bootstrap-failure refuter | Released: `src/core/context/ThemeContext.tsx` | `d42454b` promptly rendered the initial shell on `dpl_Dat5W4KZz6wNYb37jcCq1DKjyKrY`; normal signed-in interaction also passed |
+| **H10 large-detent typed sheet-hosted retry** | ✅ source complete / exact five paths released at pushed `091fe8e`; runtime proof pathless | Frameworks replacement worker `019f78bd-c1f0-7cf1-bd02-a7517d689506`; Quality deployment monitor | Released: `src/design-system/components/BottomSheet.tsx`; `src/design-system/components/CompactShell.tsx`; `src/design-system/components/AdaptiveShell.tsx`; `src/design-system/components/MapboxCanvas.tsx`; `src/app/page.tsx` | Safari recovery now passes, but no visible map failure occurred in the exact deployment, so retry was not exercised; no DOM bridge, MapLoader, Adapter, or regular-layout change |
+| **H5 Item Detail observed-status label authority** | ✅ source complete / released at pushed `cfd5d01`; visible-pixel rerun pathless | Human Interface Design Engineer `019f75a5-0fc6-7f40-9a0f-8097ead3b45d`; HI Quality | Released: `src/app/_components/ItemDetailSheet.tsx`; `src/app/page.tsx` transferred only to the active Market Details refinement | `dpl_2YE5sw7RT4QRnvQ8eCktVXoK7dGV` is Ready/aliased/HTTP 200 and AX passed; reused-Safari visible pixels refuted over the black basemap, so rerun after renderer recovery without reopening H5 source |
+| **Maps dark-style recovery** | ✅ closed / released at independently passed `1427270c` | Persistent Maps & Location Experience Engineer | Released: `src/design-system/components/MapboxCanvas.tsx`; `src/integrations/maps/MapboxAdapter.ts` | Theme-style loading/completion and bounded timeout/error recovery preserve camera and DOM markers. The regular-panel blank remains a separate HI/Frameworks pathless diagnosis |
 | **Market Details hierarchy and offer surface** | ✅ `ae47513` split runtime PASS; hierarchy ownership released | persistent Human Interface Design Engineer `019f75a5-0fc6-7f40-9a0f-8097ead3b45d`; HI Regression | — | Hierarchy/one CTA, rows/credits, pop/reopen, and regular layout pass |
-| **Market Details compact terminal-reservation correction** | 🔴 runtime REFUTED; exact three paths retained | Motion & Interaction Engineer; runtime refuter | `src/design-system/components/NavigationStack.tsx`; `src/app/page.tsx`; `scripts/motion-contracts.test.ts` | CTA disappears at absolute compact terminal and tail exceeds 24px; rows/credits reachable, pop/reopen and regular PASS; root-scroll unverified |
-| **Market Details Place Offer Row availability semantics** | 🟢 active exact one-file HI/Iconography lane | Human Interface Design Engineer `019f75a5-0fc6-7f40-9a0f-8097ead3b45d` | `src/design-system/components/PlaceOfferRow.tsx` | Confirmed/available, unavailable, caution, and genuine-unknown families; preserve text/icon redundancy and no data/copy/action widening |
+| **Market Details compact terminal-reservation correction** | ✅ closed / released with direct reused-tab runtime PASS at `2ca2bfe` | Motion & Interaction Engineer; runtime refuter | Released: `src/design-system/components/NavigationStack.tsx`; `src/app/page.tsx`; `scripts/motion-contracts.test.ts` | 23px terminal tail, fixed controls, full final attribution, and stable repeated terminal gestures passed; H26 later closed at `d99d57a` |
+| **Market Details offer-row and status hierarchy refinement** | ✅ closed / released at `493aac1` | Human Interface Design Engineer `019f75a5-0fc6-7f40-9a0f-8097ead3b45d` | Released: `src/design-system/components/PlaceOfferRow.tsx`; `src/design-system/components/StatusBadge.tsx` | Integrated before governance `6c8ec73`; edge-bleed hierarchy and explicit non-color availability cues passed the release sequence, and the `page.tsx` Market collision is cleared |
+| **Market Details visual-structure refinement** | 🟡 source PASS/pushed; delayed runtime evidence behind systemic map incident | Human Interface Design Engineer `019f75a5-0fc6-7f40-9a0f-8097ead3b45d`; no further source claim | `src/app/page.tsx`; `src/design-system/components/PlaceOfferRow.tsx` retained only for later deployment visual/AX evidence | Rollback to `4e3820ab` still visibly fails, ruling out Market causality. No page/Market correction is authorized; Production stays rolled back and push/deploy is blocked pending Maps correction |
 
-The two retained intent-adoption evidence paths and separate one-file Confirm Visit
-correction are the only Iconography ownership created by this table. Report Price, the
-three matrix-PASS paths, and Item Detail/Get-It are released. Market Details retains its
-exact four paths after runtime REFUTATION.
+All foundation, intent-adoption, Report Price, and Confirm Visit source paths are released.
+H5 is separately source-complete at `cfd5d01`, with only its runtime gate pathless. Market
+Details historical evidence does not override active Maps or HI benchmark ownership.
 
 ## Persistent employee controller
 
@@ -818,11 +1821,11 @@ paths; after they are claimed, Sol's next step is implementation.
 | **Rice search truth correction** | static PASS and prior reused-tab PASS at `75a1fd1`; Search lane remains closed and path released | Search & Ranking Engineer `019f75b7-6c59-7952-bf14-b01cfbfd2793`; independent static refuter; HI Quality browser refuter | The mismatch was Sample-projection divergence, not `ItemCard`; `searchItems` mirrors home fresh-current-offer and detail-window projections while preserving the observed-only gate and Sample/zero-confidence synthetic semantics | Prior Amuwo Odofin parity evidence remains valid. The latest browser recheck was blocked by connector `Cannot redefine property: process`; that tooling residual does not reopen Search. `src/app/actions.ts` is released from Market Details. No edits/tests/DB |
 | **V1 truth core** | T1/T2A complete; T2C/T2D statically complete; Search/provenance disposable SQL PASS at deployed `97b74af` | controller / Sol with fresh independent refuter | One Food path from admissible evidence to read, map, share, SEO, offline, and outcome | Search code paths and pathless execution gate are released; deployment remains blocked until exact shared-target `0009`/`0010`/`0011` compatibility is separately authorized and verified |
 | **Database rollout-status evidence correction** | complete at `164a12c` plus forward correction `bb4dca4`; Lovelace follow-up PASS; path released | CEO controller / DB-status docs worker | Dated fail-closed evidence records Preview ledger through recognized `0010`, unledgered `0011`-like latitude/longitude schema drift, Production unknown, and no authorization implied | Provenance/ingestion object presence is qualified as uncorroborated external reporting; migration policy was not modified |
-| **Contribution containment and integrity** | controller runtime PASS; exact five paths released from Contribution | Contribution Integrity & Moderation Engineer; independent static/source and runtime evidence | Existing fail-closed containment plus a completed, unauthorized `0013+` planning packet covering ADR-019, schema/migration/manifest, app/ops paths, and dependencies | Runtime containment is closed. Market retains `page.tsx`; Report Price passed runtime and is released; Confirm Visit later transferred to the active exact one-file Iconography correction. The `0013+` packet remains planning-only behind separate Presence/shared-migration and activation gates. No DB/push/deploy |
+| **Contribution containment and integrity** | containment/source complete; `0013` operational activation active and pathless | Contribution Integrity & Moderation Engineer `019f75a3-f50d-7180-8e92-0a7aabd8a98c`; independent operational refuter | Released Phase 1 Schema/RPC and Phase 2A server/read source, plus Preview→Production target-identity, compatibility, default-off, guarded smoke, disable/rollback, and refutation gate | Founder authorization is recorded and Presence `0012` Production operational PASS is complete. `0013` source completion does not prove application; reporting/moderation remain default-off and client re-enable is unclaimed |
 | **Market Details hierarchy and offer surface** | `ae47513` split runtime PASS; hierarchy ownership released | persistent Human Interface Design Engineer `019f75a5-0fc6-7f40-9a0f-8097ead3b45d`; HI Regression | — | Hierarchy/one CTA, rows/credits, pop/reopen, and regular layout pass |
-| **Market Details compact terminal-reservation correction** | runtime REFUTED; exact three Motion paths retained | Motion & Interaction Engineer; runtime refuter | `src/design-system/components/NavigationStack.tsx`; `src/app/page.tsx`; `scripts/motion-contracts.test.ts` | Compact terminal CTA disappears and tail exceeds 24px; final rows/full credits reachable, pop/reopen and regular PASS; root-scroll measurement unverified |
+| **Market Details compact terminal-reservation correction** | closed / released with direct reused-tab runtime PASS at `2ca2bfe` | Motion & Interaction Engineer; runtime refuter | Released: `src/design-system/components/NavigationStack.tsx`; `src/app/page.tsx`; `scripts/motion-contracts.test.ts` | 23px terminal tail, fixed controls, full final attribution, and stable repeated terminal gestures passed; H26 later closed at `d99d57a` |
 | **Market Details Place Offer Row availability semantics** | ACTIVE exact one-file HI/Iconography lane | Human Interface Design Engineer `019f75a5-0fc6-7f40-9a0f-8097ead3b45d` | `src/design-system/components/PlaceOfferRow.tsx` | Semantic status families with explicit text/icon; light/dark/grayscale/forced-colors; no data/copy/action widening |
-| **H38 offline search** | assessment complete; narrow correction queued pathless behind Market Details | unassigned | Catastrophic error-boundary escape is refuted in the current tree. Confirmed residual: the `page.tsx` search catch clears prior results and `AsyncList` lacks `onRetry` | Smallest future one-file patch: retry-token state, remove the clear, add the dependency token and `onRetry` callback, preserve cancellation/finally. Browser-refuter criteria are ready; no claim until Market Details releases `page.tsx` |
+| **H38 offline search** | ✅ source complete / released at Quality-PASSed, pushed `66234ed` | Client Reliability & Offline Engineer | Released: `src/app/page.tsx` | Explicit retry and contained AsyncList error presentation are source complete. Runtime fault-injection remains a separate pathless evidence gate |
 | **H6 ADR-020 nonce-CSP governance** | complete at `14aff35` + `6c74c147`; re-refutation NOT REFUTED with no P1/P2/P3; four docs released | H6 governance workers and independent refuter `019f7692-d254-7e43-a687-154876274927` | One enforcing nonce policy, request/response CSP parity, explicit `x-nonce`-alone rejection, no duplicate enforcement, dynamic/private/no-store, environment, Blob, report-only, and later-boundary contracts | Governance acceptance authorizes architecture only. No middleware/layout/Vercel implementation, Preview enforcement, Production deployment, push, or release authority follows |
 | **H6 CSP report collector and retention** | operations PASS; source paths released; pathless monitoring only | Security & Privacy Engineering Lead evidence custody | Released: collector, cleanup, sanitizer/store, `.env.example`, Cron-only `vercel.json`, focused contract | Production/Preview hold sensitive `CRON_SECRET` and `BLOB_READ_WRITE_TOKEN_PRIVATE`; the collector is pinned to its separate private Blob store with no public-avatar-store fallback. Hourly `0 * * * *` cleanup and active exact POST WAF 60/IP/60s platform-429 rule are enabled with no pending draft. Production stays fail-open/report-only; per-region counters remain residual |
 | **Production nonce CSP P1 correction** | REFUTED/pathless upstream adapter gate; three source paths released | Security & Privacy Engineering Lead evidence custody; future Next/Vercel adapter/version refuter | Released: `src/middleware.ts`; `src/lib/seo.tsx`; `scripts/csp-policy-contracts.test.ts` | Preview `dpl_DXZqqwy3srE6E6Ju8XLJ968otyf7` proved `nodejs24.x` middleware and repeated 6/29 nonced versus 23 bare Next scripts with one unchanged enforcing plus one report-only CSP and no internal headers. Experiment reverted; reopen only on materially new adapter/version evidence. Collector stays report-only; enforcement prohibited |
@@ -841,9 +1844,9 @@ paths; after they are claimed, Sol's next step is implementation.
 | **Aboki FX provider-aware implementation** | runtime PASS for `ed9483c` + forward fix `a4eaed3`; seven paths released | Human Interface Design Engineer `019f75a5-0fc6-7f40-9a0f-8097ead3b45d`; independent static refuter; HI Quality runtime refuter | Bounded validated current-tab `sessionStorage` preserves amount across responsive remount, clears invalid/blank state, and changes no egress/provider behavior | Existing localhost Safari tab preserved `100` JPY desktop→compact→desktop; clear and intentional pair reset removed the amount; invalid compact input did not resurrect it; light/dark passed; tab restored to Food/light desktop. This narrow PASS does not close separate release-wide evidence or migration gates. No tests/DB/push/deploy |
 | **Iconography & Visual Systems governance / ADR-018** | complete at `4116532`; independent PASS no P1/P2/P3; four docs released | Product & Data Governance Architect `019f7599-0eaa-7423-9ebf-a1bfea8efe37`; Iconography audit evidence | ADR-018 ratified controlled semantic iconography and superseded contradictory provisional palette/separator language | Exact four governance paths are released. No implementation, test, build, browser, DB, push, or deploy occurred |
 | **Controlled Semantic Iconography implementation** | complete at `69737de`; independent NOT REFUTED with no P1/P2; twelve paths released | Iconography & Visual Systems Lead `019f75cf-4d8f-7263-822b-06e846fce7ac`; independent static refuter | Neutral ordinary actions, separate Food/Money domain tones, actual-state-only status tones, rating token, neutral disabled future categories, circular borderless `IconOrb` 28/32/48, neutral item fallback, and scoped border/raw/status cleanup | Exact twelve-path scope was clean and the focused iconography contract passed. Runtime visual verification and independent contrast calculation remain evidence residuals; future call-site coverage stays queued/unclaimed pending exact paths. The commit does not cover market-detail rows, `page.tsx`, Mapbox entities, or Aboki paths. No build/browser/DB/push/deploy |
-| **Controlled Semantic Iconography bounded expansion** | three matrix paths and Report Price runtime PASS/released; two evidence paths retained; Confirm Visit static PASS/runtime UNVERIFIED | Iconography & Visual Systems Lead `019f75cf-4d8f-7263-822b-06e846fce7ac`; independent visual/accessibility refuters | Retained: `SheetPicker.tsx`, `MapLoader.tsx`, `ConfirmVisitSheet.tsx`. Released: `ReportPriceSheet.tsx` | Confirm Visit remains unreleased pending runtime |
+| **Controlled Semantic Iconography bounded expansion** | complete / released at `a2a7104` plus `b93761b` and `ae47513` | Iconography & Visual Systems Lead `019f75cf-4d8f-7263-822b-06e846fce7ac`; independent visual/accessibility refuters | Released: `SheetPicker.tsx`, `MapLoader.tsx`, `ConfirmVisitSheet.tsx`, and `ReportPriceSheet.tsx` | No continuing source ownership |
 | **H23 ADR-006 citation repair** | complete at `18b9b09`; independent static PASS with no P1/P2/P3; path released | Product & Data Governance Architect `019f7599-0eaa-7423-9ebf-a1bfea8efe37` | One-file citation/reference repair with all freshness and trust decisions preserved | `docs/adr/006-freshness-windows.md` is released. No code or policy change occurred |
-| **ADR-019 Contribution governance** | `0013+` planning packet complete but pathless and unauthorized | Product & Data Governance Architect `019f7599-0eaa-7423-9ebf-a1bfea8efe37` | Packet covers ADR-019, schema/migration/manifest, app/ops paths, and dependency ordering for later contribution integrity/moderation | `495750a` containment now has runtime PASS. Do not activate or claim packet paths until Presence/shared-migration gates pass and a fresh exact exclusive handoff is recorded |
+| **ADR-019 Contribution governance** | governance/source packet complete; `0013` operational activation active and pathless | Product & Data Governance Architect `019f7599-0eaa-7423-9ebf-a1bfea8efe37`; Contribution Integrity & Moderation Engineer `019f75a3-f50d-7180-8e92-0a7aabd8a98c` | ADR-019 contract plus released Schema/RPC and server/read source; Preview→Production activation requires target identity, compatibility, runtime/default-off, guarded smoke, disable/rollback, and independent refutation | Presence `0012` Production operational PASS and Founder authorization are recorded. Source paths remain released; client/UI re-enable awaits a separate exact claim |
 | **Shared ModalSheet focus hardening** | completed at `f19990b`; Safari refuter PASS; ModalSheet released and contract transferred to active Motion integration | Motion & Interaction Engineer / independent Safari refuter | Released: `src/design-system/components/ModalSheet.tsx`; active integration: `scripts/motion-contracts.test.ts` | The focused contract now supports the exact class-only terminal-reservation correction |
 | **contextual category capability vertical** | deferred Phase 5A, owns no paths | Sol | One non-price vertical plus typed capability extracted from two live implementations | ADR-002 Phases 0-4, accepted ADR-010/011, V1 exit, clean migrations; no EAV/registry before then |
 | **`page.tsx` modularisation and reusable core engines** | future pathless architecture lane; no transfer or implementation authority | future architecture owner with independent boundary/refutation reviewer | Map the live dependency graph and incremental extraction boundaries for discovery/search, location, map/presence, sheet/presentation, contribution, exchange, seller, trust/confidence, and legal/analytics | Preserve ADR-002 correctness-before-boundaries and active Market Details ownership of `src/app/page.tsx`. Extract only live vertical slices with callers in the same change; no dead `src/modules` shells. Require typed contracts/configuration, domain logic outside UI, incremental strangler sequence, no behavior regression, exact per-step paths, and independent refutation |
@@ -1026,26 +2029,33 @@ in either one will conflict. **Never edit these without holding the lane that ow
 
 | File | Lines | Currently owned by |
 |---|---:|---|
-| `src/app/actions.ts` | ~1358 | **released** from Market Details after `8b0d5e4`; H31 remains queued and unclaimed pending a fresh exact handoff |
-| `src/app/_components/ItemDetailSheet.tsx`, `src/app/_components/GetItSheet.tsx` | — | **released** after `ed5a6cb` static PASS and combined runtime PASS |
-| `src/lib/validation.ts` | — | **released** after presence containment `4e25b8c7`. |
+| `src/app/actions.ts`, `src/lib/validation.ts`, `src/lib/contributions/runtime.ts`, `scripts/contributions/contribution-actions-contract.test.ts` | — | **released** after Quality-PASSed, pushed `30f2ecdc`; runtime activation remains pathless and gated, with reporting/moderation default-off |
+| `src/app/_components/ItemDetailSheet.tsx` | — | **released** after independent-HI-Quality-passed, pushed H5 `cfd5d01`; H5 visible-pixel rerun is pathless after Safari renderer recovery |
+| `src/app/_components/GetItSheet.tsx` | — | **released** from the truthful-location vertical; no current claim |
 | `src/app/_components/CategorySelectorSheet.tsx` | — | **released** after `69737de` exact-scope independent NOT REFUTED with no P1/P2 and focused contract PASS |
-| `src/app/_components/ExchangePanel.tsx` | — | **released** after the Iconography HI runtime matrix PASS; prior provider-aware implementation remains complete/released |
-| `src/design-system/components/PlaceOfferRow.tsx` | — | **active exact one-file HI/Iconography availability-semantics correction** |
+| `src/app/_components/ExchangePanel.tsx` | — | **released** after Quality-PASSed, pushed concise-copy commit `10df634d` |
+| `src/app/page.tsx`, `src/design-system/components/PlaceOfferRow.tsx` | — | **retained only for delayed Market visual/AX evidence**: `23b5071` is not causal because the verified `4e3820ab` rollback also visibly fails. No Market/page source claim; push/deploy remains blocked pending systemic Maps correction |
+| `src/design-system/components/StatusBadge.tsx` | — | **released** at integrated `493aac1` Market Details hierarchy refinement |
 | `src/design-system/components/ModalSheet.tsx` | — | **released** after `f19990b` and Safari refuter PASS for zero-focusable focus containment |
-| `src/design-system/components/NavigationStack.tsx`, `src/app/page.tsx`, `scripts/motion-contracts.test.ts` | — | **retained/runtime REFUTED**: compact CTA disappears at absolute terminal and tail exceeds 24px; root-scroll unverified |
+| `src/design-system/components/NavigationStack.tsx`, `scripts/motion-contracts.test.ts` | — | **released** after the Motion terminal-tail closeout; no current claim |
+| `src/integrations/maps/MapboxAdapter.ts`, `scripts/location-default-contract.test.ts` | — | **released, likely next exact claim pending Maps confirmation**: verified rollback still fails and controller evidence implicates WebGL2-only `frameHasVisiblePixels()` handling; no activation or widening yet |
+| `src/core/context/ThemeContext.tsx` | — | **released** after `d42454b` Production PASS; no current claim |
+| `src/app/_components/ProfileSheet.tsx` | — | **released** after H26 `d99d57a` Production PASS; no current claim |
+| `src/design-system/components/BottomSheet.tsx`, `src/design-system/components/CompactShell.tsx`, `src/design-system/components/AdaptiveShell.tsx`, `src/design-system/components/MapboxCanvas.tsx`, `src/app/page.tsx` | — | **released** after final independent PASS at pushed `091fe8e`; runtime retry proof remains pathless behind Safari renderer recovery |
+| `src/core/state/locationStore.ts`, `src/core/state/globalStore.ts`, `src/app/_components/LocationSheet.tsx`, `src/lib/directions.ts` | — | **released** from the truthful-location vertical; `MapboxCanvas.tsx` is separately released after H10 `091fe8e` |
 | `src/app/_components/ReportPriceSheet.tsx` | — | **released** after `b93761b` unavailable-banner runtime PASS |
-| `src/app/_components/ConfirmVisitSheet.tsx` | Iconography & Visual Systems Lead `019f75cf-4d8f-7263-822b-06e846fce7ac` | **static PASS, runtime UNVERIFIED** — exact path retained |
-| `src/core/i18n/strings.ts` | — | **released** after controller runtime artifact closed Contribution containment with PASS |
-| `src/app/_components/ManageProfileSheet.tsx` | — | **released** after presence containment `4e25b8c7`. |
+| `src/app/_components/ConfirmVisitSheet.tsx` | — | **released** after current-main ancestor `ae47513`; no current claim |
+| `src/core/i18n/strings.ts`, `src/app/_components/AboutSheet.tsx`, `src/app/_components/ManageProfileSheet.tsx`, `src/app/manifest.ts` | — | **released** after Quality-PASSed, pushed concise-copy commit `10df634d`; disclosure, attribution, Sample/provenance labels, and no self-delete promise are preserved |
 | `src/app/api/webhooks/neon-auth/route.ts`, `src/lib/auth-email.ts`, `src/lib/auth-email-logo.ts`, `scripts/auth-email-contracts.test.ts`, `docs/operations/AUTH-EMAIL-DELIVERY.md` | — | **released** after branded Neon Auth OTP implementation `64d3519`, type correction `8583495`, monochrome correction `d549d42`, and embedded-logo follow-up `712719f`; all review rounds VERIFIED with no P1/P2/P3, latest Production deployment is Ready/aliased, and fresh OTP/Gmail inline-CID evidence passed |
 | `public/logo.png` | — | **unclaimed**; the released OTP email uses the embedded monochrome PNG from `src/lib/auth-email-logo.ts`, not this path or a remote URL |
-| `src/db/seed.ts` | — | **released** after `32b15ae` catalog determinism PASS; H27 trust defect remains separately open/unclaimed because that commit preserves the hardcoded freshness-to-trust assignment |
+| `src/db/seed.ts` | — | **released** after `32b15ae` catalog determinism and the subsequent H27 truth correction `009296c`; uniformly synthetic offers now use `trustLevel: "none"`; no current claim |
 | `src/db/seedContent.ts` | — | **released** after `32b15ae` and independent static PASS; catalog 48/85, slugs/content, Spaghetti contract, and synthetic provenance preserved |
-| `src/db/schema/presence.ts`, `src/db/schema/index.ts` | — | **frozen** during corrected-unapplied `0012`; no claim unless stored objects/signatures provably change and the controller records a new exact handoff |
+| `src/db/schema/presence.ts` | — | **frozen** after operational `0012` PASS; no current claim |
+| `src/db/schema/index.ts` | — | **released** with the complete `0013` Phase 1 source boundary; the active `0013` operational activation gate is pathless |
 | `src/db/pillars/80-presence-services.sql`, `src/db/pillars/90-presence-security.sql` | — | **released** after corrected-unapplied `0012` commit `d5991c9` and complete source/disposable validation; shared rollout remains pathless |
 | `src/db/migrations/0012_guarded_presence.sql` | — | **released** after corrected-unapplied `0012` commit `d5991c9`; still unapplied to the shared target, whose identity/role/scheduler proof remains the sole rollout blocker |
-| `src/db/migrations/meta/0012_snapshot.json`, `src/db/migrations/meta/_journal.json` | — | **frozen**; no claim unless corrected SQL provably changes stored objects/signatures and the controller records a new exact handoff |
+| `src/db/migrations/meta/0012_snapshot.json` | — | **frozen** after operational `0012` PASS |
+| `src/db/migrations/meta/_journal.json` | — | **released** with the complete `0013` Phase 1 source boundary; every frozen `0012` entry remains byte-identical |
 | `scripts/presence/presence-migration-contract.test.ts` | — | **released** after `d5991c9`; disposable validation covers nine RPCs, lifecycle/security/cleanup/idempotence, deterministic idle retention, and account-deletion purge/anonymization |
 | `package.json` / `package-lock.json` | — | **released** after the direct `nodemailer` plus types dependency changes in branded Neon Auth OTP commit `64d3519`; no continuing package ownership |
 | `LANES.md`, `docs/architecture/RELEASE-CONTROLLER.md` | — | **Quality & Release Controller employee** — event-driven lane reconciliation and checkpoint review; no timer, automation, child task, or push without a separately authorized passing checkpoint |
@@ -1060,11 +2070,10 @@ in either one will conflict. **Never edit these without holding the lane that ow
 | `src/app/layout.tsx`, `src/lib/security/csp-policy.ts` | — | **released historical nonce source**; not part of the active production P1 correction and no current claim |
 | `src/design-system/components/ListRow.tsx`, `src/design-system/components/ItemCard.tsx` | — | **released** after `69737de` exact-scope independent NOT REFUTED with no P1/P2; the three former foundation paths from that historical commit are governed by the current five-path reservation below |
 | `src/app/globals.css`, `tailwind.config.ts`, `src/design-system/components/IconOrb.tsx`, `src/design-system/icons/SolidIcon.tsx`, `scripts/iconography-contracts.test.ts` | — | **released** after semantic iconography foundation existing-tab light/dark/grayscale runtime PASS and focused contract PASS; forced-colors runtime emulation remains evidence residual only |
-| `src/app/_components/ItemDetailSheet.tsx`, `src/app/_components/GetItSheet.tsx` | — | **released** after `ed5a6cb` static PASS and combined runtime PASS |
-| `src/app/_components/SettingsSheet.tsx`, `src/app/_components/CurrencyPickerSheet.tsx`, `src/app/_components/ExchangePanel.tsx` | — | **released** after HI runtime matrix PASS for Iconography intent adoption |
-| `src/design-system/components/SheetPicker.tsx`, `src/design-system/components/MapLoader.tsx` | Iconography & Visual Systems Lead `019f75cf-4d8f-7263-822b-06e846fce7ac` | **retained evidence paths** — SheetPicker runtime-unverified; MapLoader loaded-state-only with edge states unverified |
-| `src/design-system/components/MapboxCanvas.tsx`, `src/integrations/maps/MapboxAdapter.ts` | — | **released** after H37 semantic place-marker commit `6611068` and independent NOT REFUTED. Peer markers are not live because the page/action boundary returns empty shared users; self-avatar and any contextual-orb/selected-glow follow-up remain separate and unclaimed |
-| `src/app/_components/ProfileSheet.tsx`, `src/app/_components/AboutSheet.tsx`, `src/app/_components/LocationSheet.tsx`, `src/app/_components/ReportProblemSheet.tsx` | — | **released** after `69737de` exact-scope independent NOT REFUTED with no P1/P2 and focused contract PASS |
+| `src/app/_components/GetItSheet.tsx` | — | **released** after `ed5a6cb` static PASS and combined runtime PASS; `ItemDetailSheet.tsx` is separately released at H5 `cfd5d01` |
+| `src/app/_components/SettingsSheet.tsx`, `src/app/_components/CurrencyPickerSheet.tsx` | — | **released** after HI runtime matrix PASS for Iconography intent adoption |
+| `src/design-system/components/SheetPicker.tsx`, `src/design-system/components/MapLoader.tsx` | — | **released** after current-main ancestor `a2a7104`; no current claim |
+| `src/app/_components/ReportProblemSheet.tsx` | — | **released** after `69737de` exact-scope independent NOT REFUTED with no P1/P2 and focused contract PASS |
 | `scripts/iconography-contracts.test.ts` | — | **released** with the semantic iconography foundation runtime and focused-contract PASS |
 | `src/app/currency-actions.ts`, `src/app/_data/reference-currencies.ts`, `src/app/_components/CurrencyPickerSheet.tsx`, `src/app/_components/CurrencyFlag.tsx` | — | Provider-aware implementation `ed9483c` + `a4eaed3` is complete; all paths are released, including `CurrencyPickerSheet.tsx` after the later Iconography HI runtime matrix PASS |
 | `public/icons/currency-flags.svg`, `public/icons/currency-flags.LICENSE.md` | — | **released** after circular local SVG orbs passed static and runtime evidence; no emoji, rectangular badges, or remote requests |
@@ -1087,21 +2096,21 @@ in either one will conflict. **Never edit these without holding the lane that ow
 | **Iconography & Visual Systems governance / ADR-018** | Product & Data Governance Architect `019f7599-0eaa-7423-9ebf-a1bfea8efe37`; independent refuter | ✅ `4116532def401c8419cc645b55d18b2dca36139e`; PASS no P1/P2/P3; four docs released | — | Controlled semantic iconography governance | 2026-07-18 | Exact four-doc governance commit ratified ADR-018 and superseded contradictory provisional palette/separator language. No implementation, test, build, browser, DB, push, or deploy occurred. |
 | **Controlled Semantic Iconography implementation** | Iconography & Visual Systems Lead `019f75cf-4d8f-7263-822b-06e846fce7ac`; independent static refuter | ✅ `69737de3a3e84d88bfe7bb906d4abdc4b7315dee`; NOT REFUTED, no P1/P2; twelve paths released | — | ADR-018 implementation | 2026-07-18 | Exact twelve-path scope was clean and the focused iconography contract passed. Runtime visual verification and independent contrast calculation remain release-evidence residuals. Broader future call-site coverage remains the separate queued/unclaimed semantic iconography lane and receives no path ownership from this completion. No product follow-up, build, browser, DB, push, or deploy occurred in this reconciliation. |
 | **H23 ADR-006 citation repair** | Product & Data Governance Architect `019f7599-0eaa-7423-9ebf-a1bfea8efe37`; independent static refuter | ✅ `18b9b09a0815037e90f438e43fdefba2b1f8dd27`; PASS no P1/P2/P3; path released | — | Trust/freshness ADR reference accuracy | 2026-07-18 | Exact one-file repair removed historical numeric examples, normalized references, and accurately documented trust presentation/batch call sites while preserving every 24h/72h/144h, newest-observation, ranking, `TRUST_BANDS`, seed-ladder-debt, and deleted `getFoodItemCandidates` decision. No code or policy change. |
-| **ADR-019 Contribution governance** | Product & Data Governance Architect `019f7599-0eaa-7423-9ebf-a1bfea8efe37` | 🟡 `0013+` planning packet complete; pathless and unauthorized | — | Post-containment contribution integrity / migration `0013+` policy | 2026-07-18 | The packet enumerates ADR-019, schema/migration/manifest, app/ops paths, and dependencies but grants no claim. Containment runtime now passes; activation still requires Presence/shared-migration gates followed by a fresh exact exclusive handoff. |
+| **ADR-019 Contribution governance** | Product & Data Governance Architect `019f7599-0eaa-7423-9ebf-a1bfea8efe37`; Contribution Integrity & Moderation Engineer `019f75a3-f50d-7180-8e92-0a7aabd8a98c` | 🟢 released source packet; active pathless `0013` operational activation | — | Post-containment contribution integrity / migration `0013+` policy | 2026-07-18 | Founder authorization and Presence `0012` Production operational PASS are recorded. Preview then Production must separately prove identity/fingerprint, migration/ledger/schema/RPC/grants, runtime role/default-off flags, guarded report smoke, disable/rollback, and independent refutation. Source completion does not authorize client re-enable. |
 | **Quality & Release Controller** | persistent employee | 🟢 standing, idle between explicit assignments | `LANES.md`; `docs/architecture/RELEASE-CONTROLLER.md` | Repository integration and release governance | 2026-07-18 | Replaces the deleted recurring Git Release Controller automation. Owns event-driven lane reconciliation, release documentation, commit/checkpoint review, migration-before-code ordering, and fail-closed push decisions. Never creates a timer, recurring automation, duplicate task, or child task. Never force-pushes, amends, rebases, resets, stashes, seeds, migrates a shared database, deploys manually, or swallows another lane's work. A push is Production deployment and requires an explicit Founder/CEO checkpoint-review request plus a clean, non-diverged exact candidate with every included lane released, fresh independent evidence, the integrated release gate passing, and shared-target migration compatibility proven. |
 | **Catalog seed source-only follow-up** | Catalog Stewardship Engineer `019f75a3-f38d-7893-9b82-2d6871a2563c`; independent static refuter | ✅ `32b15ae`; PASS with no P1/P2/P3; paths released | — | Catalog stewardship | 2026-07-18 | Commit `32b15ae` changed exactly `src/db/seed.ts` and `src/db/seedContent.ts`: stable per-place PRNG, item-first `variants[0]`, one run timestamp, and primary consumer contract. Catalog 48/85, all slugs/content, the single Spaghetti 500g ₦900–₦1,400 variant, and synthetic provenance/Sample wording are preserved. No DB access, seed execution, migration, push, or deploy occurred. Connected stale data remains unchanged, `src/db/seed.ts` remains prohibited for recurring ingestion, and any destructive refresh requires separate explicit authorization. |
 | **H27 seed-trust correction** | controller-owned bounded Catalog Stewardship worker; independent static refuter | ✅ complete at `009296c`; paths released | — | Remove synthetic freshness-to-trust ladder | 2026-07-18 | Exact one-line correction makes uniformly synthetic generated offers `trustLevel: "none"` instead of deriving `high`/`medium`/`low` from freshness. Independent static PASS found no P1/P2/P3. Freshness, catalog, observations, prices, units, availability, timestamps, counts, schema, migrations, and read-side behavior are unchanged. No seed or database operation occurred; persisted environments are not claimed. |
 | **NBS review-only policy + runbook (Lane A)** | Sol provenance lead `019f75a8-7eb2-7be2-9bbc-781e318bda0d`; Luna original-source refuter | ✅ `3310401`; PASS with no P1/P2; paths released | — | Founder-authorized NBS review-only ingestion | 2026-07-18 | Original package independently matched 5,294,517 bytes and SHA-256 `2d46ff90f87c7bfe75cc3df30ae35cc10a9641971543243e9d885aa7a97ca466`. Exact scope, historical hashes, time, geography, unit, availability, attribution, no-Sample, and no-live rules passed. P3 only: intentional Markdown hard-break whitespace. No fetch, test, DB, seed, schema, migration, UI, push, or deploy occurred. |
 | **NBS deterministic review artifacts + development fixture (Lane B)** | Terra fixture engineer `019f75a8-7d3b-7482-b7e2-ce8ed35b9491`; Luna original-source refuter | ✅ exact `e49782b + 6ae4df9 + 449cb82`; PASS no P1/P2/P3; paths released | — | Founder-authorized NBS review artifacts / development fixture | 2026-07-18 | Final candidate proves strict canonical injected retrieval timestamp, full candidate validation, restored historical/default CLI, and fingerprint/ID enforcement. All ten formerly claimed implementation paths are released. Standing recurring retrieval/review authorization remains, but artifacts are review/development-only. No shared `0010`, seed, publication/promotion, push, or deployment occurred or is authorized. |
 | **NBS original-source refutation** | Luna source refuter `019f75a8-8062-7330-93ee-1fb0d8d4fbc5` | ✅ final PASS no P1/P2/P3; pathless | — | Original-source/evidence refutation | 2026-07-18 | Exact combined candidate `e49782b + 6ae4df9 + 449cb82` passed. Source facts, package evidence, grounded rows, no-Sample/no-live boundaries, strict UTC, validators, CLI compatibility, and fingerprint/ID contract are closed. Historical pilot files remain immutable and unowned. |
-| **Contribution containment plan** | Contribution Integrity & Moderation Engineer `019f75a3-f50d-7180-8e92-0a7aabd8a98c`; independent static/source refuter; HI Quality browser refuter | ✅ controller runtime artifact PASS; exact five paths released from Contribution | — | Immediate contribution safety containment | 2026-07-18 | The runtime artifact closed Contribution ownership. Market retains `page.tsx`; Report Price passed runtime and is released; Confirm Visit later transferred to the active one-file Iconography correction. The `0013+` planning packet remains unauthorized behind separate Presence/shared-migration and activation gates. |
+| **Contribution containment plan** | Contribution Integrity & Moderation Engineer `019f75a3-f50d-7180-8e92-0a7aabd8a98c`; independent operational refuter | ✅ controller runtime artifact PASS; containment/source paths released | — | Immediate contribution safety containment | 2026-07-18 | Report Price and Confirm Visit later released at `b93761b` and `ae47513`. Founder authorization and Presence `0012` Production operational PASS now permit the separate pathless `0013` Preview→Production activation gate; source completion does not enable reporting, moderation, or client UI. |
 | **Shared ModalSheet focus hardening** | Motion & Interaction Engineer; independent Safari refuter | ✅ final `f19990b`; Safari PASS; ModalSheet released and contract later transferred | — | Shared modal accessibility | 2026-07-18 | Zero-focusable initial/Tab/Shift+Tab containment passed Safari refutation while preserving Escape, Close, restoration, nested/pushed sheets, motion, stacking, and layout. `src/design-system/components/ModalSheet.tsx` remains released; `scripts/motion-contracts.test.ts` is now owned only by the disjoint Market Details scroll-containment sub-lane. |
 | **Market Details hierarchy and offer surface** | Human Interface Design Engineer `019f75a5-0fc6-7f40-9a0f-8097ead3b45d`; HI Regression | ✅ `ae47513` split runtime PASS; hierarchy ownership released | — | Founder-rejected compact market detail | 2026-07-18 | Hierarchy/one CTA, rows/credits, pop/reopen, and regular layout pass. |
-| **Market Details compact terminal-reservation correction** | Motion & Interaction Engineer; runtime refuter | 🔴 runtime REFUTED; exact three paths retained | `src/design-system/components/NavigationStack.tsx`; `src/app/page.tsx`; `scripts/motion-contracts.test.ts` | Compact terminal CTA persistence | 2026-07-18 | CTA disappears at absolute terminal and tail exceeds 24px; final rows/full credits reachable, pop/reopen and regular PASS; root-scroll measurement unverified. |
+| **Market Details compact terminal-reservation correction** | Motion & Interaction Engineer; runtime refuter | ✅ closed / released with direct reused-tab runtime PASS at `2ca2bfe` | — | Compact terminal CTA persistence | 2026-07-18 | 23px terminal tail, fixed controls, full final attribution, and stable repeated terminal gestures passed. `page.tsx` is subsequently released by H5 `cfd5d01`. |
 | **Market Details Place Offer Row availability semantics** | Human Interface Design Engineer `019f75a5-0fc6-7f40-9a0f-8097ead3b45d` | 🟢 active exact one-file HI/Iconography lane | `src/design-system/components/PlaceOfferRow.tsx` | Founder runtime color refutation | 2026-07-18 | Confirmed/available uses confirmed, unavailable uses unavailable, uncertain/stale uses caution if represented, neutral only unknown; explicit text/icon remains. |
 | **Report Price unavailable-status icon correction** | Iconography & Visual Systems Lead `019f75cf-4d8f-7263-822b-06e846fce7ac`; HI Regression | ✅ `b93761b` runtime PASS; path released | — | ADR-018 status warning adoption | 2026-07-18 | Unavailable banner passed runtime. |
-| **Confirm Visit unavailable-status icon correction** | Iconography & Visual Systems Lead `019f75cf-4d8f-7263-822b-06e846fce7ac`; runtime refuter | 🟠 static PASS; runtime UNVERIFIED, path retained | `src/app/_components/ConfirmVisitSheet.tsx` | ADR-018 status warning adoption | 2026-07-18 | No release until runtime verification. |
-| **H38 offline search** | unassigned | 🟡 assessment complete; narrow correction queued pathless behind Market Details | — | Offline search resilience | 2026-07-18 | Catastrophic error-boundary escape is refuted: search rejection is caught and `AsyncList` has an error prop. Confirmed residual is limited to `page.tsx` clearing prior trustworthy rows and supplying no `onRetry`. Smallest future one-file patch adds retry-token state, removes the clear, adds the dependency token and `onRetry`, and preserves cancellation/finally. Browser-refuter criteria are ready. No path claim until Market Details releases `page.tsx`; no edits/tests occurred. |
+| **Confirm Visit unavailable-status icon correction** | Iconography & Visual Systems Lead `019f75cf-4d8f-7263-822b-06e846fce7ac` | ✅ `ae47513`; path released | — | ADR-018 status warning adoption | 2026-07-18 | Current-main ancestor completed the source slice; no continuing ownership. |
+| **H38 offline search** | Client Reliability & Offline Engineer | ✅ source complete / released at `66234ed` Quality PASS + push | — | Offline search resilience | 2026-07-18 | Released `src/app/page.tsx`: explicit `searchRetry` action plus contained AsyncList error presentation preserve prior trustworthy results, query, browsing location, category, and stale-response cancellation; automatic `online` retry remains prohibited. Runtime fault-injection is a separate pathless evidence gate. |
 | **H6 ADR-020 nonce-CSP governance** | governance commits `14aff35fa98728c4d2c22e61e773254d42186db7` + `6c74c147678eefbda8e5b5030c0ab51c13a6a952`; refuter `019f7692-d254-7e43-a687-154876274927` | ✅ NOT REFUTED, no P1/P2/P3; four docs released | — | Security/privacy architecture | 2026-07-18 | One-file correction explicitly rejects `x-nonce` alone and requires cloned request headers with raw nonce plus exact CSP, `NextResponse.next({request:{headers}})`, and byte-identical response CSP. All original contracts remain. Governance closure grants no implementation, Preview/Production enforcement, push, or deployment authority. |
 | **H6 CSP collector and retention** | Security & Privacy Engineering Lead evidence custody | ✅ operations PASS; all source paths released; pathless monitoring | — | ADR-020 report collection | 2026-07-18 | Production/Preview hold sensitive `CRON_SECRET` and `BLOB_READ_WRITE_TOKEN_PRIVATE`. A separate private Blob store is used with no fallback to the project public avatar store. Hourly `0 * * * *` cleanup and active exact `POST /reports/security/csp` 60/IP/60s WAF rule with platform `429` are enabled; no pending draft. Production remains fail-open/report-only. Vercel counters are per-region. |
 | **Production nonce CSP P1 correction** | Security & Privacy Engineering Lead evidence custody; future upstream adapter/version refuter | 🔴 Preview runtime REFUTED; pathless upstream gate; three source paths released | — | ADR-020 report-only delivery | 2026-07-18 | Ready Preview `dpl_DXZqqwy3srE6E6Ju8XLJ968otyf7` proved `_middleware` `nodejs24.x`; two authenticated fresh pages each had 29 scripts, six app-authored nonced and 23 bare Next bootstrap/Flight/chunks, exactly one unchanged enforcing plus one report-only CSP, and no internal headers. Experimental line reverted and source paths are clean. Collector remains report-only; enforcement prohibited. Reopen only with new Next/Vercel adapter/version evidence. |
@@ -1285,9 +2294,9 @@ silently ignoring it; the disagreement is the useful part.
 | H21 | **every session** | **`tailwindcss-animate` gives every `animate-in … duration-*` element `transition-property: all`.** It emits `duration-*` twice — as `animation-duration` AND `transition-duration` — and a bare `transition-duration` defaults `transition-property` to `all`. Live at `ProfileSheet.tsx:441`, `ReportPriceSheet.tsx:54`, `ConfirmVisitSheet.tsx:395,626,639`, `ModalSheet.tsx:201`. All non-focusable `<div>`s today, so **no focus ring is at risk** — but they transition every property, and the moment one becomes focusable it inherits the H18 bug. | Verified in the emitted stylesheet. | **Open, low priority.** |
 | H22 | **the owner** | **P0-5 is still open and it IS your call — unlike P0-6, which was not.** `text-secondary` is `rgba(60,60,67,0.60)` at **3.30:1** light, the app's second-most-used text colour, carrying distance, address, units and every stat label. It is **Apple's `secondaryLabel` verbatim**, so its value matches its recorded intent — changing it trades fidelity for compliance, and AGENTS.md makes Apple HIG law. That is a real collision only you can settle. (P0-6 looked identical and wasn't: its ink *contradicted* its own comment, and the pure hue lives in a separate token, so fixing it cost zero fidelity.) The audit's option: `rgba(60,60,67,0.75)` → 4.86 / 4.65, passes everywhere, hierarchy against `text-primary` survives. Dark already passes. | docs/ACCESSIBILITY.md P0-5. | **Open — needs you.** |
 | H24 | ~~browser-verify P1-1's rings~~ | **CLOSED 2026-07-17 — verified, four cycles late, and the clip risk was real but the fix holds.** The browser tooling was down for four cycles; it came back. Measured on the live search field: wrapper `overflow: hidden` (the clipping box, confirmed), `focus-within` true, **`outline: rgb(0,122,255) solid 2px`, offset 2px** — the token ring, on the WRAPPER, and a screenshot shows it rendering unclipped around the field. Moving it off the input was necessary: an outline paints outside the border box at 2px offset, exactly where that box clips. Had it stayed on the input it would have been present in the CSS and invisible on screen. |
-| H26 | **auth lane (`ProfileSheet.tsx`) + map lane (`page.tsx`)** | **Owner's typography directive lands in your files and I could not do it: too many weights; muted must never be semibold; status normal; bold/demibold cannot be repeated all over — it is not a calm UI.** I took what I own (status badge → normal; 7 muted labels lost `font-medium`). **Yours:** `page.tsx:1245` `font-bold` and `page.tsx:1253` **`font-black`** — the only two in the app, sitting on `text-caption-1`, the SMALLEST type in the scale. Black at caption size is a shout with no room to be heard; that pair alone is most of what reads as noisy. Also `ProfileSheet.tsx:564,571,696` — three `text-subhead font-semibold` action links. **Census: 27 `font-semibold` still in `src`** (was 28) — the count barely moved because the bulk of them are yours and the sheets'. A weight used 27 times is texture, not hierarchy. | Owner, 2026-07-17. | **Open.** |
-| H27 | **open/unclaimed after evidence reconciliation** | `32b15ae` completed deterministic catalog generation but left the current `src/db/seed.ts` hardcoded freshness-to-trust assignment intact. Stale deleted-`getFoodItemCandidates` comments in `src/lib/trust.ts` and released `src/app/actions.ts` remain outside any active slice. | Current HEAD `src/db/seed.ts` trust assignment versus exact `32b15ae` scope/evidence. | **NOT CLOSED by `32b15ae`; seed path released because no live implementation worker/edit exists. No reseed/DB authority.** |
-| H28 | **logo / brand lane** | **`logoGeometry.ts`'s four knip-red exports are DERIVATION, not orphans — un-export them, do NOT delete them.** `NIGERIA_CENTROID`, `QUESTION_BBOX`, `QUESTION_HEIGHT`, `QUESTION_RENDERED` are flagged unused and they are the working behind `QUESTION_TRANSFORM`, which IS live. `QUESTION_HEIGHT = 420` carries the solve: *"420 lands at (463,469) (~0 off centroid), 460 at (438,461), and 500 at (371,477), 93 units off. 420 is the knee."* **Delete them to clear knip and `QUESTION_TRANSFORM` becomes a magic string nobody can re-derive.** Un-exporting keeps the reasoning in the file and clears the red — the same move you already made in `74c2f52` for five live internals. Flagging because CI is red on these and the obvious fix is the wrong one. **Verified: un-exporting clears knip (11 red → 7) and `tsc` stays green** — but it trades them for four `no-unused-vars` **lint warnings**. CI does not run lint, so it goes green; the next session will still see them. Also: the recent audit praises the logo as *"already implemented as reusable SVG geometry"* — it is implemented and **not reused**; these four have no caller. | `knip`; the derivation comments in the file. | **Open.** |
+| H26 | **closed / released at `d99d57a`** | Caption-level bold/black and unnecessary Profile action-link emphasis correction is current-main integrated. | Production signed-in Profile open/close PASS is recorded; `ProfileSheet.tsx` released. `page.tsx` is separately released by H5 `cfd5d01`. | **No H26 claim remains.** |
+| H27 | **closed / released at `009296c`** | The subsequent one-line forward correction sets uniformly synthetic generated offers to `trustLevel: "none"` instead of deriving high/medium/low from freshness. Stale deleted-`getFoodItemCandidates` comments in `src/lib/trust.ts` and released `src/app/actions.ts` remain outside the completed seed slice. | `009296c` (`fix(seed): stop synthetic trust inflation`) is an ancestor of current `091fe8e`; independent static PASS found no P1/P2/P3. | **No active claim.** Freshness, catalog, observations, prices, units, availability, timestamps, counts, schema, migrations, read-side behavior, seed execution, and database state remain unchanged. |
+| H28 | **closed / released at `7678e9d`; no active source claim** | The four private derivation declarations are already absent. Frozen `QUESTION_TRANSFORM`, its live consumers, and measured-geometry notes remain intact; targeted ESLint passed and independent evidence found no H28 symbols in the remaining repository-wide Knip debt. | `src/design-system/brand/logoGeometry.ts`; independent H28 follow-up/refutation record | **Do not reopen without a concrete regression.** |
 | H30 | **the location-management session + the profile session** | **`page.tsx` is HOT right now: workflow wf_b0fbbf47 is rewriting it (presentation controller + sheet migration), and two more efforts queue behind it.** The owner has three concurrent asks landing on the same files: (1) a presentation controller in `page.tsx` + `ModalSheet.tsx` (running now); (2) "my location" management, which another session owns and which will touch `LocationSheet` / `locationStore` / `page.tsx`; (3) a Profile-modal redesign (rename Account to Profile, mini-profile + Manage-Profile CRUD) which is `ProfileSheet.tsx` + a new profile table + `actions.ts`. **All three touch `page.tsx`.** To avoid the two-workflows-one-file clobber this repo keeps hitting: the presentation spine goes FIRST and lands; then location and profile build ON TOP of the controller it produces (surfaces become `openSurface({type})`, not new `useState` flags). Location session: coordinate your `page.tsx` edits with whoever holds the presentation lane before editing, or wait for the spine commit. Profile is task #27 and is blocked on the spine. | Owner directive 2026-07-17; wf_b0fbbf47 active; tasks #25/#26/#27. | **Coordination, standing until the spine lands.** |
 | H29 | **whoever owns `SheetPicker.tsx` / the sheet system** | **Owner asked why modals stack. Named cause: `SheetPicker` IS a `ModalSheet size="form"`, and it opens over sheets.** Three live stacks: `ItemDetailSheet` (page) → picker (form); `ReportPriceSheet` (page) → picker ×4 (market/item/variant/unit); and the messy one, **`ReportProblemSheet` (form) → picker (form)** — a small modal over a small modal, which is precisely the "previous modal shows behind it" the owner is seeing. **The system already knows:** `presentedCount` in `ModalSheet.tsx` is a COUNT, not a flag, and its own comment says why — *"a flag would clear when the picker dismisses and report nothing presented"*. The primitive carries a workaround for a structure that should not exist. **Recommended fix, and the app already has the primitive: a picker should PUSH into the `NavigationStack` of the sheet that opened it**, exactly as `LocationSheet` already does for LGA drill-down (`019f3f3`). Then there is no stack to hide: one surface, one dismiss, a back affordance, and the picker inherits the parent's height for free. It is also what iOS does for form pickers — tap row, push, back. **This is a design call, not mine to take unilaterally** — filing the evidence. | Owner, 2026-07-17; `presentedCount` and its comment; six `<SheetPicker` call sites. | **Open — design call.** |
 | H31 | **closed / released at `261588f`** | `getCoverageForPoint` now orders by distance, then neighborhood preference, then slug. | Persistent Search & Ranking Engineer `019f75b7-6c59-7952-bf14-b01cfbfd2793`; independent SQL refuter. | Disposable action fixture proved nearer distance wins, coincident neighborhood beats LGA, and coincident neighborhoods use slug fallback. Independent refuter PASS; `src/app/actions.ts` released. |
@@ -1296,7 +2305,7 @@ silently ignoring it; the disagreement is the useful part.
 | H34 | **whoever next opens `Skeleton.tsx`** | **`OfferCardSkeleton` is the right height but the wrong box.** I fixed its invisibility and gave it the real row's surface, radius, shadow and list gap, so nothing shoves on arrival — but its internals are still an approximation: it is a vertical `space-y-4` stack, while the real offer row (`ItemDetailSheet.tsx:628`) is a horizontal flex with a leading icon and `gap-3`. `ItemCardSkeleton` in the same file traces its counterpart properly and documents why ("a skeleton that is a different height than the thing it stands in for shoves the list on arrival"). That is the standard; this one does not meet it yet. Not urgent — it is no longer invisible, and it no longer jumps. Trace the row when you are next in here. | Read both; the box models differ. | **CLOSED 2026-07-17 (`a906636`).** Traced the row column for column. The residual, that the real row can wrap and this cannot, became **H39** for the auth lane. |
 | H37 | **semantic place-marker correction complete; no current path ownership** | Current HEAD carries `placeType` through page marker candidates, `MapboxCanvas`, `MapMarkerOptions`, and adapter symbol selection after `6611068`; the final audit claim that Canvas drops it and the adapter lacks it is stale. The confirmed user-visible gap is separate: `page.tsx` passes `sharedUsers={[]}`, so peer presence is not rendered. The self marker is semantic point/area position only and has no avatar contract. | Current HEAD: `src/app/page.tsx`, `src/design-system/components/MapboxCanvas.tsx`, and `src/integrations/maps/MapboxAdapter.ts`. | **Place-marker H37 CLOSED. Peer presence and any self-avatar work remain separate, pathless, gated lanes.** |
 | H35 | **map lane / whoever owns `src/app/page.tsx` + `MapboxAdapter.ts`** | **OWNER'S REQUEST, 2026-07-17, in their words: when the user's location and the seller's location form a polyline, the camera should zoom out so the two locations stay in view, inside the viewport ABOVE the half-snap sheet.** Treat the pair as a circle and keep the whole circle visible. Today neither end is guaranteed to be. **The route already draws and the camera already ignores it:** `page.tsx:939-955` fetches the geometry and calls `setRoute`, and that is the end of it. There is no camera move anywhere in that effect, so a seller far from the user runs the line straight off the viewport. **Three concrete things the fix needs.** (1) **The adapter has no `fitBounds` and no `cameraForBounds`** (`MapboxAdapter.ts` exposes only `flyTo`/`easeTo`, `:556-557`), so the port needs widening before this is a one-liner. Mapbox's own `cameraForBounds` is the honest primitive; do not hand-roll a zoom from a haversine distance. (2) **The padding is the whole point of the ask, and it already exists:** `setPadding(MapPadding)` (`:92`) with `ZERO_PADDING` (`:75`). "Above the half-snap sheet" means bottom padding equal to the sheet's height at the medium detent, which is `DETENT_FRACTION.medium = 0.52` of viewport height (`BottomSheet.tsx:13-18`). So the two points must fit in the ~48% above it, not in the full viewport. The adapter already models padding as the visible slice (`:64`); this is exactly what that machinery is for. (3) **Fit the whole route, not the two endpoints,** when the geometry is a real road route: a road that detours around a creek leaves the corridor outside a two-point box. `RouteGeometry` (`:43`) is the full coordinate list; bound all of it. **The owner's instruction on this row: leave it until it is claimed and done, or let it stand as a contract other lanes read.** | Read the effect: no camera call. Grepped the adapter: no `fitBounds`. | **Open. Owner-requested.** |
-| H38 | **assessment complete; narrow correction queued pathless behind Market Details ownership of `src/app/page.tsx`** | Catastrophic error-boundary escape is refuted in the current tree. Confirmed residual only: the search catch clears prior trustworthy rows and `AsyncList` supplies no `onRetry`. | Smallest future one-file patch: retry-token state, remove the clear, add dependency token and `onRetry`, preserve cancellation/finally; browser-refuter criteria are ready. | **Open; no path claim until Market Details releases `page.tsx`.** |
+| H38 | **source complete / path released at Quality-PASSed, pushed `66234ed`** | Catastrophic error-boundary escape remains refuted. The source correction adds the explicit retry token and contained AsyncList error presentation without automatic online retry. | Preserve prior results, query, browsing location, category, and stale-response cancellation. | **Runtime fault-injection remains a separate pathless evidence gate.** |
 | H39 | **auth lane (owns `ItemDetailSheet.tsx`)** | **The offer row's height is not stable, and it is one un-truncated line.** In the offer list, the name (`ItemDetailSheet.tsx:637`) and the freshness label (`:643`) both `truncate` to one line, but the third line below them, distance + `confidence.label` (`:647-654`, the label at `:653` reads like "12 reports, 4 sources"), has no `truncate` and no `whitespace-nowrap`. So on a narrow viewport (the row's card below ~320px, i.e. an iPhone SE and smaller) or under large-text / browser zoom, that line wraps and the row grows from 98px to ~116px and up. That is a real layout shift on its own, independent of skeletons: when the three offers stream in at different `confidence` widths, rows can settle at different heights. **It also defeats `OfferCardSkeleton` (H34, now fixed):** a fixed-height placeholder cannot predict a wrap, so the skeleton is exact at typical width and undershoots when this line wraps. **One-line fix in your file:** give that third line the same `truncate` the two lines above it already have (or `whitespace-nowrap` + `min-w-0`), and the row height stabilises and the skeleton becomes exact everywhere. Measured: card 343px → row 98px; card 288px → row 116px; root font 24px → row 192px, all with the same data. | Measured the real row at three widths / font sizes; only the confidence line grows it. | **CLOSED 2026-07-18 (`73671e3`). Distance and meter reserve their width; only the confidence label truncates. Static forward refutation passed; extreme rendered widths remain unverified.** |
 | H40 | **superseded/resolved; no current path ownership** | Search price/place parity was corrected forward through `48fac46`, `2ebaf54`, and `75a1fd1`. Final reused-tab evidence at Amuwo Odofin 5 km matched home/search for Rice and Pepper with category switching operable and no visible exception. | Final runtime PASS recorded against `75a1fd1`. | **CLOSED; Search path released and later transferred to Contribution containment.** |
 | H41 | **resolved; no current path ownership** | **The profile location-sharing flag, coordinate write/query path, and map markers landed in `e42207d` and `46c8c6f`.** The original implementation handoff is closed, but this is not a safety or production-readiness claim. | Commits `e42207d`, `46c8c6f`; proposed safety contract ADR-016. | **CLOSED 2026-07-18 as an implementation handoff. Independent schema/privacy/map/runtime refutation and exact shared migration verification remain required before deployment or a public-safety claim.** |
@@ -1306,12 +2315,12 @@ silently ignoring it; the disagreement is the useful part.
 | H12 | **provider capability and implementation evidence; Founder policy resolved** | Account-deletion product policy is approved. The remaining blocker is technical: prove the managed provider supports safe authenticated identity deletion, then implement the approved app-PII/avatar handling, attribution/anonymisation, retention, truthful completion, and destructive-flow safeguards. No current UI or server path implements deletion, and `708bc73` documented the blocker rather than a completion. | Existing evidence remains limited to the registered but ambiguous provider route and managed-server configuration uncertainty; no destructive probe is authorized by this policy decision. | **Open on provider capability, exact implementation paths, direct evidence, and release sequencing; not blocked on another Founder policy answer and not implemented.** |
 | H13 | **the owner** | **Two things in Neon's live auth config contradict what you asked for.** (1) **`magicLink.enabled: false`** — you said *"no need for google we use magic link"*, but magic link is OFF on Neon's server, so what actually shipped is **email OTP** (`emailVerificationMethod: "otp"`). It works and you signed in with it, so not a bug — but you asked for one mechanism and are using another, and you should hear that from me rather than find it later. (2) **`social_providers: [{id:"google"}]`** — Google is still configured on the project despite *"no need for google"*. No code offers a Google button, so it is unreachable from the app: dead config on Neon's side, not a live surface. Remove it in the Neon console if you meant it; leave it if you want the option later. | `neon_auth.project_config`: `plugin_configs.magicLink.enabled=false`, `organization.enabled=true` (also unused), `social_providers=[google]`, `email_and_password.enabled=true`. | **FYI — no action taken.** |
 | H9 | **every session** | **Do not run `npm run build` while the dev server is live — it clobbers `.next` and the app goes BLACK, with no error to explain it.** Found it that way tonight at ~22:55: `main-app.js`, `layout.css` and `app-pages-internals.js` all 404, so React never booted, so nothing mounted, so ThemeProvider *correctly* held the tree invisible. A blank page that is nobody's bug and looks like everybody's. The tell is `.next/BUILD_ID` + `prerender-manifest.json` existing at all, and hashed chunks (`framework-2c534e0e…js`) where dev writes unhashed. Recovery: stop dev, `rm -rf .next`, restart. **If you must build, stop dev first** — `next build` and `next dev` share one `.next` and the last writer wins. I did this once before and diagnosed my own webpack error for a while; that is the cost. | Live network log: three 404s on a 200 page. `visibility:hidden` inherited from ThemeProvider's wrapper down to the map layer. | **Standing.** Restarted; localhost serves the real app again. **Attribution, added by governance:** the ~22:55 clobber was mine — I ran `next build` to verify the CSP against a production build while :3000 was live. **New fact this adds: a different PORT does not save you.** I used :3100/:3101 precisely to avoid a port clash and clobbered anyway, because `.next` is shared no matter what port you serve on. So "just use another port" is not the workaround — stop dev, or build elsewhere. (The "I" elsewhere in this row is the session that FOUND it, not me.) |
-| H10 | **whoever owns `BottomSheet.tsx` / sheet chrome** | **The map's "Try again" cannot be reached at the `large` detent, and no change to MapLoader can fix it.** `a499691` un-buried it at peek and medium (the default, where the bug actually bit) by having AdaptiveShell publish `--shell-bottom-inset`. But at `large` the visible map band is **53px** and the card is ~150px — it does not fit *by construction*, at any position. Today it degrades the way `sheetMapPadding` already documents and accepts: "the sheet wins; the top chrome yields", and it returns the instant the user drags down. **If you want it reachable at `large`, the SHEET must carry the retry** — that is a different fix in a different file, and it is not the map layer's to make. | Measured at 529×876, all three detents: peek band 771 / card 310–460 ✅ · medium band 420 / card 135–285 ✅ · large band 53 / card 24–174 ✗. | **Open.** Deliberate trade, not an oversight. |
+| H10 | **source complete / released at `091fe8e`; runtime proof pathless** | The typed Canvas → page → compact shell → BottomSheet retry is final-independently PASSed and pushed. All five source paths are released. Preserve map chrome, regular behavior, insets, detents, focus, and reduced motion. | Measured at 529×876, all three detents: peek band 771 / card 310–460 ✅ · medium band 420 / card 135–285 ✅ · large band 53 / card 24–174 ✗. | **Runtime evidence remains sequenced behind Safari renderer recovery:** Production black canvas is not yet surfaced as failed, so retry cannot yet be exercised honestly. |
 | H3 | **owner** | **Cold loads flash English for one frame.** `src/core/i18n/index.ts` pins hydration to `DEFAULT_LOCALE`. Invisible today because almost nothing translates; conspicuous the moment adoption lands. A cookie would fix it and would **contradict the deliberate reasoning already in that file** — which is why an agent should not just do it. | Read `index.ts`'s hydration block and the reasoning above it. | **Open.** Owner's call, not a lane's. |
-| H4 | **auth→trust** (owns `trust.ts`) | **`distinct_source_count` counts categories, and copy must never call them people again.** Corrected to "N different sources" — good. But once `sources.user_id` carries real rows the count **mixes** people and categories, so "3 sources" may be two humans and a vendor feed. Either count what it says, or say what it counts. | Measured: exceeds 1 in 319/474 offer groups. `seed.ts:254-256` seeds three category rows. ADR-003 records that identity does **not** close this. | **Open.** Flagged so ADR-003's wiring is not read as the fix. |
+| H4 | **closed / released; no implementation claim** | The earned-trust rule is satisfied in current code: `distinctSourceCount` is presented only as `1 source` or `N different sources`; it never claims people, users, or contributors. Observation/report count remains a separate field and is not substituted. | `src/lib/trust.ts` documents the non-human/independence limitation and emits source-only wording at the `who` label; current source IDs can mix accounts, anonymous pools, public data, and vendors. | **Closed.** No path or employee allocation is truthful: the smallest possible manifest would have been `src/lib/trust.ts`, but it already satisfies the resolved semantic gate. |
 | H6 | **whoever owns `middleware.ts`** (does not exist yet) | **Kill `script-src 'unsafe-inline'` with a nonce — and DELETE the CSP from `vercel.json` when you do.** `vercel.json` headers are static strings; a nonce must be minted per request, so `unsafe-inline` is unavoidable from there. Without it Next's own inline `__next_f.push` RSC scripts are blocked and the app never hydrates — blank page, not degraded. A nonce belongs in `middleware.ts`, and it must also be threaded into `layout.tsx`'s two `dangerouslySetInnerHTML` scripts (another lane). **CRITICAL: two CSP headers INTERSECT, they do not override.** Leaving the `vercel.json` one in place would silently veto the middleware policy — the strictest wins. Remove it in the same change. | `de8e678`. Verified against a production build with the real header. | **Open.** The CSP is still a large net gain today: it constrains every host. |
 | H7 | **anyone touching the CSP** | **`https://*.tiles.mapbox.com` in `connect-src` is unproven.** It is never hit at runtime — GL JS v2+ normalises tile URLs onto `api.mapbox.com`. It stays because a style's TileJSON can still return explicit `tiles.mapbox.com` URLs, and the cost of being wrong is a dead map rather than a wasted line. Delete it only with evidence, not tidiness. | Measured: `performance.getEntriesByType("resource")` shows zero `tiles.mapbox.com` hits on a production build. | **Open, low priority.** |
-| H5 | **whoever deletes `offerSignal`** (Phase 1) | **Three badge strings are a known duplicate.** `ItemDetailSheet.tsx`'s `offerSignal` hardcodes `E sure` / `Check am` / `E no dey`, duplicating `item.status_*` in the dictionary. It cannot read the dictionary: it is a plain function, not a hook, and `page.tsx` calls it from another lane. **If you change a word, change both** — or the disagreement that was just removed comes straight back. Phase 1 deletes the function; the labels go to the dictionary with it. | `ItemDetailSheet.tsx`, the comment above `offerSignal`. | **Open.** |
+| H5 | **source complete / released at pushed `cfd5d01`; runtime gate pathless** | `ItemDetailSheet.tsx` no longer owns exported hardcoded `offerSignal`; its page consumer resolves observed labels through existing read-only `item.status_*` keys without client trust calculation or copy recreation. Sample provenance and independent availability/ARIA semantics are preserved. | Independent HI Quality passed the exact two-file scope: `src/app/_components/ItemDetailSheet.tsx`; `src/app/page.tsx`. | **Source paths released.** Deployment/HI runtime matrix remains pathless; no `strings.ts`, MapboxAdapter, location contract, database, schema, migration, or action path is authorized. |
 
 ### Resolved — kept as a list, not as rows
 
@@ -1487,20 +2496,24 @@ The former Motion diagnosis worker is no longer addressable. Mendel (`019f7638-4
 
 Huygens (`019f7642-a739-7382-9af8-4b631085b775`) inspected only `src/design-system/components/Button.tsx` and found H20 already corrected in `HEAD`: emitted `active:opacity-*` utilities are present and no dead `bg-opacity-*` or `active:bg-accent/80` remains. No edit or commit was needed; the path is released.
 
-### H31 deterministic coverage tie-break
+### H31 deterministic coverage tie-break — closed / released
 
-Descartes (`019f7644-8b2a-7910-8221-533a6d7afac1`) confirmed `getCoverageForPoint` still orders only by distance, so coincident active LGA/neighbourhood centroids rely on unspecified PostgreSQL row order. The bounded correction is one query-only change in `src/app/actions.ts`: retain distance first, prefer `areas.type = 'neighborhood'`, then `areas.slug ASC`. The path is released from Market Details, but implementation remains queued, pathless, and unauthorized until a fresh exact claim; no seed, live DB, migration, UI, push, or deployment change is authorized. Acceptance requires static SQL refutation plus a controlled coincident-area fixture.
+Commit `261588f` is an ancestor of current main and `getCoverageForPoint` already orders
+distance first, then `areas.type = 'neighborhood'` descending, then `areas.slug` ascending.
+Independent controlled coincident-area fixture and static SQL refutation passed. No seed,
+live DB, migration, UI, push, or deployment claim follows; `src/app/actions.ts` is released.
 
 ### Market detail offer surface handoff
 
 Hegel (`019f7645-cc25-7d42-b537-5a0eb37cda69`) confirmed the current market detail at `src/app/page.tsx` drops price range, availability, freshness, last-observed, image, and provenance semantics, and uses the artificial `max-h-[40vh]` dead zone. The follow-up CTA correction `3fe637d` is runtime REFUTED: removing the negative margin did not resolve title/location being AX-only, visible pixels ordering Back → Get It → Prices, root/document black escape, or reopen occlusion. `page.tsx`, `PlaceOfferRow.tsx`, `NavigationStack.tsx`, and `scripts/motion-contracts.test.ts` all remain retained; no third NavigationStack timing edit is authorized. No `BottomSheet.tsx`, generic category contract, DB, migration, push, or deployment work is authorized.
 
-CEO sequencing checkpoint: the iconography foundation and `ed5a6cb` Item Detail/Get-It
-adoption passed and released; the disjoint five-path remaining-intent lane is active.
+CEO sequencing checkpoint: the iconography foundation, `ed5a6cb` Item Detail/Get-It, and
+`a2a7104` remaining-intent adoption are passed and released.
 Market Details retains `src/app/page.tsx`, `PlaceOfferRow.tsx`, `NavigationStack.tsx`, and
 `scripts/motion-contracts.test.ts` after runtime REFUTATION, with no third timing edit.
-H38, self-location/avatar, and Presence UI wait pathless for `page.tsx`; H31 remains
-queued and unclaimed on released `actions.ts`.
+H38 source is now released at `66234ed`; its runtime fault-injection gate is pathless.
+Self-location/avatar and Presence UI remain pathless. H31 is closed and `actions.ts` remains
+released from that completed correction.
 
 ### Architecture-document drift handoff
 
@@ -1531,8 +2544,8 @@ refuter.
 | --- | --- | --- |
 | Executive Leadership / Product Management | Founder feedback triage, product direction, phase order, and scope decisions | Active |
 | Program Management / Release Control | Convert feedback into bounded lanes, prevent duplicate tasks, coordinate dependencies, and release evidenced commits | Active |
-| Human Interface / Iconography | Solid semantic icon orbs, sheet hierarchy, category trigger, market-detail visual system, and accessibility refutation | Market `3fe637d` is runtime REFUTED with four paths retained; Report Price `b93761b` passed/released; Confirm Visit is the active exact one-file icon correction |
-| Maps Engineering | Place/market symbols, selected marker state, map visual language, and map-specific runtime refutation | H37 semantic place markers completed at `6611068`, independently NOT REFUTED, and both paths released. Peer avatars remain non-live; self-avatar and contextual-orb/selected-glow follow-ups are separate unclaimed work |
+| Human Interface / Iconography | Solid semantic icon orbs, sheet hierarchy, category trigger, market-detail visual system, and accessibility refutation | Foundation, Report Price, Confirm Visit, and intent-adoption source lanes are released at `9b74a31`, `b93761b`, `ae47513`, and `a2a7104`; no current Iconography path claim |
+| Maps & Location Experience | Location accuracy/provenance; self and peer marker semantics; camera/route framing; map-control occlusion; clustering/viewport scaling; and map performance | Active department led by persistent engineer `019f787c-4f49-78b0-aaa2-bd403d721a1d`. The exact ten-path truthful private self-location vertical is active at `6c8ec737`; reciprocal Presence remains default-off and unwired. Focused contracts and independent refutation precede paired HI reused-tab evidence after Frameworks/Motion settles |
 | Presence / Safety Engineering | Consent-based nearby presence, trusted people, blocks, reports, leases, and pilot gates | Corrected `0012` rollout is Founder-authorized without another prompt, subject to separate Production/Preview identity, compatibility, role, kill-switch, scheduler, backup/evidence, and independent-refutation gates; divergence stops technically |
 | Catalog Stewardship | Item CRUD, aliases, variants, units, category mapping, reference imagery, attribution, and duplicate merging | Unassigned |
 | Observation Evidence Media | Report attachments, receipts, EXIF removal, privacy, hashing, size limits, moderation, retention, and offline uploads | Unassigned |
