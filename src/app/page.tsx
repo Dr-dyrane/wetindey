@@ -9,6 +9,7 @@ import React, {
   useCallback,
   useRef
 } from "react";
+import { getImageProps } from "next/image";
 import { AlertTriangle, MapPin, Navigation, Sun, Moon, X, Plus, ChevronDown } from "lucide-react";
 
 import { Button } from "@/design-system/components/Button";
@@ -328,19 +329,34 @@ export default function HomePage() {
   } = useLocationIdentity({
     setCameraCenter,
   });
-  const [selfAvatarUrl, setSelfAvatarUrl] = useState<string | null>(null);
+  const [selfHeaderAvatarUrl, setSelfHeaderAvatarUrl] = useState<string | null>(null);
+  const [selfMapMarkerAvatarUrl, setSelfMapMarkerAvatarUrl] = useState<string | null>(null);
   const selfAvatarRequestId = useRef(0);
   const refreshSelfProfileAvatar = useEventCallback(async () => {
     const requestId = ++selfAvatarRequestId.current;
-    if (!sessionUser) {
-      setSelfAvatarUrl(null);
-      return;
-    }
-
     try {
       const latestProfile = await getMyProfile();
       if (requestId !== selfAvatarRequestId.current) return;
-      setSelfAvatarUrl(latestProfile?.avatarUrl ?? null);
+
+      const nextAvatarUrl = latestProfile?.avatarUrl ?? null;
+      setSelfHeaderAvatarUrl(nextAvatarUrl);
+
+      if (!nextAvatarUrl) {
+        setSelfMapMarkerAvatarUrl(null);
+        return;
+      }
+
+      try {
+        const optimizedAvatar = getImageProps({
+          src: nextAvatarUrl,
+          alt: "",
+          width: 64,
+          height: 64
+        }).props.src;
+        setSelfMapMarkerAvatarUrl(optimizedAvatar);
+      } catch {
+        setSelfMapMarkerAvatarUrl(null);
+      }
     } catch {
       // Keep the current marker/name state; failed profile refreshes are non-blocking
       // and the initials fallback is the expected UX.
@@ -349,7 +365,8 @@ export default function HomePage() {
 
   useEffect(() => {
     if (!sessionUser) {
-      setSelfAvatarUrl(null);
+      setSelfHeaderAvatarUrl(null);
+      setSelfMapMarkerAvatarUrl(null);
       return;
     }
     void refreshSelfProfileAvatar();
@@ -362,14 +379,14 @@ export default function HomePage() {
 
   const resolvedSelfIdentity = useMemo(() => {
     if (!selfIdentity) return null;
-    if (!selfAvatarUrl) return selfIdentity;
+    if (!selfMapMarkerAvatarUrl) return selfIdentity;
     return {
       ...selfIdentity,
-      avatarUrl: selfAvatarUrl,
+      avatarUrl: selfMapMarkerAvatarUrl,
     };
-  }, [selfIdentity, selfAvatarUrl]);
+  }, [selfIdentity, selfMapMarkerAvatarUrl]);
 
-  const resolvedSelfAvatarUrl = selfAvatarUrl ?? userProfile?.avatarUrl;
+  const resolvedSelfAvatarUrl = selfHeaderAvatarUrl ?? userProfile?.avatarUrl;
 
   // Report submission lookup metadata
   const [submitPlaces, setSubmitPlaces] = useState<{ id: string; name: string }[]>([]);

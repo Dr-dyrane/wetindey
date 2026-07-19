@@ -197,10 +197,27 @@ test("avatar session callbacks directly refresh map self identity avatar state",
     /const handleSessionChange = useEventCallback\(async \(\) => \{[\s\S]{0,140}await refetchSession\(\);[\s\S]{0,140}await refreshSelfProfileAvatar\(\);[\s\S]{0,80}\}\);/
   );
   assert.match(page, /const refreshSelfProfileAvatar = useEventCallback\(async \(\) => \{/);
+  assert.match(
+    page,
+    /const nextAvatarUrl = latestProfile\?\.avatarUrl \?\? null;[\s\S]{0,120}setSelfHeaderAvatarUrl\(nextAvatarUrl\);[\s\S]{0,240}getImageProps\(\{[\s\S]{0,220}width: 64,[\s\S]{0,120}height: 64[\s\S]{0,120}\}\)\.props\.src;/
+  );
   assert.match(page, /const resolvedSelfIdentity = useMemo\(\(\) => \{/);
+  assert.match(
+    page,
+    /const resolvedSelfIdentity = useMemo\(\(\) => \{[\s\S]{0,120}if \(!selfMapMarkerAvatarUrl\) return selfIdentity;[\s\S]{0,120}avatarUrl: selfMapMarkerAvatarUrl/,
+  );
+  assert.match(page, /const resolvedSelfAvatarUrl = selfHeaderAvatarUrl \?\? userProfile\?\.avatarUrl;/);
   assert.match(page, /selfIdentity=\{resolvedSelfIdentity\}/);
   assert.match(page, /url=\{resolvedSelfAvatarUrl\}/);
+  assert.doesNotMatch(
+    page,
+    /const resolvedSelfIdentity = useMemo\(\(\) => \{[\s\S]{0,200}avatarUrl: selfAvatarUrl/,
+  );
   assert.doesNotMatch(page, /selfIdentity=\{selfIdentity\}/);
+  assert.match(
+    page,
+    /if \(!sessionUser\) \{[\s\S]{0,120}setSelfHeaderAvatarUrl\(null\);[\s\S]{0,120}setSelfMapMarkerAvatarUrl\(null\);[\s\S]{0,40}return;/
+  );
 });
 
 test("device identity, accuracy halo and route disclosure remain explicit", () => {
