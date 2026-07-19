@@ -854,6 +854,10 @@ export class MapboxAdapter implements MapProviderAdapter {
   private styleReadyListener: (() => void) | null = null;
   private styleRenderListener: (() => void) | null = null;
   private styleInstalledGeneration: number | null = null;
+  /** A mutation-safe event emitted synchronously by the active setStyle call. */
+  private pendingMutationSafeGeneration: number | null = null;
+  /** Non-null only while the matching setStyle call is on the JavaScript stack. */
+  private styleInstallInProgressGeneration: number | null = null;
   private styleLoadTimer: number | null = null;
   private styleLoadAttempt = 0;
   private styleGeneration = 0;
@@ -964,6 +968,7 @@ export class MapboxAdapter implements MapProviderAdapter {
     this.clearStyleReadinessListeners();
     // Set BEFORE the applies: this event IS the fact they guard on.
     this.styleReady = true;
+    this.pendingMutationSafeGeneration = null;
     const wasUsable = this.styleUsable;
     this.styleUsable = true;
     this.applyCartography();
@@ -976,30 +981,6 @@ export class MapboxAdapter implements MapProviderAdapter {
         attempt
       });
     }
-    return true;
-  }
-
-  /**
-   * A painted stock-style frame is enough to uncover the map, but not enough to
-   * prove addSource/addLayer are safe. Keep style.load/idle listeners alive so
-   * the stored route and cartography replay later without risking a throw.
-   */
-  private completeUsableStyleAttempt(
-    generation: number,
-    theme: "light" | "dark",
-    attempt: number
-  ): boolean {
-    if (!this.styleAttemptIsInstalled(generation)) return false;
-    this.clearStyleLoadTimer();
-    this.clearStyleRenderListener();
-    if (this.styleUsable) return true;
-    this.styleUsable = true;
-    this.emitStyleLifecycle({
-      status: "ready",
-      generation,
-      theme,
-      attempt
-    });
     return true;
   }
 
@@ -1056,25 +1037,6 @@ export class MapboxAdapter implements MapProviderAdapter {
   }
 
   /**
-   * Mapbox can keep `isStyleLoaded()` false while a source is still settling
-   * even though the current stock style has already painted a usable frame.
-   * A render listener installed only after setStyle succeeds is the observable
-   * current-generation authority Canvas needs. Runtime getStyle serialization
-   * is deliberately not an identity oracle: Safari/Mapbox may omit or normalize
-   * the stock style's name, sprite URL and characteristic layer IDs.
-   */
-  private recognizeUsableRenderedFrame(
-    generation: number,
-    theme: "light" | "dark",
-    attempt: number
-  ): boolean {
-    if (!this.styleAttemptIsInstalled(generation)) return false;
-    const layers = this.mapInstance?.getStyle()?.layers;
-    if (!layers || layers.length === 0) return false;
-    return this.completeUsableStyleAttempt(generation, theme, attempt);
-  }
-
-  /**
    * Observe either the constructor-owned initial style (`replaceStyle=false`)
    * or an in-place theme/retry swap. No map reconstruction is allowed here:
    * `setStyle` is precisely the seam that preserves camera and DOM markers.
@@ -1092,30 +1054,31 @@ export class MapboxAdapter implements MapProviderAdapter {
     this.styleLoadAttempt = attempt;
     this.styleErrorObserved = false;
     this.styleInstalledGeneration = replaceStyle ? null : generation;
+    this.pendingMutationSafeGeneration = null;
+    this.styleInstallInProgressGeneration = null;
     this.emitStyleLifecycle({ status: "loading", generation, theme, attempt });
 
-    if (replaceStyle) {
-      try {
-        map.setStyle(MapboxAdapter.styleFor(theme));
-        this.styleInstalledGeneration = generation;
-      } catch {
-        // A synchronous style rejection follows the same bounded retry policy
-        // as an asynchronous resource error; it must not escape to React or
-        // admit the still-loaded old theme.
-        this.styleErrorObserved = true;
-        this.handleStyleLoadTimeout(generation, false);
+    const readyListener = () => {
+      if (generation !== this.styleGeneration) return;
+      if (this.styleInstallInProgressGeneration === generation) {
+        // JavaScript cannot interleave an older queued event while setStyle is
+        // on the stack. A synchronous style.load/idle here is therefore
+        // causally owned by this exact replacement, but it cannot mutate or
+        // uncover the map until setStyle returns successfully.
+        this.pendingMutationSafeGeneration = generation;
         return;
       }
-    }
-
-    // The listener boundary is installed only after a successful setStyle
-    // return. Therefore every callback carries current-generation installation
-    // authority without depending on Mapbox's unstable serialized style name.
-    const readyListener = () =>
+      // style.load and idle are Mapbox's public mutation-safe authorities.
+      // Unlike isStyleLoaded(), style.load does not wait for every visible tile,
+      // so a normal slow network can uncover a real background/partial basemap
+      // without waiting for the later idle state.
       this.completeMutationSafeStyleAttempt(generation, theme, attempt);
+    };
     const renderListener = () => {
-      if (this.recognizeLoadedStyle(generation, theme, attempt)) return;
-      this.recognizeUsableRenderedFrame(generation, theme, attempt);
+      // Mapbox fires render after every painter pass, including a black frame
+      // whose style JSON has layers but whose basemap is not usable. Render may
+      // recover a missed loaded event, but it is never readiness by itself.
+      this.recognizeLoadedStyle(generation, theme, attempt);
     };
     this.styleReadyListener = readyListener;
     this.styleRenderListener = renderListener;
@@ -1126,6 +1089,32 @@ export class MapboxAdapter implements MapProviderAdapter {
       () => this.handleStyleLoadTimeout(generation),
       STYLE_LOAD_TIMEOUT_MS
     );
+
+    if (replaceStyle) {
+      this.styleInstallInProgressGeneration = generation;
+      try {
+        map.setStyle(MapboxAdapter.styleFor(theme));
+        this.styleInstalledGeneration = generation;
+      } catch {
+        // A synchronous style rejection follows the same bounded retry policy
+        // as an asynchronous resource error; it must not escape to React or
+        // admit the still-loaded old theme.
+        this.styleErrorObserved = true;
+        this.styleInstallInProgressGeneration = null;
+        this.pendingMutationSafeGeneration = null;
+        this.clearStyleReadinessListeners();
+        this.handleStyleLoadTimeout(generation, false);
+        return;
+      }
+      this.styleInstallInProgressGeneration = null;
+    }
+
+    if (
+      this.pendingMutationSafeGeneration === generation &&
+      this.completeMutationSafeStyleAttempt(generation, theme, attempt)
+    ) {
+      return;
+    }
 
     // setStyle can complete before its asynchronous event reaches this
     // listener. Recognize that state now instead of waiting for the timeout.
@@ -2081,6 +2070,8 @@ export class MapboxAdapter implements MapProviderAdapter {
     this.styleReadyListener = null;
     this.styleRenderListener = null;
     this.styleInstalledGeneration = null;
+    this.pendingMutationSafeGeneration = null;
+    this.styleInstallInProgressGeneration = null;
     this.styleErrorObserved = false;
     this.styleLifecycleListener = null;
     this.routeCoords = null;
