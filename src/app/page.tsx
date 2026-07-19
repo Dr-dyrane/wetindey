@@ -974,7 +974,7 @@ export default function HomePage() {
   const sheetNode = (
     <div className="flex flex-col h-full overflow-hidden">
       {/* Brand & search header */}
-      <div className="px-4 pt-0 pb-2.5 md:pt-3 flex flex-col gap-2.5">
+      <div className="flex flex-col gap-2.5 px-4 pt-0 pb-2.5">
         <div className="flex items-center justify-between w-full">
           <div className="flex items-center space-x-2">
             <NigeriaLogo className="h-7 w-7" />
@@ -1247,8 +1247,15 @@ export default function HomePage() {
               onRetry={() => setPlaceOffersRetry((attempt) => attempt + 1)}
               subject={detailPlace.id}
               keyExtractor={(offer) => offer.id}
-              renderItem={(offer) => <PlaceOfferRow offer={offer} />}
-              skeleton={<PlaceOfferRowSkeleton />}
+              className={
+                isRegular
+                  ? "grid-cols-[repeat(auto-fit,minmax(min(100%,18rem),1fr))]"
+                  : undefined
+              }
+              renderItem={(offer) => (
+                <PlaceOfferRow offer={offer} layout={isRegular ? "regular" : "compact"} />
+              )}
+              skeleton={<PlaceOfferRowSkeleton layout={isRegular ? "regular" : "compact"} />}
               empty={{
                 icon: <MapPin className="h-6 w-6" />,
                 title: "No prices here yet",

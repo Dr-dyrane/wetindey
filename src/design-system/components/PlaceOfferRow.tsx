@@ -70,17 +70,20 @@ function ItemArtwork({
   offer,
   showImage,
   onImageError,
+  layout,
 }: {
   offer: PlaceOffer;
   showImage: boolean;
   onImageError: () => void;
+  layout: OfferRowLayout;
 }) {
+  const isRegular = layout === "regular";
   const artwork = showImage ? (
     <Image
       src={offer.imageUrl!}
       alt=""
       fill
-      sizes="(min-width: 768px) 72px, 88px"
+      sizes={isRegular ? "(min-width: 768px) 220px, 100vw" : "(min-width: 768px) 72px, 88px"}
       className="object-cover"
       unoptimized
       onError={onImageError}
@@ -95,21 +98,35 @@ function ItemArtwork({
   );
 
   return (
-    <figure className="group relative w-[88px] shrink-0 self-stretch md:w-[72px]">
+    <figure
+      className={
+        isRegular
+          ? "group relative h-28 min-h-tap w-full shrink-0"
+          : "group relative w-[88px] shrink-0 self-stretch md:w-[72px]"
+      }
+    >
       {offer.imageSourceUrl && showImage ? (
         <a
           href={offer.imageSourceUrl}
           target="_blank"
           rel="nofollow noopener noreferrer"
           aria-label={`Photo source for ${offer.itemName}`}
-          className="relative block h-full min-h-[104px] w-[88px] bg-transparent md:min-h-[88px] md:w-[72px]
-                     focus-visible:outline-2 focus-visible:outline-offset-[-3px]
-                     focus-visible:outline-accent"
+          className={
+            isRegular
+              ? "relative block h-full min-h-tap w-full bg-transparent focus-visible:outline-2 focus-visible:outline-offset-[-3px] focus-visible:outline-accent"
+              : "relative block h-full min-h-[88px] w-[88px] bg-transparent md:min-h-[80px] md:w-[72px] focus-visible:outline-2 focus-visible:outline-offset-[-3px] focus-visible:outline-accent"
+          }
         >
           {artwork}
         </a>
       ) : (
-        <div className="relative h-full min-h-[104px] w-[88px] bg-transparent md:min-h-[88px] md:w-[72px]">
+        <div
+          className={
+            isRegular
+              ? "relative h-full min-h-tap w-full bg-transparent"
+              : "relative h-full min-h-[88px] w-[88px] bg-transparent md:min-h-[80px] md:w-[72px]"
+          }
+        >
           {artwork}
         </div>
       )}
@@ -126,10 +143,19 @@ function ItemArtwork({
 }
 
 /**
- * One market-specific price claim. The number never stands alone: unit,
- * availability, freshness, observation date and provenance remain attached.
+ * One market-specific price claim. Browse rows keep the facts needed to
+ * decide whether an offer is useful; deeper provenance remains in detail.
  */
-export function PlaceOfferRow({ offer }: { offer: PlaceOffer }) {
+export type OfferRowLayout = "compact" | "regular";
+
+export function PlaceOfferRow({
+  offer,
+  layout = "compact",
+}: {
+  offer: PlaceOffer;
+  layout?: OfferRowLayout;
+}) {
+  const isRegular = layout === "regular";
   const [imageBroken, setImageBroken] = useState(false);
   const showImage = Boolean(
     offer.imageUrl &&
@@ -138,38 +164,38 @@ export function PlaceOfferRow({ offer }: { offer: PlaceOffer }) {
       offer.imageSourceUrl &&
       !imageBroken
   );
-  const imageCredit = showImage
-    ? `${offer.imageAttribution} · ${offer.imageLicense}`
-    : null;
-  const showProvenance =
-    !offer.trust ||
-    offer.trust.origin === "inadmissible" ||
-    offer.trust.origin === "empty";
   const status = availabilityKind(offer);
   const isSample = offer.trust?.origin === "synthetic";
   const observedAt = OBSERVED_DATE.format(new Date(offer.lastObservedAt));
-  const dateLabel =
-    offer.trust?.origin === "observed"
+  const dateLabel = isSample
+    ? "Sample"
+    : offer.trust?.origin === "observed"
       ? "Last observed"
-      : offer.trust?.origin === "synthetic"
-        ? offer.trust.provenanceLabel
-        : offer.trust?.origin === "inadmissible"
-          ? "Reference date"
-          : "Projection date";
+      : "Reference date";
 
   return (
     <article
-      className="squircle-card flex min-h-[104px] w-full items-stretch md:min-h-[88px]
-                 overflow-hidden bg-transparent"
+      className={
+        isRegular
+          ? "squircle-card flex min-w-0 w-full flex-col overflow-hidden bg-transparent"
+          : "squircle-card flex min-h-[88px] w-full items-stretch overflow-hidden bg-transparent md:min-h-[80px]"
+      }
       aria-label={`${offer.itemName}, ${priceLabel(offer)} per ${offer.unit}`}
     >
       <ItemArtwork
         offer={offer}
         showImage={showImage}
         onImageError={() => setImageBroken(true)}
+        layout={layout}
       />
 
-      <div className="min-w-0 flex-1 py-2 pl-2 pr-1.5 md:py-1.5 md:pl-2 md:pr-1">
+      <div
+        className={
+          isRegular
+            ? "min-w-0 flex-1 px-2.5 py-2"
+            : "min-w-0 flex-1 py-2 pl-2 pr-1.5 md:py-1.5 md:pl-2 md:pr-1"
+        }
+      >
         <div className="flex items-start justify-between gap-1.5">
           <div className="min-w-0 flex-1">
             <h5 className="truncate text-subhead font-semibold text-text-primary">
@@ -206,39 +232,48 @@ export function PlaceOfferRow({ offer }: { offer: PlaceOffer }) {
           </span>
         )}
 
-        <div className="mt-1 flex flex-wrap items-center gap-x-1.5 gap-y-1 text-caption-2 text-text-secondary">
+        <div className="mt-1 flex min-w-0 flex-wrap items-center gap-x-1.5 gap-y-1 text-caption-2 text-text-secondary">
           <span>{freshnessLabel(offer)}</span>
           <span className="inline-flex items-center gap-1">
             {isSample ? <SolidIcon name="star" size={16} /> : null}
             {dateLabel} {observedAt}
           </span>
-          {showProvenance ? (
-            <span>{offer.trust?.provenanceLabel ?? "No observed reports"}</span>
-          ) : null}
         </div>
-
-        {imageCredit ? (
-          <p className="mt-1 break-words text-caption-2 leading-snug text-text-tertiary">
-            {imageCredit}
-          </p>
-        ) : null}
       </div>
     </article>
   );
 }
 
-export function PlaceOfferRowSkeleton() {
+export function PlaceOfferRowSkeleton({ layout = "compact" }: { layout?: OfferRowLayout }) {
+  const isRegular = layout === "regular";
   return (
-    <div className="space-y-2" aria-hidden="true">
+    <div
+      className={isRegular ? "grid grid-cols-[repeat(auto-fit,minmax(min(100%,18rem),1fr))] gap-2" : "space-y-2"}
+      aria-hidden="true"
+    >
       {[0, 1, 2].map((index) => (
         <div
           key={index}
-          className="squircle-card flex min-h-[104px] items-stretch overflow-hidden
-                     md:min-h-[88px]
-                     bg-transparent"
+          className={
+            isRegular
+              ? "squircle-card flex min-w-0 flex-col overflow-hidden bg-transparent"
+              : "squircle-card flex min-h-[88px] items-stretch overflow-hidden bg-transparent md:min-h-[80px]"
+          }
         >
-          <div className="w-[88px] shrink-0 animate-pulse self-stretch bg-fillTertiary md:w-[72px]" />
-          <div className="min-w-0 flex-1 space-y-2 py-2 pl-2 pr-1.5 md:py-1.5 md:pl-2 md:pr-1">
+          <div
+            className={
+              isRegular
+                ? "h-28 min-h-tap w-full shrink-0 animate-pulse bg-fillTertiary"
+                : "w-[88px] shrink-0 animate-pulse self-stretch bg-fillTertiary md:w-[72px]"
+            }
+          />
+          <div
+            className={
+              isRegular
+                ? "min-w-0 flex-1 space-y-2 px-2.5 py-2"
+                : "min-w-0 flex-1 space-y-2 py-2 pl-2 pr-1.5 md:py-1.5 md:pl-2 md:pr-1"
+            }
+          >
             <div className="flex items-start justify-between gap-1.5">
               <div className="h-4 w-2/5 animate-pulse rounded-full bg-fillTertiary" />
               <div className="h-4 w-1/3 animate-pulse rounded-full bg-fillTertiary" />
