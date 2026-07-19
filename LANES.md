@@ -364,6 +364,16 @@ Former owner: Antigravity (External Approved Contractor - Product Engineering & 
 
 Modularized the 30.5 KB ExchangePanel component into a 6-file MVC subfolder slice under `src/app/_components/exchange-panel/` (`hooks/`, `views/`, `styles/`, `copy/`, `imports/`, `ExchangePanel.tsx`). All typechecks and static contract tests passed cleanly. Released paths.
 
+##### ItemDetailSheet component modularization — ACTIVE
+
+Owner: Antigravity (External Approved Contractor - Product Engineering & UX Department). Exclusive paths:
+
+- `src/app/_components/ItemDetailSheet.tsx`
+- new `src/app/_components/item-detail-sheet/`
+- `LANES.md`
+
+Modularize the 27.8 KB ItemDetailSheet component into a 6-file MVC subfolder slice under `src/app/_components/item-detail-sheet/` (Controller, Hook, View, Style, Copy, Imports) satisfying the modularization structure contract.
+
 #### Developer Relations & Engineering Enablement: department worklog protocol — active exact claim
 
 Owner: Developer Relations & Engineering Enablement worker
