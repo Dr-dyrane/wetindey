@@ -299,10 +299,12 @@ for the required Catalog governance ADR.
 - RLS and grants are defense in depth; they do not replace application authorization.
 - Suspension or revocation defeats stale session claims.
 - A Catalog Safety Responder is a narrowly scoped emergency role, not a Publisher alias.
-  It may only reduce public exposure from `allowed` to `suspended` or from a currently
-  exposed asset state to `suppressed`, invalidate an explicitly assigned compromised
-  anonymous access grant without changing the request, or open, route, and escalate
-  safety evidence as non-mutating communication.
+  Its only direct enforcement mutations are to reduce public exposure from `allowed` to
+  `suspended` or from a currently exposed asset state to `suppressed`, and to invalidate
+  an explicitly assigned compromised anonymous access grant without changing the
+  request. Opening, routing, or escalating safety evidence is a non-mutating
+  communication right; it does not approve Catalog truth, edit canonical
+  item/variant/unit/category/imagery data, merge records, or widen or mint grants.
 - Emergency authority cannot create or edit a canonical revision, activate or resume
   reportability, approve catalog truth, edit canonical item/variant/unit/category/imagery
   data, merge records, widen or mint grants, or withdraw an asset. It cannot read or act
@@ -645,6 +647,13 @@ actor overlap fail closed.
 
 ### 8.2 Case lifecycle
 
+Case reporting and escalation are non-mutating communication. A Safety Responder may
+open, route, or escalate safety evidence so that the assigned reviewers can act, but the
+append-only routing/escalation record is not approval of Catalog truth and grants no
+case-authority, canonical-data, merge, publication, reportability, asset, or anonymous-
+grant mutation. The responder's direct enforcement mutations remain limited to
+deny-only exposure/asset holds and revocation of compromised anonymous grants.
+
 | From | Actor and permission/proof | Command | Preconditions | To | Required result |
 |---|---|---|---|---|---|
 | `unassigned` | Catalog Steward with `food_catalog.case.assign` | `assignFoodCatalogCase` | Current case version; no live assignment; assignee currently eligible | `assigned` | Versioned lease/assignment and audit append |
@@ -660,7 +669,7 @@ actor overlap fail closed.
 | `assigned` reconsideration case | Assigned independent Reconsideration Reviewer | `decideFoodCatalogReconsideration` | Exact reconsideration/original-decision/evidence/assignment/case versions and one permitted outcome | `closed` | Upheld decision closes only this case, or accepted decision closes it while creating one distinct request and unassigned ordinary case; original request remains rejected; all effects and audit commit atomically |
 | `decision_ready` | Catalog Publisher satisfying the exact request transition | `publishFoodCatalogRevision`, `recordFoodCatalogRejection`, `resolveFoodCatalogRequestToExisting`, or `consolidateFoodCatalogRequests` | Matching request/revision decision preconditions and current case version | `closed` | Case closure commits with the request decision/publication and audit |
 | `unassigned`, `assigned`, `waiting_requester`, or `decision_ready` | Terminal-closure executor acting only under the actor/proof authorized for the linked request command | `closeFoodCatalogRequestTerminally`, invoked by publication, direct resolution, rejection, withdrawal, consolidation, or expiry | No associated case is `escalated`, except the exact designated escalated rejection case closing concurrently through the dedicated `closeEscalatedFoodCatalogCase` row; for rejection, the locked aggregate set names exactly one different-or-same `decisionCaseId` with the exact rejection packet, complete case-set digest, and any required consumed Second Reviewer approval, while this row may represent the deciding non-escalated case or an ancillary case; linked request is atomically entering its specified terminal state; complete associated-case/revision/approval/packet set and expected versions are locked | `closed` | All associated cases close through their applicable rows and all unpublished work invalidates atomically; any separate safety incident/hold remains independently governed |
-| `unassigned`, `assigned`, `waiting_requester`, or `decision_ready` | Catalog Steward, and Catalog Safety Responder only for safety-evidence routing/escalation with explicit `food_catalog.case.escalate` and assigned scope | `escalateFoodCatalogCase` | Enumerated safety, identity-confusion, rights, or authorization risk; current case version; reason/policy | `escalated` | Escalation record, prior assignment state, required reviewer, and audit append; no public enablement |
+| `unassigned`, `assigned`, `waiting_requester`, or `decision_ready` | Catalog Steward, or Catalog Safety Responder solely for non-mutating safety-evidence routing/escalation with explicit `food_catalog.case.escalate` communication permission and assigned scope | `escalateFoodCatalogCase` | Enumerated safety, identity-confusion, rights, or authorization risk; current case version; reason/policy | `escalated` | Append-only escalation/routing record, prior assignment state, required reviewer, and audit append; no Catalog-truth approval or canonical, reportability, asset, grant, publication, merge, or case-decision mutation |
 | `escalated` | Catalog Second Reviewer independent of requester, Steward, and first decision-maker | `returnEscalatedFoodCatalogCaseToReview` | Risk triage resolves escalation without a final decision; continuation scope and assignee eligibility recorded | `assigned` | Linked escalation closes and reviewed work resumes with a new assignment/version |
 | `escalated` | Catalog Publisher after independent Catalog Second Reviewer approval | `closeEscalatedFoodCatalogCase` plus the applicable publication/rejection command | Linked approval and exact final-decision preconditions; all versions match | `closed` | Escalation, final request/canonical decision where any, case closure, and audit commit atomically |
 
