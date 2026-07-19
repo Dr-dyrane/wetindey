@@ -335,6 +335,23 @@ Full detail/provenance remains in Item Detail. No data, action, map, copy, schem
 migration changes; >=44px targets, no horizontal overflow, and no covered CTA remain
 required.
 
+##### Human Interface — Market Details grid, CTA, and attribution correction — ACTIVE
+
+Owner: persistent HI Engineer `019f75a5-0fc6-7f40-9a0f-8097ead3b45d`. Exclusive paths:
+
+- `src/app/page.tsx`
+- `src/design-system/components/PlaceOfferRow.tsx`
+
+Founder production review refuted the current presentation contract. Regular/desktop Market
+Details must render a true two-column card grid; compact/mobile remains one column. The
+place-level CTA must say `Visit market` for market/open-market destinations and `Visit shop`
+for shop/kiosk/supermarket destinations, never `Get it`, while preserving navigation.
+Clicking an offer/card must use WetinDey's existing product/item detail flow, not navigate to
+the Wikimedia/source image. Image attribution remains accessible only through an explicit
+secondary affordance; the primary media/card target stays internal. Preserve status semantics,
+map context, scroll/CTA accessibility, and no commerce expansion. Require independent
+production refutation; no third path is authorized absent evidence it is unavoidable.
+
 ##### Motion — compact sheet dead-space correction — COMPLETE / PASS
 
 Owner: Motion & Interaction Engineer. Exclusive path: `src/design-system/components/BottomSheet.tsx`.
