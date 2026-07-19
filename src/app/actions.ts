@@ -2204,7 +2204,7 @@ export async function getCoverageForPoint(input: {
       .leftJoin(places, eq(places.areaId, areas.id))
       .where(eq(areas.coverageStatus, "active"))
       .groupBy(areas.id)
-      .orderBy(sql`ST_Distance(${areas.center}, ST_GeogFromText(${point})) asc`)
+      .orderBy(sql`ST_Distance(${areas.center}, ST_GeogFromText(${point})) asc, (${areas.type} = 'neighborhood') desc, ${areas.slug} asc`)
       .limit(1),
     db
       .select({ n: sql<number>`count(*)::int` })
