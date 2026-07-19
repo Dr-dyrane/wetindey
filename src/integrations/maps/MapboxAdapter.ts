@@ -1240,13 +1240,15 @@ export class MapboxAdapter implements MapProviderAdapter {
     // Move the existing element when only the coordinate changed. A device fix
     // updates far more often than its precision does, and rebuilding the node
     // each time would churn the DOM for no visible gain.
+    const identityName = options.identity?.name.trim() || "Me";
+    const accessibleLabel = `${identityName}; ${options.label}`;
     const identityKey = `${options.identity?.name ?? ""}\u0000${options.identity?.avatarUrl ?? ""}`;
     if (
       this.userMarker &&
       this.userMarkerPrecision === options.precision &&
       this.userMarkerIdentityKey === identityKey
     ) {
-      this.userMarkerEl?.setAttribute("aria-label", options.label);
+      this.userMarkerEl?.setAttribute("aria-label", accessibleLabel);
       this.userMarker.setLngLat([options.lng, options.lat]);
       return;
     }
@@ -1254,7 +1256,7 @@ export class MapboxAdapter implements MapProviderAdapter {
     this.userMarker?.remove();
     const el = MapboxAdapter.buildUserPositionElement(
       options.precision,
-      options.label,
+      accessibleLabel,
       options.identity
     );
     this.userMarker = new mapboxgl.Marker(el)
@@ -1542,7 +1544,7 @@ export class MapboxAdapter implements MapProviderAdapter {
     const el = document.createElement("div");
     el.setAttribute("role", "img");
     const identityName = identity?.name.trim() || "Me";
-    el.setAttribute("aria-label", `${identityName}; ${label}`);
+    el.setAttribute("aria-label", label);
     // The indicator is never a target. Without this the area disc would swallow
     // taps across 48px of map, including any place marker underneath it.
     el.style.pointerEvents = "none";
@@ -1568,6 +1570,7 @@ export class MapboxAdapter implements MapProviderAdapter {
     orb.style.height = `${orbSize}px`;
     orb.style.display = "grid";
     orb.style.placeItems = "center";
+    orb.style.position = "relative";
     orb.style.borderRadius = "50%";
     orb.style.overflow = "hidden";
     orb.style.background = "var(--color-status-info)";
@@ -1584,15 +1587,23 @@ export class MapboxAdapter implements MapProviderAdapter {
     fallback.style.fontSize = "11px";
     fallback.style.fontWeight = "700";
     fallback.style.lineHeight = "1";
+    fallback.style.position = "absolute";
+    fallback.style.inset = "0";
+    fallback.style.display = "grid";
+    fallback.style.placeItems = "center";
+    fallback.style.zIndex = "0";
     orb.appendChild(fallback);
 
     if (identity?.avatarUrl) {
       const image = document.createElement("img");
       image.src = identity.avatarUrl;
       image.alt = "";
+      image.style.position = "absolute";
+      image.style.inset = "0";
       image.style.width = "100%";
       image.style.height = "100%";
       image.style.objectFit = "cover";
+      image.style.zIndex = "1";
       image.onerror = () => image.remove();
       orb.appendChild(image);
     }
