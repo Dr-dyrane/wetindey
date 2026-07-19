@@ -145,6 +145,24 @@ motion. Do not touch page, map, or Presence paths. This exact Frameworks boundar
 the Maps refuter P2 once implemented and independently refuted; this governance claim does
 not claim implementation.
 
+#### Account deletion lifecycle P0 governance
+
+Owner: persistent Product & Data Governance Architect. Founder policy approval is already
+recorded. Exact documentation paths:
+
+- new `docs/adr/021-account-deletion-lifecycle.md`
+- existing `docs/adr/016-nearby-user-presence.md`
+- `DECISIONS.md`
+- `WETINDEY_BIBLE.md`
+- `docs/architecture/SERVICE-ARCHITECTURE.md`
+- `docs/product/FOUNDER-FEEDBACK.md`
+
+Codify the confirmed server-only Neon branch admin-deletion saga: OTP/re-auth challenge;
+delete profile, avatar, and problem-report PII; unlink sources while retaining
+observations; invoke Presence deletion; tombstone only minimal safety metadata; reconcile
+partial failure idempotently; and define retention/purge. Do not claim self-delete in UI
+until implementation evidence exists. P0 authorizes no schema, server, or UI work.
+
 The Quality & Release Controller is this orchestrator thread. It is not a separate pinned
 employee task. The repeating `wetindey-orchestrator-recovery` automation is deleted and
 must not be recreated or assigned work. Portfolio auditing and Lagos Food ingestion keep
