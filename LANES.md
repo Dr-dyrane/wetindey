@@ -534,12 +534,19 @@ least-privilege controls, idempotence, and guarded-sheet/zero-record evidence al
 Admission, reporting, and moderation remain explicitly **false**. Temporary evidence
 artifacts were removed. Release the operational lane; no reporting enablement follows.
 
-##### Contribution canonical client-IP proof — PATHLESS HIGH-PRIORITY RUNTIME GATE
+##### Contribution canonical client-IP proof — COMPLETE / RELEASED (pathless)
 
-The only remaining blocker before enabling reporting is direct runtime proof that the
-canonical `x-vercel-forwarded-for` value is enforced through the Server Action. This is an
-evidence-only lane with no source-path claim and no flag change. It must independently prove
-one canonical client IP, fail closed on ambiguity, and preserve default-off behavior.
+Isolated Preview actual Server Action `40a82fb4` reached the RPC with `admission=true` only;
+reporting and moderation remained false. Baseline, spoofed/multiple `x-forwarded-for`, and
+client `x-vercel-forwarded-for` cases all reached `reporting_disabled` after canonical
+normalized Vercel-header HMAC/rate-key/RPC `$4` binding. Every before/after/final table count
+was zero; the restored-admission-off artifact returned maintenance. Independent
+default-to-REFUTED review **PASS**ed. Three temporary previews, worktree, artifacts, and
+bypass secret were deleted; Preview/Production admission remains false and Production was
+untouched. Close/release this evidence gate; no source path or flag change follows.
+
+Limitation preserved: a post-edge comma canonical header cannot be manufactured externally;
+the source `isIP` guard/contract remains fail-closed.
 
 Completion of the `0013` operational lane now permits exact forward Presence `0014` path
 assignment as soon as the Presence Platform manifest returns; the `0014` correction and its
