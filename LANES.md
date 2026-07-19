@@ -776,10 +776,8 @@ separate release gates; no claim is made about Safari's final OS compositor.
 
 Exact path `docs/product/COMMUNITY-TRUST-AND-CONTRIBUTION-LOOP.md` is released at commit
 `170de61674c702e7f22d50d5bb83fe77b28339a3`; independent default-to-REFUTED review is
-**VERIFIED**. The commit is present on local `main` and current main is one docs commit
-ahead of `origin/main`; it is intentionally **not marked pushed** while Production remains
-rolled back for the systemic map incident. No implementation, schema, migration, or runtime
-claim follows from this documentation release.
+**VERIFIED**. The commit is an ancestor of pushed `main`. No implementation, schema,
+migration, or runtime claim follows from this documentation release.
 
 #### Contribution Integrity: `0013` operational activation — active pathless gate
 
@@ -1110,15 +1108,15 @@ the current Blob URL; preserve initials only for missing or failed avatar images
 Canvas, Adapter, Presence, auth, Blob, schema, migrations, or shared-user behavior. Require an
 independent default-to-REFUTED review and a path-scoped commit before release.
 
-#### Systemic Production map incident — active pathless diagnosis
+#### Systemic Production map incident — source correction COMPLETE / runtime evidence pathless
 
-The rollback to `dpl_AFXoZbv2FyLWvzCNAQEXu452fcBS` / `4e3820ab` is verified, but the visible
-map failure persists there; this rules out the Market Details candidate as causal. Production
-stays on that prior deployment. Controller evidence indicates that `frameHasVisiblePixels()`
-hard-codes `getContext("webgl2")`, treating a valid Safari/Mapbox WebGL1 context as black or
-failed. Await Maps confirmation before allocating code. If confirmed, activate exactly
-`src/integrations/maps/MapboxAdapter.ts` and `scripts/location-default-contract.test.ts` only;
-do not widen to page, Market, or Canvas unless Maps proves it necessary.
+The prior rollback to `dpl_AFXoZbv2FyLWvzCNAQEXu452fcBS` / `4e3820ab` proved the visible
+failure was not caused by the Market Details candidate. The bounded Safari/Mapbox WebGL1 frame
+evidence correction is committed at `b1901fb34c7252edf6ee0dff1d2f455f4196ba0a`, an ancestor
+of pushed `main`, and independently default-to-REFUTED **PASS**ed. Release
+`src/integrations/maps/MapboxAdapter.ts` and
+`scripts/location-default-contract.test.ts` from that correction. A fresh exact-deployment
+visual smoke remains pathless evidence; it is not a reason to retain or reopen source paths.
 
 Sidecar audit disposition: **H31** is independently complete and released at `261588f`
 (`fix(coverage): stabilize nearest area ties`), an ancestor of current main. Its
