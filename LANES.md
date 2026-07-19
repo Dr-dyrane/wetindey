@@ -1102,9 +1102,13 @@ Source and runtime gates are released; this residual does not reopen a path. Fra
 still cannot establish Safari's final OS compositor universally.
 
 Self-avatar audit disposition: Canvas/Adapter rendering and browsing/device separation are
-already correct. The root defect is page profile invalidation after upload. Queue, but do not
-activate while Market Details owns `src/app/page.tsx`, the exact future two-path correction:
-`src/app/page.tsx` and `scripts/location-default-contract.test.ts` only.
+already correct. The root defect is page profile invalidation after upload. **ACTIVE** under
+the persistent Maps & Location Experience Engineer: exclusively claim
+`src/app/page.tsx` and `scripts/location-default-contract.test.ts` only. Refresh the local
+profile identity after a successful avatar mutation so the already-wired self marker receives
+the current Blob URL; preserve initials only for missing or failed avatar images. Do not touch
+Canvas, Adapter, Presence, auth, Blob, schema, migrations, or shared-user behavior. Require an
+independent default-to-REFUTED review and a path-scoped commit before release.
 
 #### Systemic Production map incident — active pathless diagnosis
 
