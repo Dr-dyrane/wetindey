@@ -24,6 +24,14 @@ ALTER ROLE wetindey_presence_runtime NOLOGIN NOBYPASSRLS;
 ALTER ROLE wetindey_presence_safety NOLOGIN NOBYPASSRLS;
 ALTER ROLE wetindey_presence_lifecycle NOLOGIN NOBYPASSRLS;
 
+-- PostgreSQL 17 grants a non-superuser CREATEROLE principal ADMIN TRUE but
+-- SET FALSE on a role it creates. Ownership transfer requires SET TRUE and
+-- CREATE on the containing schema. Both capabilities are transaction-local:
+-- the migration fails closed if they cannot be granted or fully removed.
+GRANT wetindey_presence_owner TO SESSION_USER WITH INHERIT FALSE;
+GRANT wetindey_presence_owner TO SESSION_USER WITH SET TRUE;
+GRANT CREATE ON SCHEMA public TO wetindey_presence_owner;
+
 ALTER TABLE public.presence_control ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.presence_control FORCE ROW LEVEL SECURITY;
 ALTER TABLE public.presence_preferences ENABLE ROW LEVEL SECURITY;
@@ -121,6 +129,13 @@ REVOKE ALL ON FUNCTION public.presence_review_reports(uuid, boolean) FROM PUBLIC
 REVOKE ALL ON FUNCTION public.presence_set_control(
   boolean, boolean, uuid, uuid, public.geography, integer, integer, uuid, uuid
 ) FROM PUBLIC;
+
+REVOKE USAGE ON TYPE
+  public.presence_rate_dimension,
+  public.presence_rate_operation,
+  public.presence_report_kind,
+  public.presence_report_resolution
+FROM PUBLIC;
 
 GRANT USAGE ON SCHEMA public
   TO wetindey_presence_runtime, wetindey_presence_safety,
@@ -229,3 +244,56 @@ ALTER FUNCTION public.presence_review_reports(
 ALTER FUNCTION public.presence_set_control(
   boolean, boolean, uuid, uuid, public.geography, integer, integer, uuid, uuid
 ) OWNER TO wetindey_presence_owner;
+
+REVOKE CREATE ON SCHEMA public FROM wetindey_presence_owner;
+REVOKE wetindey_presence_owner FROM SESSION_USER
+  GRANTED BY SESSION_USER;
+
+DO $$
+BEGIN
+  IF pg_has_role(
+    session_user,
+    'wetindey_presence_owner',
+    'SET'
+  ) THEN
+    RAISE EXCEPTION 'migration principal retains a SET path to the presence owner'
+      USING ERRCODE = '42501';
+  END IF;
+
+  IF EXISTS (
+    SELECT 1
+    FROM pg_auth_members membership
+    JOIN pg_roles granted_role ON granted_role.oid = membership.roleid
+    JOIN pg_roles member_role ON member_role.oid = membership.member
+    WHERE granted_role.rolname = 'wetindey_presence_owner'
+      AND member_role.rolname = session_user
+      AND (membership.set_option OR membership.inherit_option)
+  ) THEN
+    RAISE EXCEPTION 'migration principal retains privileged presence owner membership'
+      USING ERRCODE = '42501';
+  END IF;
+
+  IF EXISTS (
+    SELECT 1
+    FROM pg_auth_members membership
+    JOIN pg_roles granted_role ON granted_role.oid = membership.roleid
+    JOIN pg_roles member_role ON member_role.oid = membership.member
+    JOIN pg_roles grantor_role ON grantor_role.oid = membership.grantor
+    WHERE granted_role.rolname = 'wetindey_presence_owner'
+      AND member_role.rolname = session_user
+      AND grantor_role.rolname = session_user
+  ) THEN
+    RAISE EXCEPTION 'migration principal retains its transient owner grant'
+      USING ERRCODE = '42501';
+  END IF;
+
+  IF has_schema_privilege(
+    'wetindey_presence_owner',
+    'public',
+    'CREATE'
+  ) THEN
+    RAISE EXCEPTION 'presence owner retains CREATE on schema public'
+      USING ERRCODE = '42501';
+  END IF;
+END;
+$$;

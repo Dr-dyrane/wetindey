@@ -243,7 +243,80 @@ test("RLS and grants fail closed", () => {
   assert.match(security, /wetindey_presence_safety NOLOGIN NOBYPASSRLS/);
   assert.match(security, /wetindey_presence_lifecycle NOLOGIN NOBYPASSRLS/);
   assert.match(security, /FROM PUBLIC, wetindey_presence_runtime, wetindey_presence_safety/);
+  assert.match(
+    security,
+    /REVOKE USAGE ON TYPE\s+public\.presence_rate_dimension,\s+public\.presence_rate_operation,\s+public\.presence_report_kind,\s+public\.presence_report_resolution\s+FROM PUBLIC/,
+  );
   assert.doesNotMatch(security, /GRANT (SELECT|INSERT|UPDATE|DELETE|ALL) ON TABLE/i);
   assert.doesNotMatch(security, /GRANT EXECUTE[\s\S]*presence_review_reports[\s\S]*TO wetindey_presence_runtime/);
   assert.doesNotMatch(security, /GRANT EXECUTE[\s\S]*presence_set_control[\s\S]*TO wetindey_presence_runtime/);
+});
+
+test("ownership portability uses and removes only transaction-local capability", () => {
+  const roleCreation = security.indexOf(
+    "CREATE ROLE wetindey_presence_owner NOLOGIN NOBYPASSRLS",
+  );
+  const nonInheritedMembership = security.indexOf(
+    "GRANT wetindey_presence_owner TO SESSION_USER WITH INHERIT FALSE",
+  );
+  const setMembership = security.indexOf(
+    "GRANT wetindey_presence_owner TO SESSION_USER WITH SET TRUE",
+  );
+  const schemaCreate = security.indexOf(
+    "GRANT CREATE ON SCHEMA public TO wetindey_presence_owner",
+  );
+  const firstOwnershipTransfer = security.indexOf(
+    "ALTER TABLE public.presence_control OWNER TO wetindey_presence_owner",
+  );
+  const lastOwnershipTransfer = security.indexOf(
+    "ALTER FUNCTION public.presence_set_control(",
+    firstOwnershipTransfer,
+  );
+  const schemaCreateRevoke = security.indexOf(
+    "REVOKE CREATE ON SCHEMA public FROM wetindey_presence_owner",
+  );
+  const membershipRevoke = security.indexOf(
+    "REVOKE wetindey_presence_owner FROM SESSION_USER\n  GRANTED BY SESSION_USER",
+  );
+  const catalogPostcondition = security.indexOf(
+    "migration principal retains a SET path to the presence owner",
+  );
+
+  assert.ok(roleCreation >= 0);
+  assert.ok(roleCreation < nonInheritedMembership);
+  assert.ok(nonInheritedMembership < setMembership);
+  assert.ok(setMembership < schemaCreate);
+  assert.ok(schemaCreate < firstOwnershipTransfer);
+  assert.ok(firstOwnershipTransfer < lastOwnershipTransfer);
+  assert.ok(lastOwnershipTransfer < schemaCreateRevoke);
+  assert.ok(schemaCreateRevoke < membershipRevoke);
+  assert.ok(membershipRevoke < catalogPostcondition);
+  assert.equal(
+    security.match(
+      /GRANT wetindey_presence_owner TO SESSION_USER WITH SET TRUE/g,
+    )?.length,
+    1,
+  );
+  assert.equal(
+    security.match(
+      /REVOKE wetindey_presence_owner FROM SESSION_USER\s+GRANTED BY SESSION_USER/g,
+    )?.length,
+    1,
+  );
+  assert.match(
+    security,
+    /pg_has_role\(\s*session_user,\s*'wetindey_presence_owner',\s*'SET'\s*\)/,
+  );
+  assert.match(
+    security,
+    /FROM pg_auth_members membership[\s\S]*?granted_role\.rolname = 'wetindey_presence_owner'[\s\S]*?member_role\.rolname = session_user[\s\S]*?membership\.set_option OR membership\.inherit_option/,
+  );
+  assert.match(
+    security,
+    /JOIN pg_roles grantor_role ON grantor_role\.oid = membership\.grantor[\s\S]*?grantor_role\.rolname = session_user[\s\S]*?migration principal retains its transient owner grant/,
+  );
+  assert.match(
+    security,
+    /has_schema_privilege\(\s*'wetindey_presence_owner',\s*'public',\s*'CREATE'\s*\)/,
+  );
 });
