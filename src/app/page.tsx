@@ -1209,6 +1209,36 @@ export default function HomePage() {
   const detailNode = useMemo(() => {
     if (activeCategory !== "food" || !detailPlace) return undefined;
 
+    const getItAction = (
+      <div
+        className={`stack-surface z-10 shrink-0 ${
+          isRegular ? "static pt-1" : "sticky top-0 py-2"
+        }`}
+      >
+        <Button
+          variant="primary"
+          size="md"
+          className="w-full flex items-center justify-center"
+          onClick={() =>
+            setGetItTarget({
+              placeId: detailPlace.id,
+              placeName: detailPlace.name,
+              lat: detailPlace.location.lat,
+              lng: detailPlace.location.lng,
+              address: detailPlace.address,
+              areaName: location.label,
+              // Reached from a pin, so there is no single price under test ,
+              // and therefore nothing to confirm on the way back.
+              offer: null
+            })
+          }
+        >
+          <Navigation className="h-4 w-4 mr-1.5" />
+          Get it
+        </Button>
+      </div>
+    );
+
     return (
       <div className="flex min-h-full flex-col gap-4 md:h-full md:min-h-0 md:overflow-hidden">
         <div className="flex shrink-0 items-start justify-between">
@@ -1245,6 +1275,10 @@ export default function HomePage() {
           </button>
         </div>
 
+        {/* Compact keeps the persistent action after the place context, then
+            lets the sheet's one scroller carry prices beneath it. */}
+        {!isRegular ? getItAction : null}
+
         {/* What this market is currently selling. */}
         <div className="flex min-h-0 flex-1 flex-col gap-3">
           <h4 className="shrink-0 text-footnote text-text-secondary">
@@ -1274,39 +1308,14 @@ export default function HomePage() {
           </div>
         </div>
 
-        {/* One real action, replacing two that had no onClick. */}
-        <div
-          className="stack-surface sticky z-10 shrink-0 py-2
-                     bottom-[calc(max(var(--sheet-hidden,0px),var(--safe-area-bottom))+24px)]
-                     md:static md:py-0 md:pt-1"
-        >
-          <Button
-            variant="primary"
-            size="md"
-            className="w-full flex items-center justify-center"
-            onClick={() =>
-              setGetItTarget({
-                placeId: detailPlace.id,
-                placeName: detailPlace.name,
-                lat: detailPlace.location.lat,
-                lng: detailPlace.location.lng,
-                address: detailPlace.address,
-                areaName: location.label,
-                // Reached from a pin, so there is no single price under test ,
-                // and therefore nothing to confirm on the way back.
-                offer: null
-              })
-            }
-          >
-            <Navigation className="h-4 w-4 mr-1.5" />
-            Get it
-          </Button>
-        </div>
+        {/* Regular preserves the action's established bottom placement. */}
+        {isRegular ? getItAction : null}
       </div>
     );
   }, [
     activeCategory,
     detailPlace,
+    isRegular,
     placeOffers,
     placeOffersError,
     isPlaceOffersLoading,
