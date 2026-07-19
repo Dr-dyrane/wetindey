@@ -15,7 +15,10 @@
     "audit:tokens": "node scripts/audit-tokens.mjs",
     "test:auth-email": "tsx scripts/auth-email-contracts.test.ts",
     "typecheck": "tsc --noEmit",
-    "knip": "knip"
+    "knip": "knip",
+    "quality:stage:static": "node scripts/quality/run-stage.mjs static",
+    "quality:stage:typecheck": "node scripts/quality/run-stage.mjs typecheck",
+    "quality:stage:dependencies": "node scripts/quality/run-stage.mjs dependencies"
   },
   "dependencies": {
     "@neondatabase/auth": "0.4.2-beta",
