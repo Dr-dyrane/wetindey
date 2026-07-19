@@ -9,7 +9,6 @@ import React, {
   useCallback,
   useRef
 } from "react";
-import { getImageProps } from "next/image";
 import { AlertTriangle, MapPin, Navigation, Sun, Moon, X, Plus, ChevronDown } from "lucide-react";
 
 import { Button } from "@/design-system/components/Button";
@@ -21,7 +20,6 @@ import {
   type MapCameraHandle
 } from "@/design-system/components/MapboxCanvas";
 import type { RouteGeometry } from "@/integrations/maps/MapboxAdapter";
-import { authClient } from "@/lib/auth-client";
 import {
   type Detent,
   type MapRetryCapability
@@ -38,6 +36,7 @@ import { SettingsSheet } from "@/app/_components/SettingsSheet";
 import { ReportPriceSheet } from "@/app/_components/ReportPriceSheet";
 import { ProfileSheet, Avatar } from "@/app/_components/ProfileSheet";
 import { CategorySelectorSheet, type CategoryPillar } from "@/app/_components/CategorySelectorSheet";
+import { useLocationIdentity } from "@/app/_hooks/useLocationIdentity";
 import {
   ExchangePanel,
   type ExchangeLocationFilter
@@ -63,19 +62,11 @@ import {
 import { useTheme } from "@/core/context/ThemeContext";
 import { usePresentation } from "@/core/navigation/usePresentation";
 import { useGlobalStore } from "@/core/state/globalStore";
-import {
-  useLocationChrome,
-  useLocationHydration,
-  useFreshDeviceLocation,
-  useLocationStore,
-} from "@/core/state/locationStore";
 import { useLocaleControl, useStrings } from "@/core/i18n";
 import { useEventCallback } from "@/lib/perf";
 import {
   searchItems,
   getPopularItems,
-  getMyProfile,
-  type MyProfile,
   getPlaces,
   getPlaceOffers,
   getInitialSubmissionData,
@@ -162,9 +153,6 @@ export default function HomePage() {
     activeRadiusKm,
     setActiveRadiusKm,
   } = useGlobalStore();
-
-  const locationHydrated = useLocationHydration();
-  const location = useLocationChrome();
 
   // Which detent the compact sheet rides at. Page-local: this component is the
   // only writer, and it hands both halves to AdaptiveShell as props.
@@ -292,7 +280,6 @@ export default function HomePage() {
   const [selectedExchangeLocationId, setSelectedExchangeLocationId] = useState<string | null>(
     null
   );
-  const [userProfile, setUserProfile] = useState<MyProfile | null>(null);
   /** The item ItemDetailSheet is resolving down to a unit. Non-null = presented. */
   const [detailItem, setDetailItem] = useState<ItemCardData | null>(null);
   /** The place GetItSheet is about to hand off to. Non-null = presented. */
@@ -326,10 +313,20 @@ export default function HomePage() {
   const [placeOffersRetry, setPlaceOffersRetry] = useState(0);
   const [isSearching, setIsSearching] = useState(false);
   const [isPlaceOffersLoading, setIsPlaceOffersLoading] = useState(false);
-  const [locateError, setLocateError] = useState<string | null>(null);
-  /** Stable: MapNotice keys its auto-dismiss timer on this, and a fresh identity
-   *  every render would restart the countdown forever and never dismiss. */
-  const dismissLocateError = useCallback(() => setLocateError(null), []);
+  const {
+    location,
+    searchOrigin,
+    sessionUser,
+    userProfile,
+    selfIdentity,
+    locateError,
+    dismissLocateError,
+    refetchSession,
+    handleRecenter,
+    setLocateError,
+  } = useLocationIdentity({
+    setCameraCenter,
+  });
 
   // Report submission lookup metadata
   const [submitPlaces, setSubmitPlaces] = useState<{ id: string; name: string }[]>([]);
@@ -347,125 +344,7 @@ export default function HomePage() {
   const [formPrice, setFormPrice] = useState("");
   const [formAvailable, setFormAvailable] = useState<"available" | "unavailable">("available");
 
-  const browsingLocation = useLocationStore((s) => s.browsingLocation);
-  const deviceLocation = useLocationStore((s) => s.deviceLocation);
-  const freshDeviceLocation = useFreshDeviceLocation();
-  const recordDeviceLocation = useLocationStore((s) => s.recordDeviceLocation);
-  const initialBrowsingCameraApplied = useRef(false);
-  useEffect(() => {
-    if (!locationHydrated || initialBrowsingCameraApplied.current) return;
-    initialBrowsingCameraApplied.current = true;
-    setCameraCenter({
-      lat: browsingLocation.lat,
-      lng: browsingLocation.lng,
-    });
-  }, [
-    browsingLocation.lat,
-    browsingLocation.lng,
-    locationHydrated,
-    setCameraCenter,
-  ]);
 
-  useEffect(() => {
-    if (deviceLocation && !freshDeviceLocation) {
-      setLocateError(
-        "Your last device location expired. Tap the recenter control to refresh it."
-      );
-    }
-  }, [deviceLocation, freshDeviceLocation]);
-
-  /**
-   * Who the user is, if we know. NEVER a gate.
-   *
-   * Read on the CLIENT, not in a Server Component, and that is not a stylistic
-   * choice: Neon's `getSession` writes a refreshed session cookie through an
-   * UNGUARDED `ctx.setCookie`, and Next throws ReadonlyRequestCookiesError for a
-   * cookie write in an RSC. It would pass every test while signed out (the write
-   * is skipped when there are no cookies to set) and then 500 the whole map for
-   * exactly the people we had just recognised. Server Actions may write cookies;
-   * Server Components may not.
-   *
-   * `pending` is deliberately unused. This resolves after first paint and the
-   * map must never wait on it, a shopper reading prices is not asked to sign in,
-   * so signed-out IS the ready state, not a loading state. If the fetch fails,
-   * `data` is null, which means "not recognised", the honest degradation, and
-   * identical to the anonymous path the app is built around.
-   */
-  const { data: session, refetch: refetchSession } = authClient.useSession();
-  const sessionUser = useMemo(() => {
-    const u = session?.user;
-    if (!u) return null;
-    // `name` is "" for anyone created by email OTP; ProfileSheet falls back to
-    // the email rather than rendering an empty identity.
-    return { name: u.name ?? "", email: u.email };
-  }, [session]);
-
-  const selfIdentity = useMemo(
-    () => {
-      if (!sessionUser) return null;
-
-      const avatarUrl = userProfile?.avatarUrl;
-      let markerAvatarUrl: string | null = null;
-      if (avatarUrl) {
-        try {
-          markerAvatarUrl = getImageProps({
-            src: avatarUrl,
-            alt: "",
-            width: 64,
-            height: 64
-          }).props.src;
-        } catch {
-          // A stale or malformed stored URL must degrade to initials, not make
-          // the map page fail while Next validates the optimizer source.
-        }
-      }
-
-      return {
-        name: sessionUser.name || sessionUser.email,
-        // The map adapter owns a DOM <img>, not a Next <Image>. Send that image
-        // through the same configured, same-origin optimizer as the visible
-        // profile avatars; a raw Vercel Blob URL is outside the document's
-        // img-src policy and therefore fails before it can cover the initials.
-        avatarUrl: markerAvatarUrl
-      };
-    },
-    [sessionUser, userProfile?.avatarUrl]
-  );
-
-  // Load the signed-in user's profile for their avatar.
-  useEffect(() => {
-    let cancelled = false;
-    // Never let the previous account's avatar bridge an auth transition.
-    setUserProfile(null);
-    if (sessionUser) {
-      void getMyProfile()
-        .then((profile) => {
-          if (!cancelled) setUserProfile(profile);
-        })
-        .catch(() => {
-          // Initials remain the local fallback when profile loading fails.
-        });
-    }
-    return () => {
-      cancelled = true;
-    };
-  }, [session, sessionUser]);
-
-  /**
-   * The persisted browsing context. Every search, distance and "Nearest"
-   * measures from here; it is not a physical-location claim.
-   *
-   * NOT `cameraCenter`, and the difference is not academic: tapping a result flies
-   * the camera to that market, so a query keyed on `cameraCenter` would measure the
-   * next search from the last shop you looked at rather than from you. Open rice,
-   * tap a stall two streets away, go back and open beans, and "Nearest" would
-   * quietly mean "nearest to that stall". The camera follows the position; the
-   * position never follows the camera.
-   */
-  const searchOrigin = useMemo(
-    () => ({ lat: browsingLocation.lat, lng: browsingLocation.lng }),
-    [browsingLocation.lat, browsingLocation.lng]
-  );
 
   /**
    * The location-INDEPENDENT half: every place on the map, and the form's
@@ -522,8 +401,8 @@ export default function HomePage() {
       try {
         setPopularError(null);
         const items = await getPopularItems({
-          lat: browsingLocation.lat,
-          lng: browsingLocation.lng,
+          lat: searchOrigin.lat,
+          lng: searchOrigin.lng,
           radiusKm: activeRadiusKm,
           category: activeCategory,
           limit: 8
@@ -538,8 +417,8 @@ export default function HomePage() {
       }
     });
   }, [
-    browsingLocation.lat,
-    browsingLocation.lng,
+    searchOrigin.lat,
+    searchOrigin.lng,
     activeRadiusKm,
     activeCategory,
   ]);
@@ -568,8 +447,8 @@ export default function HomePage() {
     startTransition(async () => {
       try {
         const matched = await searchItems(searchQuery, "food", {
-          lat: browsingLocation.lat,
-          lng: browsingLocation.lng,
+          lat: searchOrigin.lat,
+          lng: searchOrigin.lng,
           radiusKm: activeRadiusKm
         });
         if (!cancelled) setSearchResults(matched);
@@ -589,8 +468,8 @@ export default function HomePage() {
   }, [
     activeCategory,
     searchQuery,
-    browsingLocation.lat,
-    browsingLocation.lng,
+    searchOrigin.lat,
+    searchOrigin.lng,
     activeRadiusKm,
     searchRetryNonce
   ]);
@@ -1084,19 +963,7 @@ export default function HomePage() {
         <MapRecenterControl
           /* Recenter refreshes physical evidence and moves presentation state.
              It never mutates the persisted browsing/search context. */
-          onLocate={(deviceLocation) => {
-            setLocateError(null);
-            if (!recordDeviceLocation(deviceLocation)) {
-              setLocateError(
-                "A newer device location is already active. The older response was ignored."
-              );
-              return;
-            }
-            setCameraCenter({
-              lat: deviceLocation.lat,
-              lng: deviceLocation.lng,
-            });
-          }}
+          onLocate={handleRecenter}
           onError={(message) => setLocateError(message)}
         />
       </div>
