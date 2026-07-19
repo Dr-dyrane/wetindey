@@ -18,6 +18,7 @@ When documents disagree, the following order of precedence applies (established 
 
 | File | Purpose |
 | :--- | :--- |
+| [DYRANE-CONSTITUTION.md](DYRANE-CONSTITUTION.md) | **Human-centered decision constitution**: The standing simplicity, truth, clarity, trust, and cognitive-effort test for every change. |
 | 📖 [WETINDEY_BIBLE.md](WETINDEY_BIBLE.md) | **Product Constitution**: Definitive product and engineering core rules. |
 | ⚖️ [DECISIONS.md](DECISIONS.md) | **ADR Index**: Index of all accepted, proposed, and rejected ADRs. |
 | 🧑‍💻 [CONTRIBUTING.md](CONTRIBUTING.md) | **Developer Guide**: Code standards, lint/compiler pipelines, and contribution workflow. |

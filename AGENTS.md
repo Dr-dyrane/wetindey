@@ -8,6 +8,12 @@ Before proposing any changes, writing any code, or introducing dependencies, you
 
 ## 0. Read this before you trust anything else in this file
 
+**Read [the Dyrane Constitution](docs/DYRANE-CONSTITUTION.md) before proposing or
+merging work.** It is WetinDey's standing human-centered decision test: reduce cognitive
+effort while increasing human confidence. Apply the ten-question Dyrane Test during
+ideation, implementation, review, refutation, and release. It guides judgment without
+overriding live code evidence, accepted ADRs, or the architecture of record.
+
 **Several sessions work this repo at once. Read [LANES.md](LANES.md) and run `git status`
 BEFORE your first edit.** Claim your lane; edit only the paths your lane owns. If you spawn
 subagents, put your lane's paths in their prompt and forbid them from widening it — an

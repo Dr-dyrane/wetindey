@@ -28,6 +28,12 @@ strengthened unavailable and contradictory cases plus exact cleanup. That pathle
 execution gate is closed and released; the persistent Search & Ranking employee remains
 available for later bounded assignments and owns no path.
 
+The Founder-provided Dyrane Constitution v1.0 is now durable at
+`docs/DYRANE-CONSTITUTION.md`, indexed by `docs/README.md`, and mandatory through
+`AGENTS.md`. Its ten-question Dyrane Test guides ideation, implementation, review,
+refutation, and release without changing code/ADR/architecture precedence. The temporary
+four-path documentation lane is complete and all paths are released.
+
 The semantic iconography foundation has now passed direct existing-tab light, dark, and
 grayscale visual refutation plus its focused contract. All five foundation paths are
 released. The persistent Iconography lead moves directly to the exact two-path Item
