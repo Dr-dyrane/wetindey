@@ -245,21 +245,147 @@ ALTER FUNCTION public.presence_set_control(
   boolean, boolean, uuid, uuid, public.geography, integer, integer, uuid, uuid
 ) OWNER TO wetindey_presence_owner;
 
+-- 0014 capability security. Capabilities are digest-keyed, short-lived, and
+-- never directly readable by runtime, safety, lifecycle, or PUBLIC.
+ALTER TABLE public.presence_activation_requests ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.presence_activation_requests FORCE ROW LEVEL SECURITY;
+ALTER TABLE public.presence_capabilities ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.presence_capabilities FORCE ROW LEVEL SECURITY;
+
+CREATE POLICY presence_activation_requests_owner_policy ON public.presence_activation_requests
+  FOR ALL TO wetindey_presence_owner USING (true) WITH CHECK (true);
+CREATE POLICY presence_capabilities_owner_policy ON public.presence_capabilities
+  FOR ALL TO wetindey_presence_owner USING (true) WITH CHECK (true);
+
+REVOKE ALL ON TABLE
+  public.presence_activation_requests,
+  public.presence_capabilities
+FROM PUBLIC, wetindey_presence_runtime, wetindey_presence_safety,
+  wetindey_presence_lifecycle;
+
+REVOKE USAGE ON TYPE
+  public.presence_activation_status,
+  public.presence_capability_purpose,
+  public.presence_capability_state
+FROM PUBLIC, wetindey_presence_runtime, wetindey_presence_safety,
+  wetindey_presence_lifecycle;
+
+REVOKE EXECUTE ON FUNCTION public.presence_set_preferences(
+  uuid, boolean, boolean, text, text
+) FROM wetindey_presence_runtime;
+REVOKE EXECUTE ON FUNCTION public.presence_activate(
+  uuid, integer, integer, text, text, text
+) FROM wetindey_presence_runtime;
+REVOKE EXECUTE ON FUNCTION public.presence_stop(uuid) FROM wetindey_presence_runtime;
+REVOKE EXECUTE ON FUNCTION public.presence_snapshot(uuid, text, text, text)
+  FROM wetindey_presence_runtime;
+REVOKE EXECUTE ON FUNCTION public.presence_wave(
+  uuid, uuid, text, text, text, text
+) FROM wetindey_presence_runtime;
+REVOKE EXECUTE ON FUNCTION public.presence_block(uuid, uuid)
+  FROM wetindey_presence_runtime;
+REVOKE EXECUTE ON FUNCTION public.presence_report(
+  uuid, uuid, public.presence_report_kind, text, text, text, text
+) FROM wetindey_presence_runtime;
+
+REVOKE ALL ON FUNCTION public.presence_v2_digest(text)
+  FROM PUBLIC, wetindey_presence_runtime, wetindey_presence_safety,
+    wetindey_presence_lifecycle;
+REVOKE ALL ON FUNCTION public.presence_v2_pair_lock(uuid, uuid)
+  FROM PUBLIC, wetindey_presence_runtime, wetindey_presence_safety,
+    wetindey_presence_lifecycle;
+REVOKE ALL ON FUNCTION public.presence_v2_revoke_account(uuid, text)
+  FROM PUBLIC, wetindey_presence_runtime, wetindey_presence_safety,
+    wetindey_presence_lifecycle;
+REVOKE ALL ON FUNCTION public.presence_v2_revoke_pair(uuid, uuid, text)
+  FROM PUBLIC, wetindey_presence_runtime, wetindey_presence_safety,
+    wetindey_presence_lifecycle;
+REVOKE ALL ON FUNCTION public.presence_v2_lease_revoke_trigger()
+  FROM PUBLIC, wetindey_presence_runtime, wetindey_presence_safety,
+    wetindey_presence_lifecycle;
+REVOKE ALL ON FUNCTION public.presence_v2_issue_capability(
+  uuid, uuid, public.presence_capability_purpose, text, text, uuid, uuid, timestamptz
+) FROM PUBLIC, wetindey_presence_runtime, wetindey_presence_safety,
+  wetindey_presence_lifecycle;
+
+REVOKE ALL ON FUNCTION public.presence_set_preferences_v2(uuid, boolean, boolean, boolean, text)
+  FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.presence_activate_v2(uuid, text, integer, integer, text, text, text)
+  FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.presence_stop_v2(uuid) FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.presence_snapshot_v2(uuid, text, text, text)
+  FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.presence_wave_v2(uuid, text, text, text, text, text)
+  FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.presence_block_v2(uuid, text) FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.presence_report_v2(
+  uuid, text, text, public.presence_report_kind, text, text, text, text
+) FROM PUBLIC;
+
+GRANT EXECUTE ON FUNCTION public.presence_set_preferences_v2(
+  uuid, boolean, boolean, boolean, text
+) TO wetindey_presence_runtime;
+GRANT EXECUTE ON FUNCTION public.presence_activate_v2(
+  uuid, text, integer, integer, text, text, text
+) TO wetindey_presence_runtime;
+GRANT EXECUTE ON FUNCTION public.presence_stop_v2(uuid)
+  TO wetindey_presence_runtime;
+GRANT EXECUTE ON FUNCTION public.presence_snapshot_v2(
+  uuid, text, text, text
+) TO wetindey_presence_runtime;
+GRANT EXECUTE ON FUNCTION public.presence_wave_v2(
+  uuid, text, text, text, text, text
+) TO wetindey_presence_runtime;
+GRANT EXECUTE ON FUNCTION public.presence_block_v2(uuid, text)
+  TO wetindey_presence_runtime;
+GRANT EXECUTE ON FUNCTION public.presence_report_v2(
+  uuid, text, text, public.presence_report_kind, text, text, text, text
+) TO wetindey_presence_runtime;
+
+GRANT USAGE ON TYPE public.presence_report_kind TO wetindey_presence_runtime;
+
+CREATE OR REPLACE TRIGGER presence_v2_lease_revoke_trigger
+BEFORE DELETE ON public.presence_leases
+FOR EACH ROW EXECUTE FUNCTION public.presence_v2_lease_revoke_trigger();
+
+ALTER TABLE public.presence_activation_requests OWNER TO wetindey_presence_owner;
+ALTER TABLE public.presence_capabilities OWNER TO wetindey_presence_owner;
+ALTER TYPE public.presence_activation_status OWNER TO wetindey_presence_owner;
+ALTER TYPE public.presence_capability_purpose OWNER TO wetindey_presence_owner;
+ALTER TYPE public.presence_capability_state OWNER TO wetindey_presence_owner;
+
+ALTER FUNCTION public.presence_v2_digest(text) OWNER TO wetindey_presence_owner;
+ALTER FUNCTION public.presence_v2_pair_lock(uuid, uuid) OWNER TO wetindey_presence_owner;
+ALTER FUNCTION public.presence_v2_revoke_account(uuid, text) OWNER TO wetindey_presence_owner;
+ALTER FUNCTION public.presence_v2_revoke_pair(uuid, uuid, text) OWNER TO wetindey_presence_owner;
+ALTER FUNCTION public.presence_v2_lease_revoke_trigger() OWNER TO wetindey_presence_owner;
+ALTER FUNCTION public.presence_v2_issue_capability(
+  uuid, uuid, public.presence_capability_purpose, text, text, uuid, uuid, timestamptz
+) OWNER TO wetindey_presence_owner;
+ALTER FUNCTION public.presence_set_preferences_v2(uuid, boolean, boolean, boolean, text)
+  OWNER TO wetindey_presence_owner;
+ALTER FUNCTION public.presence_activate_v2(uuid, text, integer, integer, text, text, text)
+  OWNER TO wetindey_presence_owner;
+ALTER FUNCTION public.presence_stop_v2(uuid) OWNER TO wetindey_presence_owner;
+ALTER FUNCTION public.presence_snapshot_v2(uuid, text, text, text)
+  OWNER TO wetindey_presence_owner;
+ALTER FUNCTION public.presence_wave_v2(uuid, text, text, text, text, text)
+  OWNER TO wetindey_presence_owner;
+ALTER FUNCTION public.presence_block_v2(uuid, text) OWNER TO wetindey_presence_owner;
+ALTER FUNCTION public.presence_report_v2(
+  uuid, text, text, public.presence_report_kind, text, text, text, text
+) OWNER TO wetindey_presence_owner;
+
 REVOKE CREATE ON SCHEMA public FROM wetindey_presence_owner;
 REVOKE wetindey_presence_owner FROM SESSION_USER
   GRANTED BY SESSION_USER;
 
 DO $$
 BEGIN
-  IF pg_has_role(
-    session_user,
-    'wetindey_presence_owner',
-    'SET'
-  ) THEN
-    RAISE EXCEPTION 'migration principal retains a SET path to the presence owner'
+  IF pg_has_role(session_user, 'wetindey_presence_owner', 'SET') THEN
+    RAISE EXCEPTION '0014 migration principal retains a SET path to presence owner'
       USING ERRCODE = '42501';
   END IF;
-
   IF EXISTS (
     SELECT 1
     FROM pg_auth_members membership
@@ -269,30 +395,11 @@ BEGIN
       AND member_role.rolname = session_user
       AND (membership.set_option OR membership.inherit_option)
   ) THEN
-    RAISE EXCEPTION 'migration principal retains privileged presence owner membership'
+    RAISE EXCEPTION '0014 migration principal retains owner membership'
       USING ERRCODE = '42501';
   END IF;
-
-  IF EXISTS (
-    SELECT 1
-    FROM pg_auth_members membership
-    JOIN pg_roles granted_role ON granted_role.oid = membership.roleid
-    JOIN pg_roles member_role ON member_role.oid = membership.member
-    JOIN pg_roles grantor_role ON grantor_role.oid = membership.grantor
-    WHERE granted_role.rolname = 'wetindey_presence_owner'
-      AND member_role.rolname = session_user
-      AND grantor_role.rolname = session_user
-  ) THEN
-    RAISE EXCEPTION 'migration principal retains its transient owner grant'
-      USING ERRCODE = '42501';
-  END IF;
-
-  IF has_schema_privilege(
-    'wetindey_presence_owner',
-    'public',
-    'CREATE'
-  ) THEN
-    RAISE EXCEPTION 'presence owner retains CREATE on schema public'
+  IF has_schema_privilege('wetindey_presence_owner', 'public', 'CREATE') THEN
+    RAISE EXCEPTION '0014 presence owner retains CREATE on public schema'
       USING ERRCODE = '42501';
   END IF;
 END;

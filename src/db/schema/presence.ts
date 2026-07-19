@@ -55,6 +55,24 @@ export const presenceReportResolution = pgEnum("presence_report_resolution", [
   "closed",
 ]);
 
+export const presenceActivationStatus = pgEnum("presence_activation_status", [
+  "accepted",
+  "rejected",
+  "expired",
+]);
+
+export const presenceCapabilityPurpose = pgEnum("presence_capability_purpose", [
+  "wave",
+  "block",
+  "report",
+]);
+
+export const presenceCapabilityState = pgEnum("presence_capability_state", [
+  "active",
+  "revoked",
+  "consumed",
+]);
+
 /**
  * One fail-closed control row for the private presence boundary.
  *
@@ -68,6 +86,7 @@ export const presenceControl = pgTable(
   {
     id: integer("id").primaryKey().default(1),
     operationsAllowed: boolean("operations_allowed").notNull().default(false),
+    runtimeAllowed: boolean("runtime_allowed").notNull().default(false),
     generation: bigint("generation", { mode: "number" }).notNull().default(1),
     allowlistAccountA: uuid("allowlist_account_a"),
     allowlistAccountB: uuid("allowlist_account_b"),
@@ -132,21 +151,21 @@ export const presencePreferences = pgTable(
   {
     accountId: uuid("account_id").primaryKey(),
     presenceOptedIn: boolean("presence_opted_in").notNull().default(false),
-    profileConsented: boolean("profile_consented").notNull().default(false),
+    nameConsented: boolean("name_consented").notNull().default(false),
+    avatarConsented: boolean("avatar_consented").notNull().default(false),
     displayName: varchar("display_name", { length: 80 }),
-    avatarUrl: text("avatar_url"),
+    avatarProjectionEpoch: bigint("avatar_projection_epoch", { mode: "number" })
+      .notNull()
+      .default(1),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [
     check(
-      "presence_preferences_profile_check",
-      sql`(${t.profileConsented} and (${t.displayName} is not null or ${t.avatarUrl} is not null))
-        or (not ${t.profileConsented} and ${t.displayName} is null and ${t.avatarUrl} is null)`,
+      "presence_preferences_name_check",
+      sql`(${t.nameConsented} and ${t.displayName} is not null)
+        or (not ${t.nameConsented} and ${t.displayName} is null)`,
     ),
-    check(
-      "presence_preferences_avatar_check",
-      sql`${t.avatarUrl} is null or (length(${t.avatarUrl}) <= 2048 and ${t.avatarUrl} ~ '^https://')`,
-    ),
+    check("presence_preferences_epoch_check", sql`${t.avatarProjectionEpoch} > 0`),
   ],
 );
 
@@ -177,6 +196,87 @@ export const presenceLeases = pgTable(
       "presence_leases_centroid_check",
       sql`GeometryType(${t.centroid}::geometry) = 'POINT'
         and ST_SRID(${t.centroid}::geometry) = 4326`,
+    ),
+  ],
+);
+
+export const presenceActivationRequests = pgTable(
+  "presence_activation_requests",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    accountId: uuid("account_id").notNull(),
+    requestDigest: varchar("request_digest", { length: 64 }).notNull(),
+    cellX: integer("cell_x").notNull(),
+    cellY: integer("cell_y").notNull(),
+    status: presenceActivationStatus("status").notNull().default("accepted"),
+    leaseId: uuid("lease_id").references(() => presenceLeases.id, { onDelete: "set null" }),
+    failureCode: varchar("failure_code", { length: 64 }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+  },
+  (t) => [
+    uniqueIndex("presence_activation_requests_key").on(t.accountId, t.requestDigest),
+    index("presence_activation_requests_expiry_idx").on(t.expiresAt),
+    check("presence_activation_requests_digest_check", sql`${t.requestDigest} ~ '^[0-9a-f]{64}$'`),
+    check(
+      "presence_activation_requests_status_check",
+      sql`(${t.status} = 'accepted' and ${t.leaseId} is not null and ${t.failureCode} is null)
+        or (${t.status} in ('rejected', 'expired') and ${t.failureCode} is not null)`,
+    ),
+    check("presence_activation_requests_expiry_check", sql`${t.expiresAt} > ${t.createdAt}`),
+  ],
+);
+
+export const presenceCapabilities = pgTable(
+  "presence_capabilities",
+  {
+    tokenDigest: varchar("token_digest", { length: 64 }).primaryKey(),
+    viewerAccountId: uuid("viewer_account_id").notNull(),
+    subjectAccountId: uuid("subject_account_id").notNull(),
+    purpose: presenceCapabilityPurpose("purpose").notNull(),
+    state: presenceCapabilityState("state").notNull().default("active"),
+    snapshotDigest: varchar("snapshot_digest", { length: 64 }).notNull(),
+    avatarProjectionDigest: varchar("avatar_projection_digest", { length: 64 }).notNull(),
+    viewerLeaseId: uuid("viewer_lease_id")
+      .notNull()
+      .references(() => presenceLeases.id, { onDelete: "cascade" }),
+    subjectLeaseId: uuid("subject_lease_id")
+      .notNull()
+      .references(() => presenceLeases.id, { onDelete: "cascade" }),
+    issuedAt: timestamp("issued_at", { withTimezone: true }).notNull().defaultNow(),
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+    revokedAt: timestamp("revoked_at", { withTimezone: true }),
+    revocationReason: varchar("revocation_reason", { length: 64 }),
+    consumedAt: timestamp("consumed_at", { withTimezone: true }),
+  },
+  (t) => [
+    uniqueIndex("presence_capabilities_snapshot_key").on(
+      t.viewerAccountId,
+      t.snapshotDigest,
+      t.subjectAccountId,
+      t.purpose,
+    ),
+    index("presence_capabilities_expiry_idx").on(t.expiresAt),
+    index("presence_capabilities_pair_idx").on(t.viewerAccountId, t.subjectAccountId),
+    check("presence_capabilities_token_check", sql`${t.tokenDigest} ~ '^[0-9a-f]{64}$'`),
+    check("presence_capabilities_snapshot_check", sql`${t.snapshotDigest} ~ '^[0-9a-f]{64}$'`),
+    check(
+      "presence_capabilities_avatar_projection_check",
+      sql`${t.avatarProjectionDigest} ~ '^[0-9a-f]{64}$'`,
+    ),
+    check(
+      "presence_capabilities_state_check",
+      sql`(${t.state} = 'active' and ${t.revokedAt} is null)
+        or (${t.state} in ('revoked', 'consumed') and ${t.revokedAt} is not null)`,
+    ),
+    check(
+      "presence_capabilities_expiry_check",
+      sql`${t.expiresAt} > ${t.issuedAt} and ${t.expiresAt} <= ${t.issuedAt} + interval '15 minutes'`,
+    ),
+    check(
+      "presence_capabilities_pair_check",
+      sql`${t.viewerAccountId} <> ${t.subjectAccountId} and ${t.viewerLeaseId} <> ${t.subjectLeaseId}`,
     ),
   ],
 );
@@ -241,6 +341,7 @@ export const presenceReports = pgTable(
     id: uuid("id").primaryKey().defaultRandom(),
     reporterAccountId: uuid("reporter_account_id").notNull(),
     subjectAccountId: uuid("subject_account_id").notNull(),
+    idempotencyDigest: varchar("idempotency_digest", { length: 64 }).notNull(),
     kind: presenceReportKind("kind").notNull(),
     details: text("details"),
     resolution: presenceReportResolution("resolution").notNull().default("open"),
@@ -255,6 +356,10 @@ export const presenceReports = pgTable(
       t.resolution,
     ),
     index("presence_reports_purge_idx").on(t.purgeAt),
+    uniqueIndex("presence_reports_idempotency_key").on(
+      t.reporterAccountId,
+      t.idempotencyDigest,
+    ),
     check(
       "presence_reports_not_self_check",
       sql`${t.reporterAccountId} <> ${t.subjectAccountId}`,
@@ -263,6 +368,7 @@ export const presenceReports = pgTable(
       "presence_reports_details_check",
       sql`${t.details} is null or length(${t.details}) between 1 and 1000`,
     ),
+    check("presence_reports_digest_check", sql`${t.idempotencyDigest} ~ '^[0-9a-f]{64}$'`),
     check(
       "presence_reports_resolution_check",
       sql`(${t.resolution} = 'open' and ${t.resolvedAt} is null)

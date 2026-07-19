@@ -99,6 +99,13 @@
       "when": 1784439194861,
       "tag": "0013_contribution_integrity",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1784454430015,
+      "tag": "0014_presence_capabilities",
+      "breakpoints": true
     }
   ]
 }
