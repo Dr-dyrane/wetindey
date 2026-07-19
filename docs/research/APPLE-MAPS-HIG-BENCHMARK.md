@@ -55,6 +55,7 @@ This is an evidence inventory, not an active implementation claim. Findings are 
 current source inspection and the paired reused-tab runtime; future ownership is sequenced
 below and remains unallocated until PM records exact locks. Component symbols are used
 instead of drifting line-number citations; runtime screenshots remain the acceptance proof.
+The current `min-h-11` source guard is not itself a runtime acceptance result.
 
 | Finding | Current evidence | Smallest future lane and acceptance evidence |
 |---|---|---|
