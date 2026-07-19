@@ -434,7 +434,7 @@ remove root/category-specific browser metadata claims and use title “WetinDey:
 local information” plus description “Know before you go. Live local information near you.”
 for all categories, without capability, UI, or data behavior changes.
 
-##### Trusted People / Remote Presence governance — PROPOSED, ACTIVE DOCS CLAIM
+##### Trusted People / Remote Presence governance — PROPOSED / DOCS COMPLETE
 
 Owner: Product & Data Governance. Exact documentation paths:
 
@@ -443,19 +443,18 @@ Owner: Product & Data Governance. Exact documentation paths:
 - `WETINDEY_BIBLE.md`
 - `docs/architecture/SERVICE-ARCHITECTURE.md`
 
-This remains Proposed governance only: no schema, migration, server, or UI authorization,
-and no override of the Presence `0014` correction gate. Require independent docs
-default-to-REFUTED review and a path-scoped commit.
+Commit `cc602a087e56e5bbf9ae98b45e2f1583975e8327` independently passed and released all
+four documentation paths. ADR-025 remains Proposed governance only: no schema, migration,
+server, or UI authorization, and no override of the Presence `0014` correction gate.
 
-##### Product / Localization — manifest product-identity correction — ACTIVE
+##### Product / Localization — manifest product-identity correction — COMPLETE / STATIC PASS
 
 Owner: Product / Localization. Exclusive path: `src/app/manifest.ts`.
 
-Replace only the stale install description that frames WetinDey as nearby Food
-prices/availability with succinct product-level language led by “Know before you go” and
-live local information. Do not imply unsupported categories are live. Preserve manifest
-identity, icons, scope, display, colors, shortcuts, and every other field. Require focused
-static refutation and one exact one-file commit.
+Commit `2e7debd` independently passed and released `src/app/manifest.ts`. Its install
+description now uses succinct “Know before you go” live-local-information language without
+implying unsupported categories are live; manifest identity, icons, scope, display, colors,
+shortcuts, and every other field were preserved.
 
 ##### Product & Data Governance — ADR-026 Liquid Glass Sheet Material System — COMPLETE / PASS
 
