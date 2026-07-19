@@ -623,14 +623,14 @@ export function ProfileSheet({
                     type="button"
                     onClick={() => void resendCode()}
                     disabled={cooling}
-                    className="min-h-tap text-subhead font-semibold text-accent active:opacity-60 disabled:text-text-tertiary"
+                    className="min-h-tap text-subhead text-accent active:opacity-60 disabled:text-text-tertiary"
                   >
                     {cooling ? t("auth.resend_in", { seconds: cooldown }) : t("auth.resend")}
                   </button>
                   <button
                     type="button"
                     onClick={() => setSignIn({ kind: "email", sending: false, error: null })}
-                    className="min-h-tap text-subhead font-semibold text-accent active:opacity-60"
+                    className="min-h-tap text-subhead text-accent active:opacity-60"
                   >
                     {t("auth.different_email")}
                   </button>
