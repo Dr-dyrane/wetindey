@@ -303,6 +303,8 @@ export default function HomePage() {
   // Set when a search rejects (offline, server down). AsyncList renders it in the
   // search list's error state instead of the whole app falling to the boundary.
   const [searchError, setSearchError] = useState<string | null>(null);
+  // Incrementing retries the current query/context without rewriting any of it.
+  const [searchRetryNonce, setSearchRetryNonce] = useState(0);
   const [loadError, setLoadError] = useState<string | null>(null);
   /** Kept apart from `loadError`: the two loads fail independently, and a dead
    *  places query must not blank the list with the list's own error text. */
@@ -565,7 +567,6 @@ export default function HomePage() {
       } catch (err) {
         console.error("Search failed:", err);
         if (!cancelled) {
-          setSearchResults([]);
           setSearchError("Couldn't search. Check your connection.");
         }
       } finally {
@@ -581,7 +582,8 @@ export default function HomePage() {
     searchQuery,
     browsingLocation.lat,
     browsingLocation.lng,
-    activeRadiusKm
+    activeRadiusKm,
+    searchRetryNonce
   ]);
 
   useEffect(() => {
@@ -1279,6 +1281,7 @@ export default function HomePage() {
               items={searchResults}
               isLoading={isSearching}
               error={searchError}
+              onRetry={() => setSearchRetryNonce((nonce) => nonce + 1)}
               errorState={searchError ? { description: searchError } : undefined}
               subject={searchQuery}
               keyExtractor={(item) => item.id}
