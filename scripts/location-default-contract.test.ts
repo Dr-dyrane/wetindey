@@ -24,7 +24,10 @@ import {
 } from "../src/design-system/components/MapboxCanvas";
 import { disclosedRouteOrigin, isDisclosedRouteOriginAdmissible } from "../src/lib/directions";
 
+const testFilter = process.env.WETINDEY_CONTRACT_FILTER;
+
 function test(name: string, run: () => void) {
+  if (testFilter && !name.includes(testFilter)) return;
   try {
     run();
     process.stdout.write(`✓ ${name}\n`);
@@ -312,9 +315,12 @@ class FakeWebGLContext {
 class FakeCanvas {
   readonly context = new FakeWebGLContext();
   contextAvailable = true;
+  contextType: "webgl2" | "webgl" = "webgl2";
+  throwOnContextAccess = false;
 
   getContext(type: string) {
-    return type === "webgl2" && this.contextAvailable ? this.context : null;
+    if (this.throwOnContextAccess) throw new Error("GL access rejected");
+    return type === this.contextType && this.contextAvailable ? this.context : null;
   }
 }
 
@@ -466,16 +472,22 @@ class FakeMap {
       | "read-noop"
       | "read-throw"
       | "context-unavailable"
+      | "gl-error"
       | "zero-buffer"
   ) {
     const context = this.canvas.context;
     this.canvas.contextAvailable = mode !== "context-unavailable";
+    this.canvas.throwOnContextAccess = mode === "gl-error";
     context.black = mode === "black";
     context.transparent = mode === "transparent";
     context.leaveReadTargetUntouched = mode === "read-noop";
     context.throwOnRead = mode === "read-throw";
     context.drawingBufferWidth = mode === "zero-buffer" ? 0 : 320;
     context.drawingBufferHeight = mode === "zero-buffer" ? 0 : 240;
+  }
+
+  setContextType(type: "webgl2" | "webgl") {
+    this.canvas.contextType = type;
   }
 
   setEmitStyleLoadInsideSetStyle(emit: boolean) {
@@ -1214,37 +1226,35 @@ test("confirmed WebGL failures reconstruct once, preserve state, and then fail v
     assert.equal(first.isStyleLoaded(), false);
     assert.equal(states.at(-1)?.status, "ready");
     assert.equal(first.getRouteReplayCount(), 1);
+    assert.equal(diagnostics.get("data-map-frame-evidence"), "visible");
 
-    // Both shipped themes require the same current-generation render authority.
+    // WebGL1 fallback uses the context Mapbox already established instead of
+    // treating a failed WebGL2 lookup as a missing renderer.
     adapter.setTheme("light");
+    first.setContextType("webgl");
     first.emitStyleLoad();
     assert.equal(states.at(-1)?.status, "ready");
     assert.equal(states.at(-1)?.theme, "light");
+    assert.equal(diagnostics.get("data-map-frame-evidence"), "visible");
+    first.setContextType("webgl2");
 
-    // Safari may return black, transparent or untouched readback from a
-    // presented default framebuffer when preserveDrawingBuffer is false.
-    // Each category remains safely observable but the current style's later
-    // render wins and no Map reconstruction occurs.
+    // Transparent, untouched and throwing readback remain read-error, never
+    // black. A current render may still uncover the map because Safari's
+    // default framebuffer is not preserved for diagnostic reads.
     const instancesBeforeAmbiguousReadback = FakeMap.instances.length;
     adapter.setTheme("dark");
-    first.setFrameProbeMode("black");
-    first.emitBlackStyleLoad();
-    assert.equal(states.at(-1)?.status, "ready");
-    assert.equal(diagnostics.get("data-map-frame-evidence"), "opaque-black-readback");
-
-    adapter.setTheme("light");
     first.setFrameProbeMode("transparent");
-    first.emitStyleLoad();
-    assert.equal(states.at(-1)?.status, "ready");
-    assert.equal(diagnostics.get("data-map-frame-evidence"), "transparent");
-
-    adapter.setTheme("dark");
-    first.setFrameProbeMode("read-noop");
     first.emitStyleLoad();
     assert.equal(states.at(-1)?.status, "ready");
     assert.equal(diagnostics.get("data-map-frame-evidence"), "read-error");
 
     adapter.setTheme("light");
+    first.setFrameProbeMode("read-noop");
+    first.emitStyleLoad();
+    assert.equal(states.at(-1)?.status, "ready");
+    assert.equal(diagnostics.get("data-map-frame-evidence"), "read-error");
+
+    adapter.setTheme("dark");
     first.setFrameProbeMode("read-throw");
     first.emitStyleLoad();
     assert.equal(states.at(-1)?.status, "ready");
@@ -1254,7 +1264,7 @@ test("confirmed WebGL failures reconstruct once, preserve state, and then fail v
     // A zero buffer cannot become usable from this render callback, but may be
     // transient layout state, so it fails recoverably without spending the
     // reconstruction.
-    adapter.setTheme("dark");
+    adapter.setTheme("light");
     first.setFrameProbeMode("zero-buffer");
     first.emitStyleLoad();
     assert.equal(states.at(-1)?.status, "loading");
@@ -1265,6 +1275,24 @@ test("confirmed WebGL failures reconstruct once, preserve state, and then fail v
     assert.equal(diagnostics.get("data-map-frame-evidence"), "zero-buffer");
     assert.equal(FakeMap.instances.length, instancesBeforeAmbiguousReadback);
 
+    // Missing/throwing context inspection is categorical but never inferred as
+    // black and cannot spend the single automatic reconstruction.
+    adapter.retryStyle();
+    first.setFrameProbeMode("context-unavailable");
+    first.emitStyleLoad();
+    runNextTimer();
+    assert.equal(states.at(-1)?.status, "failed");
+    assert.equal(diagnostics.get("data-map-frame-evidence"), "context-unavailable");
+    assert.equal(FakeMap.instances.length, instancesBeforeAmbiguousReadback);
+
+    adapter.retryStyle();
+    first.setFrameProbeMode("gl-error");
+    first.emitStyleLoad();
+    runNextTimer();
+    assert.equal(states.at(-1)?.status, "failed");
+    assert.equal(diagnostics.get("data-map-frame-evidence"), "gl-error");
+    assert.equal(FakeMap.instances.length, instancesBeforeAmbiguousReadback);
+
     adapter.retryStyle();
     first.setFrameProbeMode("visible");
     first.emitStyleLoad();
@@ -1272,13 +1300,12 @@ test("confirmed WebGL failures reconstruct once, preserve state, and then fail v
     assert.equal(diagnostics.get("data-map-frame-evidence"), "visible");
     assert.equal(diagnostics.has("data-map-failure-reason"), false);
 
-    // Black readback after context restoration remains diagnostic-only:
-    // preserveDrawingBuffer:false permits it even for a presented frame.
+    // A restored context still needs a current rendered frame before recovery.
     const instanceCountBeforeRestore = FakeMap.instances.length;
     const routeReplaysBeforeRestore = first.getRouteReplayCount();
     first.loseContext();
     assert.equal(states.at(-1)?.status, "loading");
-    first.restoreContext(true);
+    first.restoreContext(false);
     assert.equal(states.at(-1)?.status, "loading");
     first.emitRender();
     assert.equal(states.at(-1)?.status, "ready");
@@ -1305,22 +1332,37 @@ test("confirmed WebGL failures reconstruct once, preserve state, and then fail v
       internals.activeUserPopup = null;
     });
 
-    // A confirmed missing current WebGL2 context without a later usable render
-    // consumes the one bounded reconstruction. Ambiguous readback does not.
+    // Two black renders from the same current generation corroborate a
+    // genuinely black frame and consume the one bounded reconstruction.
     const routeReplayCountBeforeFailure = first.getRouteReplayCount();
-    adapter.setTheme("light");
+    adapter.setTheme("dark");
     const staleRender = first.snapshotRenderListeners()[0];
     const staleContextLost = first.snapshotContextLostListeners()[0];
-    first.setFrameProbeMode("context-unavailable");
-    first.emitStyleLoad();
+    first.setFrameProbeMode("black");
+    first.emitBlackStyleLoad();
     assert.equal(states.at(-1)?.status, "loading");
     assert.equal(mapCanvasOverlay(true, false, canvasState), "loading");
+    assert.equal(diagnostics.get("data-map-frame-evidence"), "pending");
+    adapter.retryStyle();
+    staleRender?.();
+    assert.equal(
+      diagnostics.get("data-map-frame-evidence"),
+      "pending",
+      "a stale generation cannot contribute black-frame corroboration"
+    );
+    first.emitBlackStyleLoad();
+    assert.equal(
+      diagnostics.get("data-map-frame-evidence"),
+      "pending",
+      "explicit retry resets black-frame corroboration"
+    );
+    first.emitBlackRender();
+    assert.equal(diagnostics.get("data-map-frame-evidence"), "genuinely-black");
     assert.equal(
       first.getRouteReplayCount(),
       routeReplayCountBeforeFailure,
       "a retained route must wait for a subsequent usable render"
     );
-    assert.equal(diagnostics.get("data-map-frame-evidence"), "context-unavailable");
     runNextTimer();
     const replacement = FakeMap.latest as FakeMap | null;
     assert.ok(replacement);
@@ -1355,18 +1397,18 @@ test("confirmed WebGL failures reconstruct once, preserve state, and then fail v
     // A fresh theme episode gets one automatic reconstruction. If its
     // replacement also has a confirmed renderer failure, failure is visible
     // and there is no loop.
-    adapter.setTheme("dark");
-    replacement.setStyleLoaded(true);
-    replacement.emitIdle();
-    replacement.emitError("WebGL shader failed");
+    adapter.setTheme("light");
+    replacement.setFrameProbeMode("black");
+    replacement.emitBlackStyleLoad();
+    replacement.emitBlackRender();
     runNextTimer();
     const secondReplacement = FakeMap.latest as FakeMap | null;
     assert.ok(secondReplacement);
     assert.notEqual(secondReplacement, replacement);
     const countBeforeSecondFailure = FakeMap.instances.length;
-    secondReplacement.setStyleLoaded(true);
-    secondReplacement.emitIdle();
-    secondReplacement.emitError("WebGL shader failed");
+    secondReplacement.setFrameProbeMode("black");
+    secondReplacement.emitBlackStyleLoad();
+    secondReplacement.emitBlackRender();
     runNextTimer();
     const failedState = states.at(-1);
     assert.equal(failedState?.status, "failed");
@@ -1414,9 +1456,7 @@ test("confirmed WebGL failures reconstruct once, preserve state, and then fail v
     constructorAdapter.initialize({} as HTMLDivElement, { lat: 6.51, lng: 3.41 }, 13, "dark");
     const constructorMap = FakeMap.latest as FakeMap | null;
     assert.ok(constructorMap);
-    constructorMap.setStyleLoaded(true);
-    constructorMap.emitIdle();
-    constructorMap.emitError("WebGL shader failed");
+    constructorMap.loseContext();
     FakeMap.rejectNextConstruction = true;
     const countBeforeRejectedReplacement = FakeMap.instances.length;
     runNextTimer();
@@ -1443,9 +1483,7 @@ test("confirmed WebGL failures reconstruct once, preserve state, and then fail v
     removalAdapter.initialize({} as HTMLDivElement, { lat: 6.52, lng: 3.42 }, 12, "light");
     const removalMap = FakeMap.latest as FakeMap | null;
     assert.ok(removalMap);
-    removalMap.setStyleLoaded(true);
-    removalMap.emitIdle();
-    removalMap.emitError("WebGL shader failed");
+    removalMap.loseContext();
     removalMap.setRejectNextRemove(true);
     const countBeforeRejectedRemoval = FakeMap.instances.length;
     runNextTimer();
@@ -1488,13 +1526,20 @@ test("renderer readiness is render-bound, categorically diagnosed, epoch-bound a
   assert.match(adapterSource, /FRAME_READ_SENTINEL/);
   assert.match(adapterSource, /map\.getCanvas\(\)/);
   assert.match(adapterSource, /getContext\("webgl2"\)/);
+  assert.match(adapterSource, /getContext\("webgl"\)/);
   assert.match(adapterSource, /gl\.isContextLost\(\)/);
   assert.match(adapterSource, /gl\.readPixels/);
+  assert.match(adapterSource, /BLACK_FRAME_CORROBORATION_SAMPLES = 2/);
+  assert.match(adapterSource, /STYLE_LOAD_TIMEOUT_MS = 5_000/);
+  assert.match(adapterSource, /STYLE_LOAD_MAX_ATTEMPTS = 2/);
+  assert.match(adapterSource, /"genuinely-black"/);
+  assert.match(adapterSource, /"gl-error"/);
   assert.match(usableBody, /this\.recordFrameEvidence\(evidence\)/);
+  assert.match(usableBody, /evidence === "pending"/);
+  assert.match(usableBody, /evidence === "genuinely-black"/);
   assert.match(usableBody, /evidence === "context-unavailable"/);
   assert.match(usableBody, /evidence === "context-lost"/);
   assert.match(usableBody, /evidence === "zero-buffer"/);
-  assert.doesNotMatch(usableBody, /evidence !== "visible"/);
   assert.match(usableBody, /this\.styleUsable = true;[\s\S]*this\.applyRoute\(\)/);
   assert.match(adapterSource, /data-map-frame-evidence/);
   assert.match(adapterSource, /data-map-failure-reason/);
@@ -1504,9 +1549,12 @@ test("renderer readiness is render-bound, categorically diagnosed, epoch-bound a
   assert.match(adapterSource, /this\.currentMapIs\(map, epoch\)/);
   assert.match(adapterSource, /MAX_AUTOMATIC_MAP_RECONSTRUCTIONS = 1/);
   assert.match(frameTimeoutBody, /this\.contextLost/);
-  assert.match(frameTimeoutBody, /this\.frameEvidence === "context-unavailable"/);
-  assert.match(frameTimeoutBody, /this\.rendererErrorObserved/);
-  assert.doesNotMatch(frameTimeoutBody, /opaque-black-readback/);
+  assert.match(frameTimeoutBody, /this\.frameEvidence === "context-lost"/);
+  assert.match(frameTimeoutBody, /this\.frameEvidence === "genuinely-black"/);
+  assert.doesNotMatch(
+    frameTimeoutBody.match(/const hasReconstructionEvidence[\s\S]*?;\n/)?.[0] ?? "",
+    /context-unavailable|read-error|gl-error/
+  );
   assert.match(adapterSource, /private reconstructMap/);
   assert.match(
     adapterSource,

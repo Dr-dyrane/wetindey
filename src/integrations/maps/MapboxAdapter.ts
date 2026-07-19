@@ -201,16 +201,19 @@ const MAX_AUTOMATIC_MAP_RECONSTRUCTIONS = 1;
 const VISIBLE_FRAME_CHANNEL_FLOOR = 8;
 const FRAME_SAMPLE_FRACTIONS = [0.18, 0.38, 0.5, 0.62, 0.82] as const;
 const FRAME_READ_SENTINEL = [0xde, 0xad, 0xbe, 0xef] as const;
+const BLACK_FRAME_CORROBORATION_SAMPLES = 2;
 
 type FrameEvidence =
   | "pending"
   | "visible"
-  | "opaque-black-readback"
+  | "genuinely-black"
   | "context-unavailable"
   | "context-lost"
   | "zero-buffer"
   | "read-error"
-  | "transparent";
+  | "gl-error";
+
+type FrameReadEvidence = FrameEvidence | "black-sample";
 
 /**
  * How close `fitRoute` is allowed to pull in. 16.5 is a street, not a doorway.
@@ -928,6 +931,8 @@ export class MapboxAdapter implements MapProviderAdapter {
   private routeIsolationFailed = false;
   /** Safe, generation-local renderer evidence; never contains request or location data. */
   private frameEvidence: FrameEvidence = "pending";
+  private blackFrameGeneration: number | null = null;
+  private blackFrameSamples = 0;
   private automaticMapReconstructions = 0;
   private lastFailureReason: "context" | "error" | "probe" | "renderer" | "timeout" | null = null;
   /**
@@ -1200,20 +1205,25 @@ export class MapboxAdapter implements MapProviderAdapter {
    * diagnose a renderer but never independently controls the user-visible
    * overlay.
    */
-  private inspectFrameEvidence(map: MapboxMap): FrameEvidence {
-    let gl: WebGL2RenderingContext | null = null;
+  private inspectFrameEvidence(map: MapboxMap): FrameReadEvidence {
+    let gl: WebGLRenderingContext | WebGL2RenderingContext | null = null;
     let width = 0;
     let height = 0;
     try {
       const canvas = map.getCanvas();
-      gl = canvas.getContext("webgl2");
+      // Asking for the already-established context returns that context. Safari
+      // may let Mapbox operate through WebGL1 after a WebGL2 allocation failure,
+      // so WebGL2-only inspection would misclassify a visible map as missing.
+      gl =
+        (canvas.getContext("webgl2") as WebGL2RenderingContext | null) ??
+        (canvas.getContext("webgl") as WebGLRenderingContext | null);
       if (!gl) return "context-unavailable";
       if (gl.isContextLost()) return "context-lost";
       width = gl.drawingBufferWidth;
       height = gl.drawingBufferHeight;
       if (width <= 0 || height <= 0) return "zero-buffer";
     } catch {
-      return "context-unavailable";
+      return "gl-error";
     }
 
     const pixel = new Uint8Array(4);
@@ -1240,9 +1250,9 @@ export class MapboxAdapter implements MapProviderAdapter {
         }
       }
       if (opaqueBlackSamples === FRAME_SAMPLE_FRACTIONS.length ** 2) {
-        return "opaque-black-readback";
+        return "black-sample";
       }
-      if (transparentSamples > 0) return "transparent";
+      if (transparentSamples > 0) return "read-error";
     } catch {
       try {
         if (gl?.isContextLost()) return "context-lost";
@@ -1252,6 +1262,26 @@ export class MapboxAdapter implements MapProviderAdapter {
       return "read-error";
     }
     return "read-error";
+  }
+
+  private corroborateFrameEvidence(
+    generation: number,
+    evidence: FrameReadEvidence
+  ): FrameEvidence {
+    if (evidence !== "black-sample") {
+      this.blackFrameGeneration = null;
+      this.blackFrameSamples = 0;
+      return evidence;
+    }
+    if (this.blackFrameGeneration !== generation) {
+      this.blackFrameGeneration = generation;
+      this.blackFrameSamples = 1;
+      return "pending";
+    }
+    this.blackFrameSamples += 1;
+    return this.blackFrameSamples >= BLACK_FRAME_CORROBORATION_SAMPLES
+      ? "genuinely-black"
+      : "pending";
   }
 
   private completeUsableFrame(
@@ -1270,18 +1300,22 @@ export class MapboxAdapter implements MapProviderAdapter {
     ) {
       return false;
     }
-    const evidence = this.inspectFrameEvidence(map);
+    const evidence = this.corroborateFrameEvidence(
+      generation,
+      this.inspectFrameEvidence(map)
+    );
     this.recordFrameEvidence(evidence);
     if (evidence === "context-lost") this.contextLost = true;
-    // Mapbox uses preserveDrawingBuffer:false. Safari may therefore return
-    // black, transparent or failed readback after a frame that it visibly
-    // presented. Readback is diagnostic only: current-generation style
-    // readiness plus a subsequent render on a live, non-zero WebGL2 context is
-    // the usable-frame authority. Only confirmed context structure blocks it.
+    // A read failure remains diagnostic-only: it must never be promoted to
+    // black or spend reconstruction. Visible pixels, or a current render whose
+    // default framebuffer cannot be read reliably, may uncover the map.
     if (
+      evidence === "pending" ||
+      evidence === "genuinely-black" ||
       evidence === "context-unavailable" ||
       evidence === "context-lost" ||
-      evidence === "zero-buffer"
+      evidence === "zero-buffer" ||
+      evidence === "gl-error"
     ) {
       return false;
     }
@@ -1309,7 +1343,8 @@ export class MapboxAdapter implements MapProviderAdapter {
   /**
    * `style.load` and `idle` are definitive mutation-safe events. A later render
    * may recover a missed mutation-safe event, then exposes the map only while
-   * the current WebGL2 context remains present, non-lost and non-zero.
+   * the current established WebGL context remains present, non-lost and
+   * non-zero.
    */
   private recognizeLoadedStyle(
     generation: number,
@@ -1353,6 +1388,8 @@ export class MapboxAdapter implements MapProviderAdapter {
     this.contextRecoveryStyleWasReady = false;
     this.routeIsolationFailed = false;
     this.frameEvidence = "pending";
+    this.blackFrameGeneration = null;
+    this.blackFrameSamples = 0;
     this.setSafeDiagnostic("data-map-frame-evidence", "pending");
     this.lastFailureReason = null;
     this.styleInstalledGeneration = replaceStyle ? null : generation;
@@ -1492,9 +1529,8 @@ export class MapboxAdapter implements MapProviderAdapter {
 
     const hasReconstructionEvidence =
       this.contextLost ||
-      this.frameEvidence === "context-unavailable" ||
       this.frameEvidence === "context-lost" ||
-      this.rendererErrorObserved;
+      this.frameEvidence === "genuinely-black";
 
     if (
       hasReconstructionEvidence &&
@@ -1507,11 +1543,12 @@ export class MapboxAdapter implements MapProviderAdapter {
 
     const reason = hasReconstructionEvidence
       ? this.contextLost ||
-        this.frameEvidence === "context-unavailable" ||
         this.frameEvidence === "context-lost"
         ? "context"
         : "renderer"
-      : "probe";
+      : this.rendererErrorObserved
+        ? "renderer"
+        : "probe";
     this.lastFailureReason = reason;
     this.emitStyleLifecycle({
       status: "failed",
@@ -1551,6 +1588,8 @@ export class MapboxAdapter implements MapProviderAdapter {
     this.contextRecoveryStyleWasReady = styleWasReady;
     this.routeIsolationFailed = false;
     this.frameEvidence = "context-lost";
+    this.blackFrameGeneration = null;
+    this.blackFrameSamples = 0;
     this.setSafeDiagnostic("data-map-frame-evidence", "context-lost");
     if (styleWasUsable) this.automaticMapReconstructions = 0;
     this.lastFailureReason = null;
@@ -1666,6 +1705,8 @@ export class MapboxAdapter implements MapProviderAdapter {
     this.contextRecoveryStyleWasReady = false;
     this.routeIsolationFailed = false;
     this.frameEvidence = "pending";
+    this.blackFrameGeneration = null;
+    this.blackFrameSamples = 0;
     this.setSafeDiagnostic("data-map-frame-evidence", "pending");
     this.lastFailureReason = null;
     this.detachedRecoverySnapshot = null;
@@ -2693,6 +2734,8 @@ export class MapboxAdapter implements MapProviderAdapter {
     this.contextRecoveryStyleWasReady = false;
     this.routeIsolationFailed = false;
     this.frameEvidence = "pending";
+    this.blackFrameGeneration = null;
+    this.blackFrameSamples = 0;
     this.automaticMapReconstructions = 0;
     this.lastFailureReason = null;
     this.detachedRecoverySnapshot = null;
