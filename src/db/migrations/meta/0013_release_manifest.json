@@ -18,7 +18,7 @@
   "kind": "release_manifest",
   "drizzle_compatibility": "Detached metadata envelope: prevId is not in the migration snapshot chain.",
   "release": "0013_contribution_integrity",
-  "parent_commit": "ca64de66299c245b85c1a7ba01a8690f722129ae",
+  "parent_commit": "1b86e81705982f0b1d8336d2ad4dc6fe6ac90b80",
   "parent_migration": "0012_guarded_presence",
   "parent_migration_sha256": "a8b31034aae22a6e9fa62416df8a1bb483c6783947fdf742c674e82cac373302",
   "parent_snapshot_sha256": "40ba03232a62da4e0b3ad6b72c27db93927801e15dd98c0b8938cd9bf0fc8148",
