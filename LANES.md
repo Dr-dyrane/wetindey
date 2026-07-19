@@ -467,10 +467,16 @@ Liquid Glass adoption now proceeds in disjoint waves:
   `SettingsSheet.tsx`. Owner: HI implementation lead.
 - **Wave B — QUEUED:** `ItemDetailSheet.tsx`, `GetItSheet.tsx`. Owner: separate HI/visual
   implementation worker.
-##### FF-025 density disclosure — Item Detail — ACTIVE
+##### FF-025 density disclosure — Item Detail — COMPLETE / PASS
 
 Owner: Human Interface Design Engineer. Exclusive path:
 `src/app/_components/ItemDetailSheet.tsx`.
+
+Commit `24a6edde381ab0d17f335efde82b73c590d562d4` changed only this path. Exact-path
+ESLint and `git diff --check` passed; independent static refutation **PASS**ed after
+verifying explicit fallback availability wording, truthful expanded timestamp origin labels,
+disclosure/focus order, 44px controls, row actions, and loading/empty/error states. Release
+the path; no unrelated path is claimed.
 
 Keep item identity, current price/range and unit, availability, and one concise combined
 freshness/trust signal visible. Move verbose provenance explanation, exact timestamps,
