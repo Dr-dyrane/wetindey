@@ -1874,14 +1874,26 @@ Elevation should communicate layering, not luxury decoration.
 
 ## 17.8 Materials and blur
 
-Translucency MAY be used for top controls and sheet chrome when:
+**[ADR-026](docs/adr/026-liquid-glass-sheet-material-system.md) is accepted for visual
+architecture only; implementation remains separately evidenced.** Opaque sheet slabs are
+prohibited except for reduced-transparency or forced-colors/high-contrast accessibility
+fallbacks. Unsupported backdrop filtering or measured performance failure blocks
+implementation acceptance rather than authorizing another opaque variant. Named sheet
+materials are:
 
-- text remains readable;
-- device performance remains acceptable;
-- reduced-transparency preferences are respected where detectable;
-- and content does not become visually noisy.
+| Material | Use | Target |
+|---|---|---|
+| `material.contextIsland` | Compact peek/half context island | `backdrop-blur-sm` (~8px), restrained/no saturation, ~58–64% alpha |
+| `material.denseGlass` | Docked/modal decision surface | `backdrop-blur-sm` (~8px), restrained/no saturation, ~70–82% alpha |
+| `material.expandedGlass` | Edge-to-edge expanded sheet | Same translucent ~70–82% target; no opaque slab in normal modes |
+| `material.opaqueFallback` | Reduced-transparency/forced-colors accessibility fallback | 100% opaque, no blur |
 
-Provide an opaque fallback.
+The sheet host owns one blur layer per visible sheet. Never use content `filter: blur()`;
+never nest blur or glass/card slabs; use subtle inset edge light and existing elevation
+without decorative borders. Animate only transform and opacity for sheet motion and scrim;
+do not animate blur, saturation, fill alpha, edge light, or elevation. Light/dark,
+forced-colors, reduced-transparency, reduced-motion, map readability, and performance must
+be evidenced before implementation is called complete.
 
 ## 17.9 Motion tokens
 
@@ -4648,6 +4660,7 @@ The team should consider pivoting the mechanism or problem when:
 | Account deletion lifecycle | Accepted — see [ADR-021](docs/adr/021-account-deletion-lifecycle.md); implementation unclaimed | A persisted idempotent saga verifies fresh OTP/re-auth, deletes Auth through server-only exact-branch Neon administration, then retries profile, attribution, ordinary problem-report, Presence, and exact-prefix Blob cleanup. Observations remain unchanged; safety retention is minimal/tombstoned/details-cleared; terminal completion requires every phase receipt |
 | Earned seller stewardship and extensible role onboarding | Accepted — see [ADR-022](docs/adr/022-earned-seller-and-role-onboarding.md); implementation unclaimed | Application-owned scoped RBAC separates Auth, business verification, place control, roles, explicit contact-publication consent, seller accuracy, Food confidence, and badges. Owner/manager/staff permissions, moderation, independent appeal, and redacted audit precede any contact or dashboard. Identity/business verification, place-control approval, roles, lifecycle/status, accuracy/ranking, and badges cannot be purchased; implementation follows Food truth, corrected `0012`, and contribution integrity at `0013` or later |
 | Browsing context and device location are separate | Accepted — see [ADR-023](docs/adr/023-browsing-context-and-device-location.md); implementation unclaimed | Browsing context, physical device evidence, camera centre, and selected place are distinct. Default/manual/simulated points never become `Me`, personal avatar, exact route origin, or Presence evidence. Valid fixes retain accuracy and capture time outside coverage; exact origin egress requires freshness and explicit disclosure. Acceptance does not claim code, schema, provider, deployment, or rollout. |
+| Liquid Glass sheet material system | Accepted — visual architecture only; implementation separately evidenced; see [ADR-026](docs/adr/026-liquid-glass-sheet-material-system.md) | Named translucent sheet materials use `backdrop-blur-sm` (~8px), restrained/no saturation, context islands ~58–64% alpha, dense docked/modal/expanded glass ~70–82%, one blur layer per visible sheet, no nested blur/card slabs, subtle inset edge light/elevation, no decorative borders, and transform/opacity-only animation. Opaque slabs are prohibited except reduced-transparency or forced-colors accessibility fallbacks; unsupported or failed performance blocks acceptance. |
 
 > **Section 25 and Section 26 describe a TARGET, not the current system.** Verified 16 July 2026:
 > `WetinDeyModule` has zero live implementations, `src/modules/food/` is orphaned, and

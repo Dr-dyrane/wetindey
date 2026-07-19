@@ -17,6 +17,11 @@ The browser implementation should prefer CSS transitions for ordinary state chan
 
 This is a web-first adaptation of platform conventions, not an attempt to imitate undocumented Apple implementation details. Apple publishes the behavior and intent of motion, but not a universal “iOS duration” or “Apple Maps spring” that can be copied.
 
+[ADR-026](../adr/026-liquid-glass-sheet-material-system.md) is the accepted sheet-material
+architecture. This document supplies its motion and performance contract; implementation
+remains separately evidenced. Opaque sheet slabs are fallback-only, and normal sheets use
+one named translucent material with one blur owner.
+
 **Reading status:** “must” and “should” below describe the target system. Section 13 records where current code does not yet meet that target. No current behavior is considered verified merely because a token or rule appears in this document.
 
 ## 2. Research basis
@@ -110,7 +115,7 @@ Rules: default `bounce=0`; permit at most `0.04` for a deliberately physical, no
 | `motion.scale.modalStart` | `0.98` | Optional small modal depth cue; replace with fade under reduced motion |
 | `motion.opacity.scrim` | `0.28` | Medium-to-large sheet dimming; do not stack alpha-bearing scrims |
 | `motion.opacity.disabled` | `0.4` | Disabled state; also use semantic disabled affordance |
-| `motion.blur.backdrop` | `12px` | Existing WetinDey material baseline; not a transition requirement |
+| `motion.blur.backdrop` | `8px` | `backdrop-blur-sm` for the single sheet host; the former 12px baseline is superseded by ADR-026 |
 | `motion.blur.reduced` | `0px` | Reduced transparency/motion fallback |
 | `motion.border.transition` | `none` | WetinDey uses surface contrast and elevation; do not animate hairlines |
 | `motion.elevation.card` | `var(--shadow-card)` | Resting card |
@@ -128,6 +133,32 @@ Rules: default `bounce=0`; permit at most `0.04` for a deliberately physical, no
 | `motion.safeArea.bottom` | `max(env(safe-area-inset-bottom), 0px)` | Keep controls and sheet content above the home indicator |
 | `motion.velocity.flick` | `900px/s` | Candidate fast-flick threshold; calibrate on device |
 | `motion.velocity.max` | `2400px/s` | Clamp handoff velocity |
+
+### Liquid Glass sheet materials (ADR-026)
+
+The sheet host chooses one named material; descendants never add another blur or glass
+slab. These are target ranges for light/dark calibration, not per-component inventions:
+
+| Token | Surface | Fill alpha | Material rule |
+|---|---|---:|---|
+| `material.contextIsland` | Compact peek/half context island | ~58–64% | `backdrop-blur-sm` (~8px), restrained/no saturation |
+| `material.denseGlass` | Docked/modal decision surface | ~70–82% | `backdrop-blur-sm` (~8px), restrained/no saturation |
+| `material.expandedGlass` | Expanded edge-to-edge sheet | ~70–82% | Remains translucent in normal modes; no opaque slab |
+| `material.opaqueFallback` | Reduced-transparency/forced-colors accessibility fallback | 100% | No blur; system/opaque colors |
+
+`backdrop-filter: blur(8px)` belongs to the single visible sheet host and never filters
+sheet content. `filter: blur()` on text, controls, cards, map tiles, or the sheet subtree
+is prohibited. Do not animate blur, saturation, fill alpha, edge light, elevation, or
+borders; sheet entry, dismissal, detents, and scrim animate only `transform` and `opacity`.
+Use a subtle inset edge light and an existing elevation rung without a decorative hairline.
+Cards, pills, inputs, badges, and controls remain ordinary neutral surfaces, not nested
+glass slabs.
+
+When `prefers-reduced-transparency: reduce` or forced colors applies, select
+`material.opaqueFallback` immediately. Unsupported backdrop filtering or measured
+accessibility/performance failure blocks acceptance rather than widening the opaque
+exception. Under reduced motion, keep material static and replace travel/depth with a
+short opacity change or immediate state update. Fallback selection is not animated.
 
 ## 5. Interaction tokens
 
@@ -190,7 +221,7 @@ Apple’s published model supports detents, scroll-to-expand, grabbers, undimmed
 
 ### Background and depth tokens
 
-Background atmosphere is a hierarchy, not a special effect. Use the existing WetinDey surfaces in this order: map canvas → page background → sheet surface → card/control surface → raised island → modal scrim. A backdrop may blur and saturate the map to preserve context, but it must not turn the map into an unreadable texture. Do not add animated noise, film grain, or decorative texture; the product’s map and data already provide sufficient visual information. Elevation transitions change only when hierarchy changes and should use the existing shadow rungs, never a new shadow per component.
+Background atmosphere is a hierarchy, not a special effect. Use the existing WetinDey surfaces in this order: map canvas → page background → sheet material → card/control surface → raised island → modal scrim. ADR-026 permits one restrained/no-saturation `backdrop-blur-sm` (~8px) layer on the visible sheet host to preserve context; it must not turn the map into an unreadable texture. Do not add animated noise, film grain, decorative texture, nested blur, or content `filter: blur()`; the product’s map and data already provide sufficient visual information. Elevation transitions change only when hierarchy changes and should use the existing shadow rungs, never a new shadow per component.
 
 ### Gestures
 
@@ -335,7 +366,7 @@ These recipes are the public animation-token API engineers should choose before 
 | `transition.reveal` | `opacity`, small `translateY` | `standard / decelerate` | Secondary content became relevant |
 | `transition.presentSheet` | `transform`, scrim `opacity` | `slow / emphasized` | A scoped surface entered context |
 | `transition.dismissSheet` | `transform`, scrim `opacity` | `fast / accelerate` | The scoped surface left context |
-| `transition.snapSheet` | `transform`, radius/shadow at rest | `spring.standard` or `slow / emphasized` | A direct drag reached a detent |
+| `transition.snapSheet` | `transform` only; radius/shadow may change instantaneously at rest and are not animated | `spring.standard` or `slow / emphasized` | A direct drag reached a detent |
 | `transition.push` | `transform` (optional opacity) | `standard / emphasized` | Contextual navigation moved forward; opacity is optional and must match the source/destination design |
 | `transition.replace` | `opacity` or content highlight | `ultraFast / standard` | In-place data changed |
 | `transition.feedback` | `opacity`, color, icon swap | `fast / standard` | A local action was accepted or rejected |
