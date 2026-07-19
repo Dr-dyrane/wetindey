@@ -487,6 +487,18 @@ keyboard/focus/screen-reader labels, >=44px targets, light/dark/forced-colors/re
 and no nested blur/card slabs. Exclude page, actions, Mapbox, GetItSheet, schema, copy
 catalog, and active Maps paths. Require independent exact-path refutation.
 
+##### FF-025 density disclosure — Get It — ACTIVE
+
+Owner: Human Interface Design Engineer. Exclusive path:
+`src/app/_components/GetItSheet.tsx`.
+
+Show place, price/unit, one freshness/status signal, and “Go there” first. Keep origin
+disclosure, contact, reviews/history, share, attribution, and other secondary actions
+reachable behind one labeled accessible disclosure without removing handlers or data.
+Preserve maps/privacy/fulfilment limits, loading/error/offline states, >=44px targets,
+keyboard/focus/screen-reader behavior, light/dark/forced-colors/reduced-motion, and no
+nested blur/card slabs. Require independent exact-path refutation.
+
 - **Wave C — COMPLETE / PASS:** `src/app/page.tsx` and
   `src/design-system/components/PlaceOfferRow.tsx`. Owner: persistent HI Engineer
   `019f75a5-0fc6-7f40-9a0f-8097ead3b45d`.
