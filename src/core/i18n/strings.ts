@@ -441,6 +441,10 @@ export const en = {
   "auth.err_code_network": "We couldn't check that code. Check your network.",
   "auth.err_code": "That code didn't work.",
   "auth.err_sign_out": "That didn't work. Try again.",
+  "auth.code_accepted": "Code accepted",
+  "auth.session_refreshing": "Finishing sign-in",
+  "auth.session_stalled": "Code accepted. Refresh this screen.",
+  "auth.refresh_session": "Refresh",
 
   /* Geolocation problem titles. Shared verbatim between AreaPickerSheet and
      LocationSheet; only the remedy (the body) differs, so only the body forks.
@@ -862,6 +866,10 @@ const pidgin: LocaleTable = {
   "auth.err_code_network": "We no fit check that code. Check your network.",
   "auth.err_code": "That code no work.",
   "auth.err_sign_out": "E no work. Try again.",
+  "auth.code_accepted": "Code correct",
+  "auth.session_refreshing": "We dey sign you in",
+  "auth.session_stalled": "Code correct. Refresh this screen.",
+  "auth.refresh_session": "Refresh",
 
   "geo.err_insecure_title": "Location need secure connection",
   "geo.err_unsupported_title": "This browser no fit share location",
@@ -1218,6 +1226,10 @@ const yoruba: LocaleTable = {
   "auth.err_code_network": UNTRANSLATED,
   "auth.err_code": UNTRANSLATED,
   "auth.err_sign_out": UNTRANSLATED,
+  "auth.code_accepted": UNTRANSLATED,
+  "auth.session_refreshing": UNTRANSLATED,
+  "auth.session_stalled": UNTRANSLATED,
+  "auth.refresh_session": UNTRANSLATED,
 
   "geo.err_insecure_title": UNTRANSLATED,
   "geo.err_unsupported_title": UNTRANSLATED,

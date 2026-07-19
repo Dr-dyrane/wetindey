@@ -96,7 +96,7 @@ interface ProfileSheetProps {
    * Not `onSignedIn`: sign-out changes the session too, and a name that covers
    * only half the transitions is how the other half quietly stops refetching.
    */
-  onSessionChange?: () => void;
+  onSessionChange?: () => void | Promise<void>;
 }
 
 /**
@@ -146,14 +146,15 @@ type AuthErrorKey =
  * Lagos connections this product is built for, that is seconds, long enough to
  * tap the button and start over.
  *
- * It ends by itself: once the session lands, `signedIn` is true and this whole
- * branch stops rendering. Nothing has to clear it.
+ * It normally ends by itself once the session lands. A bounded recovery loop
+ * below also prevents a delayed or missed session signal from leaving this
+ * state as an endless spinner.
  */
 type SignIn =
   | { kind: "idle" }
   | { kind: "email"; sending: boolean; error: AuthErrorKey | null }
   | { kind: "code"; email: string; checking: boolean; error: AuthErrorKey | null }
-  | { kind: "verified" };
+  | { kind: "verified"; email: string; stalled: boolean };
 
 /**
  * The backend's words are not the product's words.
@@ -168,6 +169,27 @@ type SignIn =
  * limiter's 429. Both are mapped; `message` is never read.
  */
 type FetchError = { code?: string; status: number };
+
+function thrownFetchError(value: unknown): FetchError | null {
+  if (typeof value !== "object" || value === null || !("status" in value)) return null;
+  if (typeof value.status !== "number") return null;
+
+  if ("code" in value && typeof value.code === "string") {
+    return { status: value.status, code: value.code };
+  }
+
+  if (
+    "error" in value &&
+    typeof value.error === "object" &&
+    value.error !== null &&
+    "code" in value.error &&
+    typeof value.error.code === "string"
+  ) {
+    return { status: value.status, code: value.error.code };
+  }
+
+  return { status: value.status };
+}
 
 function sendErrorKey(e: FetchError): AuthErrorKey {
   if (e.status === 429) return "auth.err_rate_limited";
@@ -190,6 +212,9 @@ function codeErrorKey(e: FetchError): AuthErrorKey {
  * minute apart, no rolling 60s window can ever hold three sends.
  */
 const RESEND_COOLDOWN_MS = 60_000;
+const SESSION_REFRESH_DELAYS_MS = [0, 300, 800, 1_600] as const;
+const SESSION_REFRESH_ATTEMPT_TIMEOUT_MS = 1_500;
+const EMAIL_ADDRESS_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 /**
  * Mini profile, in the shape Apple Maps uses for its account sheet.
@@ -242,6 +267,11 @@ export function ProfileSheet({
   const [now, setNow] = useState(0);
   const emailRef = useRef<HTMLInputElement>(null);
   const codeRef = useRef<HTMLInputElement>(null);
+  const sessionChangeRef = useRef(onSessionChange);
+
+  useEffect(() => {
+    sessionChangeRef.current = onSessionChange;
+  }, [onSessionChange]);
 
   // Dismissing abandons a half-finished sign-in: a sheet that reopens onto a
   // stale code field looks broken, and the code has a five-minute life anyway.
@@ -255,6 +285,13 @@ export function ProfileSheet({
     setRetrying(false);
     setSignOutError(null);
   }, [open]);
+
+  // Once the parent has the session, discard the transient OTP step. Without
+  // this reset, signing out in the same open sheet would reveal the old
+  // "verified" state instead of the normal sign-in entry point.
+  useEffect(() => {
+    if (signedIn) setSignIn({ kind: "idle" });
+  }, [signedIn]);
 
   /**
    * Focus follows the step.
@@ -286,9 +323,66 @@ export function ProfileSheet({
     return () => window.clearInterval(id);
   }, [signIn.kind, cooling]);
 
+  const verifiedStalled = signIn.kind === "verified" && signIn.stalled;
+
+  // `signIn.emailOtp` has already accepted the code at this point. Re-read the
+  // session a few times because the auth query signal and React state can land
+  // on different turns. The loop is deliberately bounded: a provider, cookie,
+  // or client-cache failure must become a recoverable control, never a spinner
+  // that can run forever.
+  useEffect(() => {
+    if (signIn.kind !== "verified" || signedIn || signIn.stalled) return;
+
+    let active = true;
+    const timers: number[] = [];
+    let refreshInFlight: Promise<void> | null = null;
+    const wait = (delay: number) =>
+      new Promise<void>((resolve) => {
+        const timer = window.setTimeout(resolve, delay);
+        timers.push(timer);
+      });
+
+    const refreshSession = async () => {
+      for (const delay of SESSION_REFRESH_DELAYS_MS) {
+        if (delay) await wait(delay);
+        if (!active) return;
+        const refresh = sessionChangeRef.current;
+        if (refresh) {
+          refreshInFlight ??= Promise.resolve()
+            .then(refresh)
+            .catch(() => undefined)
+            .finally(() => {
+              refreshInFlight = null;
+            });
+          await Promise.race([
+            refreshInFlight,
+            wait(SESSION_REFRESH_ATTEMPT_TIMEOUT_MS),
+          ]);
+        }
+      }
+
+      await wait(500);
+      if (!active) return;
+      setSignIn((current) =>
+        current.kind === "verified" ? { ...current, stalled: true } : current
+      );
+    };
+
+    void refreshSession();
+    return () => {
+      active = false;
+      timers.forEach((timer) => window.clearTimeout(timer));
+    };
+  }, [signIn.kind, signedIn, verifiedStalled]);
+
   const sendCode = useCallback(async () => {
     const address = email.trim();
     if (!address) return;
+    if (!EMAIL_ADDRESS_PATTERN.test(address) || emailRef.current?.validity.valid === false) {
+      setSignIn({ kind: "email", sending: false, error: "auth.err_email_invalid" });
+      emailRef.current?.focus();
+      return;
+    }
     setSignIn({ kind: "email", sending: true, error: null });
     try {
       const { error } = await authClient.emailOtp.sendVerificationOtp({
@@ -306,7 +400,12 @@ export function ProfileSheet({
       setSignIn({ kind: "code", email: address, checking: false, error: null });
     } catch (err) {
       console.error("ProfileSheet: could not send the sign-in code", err);
-      setSignIn({ kind: "email", sending: false, error: "auth.err_send_network" });
+      const providerError = thrownFetchError(err);
+      setSignIn({
+        kind: "email",
+        sending: false,
+        error: providerError ? sendErrorKey(providerError) : "auth.err_send_network",
+      });
     }
   }, [email]);
 
@@ -342,7 +441,13 @@ export function ProfileSheet({
     } catch (err) {
       console.error("ProfileSheet: could not resend the sign-in code", err);
       setSentAt(0);
-      setSignIn({ kind: "code", email: address, checking: false, error: "auth.err_send_network" });
+      const providerError = thrownFetchError(err);
+      setSignIn({
+        kind: "code",
+        email: address,
+        checking: false,
+        error: providerError ? sendErrorKey(providerError) : "auth.err_send_network",
+      });
     }
   }, [signIn, cooling]);
 
@@ -361,11 +466,17 @@ export function ProfileSheet({
         // NOT `idle`, see the `verified` note on SignIn. The session has not
         // arrived, and `idle` renders the sign-in CTA at the exact instant the
         // sign-in succeeded.
-        setSignIn({ kind: "verified" });
+        setSignIn({ kind: "verified", email: signIn.email, stalled: false });
         setCode("");
-        onSessionChange?.();
       } catch (err) {
         console.error("ProfileSheet: could not verify the sign-in code", err);
+        const providerError = thrownFetchError(err);
+        if (providerError) {
+          setCode("");
+          setSignIn({ ...signIn, checking: false, error: codeErrorKey(providerError) });
+          codeRef.current?.focus();
+          return;
+        }
         // The code is NOT cleared here, unlike the rejected-code path above: the
         // network failed, the six digits are probably right, and making someone
         // retype them to recover from our outage is a punishment. `showRetry`
@@ -374,7 +485,7 @@ export function ProfileSheet({
         setSignIn({ ...signIn, checking: false, error: "auth.err_code_network" });
       }
     },
-    [signIn, onSessionChange]
+    [signIn]
   );
 
   const retry = useCallback(async () => {
@@ -382,6 +493,12 @@ export function ProfileSheet({
     await submitCode(code);
     setRetrying(false);
   }, [submitCode, code]);
+
+  const retrySession = useCallback(() => {
+    setSignIn((current) =>
+      current.kind === "verified" ? { ...current, stalled: false } : current
+    );
+  }, []);
 
   const signOut = useCallback(async () => {
     setSigningOut(true);
@@ -440,11 +557,8 @@ export function ProfileSheet({
     identityName = t("auth.check_mail");
     identitySub = t("auth.sent_to", { email: signIn.email });
   } else if (signIn.kind === "verified") {
-    // The code is accepted and the session is in flight. Keep the header the
-    // user already had rather than flashing the signed-out prompt back at them
-    // for a round-trip; the spinner below carries the wait.
-    identityName = t("auth.check_mail");
-    identitySub = null;
+    identityName = t("auth.code_accepted");
+    identitySub = signIn.email;
   } else {
     identityName = t("profile.signed_out_name");
     /**
@@ -513,29 +627,47 @@ export function ProfileSheet({
               </Button>
             )}
 
-            {/* Verified, session in flight. A spinner and nothing else: HIG on
-                progress indicators says to avoid labelling a spinner and to
-                "avoid vague terms like loading or authenticating because they
-                seldom add value", and there is no honest word for this beat
-                anyway. It ends when the session lands and this branch unmounts.
+            {/* Verified, session in flight. The usual path stays visually quiet;
+                the accessible label names the work. If the bounded refetch loop
+                expires, this becomes an explicit recovery control instead of an
+                unbounded spinner.
 
                 The arc is Button's: a conic gradient behind a radial mask, so it
                 reads as a ring without a stroke. Copied rather than imported
                 because Button only exposes it through `isLoading`, and there is
                 no button here to load. */}
             {signIn.kind === "verified" && (
-              <div className="flex min-h-tap items-center justify-center">
-                <span
-                  aria-hidden
-                  className="h-5 w-5 animate-spin squircle-full text-text-secondary"
-                  style={{
-                    background: "conic-gradient(from 0deg, transparent 0turn, currentColor 1turn)",
-                    WebkitMask:
-                      "radial-gradient(farthest-side, transparent calc(100% - 2px), #000 calc(100% - 2px))",
-                    mask: "radial-gradient(farthest-side, transparent calc(100% - 2px), #000 calc(100% - 2px))",
-                  }}
-                />
-              </div>
+              signIn.stalled ? (
+                <div className="space-y-3 text-center" role="status">
+                  <p className="text-subhead text-text-secondary">{t("auth.session_stalled")}</p>
+                  <Button
+                    variant="secondary"
+                    size="md"
+                    className="w-full"
+                    onClick={retrySession}
+                  >
+                    {t("auth.refresh_session")}
+                  </Button>
+                </div>
+              ) : (
+                <div
+                  className="flex min-h-tap items-center justify-center"
+                  role="status"
+                  aria-label={t("auth.session_refreshing")}
+                >
+                  <span
+                    aria-hidden
+                    className="h-5 w-5 animate-spin squircle-full text-text-secondary"
+                    style={{
+                      background:
+                        "conic-gradient(from 0deg, transparent 0turn, currentColor 1turn)",
+                      WebkitMask:
+                        "radial-gradient(farthest-side, transparent calc(100% - 2px), #000 calc(100% - 2px))",
+                      mask: "radial-gradient(farthest-side, transparent calc(100% - 2px), #000 calc(100% - 2px))",
+                    }}
+                  />
+                </div>
+              )
             )}
 
             {signIn.kind === "email" && (
@@ -546,7 +678,12 @@ export function ProfileSheet({
                   inputMode="email"
                   autoComplete="email"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={(e) => {
+                    setEmail(e.target.value);
+                    if (signIn.error) {
+                      setSignIn({ kind: "email", sending: false, error: null });
+                    }
+                  }}
                   onKeyDown={(e) => e.key === "Enter" && void sendCode()}
                   placeholder={t("auth.email_label")}
                   aria-label={t("auth.email_label")}
