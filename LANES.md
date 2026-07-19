@@ -32,6 +32,32 @@ grayscale visual refutation plus its focused contract. All five foundation paths
 released. The persistent Iconography lead moves directly to the exact two-path Item
 Detail/Get-It solid-glyph adoption lane recorded below.
 
+### Active lane: ephemeral Production database-target proof
+
+Owner: persistent Security & Privacy Engineering Lead
+`019f75e5-8c04-74c0-9392-d9f741a7a131`.
+
+Exact temporary source paths:
+
+- `src/app/api/internal/db-target-proof/route.ts`
+- `src/lib/security/db-target-proof.ts`
+- `scripts/db-target-proof-contract.test.ts`
+
+Purpose: resolve the Sensitive-environment ambiguity without revealing credentials. The
+route must be Production-only, `POST`-only, protected by a short-lived random bearer token
+plus caller nonce, private/no-store, rate bounded, and return only keyed HMAC fields for
+normalized connection identity and deployment identity. It must never connect to the
+database or return/log raw host, database, role, URL, password, token, identifier lengths,
+or environment values.
+
+Operations authority is limited to a staged Production-environment deployment without
+canonical-domain aliasing, comparison against the local unpooled target inside a
+non-logging process, and immediate route/token removal after proof. The old deployment
+must become unusable through token expiry. Independent security refutation is mandatory.
+This lane grants no migration, schema, seed, application-feature, canonical deployment,
+or Preview remediation authority. A match proves target identity only; corrected `0012`
+still requires separate ledger/schema/role/backup/scheduler/default-off gates.
+
 ### Pinned persistent employee roster
 
 Pinned employee tasks are durable department seats, not active path claims and not cleanup
@@ -52,7 +78,7 @@ to idle rather than creating a replacement task.
 | Iconography & Visual Systems Lead | Active exact one-file Confirm Visit correction; Report Price released | `b93761b` unavailable banner runtime PASS releases `ReportPriceSheet.tsx`. Own only `ConfirmVisitSheet.tsx` for the identical caution-status warning replacement |
 | Maps Engineering Lead | Available; named queued self-location owner, no active path claim | H37 semantic place-marker commit `6611068` is independently NOT REFUTED and both Maps paths are released. Self-location/avatar remains unclaimed behind the active short Market Details slice and a later fresh exact handoff |
 | Client Reliability & Offline Engineer | Prepared, unclaimed | H38 one-file rejected-search containment waits for the active Market Details slice to release `src/app/page.tsx` |
-| Security & Privacy Engineering Lead | Available, no active source claim | CSP collector operations passed and all collector source paths are released. Retain pathless operations monitoring; production remains fail-open and report-only, with enforcement prohibited |
+| Security & Privacy Engineering Lead | Active ephemeral Production DB-target proof | Owns only the three temporary proof paths above; CSP collector source remains released and production CSP remains fail-open/report-only |
 | Motion & Interaction Engineer | Terminal containment runtime REFUTED; exact three paths retained | On `3da6b965`, terminal Prices scrolling still displaces the fixed header/CTA and another terminal wheel moves the outer block. Pop/reopen reset and regular CTA pass |
 
 The Quality & Release Controller is this orchestrator thread. It is not a separate pinned
