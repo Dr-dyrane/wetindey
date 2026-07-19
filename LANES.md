@@ -343,7 +343,13 @@ Owner: persistent HI Engineer `019f75a5-0fc6-7f40-9a0f-8097ead3b45d`. Exclusive 
 - `src/design-system/components/PlaceOfferRow.tsx`
 
 Commit `14ece5b745ead1a4d8e8e6fdaf21730db89da7c1` independently **PASS**ed and is pushed.
-Release both exact paths. Direct Production runtime proof remains the final gate. Founder
+Release both exact paths. Final Production QA is split: regular visible runtime **PASS**
+(two columns, `Visit shop`, internal Item Detail, explicit attribution); compact AX **PASS**
+(one-column list, one CTA, full final row). Compact visible-pixel evidence is **UNVERIFIED**
+because the existing Chrome screenshot was compositor-black and the reused tab became blank
+after ordinary reload/reopen. This is not a demonstrated product defect and does not reopen
+code. Artifact: `/Users/dyrane/.codex/visualizations/2026/07/19/production-refutation/041dfb5-chrome-compact-market-black.jpeg`.
+Founder
 production review had refuted the prior presentation contract. Regular/desktop Market
 Details must render a true two-column card grid; compact/mobile remains one column. The
 place-level CTA must say `Visit market` for market/open-market destinations and `Visit shop`
@@ -354,12 +360,13 @@ secondary affordance; the primary media/card target stays internal. Preserve sta
 map context, scroll/CTA accessibility, and no commerce expansion. No third path is authorized
 absent evidence it is unavoidable.
 
-##### Maps post-map-fix Chrome recurrence — PATHLESS DIAGNOSIS
+##### Maps post-map-fix Chrome allegation — UNVERIFIED / INVALID EVIDENCE
 
-Separate from the released HI paths: after the map fix, Chrome can return to `Map no fit load`
-after closing Market Details or changing theme even though the initial dark map was ready.
-Route this to Maps as a lifecycle/runtime diagnosis; it is not an HI-path blocker. No new
-source claim is active until Maps returns exact paths and an independent refuter.
+The prior allegation that Chrome returned to `Map no fit load` after closing Market Details or
+changing theme is not a refuted lane: Maps found all three supplied JPEGs byte-identical
+(SHA-256 `95bbba2c485a252550dafdefa99c565c7e84044a5d87fee5ab355a4548e92b01`), each showing a
+usable dark map. No Canvas/Adapter code changed after `041dfb5`, and live diagnostics were
+unavailable. Remove it from refutation accounting; no Maps source claim is active.
 
 ##### Motion — compact sheet dead-space correction — COMPLETE / PASS
 
