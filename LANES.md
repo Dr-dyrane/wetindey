@@ -368,6 +368,19 @@ changing theme is not a refuted lane: Maps found all three supplied JPEGs byte-i
 usable dark map. No Canvas/Adapter code changed after `041dfb5`, and live diagnostics were
 unavailable. Remove it from refutation accounting; no Maps source claim is active.
 
+##### Motion — compact/mid sheet geometry recalibration — ACTIVE
+
+Owner: Controller temporary recovery claim. Exclusive path:
+`src/design-system/components/BottomSheet.tsx`.
+
+Founder screenshots establish that the prior dead-space correction did not produce an
+acceptable compact/medium result. Tighten the perceived compact/medium handle reservation
+without letting its >=44px target cover child content, and restore a restrained shared
+horizontal content gutter. Preserve expanded compact-detent and regular/desktop geometry,
+drag/snap/scroll handoff, safe areas, focus, reduced motion, modal stacking, and all
+child-owned content/data behavior. No `page.tsx`, `ModalSheet.tsx`, screen sheet, map,
+action, or data path is authorized. Independent refutation is required before release.
+
 ##### Motion — compact sheet dead-space correction — COMPLETE / PASS
 
 Owner: Motion & Interaction Engineer. Exclusive path: `src/design-system/components/BottomSheet.tsx`.
@@ -2624,7 +2637,7 @@ live DB, migration, UI, push, or deployment claim follows; `src/app/actions.ts` 
 
 ### Market detail offer surface handoff
 
-Hegel (`019f7645-cc25-7d42-b537-5a0eb37cda69`) confirmed the current market detail at `src/app/page.tsx` drops price range, availability, freshness, last-observed, image, and provenance semantics, and uses the artificial `max-h-[40vh]` dead zone. The follow-up CTA correction `3fe637d` is runtime REFUTED: removing the negative margin did not resolve title/location being AX-only, visible pixels ordering Back → Get It → Prices, root/document black escape, or reopen occlusion. `page.tsx`, `PlaceOfferRow.tsx`, `NavigationStack.tsx`, and `scripts/motion-contracts.test.ts` all remain retained; no third NavigationStack timing edit is authorized. No `BottomSheet.tsx`, generic category contract, DB, migration, push, or deployment work is authorized.
+Hegel (`019f7645-cc25-7d42-b537-5a0eb37cda69`) confirmed the current market detail at `src/app/page.tsx` drops price range, availability, freshness, last-observed, image, and provenance semantics, and uses the artificial `max-h-[40vh]` dead zone. The follow-up CTA correction `3fe637d` is runtime REFUTED: removing the negative margin did not resolve title/location being AX-only, visible pixels ordering Back → Get It → Prices, root/document black escape, or reopen occlusion. `page.tsx`, `PlaceOfferRow.tsx`, `NavigationStack.tsx`, and `scripts/motion-contracts.test.ts` all remain retained; no third NavigationStack timing edit is authorized. The separately recorded active compact/mid `BottomSheet.tsx` geometry correction is not a Market Details timing edit. No generic category contract, DB, migration, push, or deployment work is authorized by this Market Details record.
 
 CEO sequencing checkpoint: the iconography foundation, `ed5a6cb` Item Detail/Get-It, and
 `a2a7104` remaining-intent adoption are passed and released.

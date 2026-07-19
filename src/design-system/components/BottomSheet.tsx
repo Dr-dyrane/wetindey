@@ -1175,6 +1175,7 @@ export function BottomSheet({
   }, [cancelScrollEndFrame, detent, scrollersFrom, stepDetent]);
 
   const initialPresentation = initialPresentationRef.current;
+  const isContextDetent = detent !== "large";
   const surfaceGeometry: React.CSSProperties = {
     left: "var(--sheet-side-inset)",
     right: "var(--sheet-side-inset)",
@@ -1279,7 +1280,7 @@ export function BottomSheet({
             aria-label={`Sheet position: ${detent}. Activate to change.`}
             className={`flex h-11 min-h-11 w-full shrink-0 cursor-grab touch-none items-center justify-center p-0 active:cursor-grabbing active:opacity-70 ${transition.press}`}
           >
-            <span className="relative top-2 h-[5px] w-9 rounded-full bg-text-tertiary" />
+            <span className="h-[5px] w-9 rounded-full bg-text-tertiary" />
           </button>
 
           {mapRetryCapability ? (
@@ -1301,7 +1302,13 @@ export function BottomSheet({
             </div>
           ) : null}
 
-          <div className="flex-1 overflow-y-auto overscroll-contain">{children}</div>
+          <div
+            className={`flex-1 overflow-y-auto overscroll-contain ${
+              isContextDetent ? "px-2" : ""
+            }`}
+          >
+            {children}
+          </div>
         </div>
       </main>
     </>
