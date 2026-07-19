@@ -102,14 +102,14 @@ function ItemArtwork({
           target="_blank"
           rel="nofollow noopener noreferrer"
           aria-label={`Photo source for ${offer.itemName}`}
-          className="relative block h-full min-h-[104px] w-[88px] bg-surface-sunken
+          className="relative block h-full min-h-[104px] w-[88px] bg-transparent
                      focus-visible:outline-2 focus-visible:outline-offset-[-3px]
                      focus-visible:outline-accent"
         >
           {artwork}
         </a>
       ) : (
-        <div className="relative h-full min-h-[104px] w-[88px] bg-surface-sunken">
+        <div className="relative h-full min-h-[104px] w-[88px] bg-transparent">
           {artwork}
         </div>
       )}
@@ -117,7 +117,7 @@ function ItemArtwork({
         <span
           aria-hidden="true"
           className="pointer-events-none absolute inset-y-0 -right-px w-4
-                     bg-gradient-to-r from-transparent to-surface-card
+                     bg-gradient-to-r from-transparent to-[var(--stack-surface,var(--color-background))]
                      group-focus-within:opacity-0"
         />
       ) : null}
@@ -160,7 +160,7 @@ export function PlaceOfferRow({ offer }: { offer: PlaceOffer }) {
   return (
     <article
       className="squircle-card flex min-h-[104px] w-full items-stretch
-                 overflow-hidden bg-surface-card shadow-card"
+                 overflow-hidden bg-transparent"
       aria-label={`${offer.itemName}, ${priceLabel(offer)} per ${offer.unit}`}
     >
       <ItemArtwork
@@ -234,7 +234,7 @@ export function PlaceOfferRowSkeleton() {
         <div
           key={index}
           className="squircle-card flex min-h-[104px] items-stretch overflow-hidden
-                     bg-surface-card shadow-card"
+                     bg-transparent"
         >
           <div className="w-[88px] shrink-0 animate-pulse self-stretch bg-fillTertiary" />
           <div className="min-w-0 flex-1 space-y-2 py-2 pl-2 pr-1.5">

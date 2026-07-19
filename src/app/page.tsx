@@ -1133,7 +1133,7 @@ export default function HomePage() {
   const sheetNode = (
     <div className="flex flex-col h-full overflow-hidden">
       {/* Brand & search header */}
-      <div className="px-4 pt-3 pb-2.5 flex flex-col gap-2.5">
+      <div className="px-4 pt-0 pb-2.5 md:pt-3 flex flex-col gap-2.5">
         <div className="flex items-center justify-between w-full">
           <div className="flex items-center space-x-2">
             <NigeriaLogo className="h-7 w-7" />
@@ -1323,11 +1323,7 @@ export default function HomePage() {
 
     const getItAction = (
       <div
-        className={`stack-surface z-10 shrink-0 ${
-          isRegular
-            ? "static pt-1"
-            : "fixed inset-x-0 bottom-0 px-6 pb-[calc(var(--safe-area-bottom)+8px)] pt-2"
-        }`}
+        className={`stack-surface z-10 shrink-0 ${isRegular ? "static pt-1" : "static py-2"}`}
       >
         <Button
           variant="primary"
@@ -1355,12 +1351,8 @@ export default function HomePage() {
 
     return (
       <div
-        data-navigation-detail-bounded={isRegular || undefined}
-        className={`flex flex-col gap-3 ${
-          isRegular
-            ? "h-full min-h-0"
-            : "min-h-full pb-[calc(var(--safe-area-bottom)+64px)]"
-        }`}
+        data-navigation-detail-bounded
+        className="flex h-[calc(var(--navigation-detail-visible-height,100dvh)-24px)] min-h-0 flex-col gap-4 md:h-full md:overflow-hidden"
       >
         <div className="flex shrink-0 items-start justify-between">
           <div className="flex-1 pr-4">
@@ -1396,22 +1388,16 @@ export default function HomePage() {
           </button>
         </div>
 
+        {!isRegular ? getItAction : null}
+
         {/* What this market is currently selling. */}
-        <div
-          className={`-mx-2 flex flex-1 flex-col gap-2 ${
-            isRegular ? "min-h-0" : ""
-          }`}
-        >
+        <div className="-mx-2 flex min-h-0 flex-1 flex-col gap-2">
           <h4 className="shrink-0 text-footnote text-text-secondary">
             Prices in market
           </h4>
           <div
-            data-navigation-detail-scroller={isRegular || undefined}
-            className={
-              isRegular
-                ? "min-h-0 flex-1 overflow-y-auto overscroll-y-none pr-1"
-                : undefined
-            }
+            data-navigation-detail-scroller
+            className="min-h-0 flex-1 overflow-y-auto overscroll-y-none pr-1"
           >
             <AsyncList
               items={placeOffers}
@@ -1436,10 +1422,7 @@ export default function HomePage() {
           </div>
         </div>
 
-        {/* One live action follows Prices in DOM/focus order. Compact anchors it
-            to the detail viewport while the root reserves its exact 48px button,
-            16px vertical padding and safe area; regular keeps it in flow. */}
-        {getItAction}
+        {isRegular ? getItAction : null}
       </div>
     );
   }, [
