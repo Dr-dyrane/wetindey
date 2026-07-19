@@ -14,6 +14,18 @@ subagents, put your lane's paths in their prompt and forbid them from widening i
 agent that edits outside its lane is a bug in the prompt. A lane is a lock, not a licence:
 scope still comes from the ADRs.
 
+**Department worklogs preserve memory; they do not grant authority.** Follow
+[the department worklog protocol](docs/operations/DEPARTMENT-WORKLOG-PROTOCOL.md) when a
+bounded lane needs durable rationale, implementation memory, or a branch handoff. Append
+only to the one functional-home log whose path is explicitly included in the current
+lane. A log entry, department name, branch, commit, or handoff packet never claims a path.
+Before receiving work, a branch reconciles the exact committed base/head or pre-commit
+base/candidate-tree tuple, changed paths, migration/provider/deployment state, independent
+verdict, and conflicts using
+[the branch handoff template](docs/operations/BRANCH-HANDOFF-TEMPLATE.md). Current
+`LANES.md` alone grants edits. Receiver acknowledgement is a separate append-only
+follow-up record under its own exact log lane after receipt; it never unlocks editing.
+
 Two corrections, verified against the code on 16 July 2026. Both exist because agents
 have already been misled by this document.
 
@@ -83,12 +95,14 @@ Roadmap Phases 0-4 — deleting the orphans, and making trust derived rather tha
 hardcoded string `"high"` — come first. Reorganising code whose answers are wrong just
 produces well-structured wrong answers.
 
-**A green build means very little here. There are ZERO tests.** No `npm run test`, no
-runner, no config, no `*.test.*`. `tsc` cannot see a comment that lies. `audit:tokens` is
-blind to semantically-wrong-but-tokenised — that is how a black-on-black modal shipped
-invisible for weeks. `knip` is blind to code that is imported and wrong. Nothing checks a
-write path, a rendered string, or whether a number is *right*. **Never report "the build
-passes" as evidence that something works** — drive it, or say you did not.
+**A green build means very little here. There is no general product/runtime test suite.**
+Focused executable contract scripts exist, including static source and documentation
+checks, but they prove only the invariants they inspect. `tsc` cannot see a comment that
+lies. `audit:tokens` is blind to semantically-wrong-but-tokenised — that is how a
+black-on-black modal shipped invisible for weeks. `knip` is blind to code that is imported
+and wrong. No general suite checks every write path, rendered string, or whether a number
+is *right*. **Never report "the build passes" or "the contract passes" as evidence that
+something works** — drive it, or say you did not.
 
 **You cannot review yourself.** The bugs caught here are caught by the owner, by
 adversarial verifiers, and by cross-session review — almost never by the session that wrote

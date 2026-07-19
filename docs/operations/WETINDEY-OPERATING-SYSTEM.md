@@ -110,6 +110,29 @@ For coordination truth:
 When sources disagree, the mismatch is recorded and escalated. The auditor does not
 "resolve" it by editing scope.
 
+### 3.5 Durable memory and exact transfer state
+
+When reconstructing work across tasks or branches, use this hierarchy without allowing a
+lower artifact to impersonate a higher one:
+
+1. Code is the final evidence of current implemented behavior.
+2. Accepted ADRs govern durable decisions.
+3. The accepted architecture of record describes the current system beneath code and
+   accepted ADRs.
+4. Git identifies immutable deltas and ancestry; it does not prove semantics or runtime
+   truth.
+5. `LANES.md` records current path locks, gates, and coordination state.
+6. Department worklogs preserve durable rationale, process, implementation memory, and
+   disclosed uncertainty.
+7. A branch handoff packet records one exact pre-commit evidence tuple and, after
+   commit, its reported base/head transfer state.
+
+Pre-commit review binds to base SHA, canonical candidate-tree SHA-256, and a sorted exact
+path list. The final commit SHA is reported after commit and need not self-reference inside
+its own bytes. Department logs and handoff packets grant no path, decision, migration,
+release, provider, push, or deployment authority. Their contract and reconciliation
+procedure live in [DEPARTMENT-WORKLOG-PROTOCOL.md](DEPARTMENT-WORKLOG-PROTOCOL.md).
+
 ## 4. Current phase firewall
 
 The only launch phase is:
@@ -372,6 +395,15 @@ The worker produces an implementation handoff containing:
 - migration, privacy, accessibility, and operational effects;
 - residual risks and explicit non-goals.
 
+When work must continue in another task or branch, the worker also records the durable
+rationale in the one lane-owned functional-home log and prepares
+[the exact branch handoff packet](BRANCH-HANDOFF-TEMPLATE.md). The receiver performs
+read-only reconciliation of ancestry, the full diff path set, migration/provider/
+deployment state, the independent verdict, conflicts, and current `LANES.md`. Current
+`LANES.md` and applicable safety gates alone govern edits. Receiver acknowledgement is a
+separate append-only follow-up record/commit under its own exact log lane after receipt;
+it never unlocks editing. Neither artifact widens either worker's lane.
+
 ### Step 6: Independent refuter
 
 The refuter receives the lane, decisions, candidate, claimed behavior, proof plan, and
@@ -459,8 +491,16 @@ than silently creating lanes.
 | Release evidence | What was independently proven about an exact candidate and target? | Input to a release decision | Replace missing authority or widen scope |
 | Release decision | May this exact candidate be promoted now? | `PUSH`, `NO PUSH`, or a narrower authorized promotion | Rewrite product scope or migration history |
 | Field outcome | What happened after real use or operation? | Evidence for learning and recalibration | Automatically change trust, reputation, or roadmap |
+| Department worklog | Why and how did a functional home proceed, and what remains known or unknown? | Durable append-only rationale, process, implementation memory, and next action | Claim paths, override code/ADRs/architecture, prove runtime truth, or authorize integration |
+| Branch handoff packet | What exact base/head state is offered to a named receiver? | A reviewable transfer record after receiver reconciliation | Grant a lane, prove correctness, mutate external state, or remain valid after the candidate changes |
 
 No artifact may impersonate the next one.
+
+### 9.1 Department memory and branch reconciliation
+
+Use one append-only file per active functional home under [`departments/`](departments/README.md), not a shared hot log. A bootstrap entry records full base SHA, canonical candidate-tree SHA-256, sorted exact paths, exact lane text, evidence ID, and refuter ID. The worker/controller reports the commit SHA afterward; the entry does not self-reference.
+
+Before integration, the receiver proves ancestry, candidate hash, changed paths, external state, verdict tuple, conflicts, and current lane. Receiver acknowledgement is a separate append-only follow-up commit after receipt under its own log lane. It is never a pre-edit requirement and grants no path. Any changed tuple or unresolved fact defaults to `REFUTED`.
 
 ## 10. Decision rights and RACI
 

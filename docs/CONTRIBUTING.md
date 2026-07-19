@@ -189,6 +189,29 @@ Each of these cost real debugging. Please don't "fix" them.
 
 ---
 
+## Durable work memory and branch handoffs
+
+Current ownership still comes only from [`../LANES.md`](../LANES.md). For bounded work
+that must survive the originating task or branch, follow the
+[department worklog protocol](./operations/DEPARTMENT-WORKLOG-PROTOCOL.md) and use the
+[branch handoff template](./operations/BRANCH-HANDOFF-TEMPLATE.md).
+
+- Append only to the single functional-home log whose path is part of your exact lane.
+- Never use a department log as a path lock, decision record, architecture specification,
+  release verdict, or substitute for code evidence.
+- Record unknown or unassigned state instead of guessing ownership, migration state,
+  provider state, deployment state, or runtime behavior.
+- A pre-commit review binds to full base SHA, canonical candidate-tree SHA-256, and the
+  sorted exact path list; the worker/controller reports the final commit SHA afterward.
+- A receiver reconciles committed ancestry, the complete diff path set, external state,
+  independent verdict, conflicts, and current `LANES.md`.
+- Receiver acknowledgement is a separate lane-owned append-only follow-up after receipt,
+  never an edit-unlock requirement.
+- If the base, candidate hash, paths, lane, verdict, external state, or conflict posture
+  changes, issue a new packet. Do not patch an old packet into plausibility.
+
+---
+
 ## Before you open a PR
 
 ```bash
@@ -196,10 +219,12 @@ npx tsc --noEmit        # must pass
 npm run audit:tokens    # must pass — gates the build
 npm run lint
 npm run format
+npx tsx --test scripts/department-worklog-contract.test.ts
 ```
 
-There is no test suite. `npm run build` passing does not mean it works; open the
-app and drive the flow you changed.
+There is no general product/runtime test suite. Focused contract scripts validate named
+source or document invariants only. Neither `npm run build` nor a contract script passing
+means the product works; open the app and drive the flow you changed.
 
 ### Database contributions
 
