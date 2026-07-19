@@ -1,4 +1,23 @@
-import { pgTable, pgEnum, uuid, varchar, timestamp, text, integer, doublePrecision, boolean, jsonb, customType, index, uniqueIndex } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
+import {
+  type AnyPgColumn,
+  bigint,
+  boolean,
+  check,
+  customType,
+  doublePrecision,
+  index,
+  integer,
+  jsonb,
+  pgEnum,
+  pgTable,
+  primaryKey,
+  text,
+  timestamp,
+  uniqueIndex,
+  uuid,
+  varchar,
+} from "drizzle-orm/pg-core";
 
 export const observationProvenance = pgEnum("observation_provenance", [
   "synthetic",
@@ -6,6 +25,48 @@ export const observationProvenance = pgEnum("observation_provenance", [
   "partner",
   "reference",
   "inferred"
+]);
+
+export const contributionOperation = pgEnum("contribution_operation", [
+  "report_price",
+  "visit_confirmation",
+  "correction",
+]);
+
+export const contributionRateDimension = pgEnum("contribution_rate_dimension", [
+  "subject",
+  "network",
+]);
+
+export const contributionDecision = pgEnum("contribution_decision", [
+  "approve",
+  "reject",
+  "reverse",
+]);
+
+export const contributionAssignmentStatus = pgEnum("contribution_assignment_status", [
+  "active",
+  "suspended",
+  "revoked",
+]);
+
+export const contributionProjectionState = pgEnum("contribution_projection_state", [
+  "available",
+  "unavailable",
+  "conflict",
+]);
+
+export const contributionAuditAction = pgEnum("contribution_audit_action", [
+  "rate_allowed",
+  "rate_denied",
+  "admission",
+  "idempotency_conflict",
+  "moderation_approved",
+  "moderation_rejected",
+  "moderation_reversed",
+  "projection_updated",
+  "assignment_updated",
+  "control_updated",
 ]);
 
 /**
@@ -293,6 +354,130 @@ export const sources = pgTable("sources", {
   index("sources_user_id_idx").on(t.userId)
 ]);
 
+/**
+ * Fail-closed policy and activation boundary for ADR-019.
+ *
+ * Schema presence never reopens reporting. The two switches are independent so
+ * pending admission may be exercised without granting moderation, and neither
+ * can be activated accidentally by a migration default.
+ */
+export const contributionControl = pgTable(
+  "contribution_control",
+  {
+    id: integer("id").primaryKey().default(1),
+    reportingAllowed: boolean("reporting_allowed").notNull().default(false),
+    moderationAllowed: boolean("moderation_allowed").notNull().default(false),
+    subjectLimit15m: integer("subject_limit_15m").notNull().default(5),
+    subjectLimitDay: integer("subject_limit_day").notNull().default(20),
+    networkLimit15m: integer("network_limit_15m").notNull().default(30),
+    networkLimitDay: integer("network_limit_day").notNull().default(100),
+    unavailableMinSources: integer("unavailable_min_sources").notNull().default(2),
+    projectionWindowHours: integer("projection_window_hours").notNull().default(72),
+    policyVersion: varchar("policy_version", { length: 64 }).notNull().default("adr-019-v1"),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    check("contribution_control_singleton_check", sql`${t.id} = 1`),
+    check(
+      "contribution_control_limits_check",
+      sql`${t.subjectLimit15m} > 0
+        and ${t.subjectLimitDay} >= ${t.subjectLimit15m}
+        and ${t.networkLimit15m} > 0
+        and ${t.networkLimitDay} >= ${t.networkLimit15m}
+        and ${t.unavailableMinSources} >= 2
+        and ${t.projectionWindowHours} between 1 and 168`,
+    ),
+    check(
+      "contribution_control_policy_check",
+      sql`length(trim(${t.policyVersion})) between 1 and 64`,
+    ),
+  ],
+);
+
+/**
+ * One durable result for one caller-minted idempotency key in one server-
+ * resolved subject scope. A failed transaction leaves no row; a completed row
+ * is the stable replay response.
+ */
+export const contributionRequests = pgTable(
+  "contribution_requests",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    operation: contributionOperation("operation").notNull(),
+    idempotencyKey: uuid("idempotency_key").notNull(),
+    subjectDigest: varchar("subject_digest", { length: 64 }).notNull(),
+    payloadDigest: varchar("payload_digest", { length: 64 }).notNull(),
+    sourceId: uuid("source_id").references(() => sources.id).notNull(),
+    observationId: uuid("observation_id"),
+    resultCode: varchar("result_code", { length: 32 }).notNull().default("pending_review"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    completedAt: timestamp("completed_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("contribution_requests_subject_idempotency_key").on(
+      t.operation,
+      t.subjectDigest,
+      t.idempotencyKey,
+    ),
+    uniqueIndex("contribution_requests_observation_key").on(t.observationId),
+    index("contribution_requests_source_created_idx").on(t.sourceId, t.createdAt.desc()),
+    check(
+      "contribution_requests_digest_check",
+      sql`${t.subjectDigest} ~ '^[0-9a-f]{64}$'
+        and ${t.payloadDigest} ~ '^[0-9a-f]{64}$'`,
+    ),
+    check(
+      "contribution_requests_result_check",
+      sql`${t.resultCode} = 'pending_review'`,
+    ),
+    check(
+      "contribution_requests_completion_check",
+      sql`${t.completedAt} >= ${t.createdAt}`,
+    ),
+  ],
+);
+
+/**
+ * Durable fixed-window counters. RPC-level advisory locks make inspection and
+ * consumption atomic across all applicable dimensions before these rows move.
+ */
+export const contributionRateBuckets = pgTable(
+  "contribution_rate_buckets",
+  {
+    operation: contributionOperation("operation").notNull(),
+    dimension: contributionRateDimension("dimension").notNull(),
+    keyDigest: varchar("key_digest", { length: 64 }).notNull(),
+    windowStartedAt: timestamp("window_started_at", { withTimezone: true }).notNull(),
+    windowSeconds: integer("window_seconds").notNull(),
+    usedCount: integer("used_count").notNull().default(0),
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    primaryKey({
+      columns: [
+        t.operation,
+        t.dimension,
+        t.keyDigest,
+        t.windowStartedAt,
+        t.windowSeconds,
+      ],
+      name: "contribution_rate_buckets_pk",
+    }),
+    index("contribution_rate_buckets_expiry_idx").on(t.expiresAt),
+    check(
+      "contribution_rate_buckets_digest_check",
+      sql`${t.keyDigest} ~ '^[0-9a-f]{64}$'`,
+    ),
+    check(
+      "contribution_rate_buckets_window_check",
+      sql`${t.windowSeconds} in (900, 86400)
+        and ${t.usedCount} >= 0
+        and ${t.expiresAt} = ${t.windowStartedAt} + make_interval(secs => ${t.windowSeconds})`,
+    ),
+  ],
+);
+
 // 8. Observations Table (Raw, immutable price reports)
 export const observations = pgTable("observations", {
   id: uuid("id").defaultRandom().primaryKey(),
@@ -308,6 +493,10 @@ export const observations = pgTable("observations", {
   collectionMethod: varchar("collection_method", { length: 100 }).notNull(), // 'app_entry', 'scraper', 'sms'
   provenance: observationProvenance("provenance").default("synthetic").notNull(),
   moderationStatus: varchar("moderation_status", { length: 50 }).default("pending").notNull(), // 'pending', 'approved', 'rejected'
+  admissionId: uuid("admission_id").references(() => contributionRequests.id),
+  correctsObservationId: uuid("corrects_observation_id").references(
+    (): AnyPgColumn => observations.id,
+  ),
   notes: text("notes"),
   /**
    * Did the trip actually end in a purchase?
@@ -341,8 +530,210 @@ export const observations = pgTable("observations", {
    * (submitObservation's recompute), reached again through the visit paths.
    * 942 rows today, and observations are immutable, this table only ever grows.
    */
-  index("observations_variant_unit_place_idx").on(t.itemVariantId, t.unitId, t.placeId)
+  index("observations_variant_unit_place_idx").on(t.itemVariantId, t.unitId, t.placeId),
+  uniqueIndex("observations_admission_key").on(t.admissionId),
+  index("observations_correction_idx").on(t.correctsObservationId),
+  check(
+    "observations_contribution_claim_check",
+    sql`${t.admissionId} is null
+      or (
+        ${t.provenance} = 'observed'
+        and ${t.moderationStatus} = 'pending'
+        and (
+          (${t.availabilityState} = 'available' and ${t.priceAmount} is not null and ${t.priceAmount} > 0)
+          or (${t.availabilityState} = 'unavailable' and ${t.priceAmount} is null)
+        )
+      )`,
+  ),
+  check(
+    "observations_correction_not_self_check",
+    sql`${t.correctsObservationId} is null or ${t.correctsObservationId} <> ${t.id}`,
+  ),
 ]);
+
+export const contributionModeratorAssignments = pgTable(
+  "contribution_moderator_assignments",
+  {
+    accountId: uuid("account_id").primaryKey(),
+    status: contributionAssignmentStatus("status").notNull().default("suspended"),
+    issuedByAccountId: uuid("issued_by_account_id").notNull(),
+    reviewedByAccountId: uuid("reviewed_by_account_id").notNull(),
+    effectiveAt: timestamp("effective_at", { withTimezone: true }).notNull(),
+    expiresAt: timestamp("expires_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    index("contribution_moderator_assignments_status_idx").on(t.status, t.expiresAt),
+    check(
+      "contribution_moderator_assignments_separation_check",
+      sql`${t.accountId} <> ${t.issuedByAccountId}
+        and ${t.accountId} <> ${t.reviewedByAccountId}
+        and ${t.issuedByAccountId} <> ${t.reviewedByAccountId}`,
+    ),
+    check(
+      "contribution_moderator_assignments_time_check",
+      sql`${t.expiresAt} is null or ${t.expiresAt} > ${t.effectiveAt}`,
+    ),
+  ],
+);
+
+/**
+ * Append-only decisions. `reverse` points at the effective approve/reject
+ * decision it cancels; a subsequent approve/reject is another row.
+ */
+export const contributionModerationDecisions = pgTable(
+  "contribution_moderation_decisions",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    observationId: uuid("observation_id").references(() => observations.id).notNull(),
+    decision: contributionDecision("decision").notNull(),
+    actorAccountId: uuid("actor_account_id").notNull(),
+    priorDecisionId: uuid("prior_decision_id").references(
+      (): AnyPgColumn => contributionModerationDecisions.id,
+    ),
+    requestId: uuid("request_id").notNull(),
+    payloadDigest: varchar("payload_digest", { length: 64 }).notNull(),
+    reasonCode: varchar("reason_code", { length: 64 }).notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("contribution_moderation_decisions_request_key").on(t.requestId),
+    uniqueIndex("contribution_moderation_decisions_reversal_key").on(t.priorDecisionId),
+    index("contribution_moderation_decisions_observation_created_idx").on(
+      t.observationId,
+      t.createdAt.desc(),
+    ),
+    check(
+      "contribution_moderation_decisions_shape_check",
+      sql`(${t.decision} = 'reverse' and ${t.priorDecisionId} is not null)
+        or (${t.decision} in ('approve', 'reject') and ${t.priorDecisionId} is null)`,
+    ),
+    check(
+      "contribution_moderation_decisions_digest_check",
+      sql`${t.payloadDigest} ~ '^[0-9a-f]{64}$'`,
+    ),
+    check(
+      "contribution_moderation_decisions_reason_check",
+      sql`${t.reasonCode} ~ '^[a-z0-9_]{2,64}$'`,
+    ),
+  ],
+);
+
+export const contributionAuditEvents = pgTable(
+  "contribution_audit_events",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    requestId: uuid("request_id").notNull(),
+    action: contributionAuditAction("action").notNull(),
+    actorAccountId: uuid("actor_account_id"),
+    subjectDigest: varchar("subject_digest", { length: 64 }),
+    observationId: uuid("observation_id").references(() => observations.id),
+    decisionId: uuid("decision_id").references(() => contributionModerationDecisions.id),
+    reasonCode: varchar("reason_code", { length: 64 }).notNull(),
+    details: jsonb("details").notNull().default({}),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    index("contribution_audit_events_request_idx").on(t.requestId, t.createdAt),
+    index("contribution_audit_events_observation_idx").on(t.observationId, t.createdAt),
+    check(
+      "contribution_audit_events_digest_check",
+      sql`${t.subjectDigest} is null or ${t.subjectDigest} ~ '^[0-9a-f]{64}$'`,
+    ),
+    check(
+      "contribution_audit_events_reason_check",
+      sql`${t.reasonCode} ~ '^[a-z0-9_]{2,64}$'`,
+    ),
+    check(
+      "contribution_audit_events_details_check",
+      sql`length(${t.details}::text) <= 4096`,
+    ),
+  ],
+);
+
+/**
+ * ADR-019's approved-only projection, separate from legacy offers_current.
+ * Phase 1 writes only this boundary; Phase 2 must deliberately switch reads.
+ */
+export const contributionProjections = pgTable(
+  "contribution_projections",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    itemVariantId: uuid("item_variant_id").references(() => itemVariants.id).notNull(),
+    unitId: uuid("unit_id").references(() => units.id).notNull(),
+    placeId: uuid("place_id").references(() => places.id).notNull(),
+    state: contributionProjectionState("state").notNull(),
+    priceKind: varchar("price_kind", { length: 50 }),
+    priceMin: integer("price_min"),
+    priceMax: integer("price_max"),
+    currency: varchar("currency", { length: 10 }).notNull().default("NGN"),
+    lastObservedAt: timestamp("last_observed_at").notNull(),
+    expiresAt: timestamp("expires_at").notNull(),
+    supportingObservationCount: integer("supporting_observation_count").notNull(),
+    availableSourceCount: integer("available_source_count").notNull().default(0),
+    unavailableSourceCount: integer("unavailable_source_count").notNull().default(0),
+    policyVersion: varchar("policy_version", { length: 64 }).notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("contribution_projections_subject_key").on(
+      t.itemVariantId,
+      t.unitId,
+      t.placeId,
+    ),
+    index("contribution_projections_expiry_idx").on(t.expiresAt),
+    check(
+      "contribution_projections_counts_check",
+      sql`${t.supportingObservationCount} > 0
+        and ${t.availableSourceCount} >= 0
+        and ${t.unavailableSourceCount} >= 0`,
+    ),
+    check(
+      "contribution_projections_price_check",
+      sql`(
+          ${t.state} = 'available'
+          and ${t.priceMin} is not null
+          and ${t.priceMin} > 0
+          and ${t.priceKind} in ('Exact', 'Range')
+          and (
+            (${t.priceKind} = 'Exact' and ${t.priceMax} is null)
+            or (${t.priceKind} = 'Range' and ${t.priceMax} is not null and ${t.priceMax} > ${t.priceMin})
+          )
+        )
+        or (
+          ${t.state} = 'unavailable'
+          and ${t.priceKind} is null
+          and ${t.priceMin} is null
+          and ${t.priceMax} is null
+          and ${t.unavailableSourceCount} >= 2
+        )
+        or (
+          ${t.state} = 'conflict'
+          and (
+            (${t.priceKind} is null and ${t.priceMin} is null and ${t.priceMax} is null)
+            or (
+              ${t.priceMin} is not null
+              and ${t.priceMin} > 0
+              and ${t.priceKind} in ('Exact', 'Range')
+              and (
+                (${t.priceKind} = 'Exact' and ${t.priceMax} is null)
+                or (${t.priceKind} = 'Range' and ${t.priceMax} is not null and ${t.priceMax} > ${t.priceMin})
+              )
+            )
+          )
+        )`,
+    ),
+    check(
+      "contribution_projections_expiry_check",
+      sql`${t.expiresAt} > ${t.lastObservedAt}`,
+    ),
+    check(
+      "contribution_projections_policy_check",
+      sql`length(trim(${t.policyVersion})) between 1 and 64`,
+    ),
+  ],
+);
 
 // 9. Offers Current (Materialized derived current offers table)
 export const offersCurrent = pgTable("offers_current", {

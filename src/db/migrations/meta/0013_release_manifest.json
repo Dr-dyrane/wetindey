@@ -1,0 +1,49 @@
+{
+  "id": "cc3f91e0-35ad-4e11-b3d4-bb0488462af5",
+  "prevId": "e84c9697-2364-43c7-9f21-4517ab8cf0bb",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {},
+  "enums": {},
+  "schemas": {},
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  },
+  "kind": "release_manifest",
+  "drizzle_compatibility": "Detached metadata envelope: prevId is not in the migration snapshot chain.",
+  "release": "0013_contribution_integrity",
+  "parent_commit": "ca64de66299c245b85c1a7ba01a8690f722129ae",
+  "parent_migration": "0012_guarded_presence",
+  "parent_migration_sha256": "a8b31034aae22a6e9fa62416df8a1bb483c6783947fdf742c674e82cac373302",
+  "parent_snapshot_sha256": "40ba03232a62da4e0b3ad6b72c27db93927801e15dd98c0b8938cd9bf0fc8148",
+  "migration_sha256": "052769850c3d633230d9ec109c2b09067b73a686cadb7c139a613622184f0f0a",
+  "snapshot_sha256": "a0787dd0b1f617c72130965438662dfa4e13a6a6e13f0c09a17e6e231335e9bc",
+  "schema_fingerprint_sha256": "3c3fbe9bb03be8c75536fff7e39583c403decf88448dd03705ed56bdcca63a13",
+  "source_sha256": {
+    "src/db/schema/index.ts": "fcb0d460c736556fdae59f4bc9623f672fa9880b08cd9e0aa00cac2379024139",
+    "src/db/pillars/40-contribution-integrity.sql": "1f281c4ab608e827fc71f9d7ce578ca96a3d53270a46ff140e838e5b906182ca",
+    "src/db/pillars/60-contribution-moderation.sql": "46984886ca5cd1cc9bc2178b40a76fa23d0156a83a990b75e461b51c8bbb2645",
+    "src/db/pillars/80-contribution-services.sql": "c7708a2941f5b93ad70eb4399c5e9f2a65f78bb2ee069666870f47fdf93ae5f7",
+    "src/db/pillars/90-contribution-security.sql": "80e89d652b2be013ae023c2ee24ad4b82c761c85f6eed552e21e31517a5766ba",
+    "src/db/migrations/meta/_journal.json": "8b2e9842adcc18fcef5654d95a1d567cba3aac0218a858f1e8e883909aec6a92",
+    "scripts/contributions/contribution-migration-contract.test.ts": "b8a67994539a2133c7b9d54b186419e11dfeabf2f4e6f345936ef551a6fd7bb7"
+  },
+  "generator": {
+    "drizzle_kit": "0.31.10",
+    "drizzle_orm": "0.45.2",
+    "journal_version": "7"
+  },
+  "disposable_contract_engine": {
+    "postgresql": "17.5",
+    "postgis": "3.6",
+    "pglite": "0.4.6",
+    "pglite_postgis": "0.0.8"
+  },
+  "shared_database_applied": false
+}
