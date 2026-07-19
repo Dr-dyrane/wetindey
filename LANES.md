@@ -335,22 +335,31 @@ Full detail/provenance remains in Item Detail. No data, action, map, copy, schem
 migration changes; >=44px targets, no horizontal overflow, and no covered CTA remain
 required.
 
-##### Human Interface — Market Details grid, CTA, and attribution correction — ACTIVE
+##### Human Interface — Market Details grid, CTA, and attribution correction — COMPLETE / PASS
 
 Owner: persistent HI Engineer `019f75a5-0fc6-7f40-9a0f-8097ead3b45d`. Exclusive paths:
 
 - `src/app/page.tsx`
 - `src/design-system/components/PlaceOfferRow.tsx`
 
-Founder production review refuted the current presentation contract. Regular/desktop Market
+Commit `14ece5b745ead1a4d8e8e6fdaf21730db89da7c1` independently **PASS**ed and is pushed.
+Release both exact paths. Direct Production runtime proof remains the final gate. Founder
+production review had refuted the prior presentation contract. Regular/desktop Market
 Details must render a true two-column card grid; compact/mobile remains one column. The
 place-level CTA must say `Visit market` for market/open-market destinations and `Visit shop`
 for shop/kiosk/supermarket destinations, never `Get it`, while preserving navigation.
 Clicking an offer/card must use WetinDey's existing product/item detail flow, not navigate to
 the Wikimedia/source image. Image attribution remains accessible only through an explicit
 secondary affordance; the primary media/card target stays internal. Preserve status semantics,
-map context, scroll/CTA accessibility, and no commerce expansion. Require independent
-production refutation; no third path is authorized absent evidence it is unavoidable.
+map context, scroll/CTA accessibility, and no commerce expansion. No third path is authorized
+absent evidence it is unavoidable.
+
+##### Maps post-map-fix Chrome recurrence — PATHLESS DIAGNOSIS
+
+Separate from the released HI paths: after the map fix, Chrome can return to `Map no fit load`
+after closing Market Details or changing theme even though the initial dark map was ready.
+Route this to Maps as a lifecycle/runtime diagnosis; it is not an HI-path blocker. No new
+source claim is active until Maps returns exact paths and an independent refuter.
 
 ##### Motion — compact sheet dead-space correction — COMPLETE / PASS
 
