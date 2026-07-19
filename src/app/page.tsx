@@ -1324,7 +1324,9 @@ export default function HomePage() {
     const getItAction = (
       <div
         className={`stack-surface z-10 shrink-0 ${
-          isRegular ? "static pt-1" : "sticky top-0 py-2"
+          isRegular
+            ? "static pt-1"
+            : "fixed inset-x-0 bottom-0 px-6 pb-[calc(var(--safe-area-bottom)+8px)] pt-2"
         }`}
       >
         <Button
@@ -1355,7 +1357,9 @@ export default function HomePage() {
       <div
         data-navigation-detail-bounded={isRegular || undefined}
         className={`flex flex-col gap-3 ${
-          isRegular ? "h-full min-h-0" : "min-h-full"
+          isRegular
+            ? "h-full min-h-0"
+            : "min-h-full pb-[calc(var(--safe-area-bottom)+64px)]"
         }`}
       >
         <div className="flex shrink-0 items-start justify-between">
@@ -1391,11 +1395,6 @@ export default function HomePage() {
             </span>
           </button>
         </div>
-
-        {/* Compact keeps one sticky, in-flow action after the place context.
-            NavigationStack owns the scroll, so there is no measured inner
-            viewport or translated-sheet tail. */}
-        {!isRegular ? getItAction : null}
 
         {/* What this market is currently selling. */}
         <div
@@ -1437,8 +1436,10 @@ export default function HomePage() {
           </div>
         </div>
 
-        {/* Regular preserves the action's established bottom placement. */}
-        {isRegular ? getItAction : null}
+        {/* One live action follows Prices in DOM/focus order. Compact anchors it
+            to the detail viewport while the root reserves its exact 48px button,
+            16px vertical padding and safe area; regular keeps it in flow. */}
+        {getItAction}
       </div>
     );
   }, [
