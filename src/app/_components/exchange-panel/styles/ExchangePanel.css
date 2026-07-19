@@ -9,3 +9,131 @@
   font-feature-settings: "tnum" 1;
   font-variant-numeric: tabular-nums;
 }
+
+.exchange-conversion-canvas {
+  box-shadow:
+    0 18px 42px rgb(0 0 0 / 0.08),
+    inset 0 1px 0 rgb(255 255 255 / 0.32);
+}
+
+.exchange-amount-row {
+  display: flex;
+  min-height: 3.5rem;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.exchange-amount-input {
+  min-width: 0;
+  flex: 1;
+  background: transparent;
+  color: var(--color-text-primary);
+  font-size: 1.75rem;
+  font-weight: 650;
+  line-height: 1.1;
+  font-feature-settings: "tnum" 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.exchange-amount-input::placeholder {
+  color: var(--color-text-tertiary);
+}
+
+.exchange-amount-input:focus-visible {
+  outline: none;
+}
+
+.exchange-currency-chip {
+  display: inline-flex;
+  height: 2.25rem;
+  flex: none;
+  align-items: center;
+  gap: 0.45rem;
+  border-radius: 0.875rem;
+  background: var(--color-control-fill);
+  padding-inline: 0.75rem;
+  color: var(--color-text-primary);
+  font-size: 0.9375rem;
+  font-weight: 650;
+}
+
+.exchange-relationship {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 0.625rem;
+  color: var(--color-text-tertiary);
+}
+
+.exchange-relationship > span {
+  height: 1px;
+  background: color-mix(in srgb, currentColor 18%, transparent);
+}
+
+.exchange-actions {
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
+  gap: 0.5rem;
+}
+
+.exchange-rate-disclosure > summary,
+.exchange-nearby-action {
+  display: flex;
+  min-height: 2.75rem;
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: 1rem;
+  padding-inline: 0.875rem;
+  font-size: 0.875rem;
+  font-weight: 650;
+  text-align: center;
+}
+
+.exchange-rate-disclosure > summary {
+  background: var(--color-text-primary);
+  color: var(--color-surface-card);
+  list-style: none;
+}
+
+.exchange-rate-disclosure > summary::-webkit-details-marker {
+  display: none;
+}
+
+.exchange-rate-disclosure[open] > summary svg {
+  transform: rotate(180deg);
+}
+
+.exchange-nearby-action {
+  background: var(--color-control-fill);
+  color: var(--color-text-primary);
+}
+
+.exchange-rate-detail {
+  grid-column: 1 / -1;
+  padding: 0.75rem 0.25rem 0.125rem;
+  color: var(--color-text-secondary);
+  font-size: 0.75rem;
+  line-height: 1.35;
+}
+
+.exchange-actions:has(.exchange-rate-disclosure[open]) {
+  grid-template-rows: auto auto;
+}
+
+.exchange-actions .exchange-rate-disclosure[open] {
+  display: contents;
+}
+
+@media (max-width: 360px) {
+  .exchange-actions {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .exchange-rate-disclosure > summary svg {
+    transition: none;
+  }
+}

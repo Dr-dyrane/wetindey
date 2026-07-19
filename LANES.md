@@ -388,6 +388,24 @@ Exclusive paths:
 Restored the pre-modularization Haversine distance calculation and original coordinate
 order after the extracted view replaced it with a hardcoded `0.5 km`. Typecheck,
 exact-path lint, diff checks, and localhost hot reload passed. Luna independently
+
+##### Aboki FX decision-first visual hierarchy — COMPLETE / PATHS RELEASED
+
+Owner: current controller.
+Exclusive paths:
+
+- `src/app/_components/exchange-panel/views/ExchangePanelView.tsx`
+- `src/app/_components/exchange-panel/styles/ExchangePanel.css`
+- `LANES.md`
+
+Flatten the first Aboki FX pane into one decision-first conversion canvas with progressive
+rate disclosure and a secondary scroll-to-nearby-BDC action. Preserve currency/rate logic,
+provider attribution, distance calculation, accessibility, and all data boundaries. No
+actions, schema, picker, currency catalog, or nearby-location data changes.
+
+Implemented as a flat two-amount relationship with progressive rate provenance, one
+primary rate action, and one secondary BDC filter/scroll action. No validation or runtime
+visual drive was performed in this bounded pass.
 returned NOT_REFUTED with no P1/P2/P3.
 
 ##### ItemDetailSheet component modularization — COMPLETE / PATHS RELEASED

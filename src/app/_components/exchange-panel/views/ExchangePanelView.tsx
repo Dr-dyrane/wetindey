@@ -67,256 +67,159 @@ export function ExchangePanelView({
       : "";
 
   return (
-    <div className="space-y-4 px-3 pb-[calc(max(var(--sheet-hidden,0px),var(--safe-area-bottom))+20px)]">
-      <section className="space-y-2.5" aria-labelledby="exchange-reference-heading">
+    <div className="space-y-5 px-3 pb-[calc(max(var(--sheet-hidden,0px),var(--safe-area-bottom))+20px)]">
+      <section className="space-y-3" aria-labelledby="exchange-reference-heading">
         <div className="px-1">
+          <p className="text-caption-1 font-semibold uppercase tracking-[0.08em] text-text-tertiary">
+            Aboki FX
+          </p>
           <h2
             id="exchange-reference-heading"
-            className="text-title-2 font-semibold text-text-primary"
+            className="mt-0.5 text-title-2 font-semibold text-text-primary"
           >
-            Naira reference
+            What is it worth?
           </h2>
         </div>
 
-        <div className="squircle-card space-y-3 bg-surface-card p-3">
-          <div>
-            <label
-              htmlFor={amountId}
-              className="mb-1.5 block text-footnote font-semibold text-text-secondary"
-            >
-              Amount
+        <div className="exchange-conversion-canvas squircle-card bg-surface-card px-3 py-2">
+          <div className="exchange-amount-row">
+            <label htmlFor={amountId} className="sr-only">
+              Foreign amount
             </label>
-            <div
-              className={`squircle flex min-h-[64px] items-center gap-2 bg-controlFill px-3 ${transition.focus} focus-within:bg-surface-card focus-within:outline focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-focusRing`}
-            >
-              <input
-                id={amountId}
-                value={amounts.foreign}
-                onChange={(event) => editAmount("foreign", event.target.value)}
-                inputMode="decimal"
-                autoComplete="off"
-                placeholder="100"
-                aria-invalid={foreignError ? true : undefined}
-                aria-describedby={
-                  foreignError
-                    ? `${foreignErrorId} exchange-reference-note`
-                    : "exchange-reference-note"
-                }
-                data-autofocus
-                className="min-w-0 flex-1 bg-transparent text-title-1 font-semibold tabular-nums text-text-primary placeholder:text-text-tertiary"
+            <input
+              id={amountId}
+              value={amounts.foreign}
+              onChange={(event) => editAmount("foreign", event.target.value)}
+              inputMode="decimal"
+              autoComplete="off"
+              placeholder="100"
+              aria-invalid={foreignError ? true : undefined}
+              aria-describedby={
+                foreignError ? `${foreignErrorId} exchange-reference-note` : "exchange-reference-note"
+              }
+              data-autofocus
+              className="exchange-amount-input"
+            />
+            {catalogState.kind === "loading" && !currency ? (
+              <Skeleton className="h-9 w-24 rounded-[14px]" />
+            ) : (
+              <CurrencyPickerSheet
+                available={availableCurrencies}
+                value={currency}
+                onSelect={enterCurrency}
+                disabled={catalogState.kind !== "ready"}
               />
-              {catalogState.kind === "loading" && !currency ? (
-                <Skeleton className="h-11 w-24 rounded-[14px]" />
-              ) : (
-                <CurrencyPickerSheet
-                  available={availableCurrencies}
-                  value={currency}
-                  onSelect={enterCurrency}
-                  disabled={catalogState.kind !== "ready"}
-                />
-              )}
-            </div>
-            {foreignError && (
-              <p
-                id={foreignErrorId}
-                role="alert"
-                className="text-status-danger-fg mt-1.5 px-1 text-footnote"
-              >
-                {foreignError}
-              </p>
             )}
           </div>
 
-          <div>
-            <label
-              htmlFor={ngnAmountId}
-              className="mb-1.5 block text-footnote font-semibold text-text-secondary"
-            >
-              Naira
-            </label>
-            <div
-              className={`squircle flex min-h-[64px] items-center gap-2 bg-controlFill px-3 ${transition.focus} focus-within:bg-surface-card focus-within:outline focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-focusRing`}
-            >
-              <input
-                id={ngnAmountId}
-                value={amounts.ngn}
-                onChange={(event) => editAmount("ngn", event.target.value)}
-                inputMode="decimal"
-                autoComplete="off"
-                placeholder="100000"
-                aria-invalid={ngnError ? true : undefined}
-                aria-describedby={
-                  ngnError ? `${ngnErrorId} exchange-reference-note` : "exchange-reference-note"
-                }
-                className="min-w-0 flex-1 bg-transparent text-title-1 font-semibold tabular-nums text-text-primary placeholder:text-text-tertiary"
-              />
-              <span className="squircle flex h-11 shrink-0 items-center gap-2 bg-surface-card px-3 text-body font-semibold text-text-primary">
-                <CurrencyFlag code="NGN" />
-                NGN
-              </span>
-            </div>
-            {ngnError && (
-              <p
-                id={ngnErrorId}
-                role="alert"
-                className="text-status-danger-fg mt-1.5 px-1 text-footnote"
-              >
-                {ngnError}
-              </p>
-            )}
+          <div className="exchange-relationship" aria-hidden="true">
+            <span />
+            <SolidIcon name="chevron-down" size={14} />
+            <span />
           </div>
 
-          <p className="sr-only" aria-live="polite" aria-atomic="true">
-            {conversionAnnouncement}
+          <div className="exchange-amount-row">
+            <label htmlFor={ngnAmountId} className="sr-only">
+              Naira amount
+            </label>
+            <input
+              id={ngnAmountId}
+              value={amounts.ngn}
+              onChange={(event) => editAmount("ngn", event.target.value)}
+              inputMode="decimal"
+              autoComplete="off"
+              placeholder="100000"
+              aria-invalid={ngnError ? true : undefined}
+              aria-describedby={
+                ngnError ? `${ngnErrorId} exchange-reference-note` : "exchange-reference-note"
+              }
+              className="exchange-amount-input"
+            />
+            <span className="exchange-currency-chip">
+              <CurrencyFlag code="NGN" />
+              NGN
+            </span>
+          </div>
+        </div>
+
+        {foreignError && (
+          <p id={foreignErrorId} role="alert" className="px-1 text-footnote text-status-danger-fg">
+            {foreignError}
           </p>
+        )}
+        {ngnError && (
+          <p id={ngnErrorId} role="alert" className="px-1 text-footnote text-status-danger-fg">
+            {ngnError}
+          </p>
+        )}
+        <p className="sr-only" aria-live="polite" aria-atomic="true">
+          {conversionAnnouncement}
+        </p>
 
-          <div
-            className="squircle min-h-[104px] bg-fillTertiary p-3"
-            aria-live="polite"
-            aria-atomic="true"
-          >
-            <div className="flex items-center justify-between gap-3">
-              <p className="text-footnote font-semibold text-text-secondary">Reference rate</p>
-            </div>
-
-            {catalogState.kind === "loading" && !visibleRate ? (
-              <div aria-label="Loading available reference currencies" className="mt-3 space-y-3">
-                <Skeleton className="h-9 w-3/4" />
-                <Skeleton className="h-3 w-44" />
-              </div>
-            ) : catalogState.kind === "empty" ? (
-              <div className="mt-3 space-y-3">
-                <div>
-                  <p role="status" className="text-body font-semibold text-text-primary">
-                    No Naira pairs
-                  </p>
-                  <p className="mt-1 text-footnote text-text-secondary">
-                    Try again.
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  onClick={retryCatalog}
-                  className={`squircle min-h-tap bg-controlFill px-3 text-footnote font-semibold text-text-primary ${transition.press}`}
-                >
-                  <span className="mr-1.5 inline-flex align-middle">
-                    <SolidIcon name="refresh" size={16} />
-                  </span>
-                  Try again
-                </button>
-              </div>
-            ) : catalogState.kind === "error" && !visibleRate ? (
-              <div className="mt-3 space-y-3">
-                <div>
-                  <p role="alert" className="text-body font-semibold text-text-primary">
-                    Couldn’t load currencies
-                  </p>
-                  <p className="mt-1 text-footnote text-text-secondary">
-                    {offline ? "Offline. Try again when connected." : "Try again."}
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  onClick={retryCatalog}
-                  className={`squircle min-h-tap bg-controlFill px-3 text-footnote font-semibold text-text-primary ${transition.press}`}
-                >
-                  <span className="mr-1.5 inline-flex align-middle">
-                    <SolidIcon name="refresh" size={16} />
-                  </span>
-                  Try again
-                </button>
-              </div>
-            ) : rateState.kind === "loading" && !rateState.cached ? (
-              <div aria-label="Loading the reference rate" className="mt-3 space-y-3">
-                <Skeleton className="h-9 w-3/4" />
-                <Skeleton className="h-3 w-44" />
-              </div>
-            ) : rateState.kind === "unavailable" ? (
-              <div className="mt-3">
-                <p role="status" className="text-body font-semibold text-text-primary">
-                  Pair unavailable
-                </p>
-                <p className="mt-1 text-footnote text-text-secondary">
-                  Choose another currency.
-                </p>
-              </div>
-            ) : rateState.kind === "error" ? (
-              <div className="mt-3 space-y-3">
-                <div>
-                  <p role="alert" className="text-body font-semibold text-text-primary">
-                    Couldn’t load rate
-                  </p>
-                  <p className="mt-1 text-footnote text-text-secondary">
-                    {offline ? "Offline. Try again when connected." : "Try again."}
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  onClick={retryRate}
-                  className={`squircle min-h-tap bg-controlFill px-3 text-footnote font-semibold text-text-primary ${transition.press}`}
-                >
-                  <span className="mr-1.5 inline-flex align-middle">
-                    <SolidIcon name="refresh" size={16} />
-                  </span>
-                  Try again
-                </button>
-              </div>
-            ) : visibleRate && selectedMeta ? (
-              <div className="mt-1">
-                <div className="flex items-start justify-between gap-3">
-                  <p className="text-body font-semibold text-text-primary">
-                    {providerLabel(visibleRate)}
-                  </p>
-                  {usingSavedRate && (
-                    <span className="shrink-0 text-caption-1 font-semibold text-status-caution-fg">
-                      {offline ? "Saved · Offline" : "Saved"}
-                    </span>
-                  )}
-                </div>
-                <p className="mt-2 text-caption-1 tabular-nums leading-snug text-text-secondary">
-                  {selectedMeta.symbol}1 = ₦{RATE_FORMATTER.format(visibleRate.rate)} · Effective{" "}
-                  {formatEffectiveDate(visibleRate.effectiveDate)}
-                </p>
-                {(rateState.kind === "loading" ||
-                  (rateState.kind === "ready" && rateState.refreshFailed) ||
-                  offline ||
-                  catalogState.kind === "loading" ||
-                  catalogState.kind === "error") && (
-                  <div className="mt-2 flex items-center justify-between gap-3">
-                    <p role="status" className="text-caption-1 text-status-caution-fg">
-                      {offline
-                        ? "Offline · saved rate"
-                        : catalogState.kind === "error"
-                          ? "Currency list unavailable · saved rate"
-                          : catalogState.kind === "loading"
-                            ? "Updating currencies · saved rate"
-                            : "Updating rate · saved rate"}
-                    </p>
-                    {!offline && catalogState.kind !== "loading" && (
-                      <button
-                        type="button"
-                        onClick={catalogState.kind === "error" ? retryCatalog : retryRate}
-                        className={`min-h-tap shrink-0 px-2 text-footnote font-semibold text-status-caution-fg ${transition.press}`}
-                      >
-                        Refresh
-                      </button>
+        <div className="exchange-actions">
+          <details className="exchange-rate-disclosure">
+            <summary className={transition.press}>
+              <span>View exchange rate</span>
+              <SolidIcon name="chevron-down" size={16} />
+            </summary>
+            <div className="exchange-rate-detail" aria-live="polite" aria-atomic="true">
+              {catalogState.kind === "loading" && !visibleRate ? (
+                <Skeleton className="h-5 w-3/4" />
+              ) : catalogState.kind === "empty" ? (
+                <RateFailure message="No Naira pairs" onRetry={retryCatalog} />
+              ) : catalogState.kind === "error" && !visibleRate ? (
+                <RateFailure
+                  message={offline ? "Currencies unavailable offline" : "Couldn’t load currencies"}
+                  onRetry={retryCatalog}
+                />
+              ) : rateState.kind === "loading" && !rateState.cached ? (
+                <Skeleton className="h-5 w-3/4" />
+              ) : rateState.kind === "unavailable" ? (
+                <p role="status">Pair unavailable. Choose another currency.</p>
+              ) : rateState.kind === "error" ? (
+                <RateFailure
+                  message={offline ? "Rate unavailable offline" : "Couldn’t load rate"}
+                  onRetry={retryRate}
+                />
+              ) : visibleRate && selectedMeta ? (
+                <>
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="font-semibold text-text-primary">{providerLabel(visibleRate)}</p>
+                    {usingSavedRate && (
+                      <span className="text-caption-1 font-semibold text-status-caution-fg">
+                        {offline ? "Saved · Offline" : "Saved"}
+                      </span>
                     )}
                   </div>
-                )}
-              </div>
-            ) : null}
-          </div>
+                  <p className="mt-1 tabular-nums">
+                    {selectedMeta.symbol}1 = ₦{RATE_FORMATTER.format(visibleRate.rate)} ·{" "}
+                    {formatEffectiveDate(visibleRate.effectiveDate)}
+                  </p>
+                </>
+              ) : null}
+            </div>
+          </details>
 
-          <p
-            id="exchange-reference-note"
-            className="text-caption-1 leading-snug text-text-tertiary"
+          <a
+            href="#nearby-exchange-locations"
+            onClick={() => onFilterChange("bdc")}
+            className={`exchange-nearby-action ${transition.press}`}
           >
-            Reference only — no money exchange.
-          </p>
+            <SolidIcon name="map-pin" size={16} />
+            Nearby BDCs
+          </a>
         </div>
+
+        <p id="exchange-reference-note" className="px-1 text-caption-1 text-text-tertiary">
+          Reference only
+        </p>
       </section>
 
-      <section className="space-y-2.5" aria-labelledby="sample-nearby-heading">
+      <section
+        id="nearby-exchange-locations"
+        className="scroll-mt-4 space-y-2.5"
+        aria-labelledby="sample-nearby-heading"
+      >
         <div className="px-1">
           <div className="flex items-center justify-between gap-3">
             <h2 id="sample-nearby-heading" className="text-title-3 font-semibold text-text-primary">
@@ -414,6 +317,21 @@ export function ExchangePanelView({
           </div>
         )}
       </section>
+    </div>
+  );
+}
+
+function RateFailure({ message, onRetry }: { message: string; onRetry: () => void }) {
+  return (
+    <div className="flex items-center justify-between gap-3">
+      <p role="alert">{message}</p>
+      <button
+        type="button"
+        onClick={onRetry}
+        className="min-h-tap shrink-0 px-2 font-semibold text-text-primary"
+      >
+        Retry
+      </button>
     </div>
   );
 }
