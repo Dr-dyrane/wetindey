@@ -269,6 +269,21 @@ Owner: Antigravity (External Approved Contractor - Product Engineering & UX Depa
 
 Organized the homepage modular files into structured subfolders under `src/app/_components/home-page/` and relocated loose server action files into `src/app/_actions/`, updating all import edges. Verification checks (`lint`, `tsc`, and full production build) completed with 0 errors. Released paths. Commit `0863c7800a1ae8f82104ee994da743ab7524776c` is pushed locally.
 
+##### Workspace root documentation hygiene — ACTIVE
+
+Owner: Antigravity (External Approved Contractor - Product Engineering & UX Department). Exclusive paths:
+
+- `WETINDEY_BIBLE.md`
+- `DECISIONS.md`
+- `AGENTS.md`
+- new `docs/WETINDEY_BIBLE.md`
+- new `docs/DECISIONS.md`
+- new `.agents/AGENTS.md`
+- `scripts/department-worklog-contract.test.ts`
+- `README.md`
+
+Reorganize workspace root documentation and customization files for directory hygiene: move `WETINDEY_BIBLE.md` and `DECISIONS.md` to the `docs/` folder, relocate `AGENTS.md` to `.agents/AGENTS.md` to align with the customization roots pattern, and update all internal links and test paths accordingly.
+
 ##### P1 authentication recovery — SUPERSEDED / PATHLESS
 
 Former owner: Authentication / Client Reliability. Former paths:
