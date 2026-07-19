@@ -12,22 +12,17 @@ export interface MapMarkerOptions {
 }
 
 /**
- * How precisely we can honestly draw the user.
- *
- * Not a styling flag — a claim about the data, and the only reason this type
- * exists. `point` says "this coordinate is where you are". `area` says "this
- * coordinate is the middle of somewhere you are probably in", which is what an
- * area centre and an untouched default both are. Only a real device fix earns
- * `point`; drawing the other two as a point would claim a GPS precision we were
- * never given. The caller maps provenance onto this (see MapboxCanvas) — the
- * adapter only draws the claim it is handed.
+ * Accuracy treatment for a real device fix. Browsing/default/manual positions
+ * never reach this boundary at all.
  */
-export type UserPositionPrecision = "point" | "area";
+export type UserPositionPrecision = "precise" | "approximate";
 
 export interface UserPositionOptions {
   lat: number;
   lng: number;
   precision: UserPositionPrecision;
+  /** Browser-reported 95% confidence radius in metres. */
+  accuracyM: number;
   identity: {
     name: string;
     avatarUrl: string | null;
@@ -127,16 +122,19 @@ export interface ScreenPoint {
 export type MapStyleLifecycleState =
   | {
       status: "loading";
+      generation: number;
       theme: "light" | "dark";
       attempt: number;
     }
   | {
       status: "ready";
+      generation: number;
       theme: "light" | "dark";
       attempt: number;
     }
   | {
       status: "failed";
+      generation: number;
       theme: "light" | "dark";
       attempt: number;
       reason: "error" | "timeout";
@@ -656,13 +654,18 @@ const DARK_PARK = "hsl(140, 22%, 18%)";
  */
 const DARK_SUBDIVISION_LABEL = "hsl(220, 15%, 62%)";
 
-/** Diameter of the device-fix dot, px. Small on purpose: it is a point. */
-const USER_POINT_SIZE = 40;
+const USER_ORB_SIZE = 32;
+
 /**
- * Diameter of the area disc, px. Large on purpose — a region is not a point —
- * and deliberately not 36, which is the place marker's size.
+ * The halo is separate from identity and grows conservatively with reported
+ * uncertainty. It is intentionally capped: a DOM marker cannot claim a
+ * map-scale metric radius, so size communicates relative accuracy while the
+ * accessible label states the actual browser value.
  */
-const USER_AREA_SIZE = 48;
+function userAccuracyHaloSize(accuracyM: number): number {
+  const safeAccuracy = Number.isFinite(accuracyM) ? Math.max(0, accuracyM) : 0;
+  return Math.round(Math.min(112, Math.max(44, 44 + Math.log2(1 + safeAccuracy / 20) * 12)));
+}
 
 /**
  * Resolve a design token to the value the GPU layer needs.
@@ -734,6 +737,7 @@ interface MapboxMap {
   fitBounds(bounds: BoundsTuple, options?: FitBoundsOptions): void;
   project(lnglat: [number, number]): ScreenPoint;
   setStyle(style: string): void;
+  triggerRepaint(): void;
   on(type: MapboxStyleReadinessEvent, listener: () => void): void;
   on(type: "error", listener: (event: MapboxErrorEvent) => void): void;
   off(type: MapboxStyleReadinessEvent, listener: () => void): void;
@@ -832,6 +836,7 @@ export class MapboxAdapter implements MapProviderAdapter {
   /** What the live element was built to claim; rebuild only when this changes. */
   private userMarkerPrecision: UserPositionPrecision | null = null;
   private userMarkerIdentityKey: string | null = null;
+  private userMarkerAccuracyKey: number | null = null;
   /** The route as last asked for, so a style rebuild can restore it. */
   private routeCoords: RouteGeometry | null = null;
   private routeTint: RouteTint = "accent";
@@ -843,9 +848,13 @@ export class MapboxAdapter implements MapProviderAdapter {
    * true from each `style.load`. It mirrors Mapbox's private `_loaded`.
    */
   private styleReady = false;
+  /** Current generation has painted enough basemap to remove Canvas overlays. */
+  private styleUsable = false;
   private styleLifecycleListener: MapStyleLifecycleListener | null = null;
   private styleReadyListener: (() => void) | null = null;
   private styleRenderListener: (() => void) | null = null;
+  private styleInstalledGeneration: number | null = null;
+  private pendingMutationSafeGeneration: number | null = null;
   private styleLoadTimer: number | null = null;
   private styleLoadAttempt = 0;
   private styleGeneration = 0;
@@ -934,24 +943,70 @@ export class MapboxAdapter implements MapProviderAdapter {
    * listeners stops ordinary superseded events; the generation check also makes
    * an already-queued callback harmless after a rapid theme change.
    */
-  private completeStyleAttempt(
+  private styleAttemptIsCurrent(
+    generation: number,
+    theme: "light" | "dark"
+  ): boolean {
+    return (
+      generation === this.styleGeneration &&
+      this.styleInstalledGeneration === generation &&
+      this.styleMatchesTheme(theme)
+    );
+  }
+
+  /**
+   * `style.load`/`idle` or a positive isStyleLoaded probe make style mutation
+   * safe. Only this path may replay cartography and stored route sources.
+   */
+  private completeMutationSafeStyleAttempt(
     generation: number,
     theme: "light" | "dark",
     attempt: number
-  ): void {
-    if (generation !== this.styleGeneration) return;
+  ): boolean {
+    if (!this.styleAttemptIsCurrent(generation, theme)) return false;
 
     this.clearStyleLoadTimer();
     this.clearStyleReadinessListeners();
     // Set BEFORE the applies: this event IS the fact they guard on.
     this.styleReady = true;
+    this.pendingMutationSafeGeneration = null;
+    const wasUsable = this.styleUsable;
+    this.styleUsable = true;
     this.applyCartography();
     this.applyRoute();
+    if (!wasUsable) {
+      this.emitStyleLifecycle({
+        status: "ready",
+        generation,
+        theme,
+        attempt
+      });
+    }
+    return true;
+  }
+
+  /**
+   * A painted stock-style frame is enough to uncover the map, but not enough to
+   * prove addSource/addLayer are safe. Keep style.load/idle listeners alive so
+   * the stored route and cartography replay later without risking a throw.
+   */
+  private completeUsableStyleAttempt(
+    generation: number,
+    theme: "light" | "dark",
+    attempt: number
+  ): boolean {
+    if (!this.styleAttemptIsCurrent(generation, theme)) return false;
+    this.clearStyleLoadTimer();
+    this.clearStyleRenderListener();
+    if (this.styleUsable) return true;
+    this.styleUsable = true;
     this.emitStyleLifecycle({
       status: "ready",
+      generation,
       theme,
       attempt
     });
+    return true;
   }
 
   /**
@@ -961,7 +1016,7 @@ export class MapboxAdapter implements MapProviderAdapter {
    * the bounded timeout retries and ultimately reports an error-backed failure.
    */
   private handleMapError = (_event: MapboxErrorEvent): void => {
-    if (this.styleReady || this.styleLoadTimer === null) return;
+    if (this.styleUsable || this.styleReady || this.styleLoadTimer === null) return;
     this.styleErrorObserved = true;
   };
 
@@ -983,10 +1038,13 @@ export class MapboxAdapter implements MapProviderAdapter {
       map.off("idle", this.styleReadyListener);
       this.styleReadyListener = null;
     }
-    if (this.styleRenderListener) {
-      map.off("render", this.styleRenderListener);
-      this.styleRenderListener = null;
-    }
+    this.clearStyleRenderListener();
+  }
+
+  private clearStyleRenderListener(): void {
+    if (!this.mapInstance || !this.styleRenderListener) return;
+    this.mapInstance.off("render", this.styleRenderListener);
+    this.styleRenderListener = null;
   }
 
   /**
@@ -1000,8 +1058,56 @@ export class MapboxAdapter implements MapProviderAdapter {
     attempt: number
   ): boolean {
     if (generation !== this.styleGeneration || !this.mapInstance?.isStyleLoaded()) return false;
-    this.completeStyleAttempt(generation, theme, attempt);
-    return true;
+    return this.completeMutationSafeStyleAttempt(generation, theme, attempt);
+  }
+
+  /** Identify the requested stock style without trusting event timing alone. */
+  private styleMatchesTheme(theme: "light" | "dark"): boolean {
+    const style = this.mapInstance?.getStyle();
+    if (!style) return false;
+
+    const expectedId = theme === "dark" ? "dark-v11" : "streets-v12";
+    const name = style.name?.toLowerCase() ?? "";
+    if (
+      (theme === "dark" && name.includes("dark")) ||
+      (theme === "light" && name.includes("street"))
+    ) {
+      return true;
+    }
+
+    const spriteUrls =
+      typeof style.sprite === "string"
+        ? [style.sprite]
+        : (style.sprite?.map((sprite) => sprite.url) ?? []);
+    if (spriteUrls.some((url) => url.toLowerCase().includes(expectedId))) {
+      return true;
+    }
+
+    const layerIds = new Set(style.layers?.map((layer) => layer.id) ?? []);
+    return theme === "dark"
+      ? layerIds.has("road-label-simple") && !layerIds.has("building-number-label")
+      : layerIds.has("building-number-label") ||
+          layerIds.has("tunnel-oneway-arrow-blue");
+  }
+
+  /**
+   * Mapbox can keep `isStyleLoaded()` false while a source is still settling
+   * even though the current stock style has already painted a usable frame.
+   * A generation-bound `render` with the requested style identity and a
+   * populated layer stack is the observable fact Canvas needs: the map is no
+   * longer a blank transition, while a frame left over from the old theme
+   * cannot qualify merely because its old layer stack still exists.
+   */
+  private recognizeUsableStyleFrame(
+    generation: number,
+    theme: "light" | "dark",
+    attempt: number
+  ): boolean {
+    if (generation !== this.styleGeneration || !this.styleMatchesTheme(theme))
+      return false;
+    const layers = this.mapInstance?.getStyle()?.layers;
+    if (!layers || layers.length === 0) return false;
+    return this.completeUsableStyleAttempt(generation, theme, attempt);
   }
 
   /**
@@ -1018,23 +1124,32 @@ export class MapboxAdapter implements MapProviderAdapter {
     const generation = ++this.styleGeneration;
     this.currentTheme = theme;
     this.styleReady = false;
+    this.styleUsable = false;
     this.styleLoadAttempt = attempt;
     this.styleErrorObserved = false;
-    this.emitStyleLifecycle({ status: "loading", theme, attempt });
-    if (replaceStyle) {
-      try {
-        map.setStyle(MapboxAdapter.styleFor(theme));
-      } catch {
-        // A synchronous style rejection follows the same bounded retry policy
-        // as an asynchronous resource error; it must not escape to React.
-        this.styleErrorObserved = true;
-        this.handleStyleLoadTimeout(generation, false);
+    this.styleInstalledGeneration = replaceStyle ? null : generation;
+    this.pendingMutationSafeGeneration = null;
+    this.emitStyleLifecycle({ status: "loading", generation, theme, attempt });
+
+    const readyListener = () => {
+      if (
+        generation !== this.styleGeneration ||
+        !this.styleMatchesTheme(theme)
+      )
+        return;
+      if (this.styleInstalledGeneration !== generation) {
+        // A cached style may emit style.load synchronously inside setStyle.
+        // Latch the event, but do not mutate the style or tell Canvas until
+        // setStyle returns successfully and authorizes this generation.
+        this.pendingMutationSafeGeneration = generation;
         return;
       }
-    }
-
-    const readyListener = () => this.completeStyleAttempt(generation, theme, attempt);
-    const renderListener = () => this.recognizeLoadedStyle(generation, theme, attempt);
+      this.completeMutationSafeStyleAttempt(generation, theme, attempt);
+    };
+    const renderListener = () => {
+      if (this.recognizeLoadedStyle(generation, theme, attempt)) return;
+      this.recognizeUsableStyleFrame(generation, theme, attempt);
+    };
     this.styleReadyListener = readyListener;
     this.styleRenderListener = renderListener;
     map.on("style.load", readyListener);
@@ -1045,9 +1160,34 @@ export class MapboxAdapter implements MapProviderAdapter {
       STYLE_LOAD_TIMEOUT_MS
     );
 
+    if (replaceStyle) {
+      try {
+        map.setStyle(MapboxAdapter.styleFor(theme));
+        this.styleInstalledGeneration = generation;
+      } catch {
+        // A synchronous style rejection follows the same bounded retry policy
+        // as an asynchronous resource error; it must not escape to React or
+        // admit the still-loaded old theme.
+        this.styleErrorObserved = true;
+        this.pendingMutationSafeGeneration = null;
+        this.clearStyleReadinessListeners();
+        this.handleStyleLoadTimeout(generation, false);
+        return;
+      }
+    }
+
+    if (this.pendingMutationSafeGeneration === generation) {
+      this.completeMutationSafeStyleAttempt(generation, theme, attempt);
+      return;
+    }
+
     // setStyle can complete before its asynchronous event reaches this
     // listener. Recognize that state now instead of waiting for the timeout.
-    this.recognizeLoadedStyle(generation, theme, attempt);
+    if (!this.recognizeLoadedStyle(generation, theme, attempt)) {
+      // Guarantees a post-install render signal even when a cached style emitted
+      // its data/load events synchronously inside setStyle.
+      map.triggerRepaint();
+    }
   }
 
   private handleStyleLoadTimeout(
@@ -1056,7 +1196,7 @@ export class MapboxAdapter implements MapProviderAdapter {
   ): void {
     if (generation !== this.styleGeneration) return;
     this.clearStyleLoadTimer();
-    if (!this.mapInstance || this.styleReady) return;
+    if (!this.mapInstance || this.styleReady || this.styleUsable) return;
     if (
       recognizeAlreadyLoaded &&
       this.recognizeLoadedStyle(
@@ -1083,6 +1223,7 @@ export class MapboxAdapter implements MapProviderAdapter {
     // manual retry or theme switch clears them and increments the generation.
     this.emitStyleLifecycle({
       status: "failed",
+      generation,
       theme: this.currentTheme,
       attempt: this.styleLoadAttempt,
       reason: this.styleErrorObserved ? "error" : "timeout"
@@ -1421,7 +1562,7 @@ export class MapboxAdapter implements MapProviderAdapter {
   }
 
   /**
-   * The user's own indicator, in one of two shapes.
+   * The user's own fresh-device indicator.
    *
    * Styled with inline custom properties rather than Tailwind classes, unlike
    * addMarker above. Not a preference — a correctness constraint: this file
@@ -1439,6 +1580,7 @@ export class MapboxAdapter implements MapProviderAdapter {
       this.userMarkerEl = null;
       this.userMarkerPrecision = null;
       this.userMarkerIdentityKey = null;
+      this.userMarkerAccuracyKey = null;
       return;
     }
 
@@ -1452,10 +1594,12 @@ export class MapboxAdapter implements MapProviderAdapter {
     const identityName = options.identity?.name.trim() || "Me";
     const accessibleLabel = `${identityName}; ${options.label}`;
     const identityKey = `${options.identity?.name ?? ""}\u0000${options.identity?.avatarUrl ?? ""}`;
+    const accuracyKey = userAccuracyHaloSize(options.accuracyM);
     if (
       this.userMarker &&
       this.userMarkerPrecision === options.precision &&
-      this.userMarkerIdentityKey === identityKey
+      this.userMarkerIdentityKey === identityKey &&
+      this.userMarkerAccuracyKey === accuracyKey
     ) {
       this.userMarkerEl?.setAttribute("aria-label", accessibleLabel);
       this.userMarker.setLngLat([options.lng, options.lat]);
@@ -1465,6 +1609,7 @@ export class MapboxAdapter implements MapProviderAdapter {
     this.userMarker?.remove();
     const el = MapboxAdapter.buildUserPositionElement(
       options.precision,
+      options.accuracyM,
       accessibleLabel,
       options.identity
     );
@@ -1474,6 +1619,7 @@ export class MapboxAdapter implements MapProviderAdapter {
     this.userMarkerEl = el;
     this.userMarkerPrecision = options.precision;
     this.userMarkerIdentityKey = identityKey;
+    this.userMarkerAccuracyKey = accuracyKey;
   }
 
   public setSharedUserMarkers(users: SharedUserLocation[]): void {
@@ -1729,24 +1875,13 @@ export class MapboxAdapter implements MapProviderAdapter {
    * this exists to end: the map had never drawn the user at all, so a place
    * marker was the only candidate for "me".
    *
-   * What separates the two variants is SHAPE, and the shape is the honesty:
-   *
-   *   point — a small hard dot. "You, precisely." A real fix has an answer, so
-   *           the indicator has an edge and a centre.
-   *   area  — a wide disc that fades out, with NOTHING at its centre. An area
-   *           centre is a REGION, and a dot is the wrong shape for a region: the
-   *           coordinate is the middle of a neighbourhood, not a spot the user
-   *           is standing on. The fade matters as much as the absence of the
-   *           dot — a hard rim would assert a boundary we were never told, so
-   *           the disc declines to say where it ends, and its plateau declines
-   *           to say where it peaks. Neither claim is available, so neither is
-   *           drawn.
-   *
-   * No stroke on either. The dot's separation is elevation (--shadow-raised);
-   * the disc's is the fade itself.
+   * The identity orb is stable for both precise and approximate fixes. Accuracy
+   * is a separate fading sibling whose relative size follows the browser's
+   * reported radius; it never replaces or blurs the identity.
    */
   private static buildUserPositionElement(
     precision: UserPositionPrecision,
+    accuracyM: number,
     label: string,
     identity: UserPositionOptions["identity"]
   ): HTMLDivElement {
@@ -1758,25 +1893,30 @@ export class MapboxAdapter implements MapProviderAdapter {
     // taps across 48px of map, including any place marker underneath it.
     el.style.pointerEvents = "none";
 
-    const size = precision === "point" ? USER_POINT_SIZE : USER_AREA_SIZE;
+    const size = userAccuracyHaloSize(accuracyM);
     el.style.width = `${size}px`;
     el.style.height = `${size}px`;
     el.style.display = "grid";
     el.style.placeItems = "center";
+    el.style.position = "relative";
     el.style.borderRadius = "50%";
 
-    if (precision === "area") {
-      // The halo communicates uncertainty; the centered orb still communicates
-      // identity. It must not be replaced by a blur or a point-like location dot.
-      el.style.background =
-        "radial-gradient(circle closest-side, var(--color-status-info-bg) 0%," +
-        " var(--color-status-info-bg) 58%, transparent 100%)";
-    }
+    // Accuracy and identity are siblings. A large uncertainty region can never
+    // blur, replace, or masquerade as the user's avatar/initials orb.
+    const halo = document.createElement("span");
+    halo.setAttribute("aria-hidden", "true");
+    halo.style.position = "absolute";
+    halo.style.inset = "0";
+    halo.style.borderRadius = "50%";
+    halo.style.background =
+      "radial-gradient(circle closest-side, var(--color-status-info-bg) 0%," +
+      " var(--color-status-info-bg) 58%, transparent 100%)";
+    halo.style.opacity = precision === "precise" ? "0.72" : "1";
+    el.appendChild(halo);
 
     const orb = document.createElement("span");
-    const orbSize = precision === "point" ? 32 : 30;
-    orb.style.width = `${orbSize}px`;
-    orb.style.height = `${orbSize}px`;
+    orb.style.width = `${USER_ORB_SIZE}px`;
+    orb.style.height = `${USER_ORB_SIZE}px`;
     orb.style.display = "grid";
     orb.style.placeItems = "center";
     orb.style.position = "relative";
@@ -1990,9 +2130,12 @@ export class MapboxAdapter implements MapProviderAdapter {
       this.mapInstance = null;
     }
     this.styleReady = false;
+    this.styleUsable = false;
     this.styleLoadAttempt = 0;
     this.styleReadyListener = null;
     this.styleRenderListener = null;
+    this.styleInstalledGeneration = null;
+    this.pendingMutationSafeGeneration = null;
     this.styleErrorObserved = false;
     this.styleLifecycleListener = null;
     this.routeCoords = null;

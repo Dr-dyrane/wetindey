@@ -25,9 +25,9 @@ import { DETENT_FRACTION, type Detent } from "./BottomSheet";
 import type { SharedUserLocation } from "@/app/actions";
 import { useTheme } from "@/core/context/ThemeContext";
 import {
-  useLocationChrome,
-  useLocationStore,
-  type LocationProvenance
+  acquireDeviceLocation,
+  useFreshDeviceLocation,
+  type DeviceLocation
 } from "@/core/state/locationStore";
 import { MapLoading, MapFailed } from "./MapLoader";
 
@@ -86,27 +86,48 @@ interface MapboxCanvasProps {
   sharedUsers?: SharedUserLocation[];
 }
 
-/**
- * Provenance → how honestly we can draw it.
- *
- * ONLY a device fix is a real fix; the store says so in as many words. An area
- * centre is the middle of a neighbourhood, and the default is Festac because the
- * pilot opens there — neither is a place anyone is standing, so neither may be
- * drawn as a point.
- *
- * A Record and not `provenance === "device"`, and the difference is the whole
- * safeguard: a new provenance added to the union cannot quietly fall through to
- * the confident shape, because this stops compiling until its author says which
- * claim it makes. This app has shipped that exact bug — a status dot whose
- * condition was permanently false, so every state rendered "confirmed" — and the
- * lesson taken was that honesty has to be structural, not remembered.
- */
-const PRECISION_FOR: Record<LocationProvenance, UserPositionPrecision> = {
-  device: "point",
-  manual: "area",
-  simulated: "area",
-  default: "area"
+export interface MapCanvasStyleState {
+  status: MapStyleLifecycleState["status"];
+  generation: number;
+}
+
+export const INITIAL_MAP_CANVAS_STYLE_STATE: MapCanvasStyleState = {
+  status: "loading",
+  generation: 0
 };
+
+/**
+ * Canvas is the overlay owner, so it independently rejects stale Adapter
+ * callbacks. A late ready for the current generation may heal failure; a late
+ * failure may never cover a frame that generation already proved usable.
+ */
+export function reduceMapCanvasStyleState(
+  current: MapCanvasStyleState,
+  event: MapStyleLifecycleState
+): MapCanvasStyleState {
+  if (event.generation < current.generation) return current;
+  if (
+    event.generation === current.generation &&
+    current.status === "ready" &&
+    event.status === "failed"
+  ) {
+    return current;
+  }
+  return { status: event.status, generation: event.generation };
+}
+
+export function mapCanvasOverlay(
+  adapterReady: boolean,
+  libraryFailed: boolean,
+  style: MapCanvasStyleState
+): "loading" | "failed" | null {
+  if (libraryFailed || style.status === "failed") return "failed";
+  if (!adapterReady || style.status === "loading") return "loading";
+  return null;
+}
+
+/** Above this browser-reported radius, the halo receives approximate treatment. */
+const APPROXIMATE_DEVICE_ACCURACY_M = 100;
 
 /**
  * The map chrome — location pill and theme toggle — floats at
@@ -245,7 +266,9 @@ export const MapboxCanvas = forwardRef<MapCameraHandle, MapboxCanvasProps>(funct
   /** The adapter exists; marker/camera effects may safely address it. */
   const [ready, setReady] = useState(false);
   /** The current basemap, unlike DOM markers, is owned by the live style. */
-  const [styleStatus, setStyleStatus] = useState<MapStyleLifecycleState["status"]>("loading");
+  const [styleState, setStyleState] = useState<MapCanvasStyleState>(
+    INITIAL_MAP_CANVAS_STYLE_STATE
+  );
   const [failed, setFailed] = useState(false);
   /** Bumped by 'Try again'; re-runs the init effect. */
   const [attempt, setAttempt] = useState(0);
@@ -294,7 +317,11 @@ export const MapboxCanvas = forwardRef<MapCameraHandle, MapboxCanvasProps>(funct
       const adapter = new MapboxAdapter(accessToken);
       adapterRef.current = adapter;
       adapter.setStyleLifecycleListener((state) => {
-        if (!cancelled) setStyleStatus(state.status);
+        if (!cancelled) {
+          setStyleState((current) =>
+            reduceMapCanvasStyleState(current, state)
+          );
+        }
       });
       // Read the theme at init, not at first render: ThemeContext resolves
       // localStorage in an effect, so a ref captured during render is always
@@ -312,7 +339,7 @@ export const MapboxCanvas = forwardRef<MapCameraHandle, MapboxCanvasProps>(funct
         adapter.destroy();
         if (adapterRef.current === adapter) adapterRef.current = null;
         setReady(false);
-        setStyleStatus("loading");
+        setStyleState(INITIAL_MAP_CANVAS_STYLE_STATE);
         setFailed(true);
         return;
       }
@@ -389,32 +416,34 @@ export const MapboxCanvas = forwardRef<MapCameraHandle, MapboxCanvasProps>(funct
   }, [candidates, onMarkerClick, ready, selectedPlaceId]);
 
   /**
-   * Draw the user. Always — there is no state in which the map has nobody on it.
-   *
-   * From the STORE, never from the `center` prop, and that is not a detail:
-   * `center` is the CAMERA, and page.tsx flies it to whichever market you tap.
-   * Keyed on that, "you" would walk to the last stall you looked at. The camera
-   * follows the position; the position never follows the camera.
-   *
-   * Untouched by the marker effect above despite sitting right below it —
-   * clearMarkers() only owns the candidate pins. See setUserPosition.
+   * Personal identity is earned only by a fresh browser fix. Browsing defaults,
+   * selected areas and camera centres never reach the self-marker boundary.
    */
-  const userPosition = useLocationStore((s) => s.position);
-  const { label: locationLabel } = useLocationChrome();
+  const deviceLocation = useFreshDeviceLocation();
   useEffect(() => {
     const adapter = adapterRef.current;
     if (!adapter) return;
-    const precision = PRECISION_FOR[userPosition.provenance];
+    if (!deviceLocation) {
+      adapter.setUserPosition(null);
+      return;
+    }
+    const precision: UserPositionPrecision =
+      deviceLocation.accuracyM <= APPROXIMATE_DEVICE_ACCURACY_M
+        ? "precise"
+        : "approximate";
+    const roundedAccuracy = Math.max(1, Math.round(deviceLocation.accuracyM));
     adapter.setUserPosition({
-      lat: userPosition.lat,
-      lng: userPosition.lng,
+      lat: deviceLocation.lat,
+      lng: deviceLocation.lng,
       precision,
+      accuracyM: deviceLocation.accuracyM,
       identity: selfIdentity,
-      // The shape says "precisely" or "roughly" to everyone who can see it.
-      // This says the same thing to everyone who cannot.
-      label: precision === "point" ? "You are here" : `Somewhere around ${locationLabel}`
+      label:
+        precision === "precise"
+          ? `Your current location, accurate to about ${roundedAccuracy} metres`
+          : `Your approximate current location, accurate to about ${roundedAccuracy} metres`
     });
-  }, [userPosition, locationLabel, selfIdentity, ready]);
+  }, [deviceLocation, selfIdentity, ready]);
 
   // Render other location-sharing users on the map
   useEffect(() => {
@@ -465,19 +494,21 @@ export const MapboxCanvas = forwardRef<MapCameraHandle, MapboxCanvasProps>(funct
     []
   );
 
+  const overlay = mapCanvasOverlay(ready, failed, styleState);
+
   return (
     <div className="absolute inset-0 overflow-hidden">
       {/* The container must stay mounted underneath: Mapbox attaches to this
           node, so unmounting it while loading would give the adapter nothing to
           initialise into. The placeholders sit ON TOP and peel away. */}
       <div ref={containerRef} className="h-full w-full" />
-      {!failed && (!ready || styleStatus === "loading") && <MapLoading />}
-      {(failed || styleStatus === "failed") && (
+      {overlay === "loading" && <MapLoading />}
+      {overlay === "failed" && (
         <MapFailed
           onRetry={() => {
             if (failed) {
               setReady(false);
-              setStyleStatus("loading");
+              setStyleState(INITIAL_MAP_CANVAS_STYLE_STATE);
               setFailed(false);
               setAttempt((n) => n + 1);
               return;
@@ -491,8 +522,8 @@ export const MapboxCanvas = forwardRef<MapCameraHandle, MapboxCanvasProps>(funct
 });
 
 interface MapRecenterControlProps {
-  /** The user's position, once acquired. Feed it to `MapCameraHandle.recenterTo`. */
-  onLocate: (position: { lat: number; lng: number }) => void;
+  /** A freshly acquired physical fix. The caller records it and moves camera state. */
+  onLocate: (position: DeviceLocation) => void;
   /** Geolocation refused, unavailable or timed out. Surface it — do not swallow. */
   onError?: (message: string) => void;
   className?: string;
@@ -519,30 +550,21 @@ export function MapRecenterControl({ onLocate, onError, className = "" }: MapRec
 
   const locate = useCallback(() => {
     if (locating) return;
-    if (typeof navigator === "undefined" || !navigator.geolocation) {
-      onError?.("This device cannot share your location.");
-      return;
-    }
     setLocating(true);
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        if (!mounted.current) return;
-        setLocating(false);
-        onLocate({ lat: position.coords.latitude, lng: position.coords.longitude });
-      },
-      (error) => {
-        if (!mounted.current) return;
-        setLocating(false);
-        onError?.(
-          error.code === error.PERMISSION_DENIED
-            ? "Location is off for WetinDey. Turn am on for your browser settings."
-            : "We no fit find your location. Try again."
-        );
-      },
-      // 15s is generous on purpose: a cold GPS fix on a mid-range Android over a
-      // Lagos data connection routinely takes more than the 6s people reach for.
-      { enableHighAccuracy: true, timeout: 15_000, maximumAge: 30_000 }
-    );
+    void acquireDeviceLocation({
+      enableHighAccuracy: true,
+      timeoutMs: 15_000,
+      // Recenter means refresh, never reuse a cached physical claim.
+      maximumAgeMs: 0,
+    }).then((result) => {
+      if (!mounted.current) return;
+      setLocating(false);
+      if (!result.ok) {
+        onError?.(`${result.problem.title}. ${result.problem.message}`);
+        return;
+      }
+      onLocate(result.location);
+    });
   }, [locating, onLocate, onError]);
 
   return (

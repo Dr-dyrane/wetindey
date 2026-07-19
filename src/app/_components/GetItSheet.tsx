@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Star } from "lucide-react";
 import { IconOrb } from "@/design-system/components/IconOrb";
 import { ModalSheet } from "@/design-system/components/ModalSheet";
@@ -16,6 +16,17 @@ import {
   type ReviewAggregateData
 } from "@/app/actions";
 import { formatNaira } from "@/lib/money";
+import {
+  ROUTE_ORIGIN_FRESH_MS,
+  acquireDeviceLocation,
+  isDeviceLocationFresh,
+  useLocationStore,
+} from "@/core/state/locationStore";
+import {
+  disclosedRouteOrigin,
+  isDisclosedRouteOriginAdmissible,
+  type DisclosedRouteOrigin,
+} from "@/lib/directions";
 
 /** The offer the user was looking at when they tapped "Get it", if any. */
 export interface GetItOffer {
@@ -58,8 +69,8 @@ interface GetItSheetProps {
   onClose: () => void;
   /** Null closes the sheet's content; the sheet itself is driven by `open`. */
   target: GetItTarget | null;
-  /** Where the user is now — becomes the route's start point when known. */
-  origin?: { lat: number; lng: number } | null;
+  /** Called only after action-stage disclosure admits a fresh device origin. */
+  onOriginDisclosed?: (origin: DisclosedRouteOrigin) => void;
   /**
    * The user is leaving for the market. Fired synchronously, after the
    * coordinate has been checked and BEFORE the handoff — on Android the handoff
@@ -88,7 +99,7 @@ function assertCoordinate(lat: number, lng: number, placeName: string): void {
     Number.isFinite(lat) && Number.isFinite(lng) &&
     lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180;
   if (!ok) {
-    throw new Error(`GetItSheet: invalid coordinate for "${placeName}": lat=${lat}, lng=${lng}`);
+    throw new Error(`GetItSheet: invalid destination coordinate for "${placeName}"`);
   }
 }
 
@@ -188,7 +199,10 @@ function openExternal(url: string): void {
  * remove, so the handoff is watched: if the page is still in the foreground a
  * beat later, the scheme was never handled and the web map opens instead.
  */
-function openAndroidMaps(t: GetItTarget, origin?: { lat: number; lng: number } | null): void {
+function openAndroidMaps(
+  t: GetItTarget,
+  origin: DisclosedRouteOrigin | null
+): void {
   let handedOff = false;
   const markHandedOff = () => {
     handedOff = true;
@@ -208,7 +222,10 @@ function openAndroidMaps(t: GetItTarget, origin?: { lat: number; lng: number } |
     window.removeEventListener("blur", markHandedOff);
     document.removeEventListener("visibilitychange", onVisibility);
     if (!handedOff && document.visibilityState === "visible") {
-      window.location.href = googleMapsUrl(t, origin);
+      window.location.href = googleMapsUrl(
+        t,
+        origin && isDisclosedRouteOriginAdmissible(origin) ? origin : null
+      );
     }
   }, 1200);
 }
@@ -324,6 +341,12 @@ function contactCopy(state: ContactState): { detail: string; footer: string | nu
 // ─────────────────────────────────────────────────────────────────────────────
 
 type ShareResult = { kind: "idle" } | { kind: "copied" } | { kind: "manual"; text: string };
+type OriginState =
+  | { kind: "idle" }
+  | { kind: "disclosure" }
+  | { kind: "locating" }
+  | { kind: "ready"; origin: DisclosedRouteOrigin }
+  | { kind: "problem"; title: string; message: string; canRetry: boolean };
 
 /**
  * "Get it" — the step where the lookup turns into a trip.
@@ -334,7 +357,13 @@ type ShareResult = { kind: "idle" } | { kind: "copied" } | { kind: "manual"; tex
  * component exists because Directions and Share rendered without handlers, and
  * a control that looks alive and does nothing is worse than no control.
  */
-export function GetItSheet({ open, onClose, target, origin, onGoThere }: GetItSheetProps) {
+export function GetItSheet({
+  open,
+  onClose,
+  target,
+  onOriginDisclosed,
+  onGoThere,
+}: GetItSheetProps) {
   const [platform, setPlatform] = useState<MapsPlatform | null>(null);
   const [canShare, setCanShare] = useState(false);
   const [shareResult, setShareResult] = useState<ShareResult>({ kind: "idle" });
@@ -342,6 +371,9 @@ export function GetItSheet({ open, onClose, target, origin, onGoThere }: GetItSh
   const [reviewsList, setReviewsList] = useState<ReviewData[]>([]);
   const [aggregate, setAggregate] = useState<ReviewAggregateData | null>(null);
   const [loadingReviews, setLoadingReviews] = useState(false);
+  const [originState, setOriginState] = useState<OriginState>({ kind: "idle" });
+  const recordDeviceLocation = useLocationStore((state) => state.recordDeviceLocation);
+  const originGeneration = useRef(0);
 
   const placeId = target?.placeId ?? null;
 
@@ -406,9 +438,16 @@ export function GetItSheet({ open, onClose, target, origin, onGoThere }: GetItSh
 
   useEffect(() => {
     if (!open) {
+      originGeneration.current += 1;
       setShareResult({ kind: "idle" });
+      setOriginState({ kind: "idle" });
     }
   }, [open]);
+
+  useEffect(() => {
+    originGeneration.current += 1;
+    setOriginState({ kind: "idle" });
+  }, [placeId]);
 
   useEffect(() => {
     if (shareResult.kind !== "copied") return;
@@ -431,9 +470,11 @@ export function GetItSheet({ open, onClose, target, origin, onGoThere }: GetItSh
     setShareResult({ kind: "manual", text: payload });
   }, []);
 
-  const handleGoThere = useCallback(() => {
+  const handoff = useCallback((origin: DisclosedRouteOrigin | null) => {
     if (!target) return;
     assertCoordinate(target.lat, target.lng, target.placeName);
+    const admittedOrigin =
+      origin && isDisclosedRouteOriginAdmissible(origin) ? origin : null;
 
     // Before the handoff, never after: `openAndroidMaps` assigns
     // `window.location.href`, and a page that has been navigated away from does
@@ -445,14 +486,93 @@ export function GetItSheet({ open, onClose, target, origin, onGoThere }: GetItSh
     // but the handoff must be right even on the first frame after mount.
     const p = detectMapsPlatform();
     if (p === "android") {
-      openAndroidMaps(target, origin);
+      openAndroidMaps(target, admittedOrigin);
     } else if (p === "apple") {
-      openExternal(appleMapsUrl(target, origin));
+      openExternal(appleMapsUrl(target, admittedOrigin));
     } else {
-      openExternal(googleMapsUrl(target, origin));
+      openExternal(googleMapsUrl(target, admittedOrigin));
     }
     onClose();
-  }, [target, origin, onClose, onGoThere]);
+  }, [target, onClose, onGoThere]);
+
+  const handleGoThere = useCallback(() => {
+    if (!target) return;
+    setOriginState({ kind: "disclosure" });
+  }, [target]);
+
+  const handleDestinationOnly = useCallback(() => {
+    handoff(null);
+  }, [handoff]);
+
+  const handleUseCurrentLocation = useCallback(() => {
+    if (originState.kind === "locating") return;
+    const generation = ++originGeneration.current;
+    setOriginState({ kind: "locating" });
+    void acquireDeviceLocation({
+      enableHighAccuracy: true,
+      timeoutMs: 15_000,
+      maximumAgeMs: 0,
+    }).then((result) => {
+      if (generation !== originGeneration.current) return;
+      if (!result.ok) {
+        setOriginState({
+          kind: "problem",
+          title: result.problem.title,
+          message: result.problem.message,
+          canRetry: result.problem.canRetry,
+        });
+        return;
+      }
+
+      if (!recordDeviceLocation(result.location)) {
+        setOriginState({
+          kind: "problem",
+          title: "A newer location is already active",
+          message: "This older response was ignored. Refresh again, or open the market only.",
+          canRetry: true,
+        });
+        return;
+      }
+      const origin = disclosedRouteOrigin(result.location);
+      if (!origin) {
+        setOriginState({
+          kind: "problem",
+          title: "Your location is already out of date",
+          message: "Refresh it again, or open directions with the market only.",
+          canRetry: true,
+        });
+        return;
+      }
+      onOriginDisclosed?.(origin);
+      setOriginState({ kind: "ready", origin });
+    });
+  }, [
+    onOriginDisclosed,
+    originState.kind,
+    recordDeviceLocation,
+  ]);
+
+  const handleOpenWithLocation = useCallback(() => {
+    if (originState.kind !== "ready") return;
+    const now = Date.now();
+    if (
+      !isDeviceLocationFresh(
+        originState.origin,
+        ROUTE_ORIGIN_FRESH_MS,
+        now
+      ) ||
+      now - originState.origin.disclosedAt > ROUTE_ORIGIN_FRESH_MS
+    ) {
+      setOriginState({
+        kind: "problem",
+        title: "Your route origin expired",
+        message: "Refresh your location again, or open the market only.",
+        canRetry: true,
+      });
+      return;
+    }
+    handoff(originState.origin);
+  }, [handoff, originState]);
 
   const handleShare = useCallback(async () => {
     if (!target) return;
@@ -561,6 +681,68 @@ export function GetItSheet({ open, onClose, target, origin, onGoThere }: GetItSh
                 }}
               />
             </ListGroup>
+
+            {originState.kind !== "idle" && (
+              <div
+                role={originState.kind === "problem" ? "alert" : undefined}
+                className="mx-4 space-y-3 squircle-card bg-fillSecondary px-4 py-3"
+              >
+                <div className="space-y-1">
+                  <p className="text-subhead font-semibold text-text-primary">
+                    {originState.kind === "problem"
+                      ? originState.title
+                      : originState.kind === "ready"
+                        ? "Current location ready"
+                        : "Choose what leaves WetinDey"}
+                  </p>
+                  <p className="text-footnote text-text-secondary">
+                    {originState.kind === "problem"
+                      ? originState.message
+                      : originState.kind === "ready"
+                        ? `Your refreshed location and this market were sent to Mapbox for this route. Open ${
+                            platform ? mapsAppName(platform) : "your maps app"
+                          } within one minute to use the same origin.`
+                      : `Use current location refreshes and sends your exact location and this market to Mapbox for a route, then to ${
+                          platform ? mapsAppName(platform) : "your maps app"
+                        }. Destination only sends the market, not your location.`}
+                  </p>
+                </div>
+                <div className="flex flex-col gap-2 sm:flex-row">
+                  {originState.kind === "ready" ? (
+                    <button
+                      type="button"
+                      onClick={handleOpenWithLocation}
+                      className="min-h-tap flex-1 squircle bg-accent px-3 text-subhead font-semibold
+                                 text-text-on-accent active:opacity-70"
+                    >
+                      Open with my location
+                    </button>
+                  ) : (originState.kind !== "problem" ||
+                    originState.canRetry) && (
+                    <button
+                      type="button"
+                      onClick={handleUseCurrentLocation}
+                      disabled={originState.kind === "locating"}
+                      aria-busy={originState.kind === "locating"}
+                      className="min-h-tap flex-1 squircle bg-accent px-3 text-subhead font-semibold
+                                 text-text-on-accent active:opacity-70 disabled:opacity-50"
+                    >
+                      {originState.kind === "locating"
+                        ? "Refreshing location…"
+                        : "Use current location"}
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={handleDestinationOnly}
+                    className="min-h-tap flex-1 squircle bg-fillPrimary px-3 text-subhead
+                               font-semibold text-text-primary active:opacity-70"
+                  >
+                    Destination only
+                  </button>
+                </div>
+              </div>
+            )}
 
             {/* Last resort: no share sheet, no clipboard. The text is still the
                 thing the user wanted, so it goes on screen where they can take it

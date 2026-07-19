@@ -7,12 +7,9 @@ import { PRIMARY_LOCATION } from "@/db/lagosSouthWest";
  * Three field/setter pairs were removed here, each confirmed dead by grep
  * before deletion:
  *
- *   · `userLocation` / `setUserLocation` — the setter also wrote `mapCenter`,
- *     and the field itself was read by nothing, ever. Superseded wholesale by
- *     `locationStore`, which carries the one fact this pair could not: WHERE THE
- *     POSITION CAME FROM. A simulated drop and a real device fix produced an
- *     identical `{lat, lng}` here, so the chrome could not tell "we found you"
- *     from "we assumed" — and every distance the map prints is measured from it.
+ *   · `userLocation` / `setUserLocation` — the setter also wrote the camera,
+ *     and the field itself was read by nothing. `locationStore` now keeps
+ *     browsing context and session-only device evidence as separate values.
  *   · `selectedAreaName` / `setSelectedAreaName` — the field was pinned to the
  *     literal "Festac" at creation and the setter was never called from
  *     anywhere, which is why the location pill was a label rather than a claim.
@@ -22,7 +19,7 @@ import { PRIMARY_LOCATION } from "@/db/lagosSouthWest";
  *     three places; no file ever read it. The item the user picked is local to
  *     the surface asking about it (ItemDetailSheet), not global.
  *
- * What remains is genuinely global: the camera anchor, and the search radius.
+ * What remains is genuinely global: the camera centre, and the search radius.
  */
 interface LocationCoordinate {
   lat: number;
@@ -31,23 +28,22 @@ interface LocationCoordinate {
 
 interface GlobalState {
   /**
-   * Where the camera is pointed. NOT where the user is — `locationStore.position`
-   * is that, and it is the thing queries and distances measure from. This
-   * follows it, and also moves on its own when the user taps a result.
+   * Where the camera is pointed. It is presentation state, not browsing
+   * preference and not physical-location evidence.
    */
-  mapCenter: LocationCoordinate;
+  cameraCenter: LocationCoordinate;
   activeRadiusKm: number;
 
-  setMapCenter: (center: LocationCoordinate) => void;
+  setCameraCenter: (center: LocationCoordinate) => void;
   setActiveRadiusKm: (radius: number) => void;
 }
 
 export const useGlobalStore = create<GlobalState>((set) => ({
   // Pilot opens on D Close, 6th Avenue, Festac. See lagosSouthWest.ts for how
   // the coordinate was derived — 6th Avenue is absent from the map data.
-  mapCenter: { lat: PRIMARY_LOCATION.lat, lng: PRIMARY_LOCATION.lng },
+  cameraCenter: { lat: PRIMARY_LOCATION.lat, lng: PRIMARY_LOCATION.lng },
   activeRadiusKm: 5,
 
-  setMapCenter: (center) => set({ mapCenter: center }),
+  setCameraCenter: (center) => set({ cameraCenter: center }),
   setActiveRadiusKm: (radius) => set({ activeRadiusKm: radius }),
 }));

@@ -1773,7 +1773,7 @@ function searchOrigin(center: { lat: number; lng: number }) {
     Math.abs(center.lat) > 90 ||
     Math.abs(center.lng) > 180
   ) {
-    throw new Error(`Discovery: invalid search origin ${JSON.stringify(center)}`);
+    throw new Error("Discovery: invalid search origin");
   }
   return sql`ST_SetSRID(ST_MakePoint(${center.lng}, ${center.lat}), 4326)`;
 }
@@ -2013,7 +2013,7 @@ function toEwkt(lat: number, lng: number): string {
     Number.isFinite(lat) && Number.isFinite(lng) &&
     lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180;
   if (!ok) {
-    throw new Error(`Invalid coordinate: lat=${lat}, lng=${lng}`);
+    throw new Error("Invalid geographic coordinate");
   }
   return `SRID=4326;POINT(${lng} ${lat})`;
 }

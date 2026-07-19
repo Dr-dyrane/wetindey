@@ -1,80 +1,62 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 
 import { PRIMARY_LOCATION } from "@/db/lagosSouthWest";
 
-/**
- * The single owner of "where am I".
- *
- * This supersedes three dead members of `globalStore`:
- *
- *   · `userLocation`        — written by `setUserLocation`, read by nothing.
- *   · `setSelectedAreaName` — never called by anything.
- *   · `selectedAreaName`    — pinned to the literal `"Festac"` at creation, so
- *                             the pill has always been a label, not a claim.
- *
- * The reason those three could never add up to a working position is that they
- * carried a coordinate and a name but not the one fact the UI has to state:
- * WHERE THE POSITION CAME FROM. A simulated drop, a typed coordinate, a device
- * fix and an untouched default all produced the identical `{lat, lng}`, so the
- * chrome had no way to distinguish "we found you" from "we assumed". On a
- * wayfinding surface that difference is the whole message — presenting a
- * simulated position as a real one is a lie, and distances measured from a
- * default the user never chose are worse than no distances at all.
- *
- * So provenance is not metadata here. It is a required field of the position and
- * it survives reloads with the coordinate. The caveat it earns is rendered at the
- * point of choice: LocationSheet marks the selected row "Area centre" when the
- * provenance is `manual`, so the qualifier sits next to the area the user is
- * picking rather than travelling with the label everywhere the label goes.
- */
-export type LocationProvenance =
-  /**
-   * Legacy. No setter produces this: `simulate()` was the only writer and its
-   * one caller went away with coordinate entry. It stays in the union because
-   * the persist key and version did not change when that happened, so a browser
-   * that ran the earlier build rehydrates a `simulated` position into this store
-   * today. Narrowing the union would not delete those; it would only stop the
-   * type describing them.
-   */
+export const DEVICE_LOCATION_FRESH_MS = 5 * 60 * 1000;
+export const ROUTE_ORIGIN_FRESH_MS = 60 * 1000;
+
+export type BrowsingLocationProvenance =
   | "simulated"
-  /**
-   * The user picked their area off the administrative tree. Self-declared, and
-   * precise only to the area's centre — so it is not a fix, but picking the area
-   * you are standing in is an answer, not a pretence. The caveat it earns is
-   * about precision ("we measure from the middle of your area"), not honesty.
-   */
   | "manual"
-  /** `navigator.geolocation` answered. The only provenance that is the truth. */
   | "device"
-  /** Nobody has chosen yet — the pilot's opening coordinate. */
   | "default";
 
-/* Not exported: the store exposes position via useLocationStore(), and no
-   external file imports UserPosition by name. */
-interface UserPosition {
+export interface BrowsingLocation {
   lat: number;
   lng: number;
-  provenance: LocationProvenance;
-  /**
-   * Name of the area this position sits in, when we know one. Null is a real
-   * and expected state: a device fix outside every area we cover has no name to
-   * give, and inventing one to fill the label would be the same lie in a smaller
-   * font. `useLocationChrome()` falls back to the coordinate itself.
-   */
+  provenance: BrowsingLocationProvenance;
   areaName: string | null;
-  /** Slug of the chosen area, so a list can mark the current row. */
   areaSlug: string | null;
-  /** Epoch ms. A device fix from an hour ago is not the same claim as one now. */
   setAt: number;
 }
 
-interface PersistedLocationState {
-  position: UserPosition;
+export interface DeviceLocation {
+  lat: number;
+  lng: number;
+  accuracyM: number;
+  capturedAt: number;
+  receivedAt: number;
+  provenance: "device";
 }
 
-const DEFAULT_POSITION: UserPosition = {
+export type DeviceLocationProblemCode =
+  | "insecure"
+  | "unsupported"
+  | "permission-denied"
+  | "unavailable"
+  | "timeout"
+  | "invalid"
+  | "stale"
+  | "unknown";
+
+export interface DeviceLocationProblem {
+  code: DeviceLocationProblemCode;
+  title: string;
+  message: string;
+  canRetry: boolean;
+}
+
+export type DeviceLocationResult =
+  | { ok: true; location: DeviceLocation }
+  | { ok: false; problem: DeviceLocationProblem };
+
+interface PersistedLocationState {
+  browsingLocation: BrowsingLocation;
+}
+
+const DEFAULT_BROWSING_LOCATION: BrowsingLocation = {
   lat: PRIMARY_LOCATION.lat,
   lng: PRIMARY_LOCATION.lng,
   provenance: "default",
@@ -83,10 +65,10 @@ const DEFAULT_POSITION: UserPosition = {
   setAt: 0,
 };
 
-function persistedUserPosition(value: unknown): UserPosition | null {
+function persistedBrowsingLocation(value: unknown): BrowsingLocation | null {
   if (typeof value !== "object" || value === null) return null;
-  const position = value as Record<string, unknown>;
-  const provenance = position.provenance;
+  const location = value as Record<string, unknown>;
+  const provenance = location.provenance;
   if (
     provenance !== "simulated" &&
     provenance !== "manual" &&
@@ -95,97 +77,265 @@ function persistedUserPosition(value: unknown): UserPosition | null {
   )
     return null;
   if (
-    typeof position.lat !== "number" ||
-    !Number.isFinite(position.lat) ||
-    typeof position.lng !== "number" ||
-    !Number.isFinite(position.lng) ||
-    (position.areaName !== null && typeof position.areaName !== "string") ||
-    (position.areaSlug !== null && typeof position.areaSlug !== "string") ||
-    typeof position.setAt !== "number" ||
-    !Number.isFinite(position.setAt)
+    typeof location.lat !== "number" ||
+    !Number.isFinite(location.lat) ||
+    location.lat < -90 ||
+    location.lat > 90 ||
+    typeof location.lng !== "number" ||
+    !Number.isFinite(location.lng) ||
+    location.lng < -180 ||
+    location.lng > 180 ||
+    (location.areaName !== null && typeof location.areaName !== "string") ||
+    (location.areaSlug !== null && typeof location.areaSlug !== "string") ||
+    typeof location.setAt !== "number" ||
+    !Number.isFinite(location.setAt)
   )
     return null;
 
   return {
-    lat: position.lat,
-    lng: position.lng,
+    lat: location.lat,
+    lng: location.lng,
     provenance,
-    areaName: position.areaName,
-    areaSlug: position.areaSlug,
-    setAt: position.setAt,
+    areaName: location.areaName,
+    areaSlug: location.areaSlug,
+    setAt: location.setAt,
   };
 }
 
+function persistedLocationCandidate(value: unknown): BrowsingLocation | null {
+  if (typeof value !== "object" || value === null) return null;
+  const state = value as Record<string, unknown>;
+  return (
+    persistedBrowsingLocation(state.browsingLocation) ??
+    persistedBrowsingLocation(state.position)
+  );
+}
+
 /**
- * Move only the untouched synthetic default to the canonical Festac centre.
- * Every chosen, simulated, or device-derived coordinate belongs to the user
- * and survives byte-for-byte in meaning; a release must never turn a real GPS
- * fix into the product's default merely because the persisted version changed.
+ * Versions 1–2 persisted the overloaded field as `position`. A device-derived
+ * value survives only as the browsing choice it already represented; it never
+ * rehydrates physical evidence into the new session-only `deviceLocation`.
  */
 export function migratePersistedLocationState(
   persistedState: unknown,
   _version: number
 ): PersistedLocationState {
-  if (typeof persistedState !== "object" || persistedState === null)
-    return { position: DEFAULT_POSITION };
-
-  const position = persistedUserPosition(
-    (persistedState as Record<string, unknown>).position
-  );
-  if (!position || position.provenance === "default")
-    return { position: DEFAULT_POSITION };
-
-  return { position };
+  const candidate = persistedLocationCandidate(persistedState);
+  return {
+    browsingLocation:
+      candidate && candidate.provenance !== "default"
+        ? candidate
+        : DEFAULT_BROWSING_LOCATION,
+  };
 }
 
-/** 4 dp ≈ 11 m. Enough to name a block, not enough to imply a doorway. */
+/** 4 dp ≈ 11 m. Used for a browsing label, never device-location logging. */
 export function formatCoordinate(lat: number, lng: number): string {
   return `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
 }
 
+export function isDeviceLocationFresh(
+  location: DeviceLocation | null,
+  maxAgeMs: number = DEVICE_LOCATION_FRESH_MS,
+  now: number = Date.now()
+): location is DeviceLocation {
+  if (!location || !Number.isFinite(maxAgeMs) || maxAgeMs < 0) return false;
+  const age = now - location.capturedAt;
+  return age >= 0 && age <= maxAgeMs;
+}
 
-interface LocationState {
-  position: UserPosition;
-  /**
-   * False until the persisted position has been read back. The chrome renders
-   * on the server with the default, so anything that would flash a stale label
-   * can wait one frame on this rather than mismatching hydration.
-   */
-  hydrated: boolean;
+export function newestDeviceLocation(
+  current: DeviceLocation | null,
+  incoming: DeviceLocation
+): DeviceLocation {
+  return current && incoming.capturedAt < current.capturedAt
+    ? current
+    : incoming;
+}
 
-  /** Commit a chosen area's centre. `areaName` is null when no area contains it. */
-  setManualPoint: (input: { lat: number; lng: number; areaName: string | null; areaSlug: string | null }) => void;
-  /** Commit a real `navigator.geolocation` fix. The only honest "you are here". */
-  setDevicePoint: (input: { lat: number; lng: number; areaName: string | null; areaSlug: string | null }) => void;
-  /** Back to the pilot's opening coordinate, provenance and all. */
-  resetToDefault: () => void;
-  setHydrated: (v: boolean) => void;
+function problem(
+  code: DeviceLocationProblemCode,
+  title: string,
+  message: string,
+  canRetry: boolean
+): DeviceLocationResult {
+  return { ok: false, problem: { code, title, message, canRetry } };
+}
+
+export interface AcquireDeviceLocationOptions {
+  enableHighAccuracy?: boolean;
+  timeoutMs?: number;
+  maximumAgeMs?: number;
 }
 
 /**
- * Zustand calls `migrate` only for a version mismatch. Validate again in
- * `merge`, which runs for every hydration, so a malformed payload that already
- * claims the current version cannot replace the live position with null or an
- * incomplete object. Default provenance is normalized on every path; the other
- * three provenances retain their validated coordinate and metadata.
+ * The one browser-geolocation boundary. It retains the browser capture time and
+ * accuracy and returns typed, user-visible failures without logging a fix.
  */
+export async function acquireDeviceLocation(
+  options: AcquireDeviceLocationOptions = {}
+): Promise<DeviceLocationResult> {
+  if (typeof window === "undefined" || typeof navigator === "undefined") {
+    return problem(
+      "unsupported",
+      "Location is unavailable",
+      "This device cannot share its location. Pick an area instead.",
+      false
+    );
+  }
+  if (!window.isSecureContext) {
+    return problem(
+      "insecure",
+      "Location needs a secure connection",
+      "Open WetinDey on its secure address, or pick an area instead.",
+      false
+    );
+  }
+  if (!navigator.geolocation) {
+    return problem(
+      "unsupported",
+      "This browser cannot share location",
+      "Location is not supported here. Pick an area instead.",
+      false
+    );
+  }
+
+  return new Promise<DeviceLocationResult>((resolve) => {
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const receivedAt = Date.now();
+        const capturedAt =
+          Number.isFinite(position.timestamp) && position.timestamp > 0
+            ? position.timestamp
+            : receivedAt;
+        const { latitude, longitude, accuracy } = position.coords;
+        if (
+          !Number.isFinite(latitude) ||
+          latitude < -90 ||
+          latitude > 90 ||
+          !Number.isFinite(longitude) ||
+          longitude < -180 ||
+          longitude > 180 ||
+          !Number.isFinite(accuracy) ||
+          accuracy < 0
+        ) {
+          resolve(
+            problem(
+              "invalid",
+              "Your device returned an unusable location",
+              "The location response was incomplete. Try again, or pick an area.",
+              true
+            )
+          );
+          return;
+        }
+
+        const location: DeviceLocation = {
+          lat: latitude,
+          lng: longitude,
+          accuracyM: accuracy,
+          capturedAt,
+          receivedAt,
+          provenance: "device",
+        };
+        if (!isDeviceLocationFresh(location, DEVICE_LOCATION_FRESH_MS, receivedAt)) {
+          resolve(
+            problem(
+              "stale",
+              "Your location is out of date",
+              "The device returned an old fix. Try again to refresh it, or continue with your browsing area.",
+              true
+            )
+          );
+          return;
+        }
+        resolve({ ok: true, location });
+      },
+      (error) => {
+        if (error.code === error.PERMISSION_DENIED) {
+          resolve(
+            problem(
+              "permission-denied",
+              "Location is blocked",
+              "Allow location for WetinDey in your browser settings, or pick an area.",
+              false
+            )
+          );
+          return;
+        }
+        if (error.code === error.POSITION_UNAVAILABLE) {
+          resolve(
+            problem(
+              "unavailable",
+              "Your device could not get a fix",
+              "Try again near a window, or continue with your browsing area.",
+              true
+            )
+          );
+          return;
+        }
+        if (error.code === error.TIMEOUT) {
+          resolve(
+            problem(
+              "timeout",
+              "Finding you took too long",
+              "Try again, or continue with your browsing area.",
+              true
+            )
+          );
+          return;
+        }
+        resolve(
+          problem(
+            "unknown",
+            "Location did not work",
+            "Try again, or continue with your browsing area.",
+            true
+          )
+        );
+      },
+      {
+        enableHighAccuracy: options.enableHighAccuracy ?? false,
+        timeout: options.timeoutMs ?? 10_000,
+        maximumAge: options.maximumAgeMs ?? 60_000,
+      }
+    );
+  });
+}
+
+export interface LocationState {
+  browsingLocation: BrowsingLocation;
+  /** Physical evidence is deliberately session-only and excluded from persistence. */
+  deviceLocation: DeviceLocation | null;
+  hydrated: boolean;
+  setManualBrowsingLocation: (input: {
+    lat: number;
+    lng: number;
+    areaName: string | null;
+    areaSlug: string | null;
+  }) => void;
+  setDeviceBrowsingLocation: (
+    location: DeviceLocation,
+    area: { areaName: string | null; areaSlug: string | null }
+  ) => void;
+  recordDeviceLocation: (location: DeviceLocation) => boolean;
+  resetBrowsingToDefault: () => void;
+  setHydrated: (value: boolean) => void;
+}
+
 export function mergePersistedLocationState(
   persistedState: unknown,
   currentState: LocationState
 ): LocationState {
-  const position =
-    typeof persistedState === "object" && persistedState !== null
-      ? persistedUserPosition(
-          (persistedState as Record<string, unknown>).position
-        )
-      : null;
-
+  const candidate = persistedLocationCandidate(persistedState);
   return {
     ...currentState,
-    position:
-      position && position.provenance !== "default"
-        ? position
-        : DEFAULT_POSITION,
+    browsingLocation:
+      candidate && candidate.provenance !== "default"
+        ? candidate
+        : DEFAULT_BROWSING_LOCATION,
+    // Persistence can never restore a personal fix.
+    deviceLocation: null,
   };
 }
 
@@ -194,73 +344,67 @@ export const LOCATION_STORAGE_KEY = "wetindey.location.v1";
 export const useLocationStore = create<LocationState>()(
   persist(
     (set) => ({
-      position: DEFAULT_POSITION,
+      browsingLocation: DEFAULT_BROWSING_LOCATION,
+      deviceLocation: null,
       hydrated: false,
 
-      setManualPoint: (input) =>
+      setManualBrowsingLocation: (input) =>
         set({
-          position: {
-            lat: input.lat,
-            lng: input.lng,
+          browsingLocation: {
+            ...input,
             provenance: "manual",
-            areaName: input.areaName,
-            areaSlug: input.areaSlug,
             setAt: Date.now(),
           },
         }),
 
-      setDevicePoint: (input) =>
+      setDeviceBrowsingLocation: (location, area) =>
         set({
-          position: {
-            lat: input.lat,
-            lng: input.lng,
+          browsingLocation: {
+            lat: location.lat,
+            lng: location.lng,
             provenance: "device",
-            areaName: input.areaName,
-            areaSlug: input.areaSlug,
+            areaName: area.areaName,
+            areaSlug: area.areaSlug,
             setAt: Date.now(),
           },
         }),
 
-      resetToDefault: () => set({ position: DEFAULT_POSITION }),
-      setHydrated: (v) => set({ hydrated: v }),
+      recordDeviceLocation: (location) => {
+        let accepted = false;
+        set((state) => {
+          const newest = newestDeviceLocation(state.deviceLocation, location);
+          if (newest !== location) return state;
+          accepted = true;
+          return { deviceLocation: newest };
+        });
+        return accepted;
+      },
+
+      resetBrowsingToDefault: () =>
+        set({ browsingLocation: DEFAULT_BROWSING_LOCATION }),
+      setHydrated: (value) => set({ hydrated: value }),
     }),
     {
       name: LOCATION_STORAGE_KEY,
       storage: createJSONStorage(() => localStorage),
-      // Only the position persists. `hydrated` is a fact about this tab.
-      partialize: (s) => ({ position: s.position }),
-      /**
-       * The server renders the default position; rehydrating during module
-       * init would make the first client render disagree with it and React
-       * would throw the tree away. `useLocationHydration()` rehydrates in an
-       * effect instead, after the first paint has matched.
-       */
+      partialize: (state) => ({
+        browsingLocation: state.browsingLocation,
+      }),
       skipHydration: true,
       onRehydrateStorage: () => (state, error) => {
-        if (error) console.error("locationStore: rehydrate failed", error);
+        if (error) console.error("locationStore: rehydrate failed");
         state?.setHydrated(true);
       },
-      // Payload version, independent of the long-lived localStorage key name.
-      // Version 2 moves only the synthetic default; migrate preserves every
-      // user-chosen, simulated, and device-GPS coordinate.
-      version: 2,
+      version: 3,
       migrate: migratePersistedLocationState,
       merge: mergePersistedLocationState,
     }
   )
 );
 
-/**
- * Rehydrate the persisted position exactly once, on the client, after mount.
- * Call this from the shell (page.tsx) — the store is inert without it and will
- * sit on the default forever.
- */
 export function useLocationHydration(): boolean {
-  const hydrated = useLocationStore((s) => s.hydrated);
+  const hydrated = useLocationStore((state) => state.hydrated);
   useEffect(() => {
-    // Module-scoped guard, so a remount or StrictMode's double-invoke cannot
-    // re-read storage and stomp a position the user has already changed in
-    // this session.
     if (rehydrateStarted) return;
     rehydrateStarted = true;
     void useLocationStore.persist.rehydrate();
@@ -270,26 +414,46 @@ export function useLocationHydration(): boolean {
 
 let rehydrateStarted = false;
 
+/**
+ * Returns a live fix only while it may truthfully identify the user. The timer
+ * forces a render at expiry even if no further geolocation event arrives.
+ */
+export function useFreshDeviceLocation(
+  maxAgeMs: number = DEVICE_LOCATION_FRESH_MS
+): DeviceLocation | null {
+  const deviceLocation = useLocationStore((state) => state.deviceLocation);
+  const [, setClock] = useState(0);
+
+  useEffect(() => {
+    if (!deviceLocation) return;
+    const remaining = deviceLocation.capturedAt + maxAgeMs - Date.now();
+    if (remaining <= 0) {
+      setClock((value) => value + 1);
+      return;
+    }
+    const timer = window.setTimeout(
+      () => setClock((value) => value + 1),
+      remaining + 1
+    );
+    return () => window.clearTimeout(timer);
+  }, [deviceLocation, maxAgeMs]);
+
+  return isDeviceLocationFresh(deviceLocation, maxAgeMs)
+    ? deviceLocation
+    : null;
+}
+
 export interface LocationChrome {
-  /** The area's name, or its coordinate when no area contains it. Never empty. */
   label: string;
 }
 
-/**
- * The position's name, resolved for display.
- *
- * This is a label, not a claim: it says which area is on screen, and nothing
- * about whether the position is really yours. Callers that need to qualify the
- * position — to say a distance is measured from an area's centre rather than
- * from the user — must read `provenance` off `useLocationStore` and say so
- * themselves. LocationSheet is where that happens today, on the selected row.
- *
- * Read `useLocationStore((s) => s.position)` directly for the coordinate; a
- * label deriver has no business handing out the whole position.
- */
 export function useLocationChrome(): LocationChrome {
-  const position = useLocationStore((s) => s.position);
+  const browsingLocation = useLocationStore(
+    (state) => state.browsingLocation
+  );
   return {
-    label: position.areaName ?? formatCoordinate(position.lat, position.lng),
+    label:
+      browsingLocation.areaName ??
+      formatCoordinate(browsingLocation.lat, browsingLocation.lng),
   };
 }

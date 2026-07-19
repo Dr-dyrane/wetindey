@@ -12,7 +12,11 @@ import { IconOrb } from "@/design-system/components/IconOrb";
 import { getAreaTree, getCoverageForPoint } from "@/app/actions";
 import type { AreaGroup, AreaSummary, AreaTree } from "@/app/actions";
 import { getHaversineDistance, formatDistance } from "@/lib/geospatial";
-import { useLocationStore } from "@/core/state/locationStore";
+import {
+  acquireDeviceLocation,
+  useFreshDeviceLocation,
+  useLocationStore,
+} from "@/core/state/locationStore";
 
 export interface LocationSheetProps {
   open: boolean;
@@ -21,9 +25,8 @@ export interface LocationSheetProps {
    *  against a constant invented here. */
   radiusKm: number;
   /**
-   * Fired after the store has been updated, so the shell can recentre the map.
-   * The store is the record of where the user is; this is only the nudge to
-   * move the camera.
+   * Fired after a deliberate browsing choice, so the shell can centre the
+   * camera on that context. Physical device evidence is stored independently.
    */
   onCommit?: (coords: { lat: number; lng: number }) => void;
 }
@@ -109,14 +112,19 @@ type LocateState =
  * popovers in compact views".
  */
 export function LocationSheet({ open, onClose, radiusKm, onCommit }: LocationSheetProps) {
-  const position = useLocationStore((s) => s.position);
-  const setManualPoint = useLocationStore((s) => s.setManualPoint);
-  const setDevicePoint = useLocationStore((s) => s.setDevicePoint);
+  const browsingLocation = useLocationStore((s) => s.browsingLocation);
+  const setManualBrowsingLocation = useLocationStore(
+    (s) => s.setManualBrowsingLocation
+  );
+  const setDeviceBrowsingLocation = useLocationStore(
+    (s) => s.setDeviceBrowsingLocation
+  );
+  const recordDeviceLocation = useLocationStore((s) => s.recordDeviceLocation);
 
   const [tree, setTree] = useState<AreaTree | null>(null);
   const [treeError, setTreeError] = useState<string | null>(null);
   const [locate, setLocate] = useState<LocateState>({ kind: "idle" });
-  const [deviceCoords, setDeviceCoords] = useState<{ lat: number; lng: number } | null>(null);
+  const freshDeviceLocation = useFreshDeviceLocation();
 
   /** The pushed LGA, by slug. Resolved against the tree at render rather than
    *  held as a group object, so a reloaded tree cannot strand level 1 on rows
@@ -181,7 +189,7 @@ export function LocationSheet({ open, onClose, radiusKm, onCommit }: LocationShe
     (area: AreaSummary) => {
       // The area's centre IS the derived position. The user named a place; we
       // resolve it to a point, rather than making them do that arithmetic.
-      setManualPoint({
+      setManualBrowsingLocation({
         lat: area.lat,
         lng: area.lng,
         areaName: area.name,
@@ -189,137 +197,89 @@ export function LocationSheet({ open, onClose, radiusKm, onCommit }: LocationShe
       });
       commit({ lat: area.lat, lng: area.lng });
     },
-    [setManualPoint, commit]
+    [setManualBrowsingLocation, commit]
   );
 
   // ── 2. Real location ──────────────────────────────────────────────────────
 
   const handleUseMyLocation = useCallback(() => {
-    if (typeof window === "undefined") return;
-
-    // Chrome, Safari and Firefox all remove `navigator.geolocation` outside a
-    // secure context, so an http:// origin looks identical to a browser that
-    // never had the API. Separate the two — one is fixable by the operator,
-    // the other is not fixable at all.
-    if (!window.isSecureContext) {
-      setLocate({
-        kind: "problem",
-        title: "Location needs a secure connection",
-        body: "Your browser only shares location over https. Open WetinDey on the secure address, or pick your area below.",
-        canRetry: false,
-      });
-      return;
-    }
-
-    if (!("geolocation" in navigator)) {
-      setLocate({
-        kind: "problem",
-        title: "This browser can't share location",
-        body: "It doesn't support location at all. Pick your area below instead.",
-        canRetry: false,
-      });
-      return;
-    }
-
     const g = ++generation.current;
     setLocate({ kind: "locating" });
-
-    navigator.geolocation.getCurrentPosition(
-      async (pos) => {
-        if (g !== generation.current) return;
-        const coords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-        setDeviceCoords(coords);
-
-        try {
-          const coverage = await getCoverageForPoint({ ...coords, radiusKm });
-          if (g !== generation.current) return;
-
-          if (coverage.placesInRadius > 0) {
-            setDevicePoint({
-              ...coords,
-              areaName: coverage.nearestArea?.name ?? null,
-              areaSlug: coverage.nearestArea?.slug ?? null,
-            });
-            commit(coords);
-            return;
-          }
-
-          // Located, but we hold nothing they can walk to. Say that plainly
-          // rather than recentring the map on an empty patch of Lagos and
-          // leaving them to work out why there are no pins.
-          setLocate({
-            kind: "outside",
-            distanceKm: coverage.nearestArea?.distanceKm ?? null,
-            nearest: coverage.nearestArea,
-          });
-        } catch (err) {
-          console.error("LocationSheet: coverage lookup failed", err);
-          if (g !== generation.current) return;
-          setLocate({
-            kind: "problem",
-            title: "We found you, but not our data",
-            body: "We got your location but couldn't reach the price data. Check your network and try again.",
-            canRetry: true,
-          });
-        }
-      },
-      (err) => {
-        if (g !== generation.current) return;
-
-        if (err.code === err.PERMISSION_DENIED) {
-          setLocate({
-            kind: "problem",
-            title: "Location is blocked",
-            body: "WetinDey doesn't have permission to see where you are. Allow location for this site in your browser settings, or pick your area below.",
-            canRetry: false,
-          });
-          return;
-        }
-
-        if (err.code === err.POSITION_UNAVAILABLE) {
-          setLocate({
-            kind: "problem",
-            title: "Your device couldn't get a fix",
-            body: "Location is allowed, but no position came back — this is common indoors. Try again near a window, or pick your area below.",
-            canRetry: true,
-          });
-          return;
-        }
-
-        if (err.code === err.TIMEOUT) {
-          setLocate({
-            kind: "problem",
-            title: "Finding you took too long",
-            body: "The request timed out before your device answered. Try again, or pick your area below.",
-            canRetry: true,
-          });
-          return;
-        }
-
-        console.error("LocationSheet: unexpected geolocation error", err);
+    void acquireDeviceLocation({
+      enableHighAccuracy: false,
+      timeoutMs: 10_000,
+      maximumAgeMs: 60_000,
+    }).then(async (result) => {
+      if (g !== generation.current) return;
+      if (!result.ok) {
         setLocate({
           kind: "problem",
-          title: "Location didn't work",
-          body: "Your browser refused the request without saying why. Pick your area below instead.",
+          title: result.problem.title,
+          body: result.problem.message,
+          canRetry: result.problem.canRetry,
+        });
+        return;
+      }
+
+      const deviceLocation = result.location;
+      if (!recordDeviceLocation(deviceLocation)) {
+        setLocate({
+          kind: "problem",
+          title: "A newer location is already active",
+          body: "This older response was ignored. Try again if you want another refresh.",
           canRetry: true,
         });
-      },
-      {
-        // The radius is measured in kilometres, so a coarse network fix is
-        // plenty. Asking for high accuracy would spin up GPS and cost seconds
-        // and battery to sharpen a number nothing here reads that finely.
-        enableHighAccuracy: false,
-        timeout: 10_000,
-        maximumAge: 60_000,
+        return;
       }
-    );
-  }, [radiusKm, setDevicePoint, commit]);
+      const coords = { lat: deviceLocation.lat, lng: deviceLocation.lng };
+
+      try {
+        const coverage = await getCoverageForPoint({ ...coords, radiusKm });
+        if (g !== generation.current) return;
+
+        if (coverage.placesInRadius > 0) {
+          // "Use my location" is a deliberate browsing choice. The physical
+          // fix still remains a separate session value for marker/routing use.
+          setDeviceBrowsingLocation(deviceLocation, {
+            areaName: coverage.nearestArea?.name ?? null,
+            areaSlug: coverage.nearestArea?.slug ?? null,
+          });
+          commit(coords);
+          return;
+        }
+
+        // The fix is retained even when WetinDey has no local coverage. Coverage
+        // limits our data, not the truth of where the device is.
+        setLocate({
+          kind: "outside",
+          distanceKm: coverage.nearestArea?.distanceKm ?? null,
+          nearest: coverage.nearestArea,
+        });
+      } catch {
+        if (g !== generation.current) return;
+        setLocate({
+          kind: "problem",
+          title: "We found you, but not our data",
+          body: "Your current location is saved for this session, but we couldn't check nearby price coverage. Try again.",
+          canRetry: true,
+        });
+      }
+    });
+  }, [
+    radiusKm,
+    recordDeviceLocation,
+    setDeviceBrowsingLocation,
+    commit,
+  ]);
 
   const locating = locate.kind === "locating";
 
   /** Distances are measured from a real fix if we have one, otherwise from
    *  wherever the user currently stands. */
-  const measureFrom = deviceCoords ?? { lat: position.lat, lng: position.lng };
+  const measureFrom = freshDeviceLocation ?? {
+    lat: browsingLocation.lat,
+    lng: browsingLocation.lng,
+  };
 
   /** One neighbourhood row. The count is data, not decoration: an area with
    *  nothing in it says so, so picking it is an informed choice rather than a
@@ -332,7 +292,7 @@ export function LocationSheet({ open, onClose, radiusKm, onCommit }: LocationShe
    *  after their only neighbourhood (lagosAdmin.ts NEIGHBOURHOOD_LGA — ojo,
    *  surulere, mushin), so keeping it would print "Ojo" under "Ojo". */
   const areaRow = (area: AreaSummary, lgaName?: string) => {
-    const isSelected = area.slug === position.areaSlug;
+    const isSelected = area.slug === browsingLocation.areaSlug;
     const distanceKm = getHaversineDistance(measureFrom.lat, measureFrom.lng, area.lat, area.lng);
     const detail = [
       lgaName === area.name ? null : lgaName,
@@ -362,7 +322,7 @@ export function LocationSheet({ open, onClose, radiusKm, onCommit }: LocationShe
             {detail}
           </span>
         </span>
-        {isSelected && position.provenance === "manual" && (
+        {isSelected && browsingLocation.provenance === "manual" && (
           <StatusBadge kind="caution">Area centre</StatusBadge>
         )}
         {isSelected && <Check className="h-5 w-5 shrink-0 text-accent" strokeWidth={2.5} />}
@@ -375,7 +335,9 @@ export function LocationSheet({ open, onClose, radiusKm, onCommit }: LocationShe
    *  measure from, and it names the area you are standing in so the current
    *  location stays legible without opening the level. */
   const lgaRow = (group: AreaGroup) => {
-    const selected = group.areas.find((a) => a.slug === position.areaSlug);
+    const selected = group.areas.find(
+      (a) => a.slug === browsingLocation.areaSlug
+    );
     const places = group.areas.reduce((n, a) => n + a.placeCount, 0);
     const detail = [
       selected?.name,
@@ -417,7 +379,7 @@ export function LocationSheet({ open, onClose, radiusKm, onCommit }: LocationShe
     <div className="h-full overflow-y-auto overscroll-contain space-y-6 py-3">
       {/* ── 1. Real location ────────────────────────────────────────── */}
 
-      <ListGroup footer="Coordinates are sent to WetinDey to calculate nearby coverage and results. Your selected location is saved on this device; directions may be handed to a maps app.">
+      <ListGroup footer="Your device fix is kept only for this session. Choosing Use my location also saves that point as your browsing area. Exact route origin leaves WetinDey only after a separate directions disclosure.">
         <button
           type="button"
           onClick={handleUseMyLocation}
@@ -434,7 +396,7 @@ export function LocationSheet({ open, onClose, radiusKm, onCommit }: LocationShe
               {locating ? "Finding you…" : "Use my location"}
             </span>
           </span>
-          {position.provenance === "device" && (
+          {browsingLocation.provenance === "device" && (
             <Check className="h-5 w-5 shrink-0 text-accent" strokeWidth={2.5} />
           )}
         </button>

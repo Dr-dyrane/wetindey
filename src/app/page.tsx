@@ -56,7 +56,12 @@ import {
 import { useTheme } from "@/core/context/ThemeContext";
 import { usePresentation } from "@/core/navigation/usePresentation";
 import { useGlobalStore } from "@/core/state/globalStore";
-import { useLocationChrome, useLocationHydration, useLocationStore } from "@/core/state/locationStore";
+import {
+  useLocationChrome,
+  useLocationHydration,
+  useFreshDeviceLocation,
+  useLocationStore,
+} from "@/core/state/locationStore";
 import { useLocaleControl, useStrings } from "@/core/i18n";
 import { useEventCallback } from "@/lib/perf";
 import {
@@ -72,7 +77,10 @@ import {
   type NarrowedOffer
 } from "@/app/actions";
 import { getHaversineDistance, formatDistance } from "@/lib/geospatial";
-import { fetchRoute } from "@/lib/directions";
+import {
+  fetchRoute,
+  type DisclosedRouteOrigin,
+} from "@/lib/directions";
 
 interface PlaceData {
   id: string;
@@ -141,9 +149,14 @@ export default function HomePage() {
 
   // Zustand global state, the camera anchor and the search radius. Where the
   // USER is lives in locationStore; these two are not the same fact.
-  const { mapCenter, setMapCenter, activeRadiusKm, setActiveRadiusKm } = useGlobalStore();
+  const {
+    cameraCenter,
+    setCameraCenter,
+    activeRadiusKm,
+    setActiveRadiusKm,
+  } = useGlobalStore();
 
-  useLocationHydration();
+  const locationHydrated = useLocationHydration();
   const location = useLocationChrome();
 
   // Which detent the compact sheet rides at. Page-local: this component is the
@@ -323,15 +336,32 @@ export default function HomePage() {
   const [formPrice, setFormPrice] = useState("");
   const [formAvailable, setFormAvailable] = useState<"available" | "unavailable">("available");
 
-  /**
-   * The persisted position is the source of truth for the camera. This runs
-   * after rehydration and on every location change, so a reload reopens where
-   * the user actually left off rather than snapping back to Festac.
-   */
-  const locPosition = useLocationStore((s) => s.position);
+  const browsingLocation = useLocationStore((s) => s.browsingLocation);
+  const deviceLocation = useLocationStore((s) => s.deviceLocation);
+  const freshDeviceLocation = useFreshDeviceLocation();
+  const recordDeviceLocation = useLocationStore((s) => s.recordDeviceLocation);
+  const initialBrowsingCameraApplied = useRef(false);
   useEffect(() => {
-    setMapCenter({ lat: locPosition.lat, lng: locPosition.lng });
-  }, [locPosition.lat, locPosition.lng, setMapCenter]);
+    if (!locationHydrated || initialBrowsingCameraApplied.current) return;
+    initialBrowsingCameraApplied.current = true;
+    setCameraCenter({
+      lat: browsingLocation.lat,
+      lng: browsingLocation.lng,
+    });
+  }, [
+    browsingLocation.lat,
+    browsingLocation.lng,
+    locationHydrated,
+    setCameraCenter,
+  ]);
+
+  useEffect(() => {
+    if (deviceLocation && !freshDeviceLocation) {
+      setLocateError(
+        "Your last device location expired. Tap the recenter control to refresh it."
+      );
+    }
+  }, [deviceLocation, freshDeviceLocation]);
 
   /**
    * Who the user is, if we know. NEVER a gate.
@@ -393,26 +423,37 @@ export default function HomePage() {
 
   // Load the signed-in user's profile for their avatar.
   useEffect(() => {
+    let cancelled = false;
+    // Never let the previous account's avatar bridge an auth transition.
+    setUserProfile(null);
     if (sessionUser) {
-      getMyProfile().then(setUserProfile).catch(() => {});
-    } else {
-      setUserProfile(null);
+      void getMyProfile()
+        .then((profile) => {
+          if (!cancelled) setUserProfile(profile);
+        })
+        .catch(() => {
+          // Initials remain the local fallback when profile loading fails.
+        });
     }
-  }, [sessionUser]);
+    return () => {
+      cancelled = true;
+    };
+  }, [session, sessionUser]);
 
   /**
-   * Where the user IS. Every distance, radius and "Nearest" measures from here.
+   * The persisted browsing context. Every search, distance and "Nearest"
+   * measures from here; it is not a physical-location claim.
    *
-   * NOT `mapCenter`, and the difference is not academic: tapping a result flies
-   * the camera to that market, so a query keyed on `mapCenter` would measure the
+   * NOT `cameraCenter`, and the difference is not academic: tapping a result flies
+   * the camera to that market, so a query keyed on `cameraCenter` would measure the
    * next search from the last shop you looked at rather than from you. Open rice,
    * tap a stall two streets away, go back and open beans, and "Nearest" would
    * quietly mean "nearest to that stall". The camera follows the position; the
    * position never follows the camera.
    */
   const searchOrigin = useMemo(
-    () => ({ lat: locPosition.lat, lng: locPosition.lng }),
-    [locPosition.lat, locPosition.lng]
+    () => ({ lat: browsingLocation.lat, lng: browsingLocation.lng }),
+    [browsingLocation.lat, browsingLocation.lng]
   );
 
   /**
@@ -470,8 +511,8 @@ export default function HomePage() {
       try {
         setPopularError(null);
         const items = await getPopularItems({
-          lat: locPosition.lat,
-          lng: locPosition.lng,
+          lat: browsingLocation.lat,
+          lng: browsingLocation.lng,
           radiusKm: activeRadiusKm,
           category: activeCategory,
           limit: 8
@@ -485,7 +526,12 @@ export default function HomePage() {
         setPopularError("We no fit reach the price data right now.");
       }
     });
-  }, [locPosition.lat, locPosition.lng, activeRadiusKm, activeCategory]);
+  }, [
+    browsingLocation.lat,
+    browsingLocation.lng,
+    activeRadiusKm,
+    activeCategory,
+  ]);
 
   useEffect(() => {
     loadBaseline();
@@ -511,8 +557,8 @@ export default function HomePage() {
     startTransition(async () => {
       try {
         const matched = await searchItems(searchQuery, "food", {
-          lat: locPosition.lat,
-          lng: locPosition.lng,
+          lat: browsingLocation.lat,
+          lng: browsingLocation.lng,
           radiusKm: activeRadiusKm
         });
         if (!cancelled) setSearchResults(matched);
@@ -533,8 +579,8 @@ export default function HomePage() {
   }, [
     activeCategory,
     searchQuery,
-    locPosition.lat,
-    locPosition.lng,
+    browsingLocation.lat,
+    browsingLocation.lng,
     activeRadiusKm
   ]);
 
@@ -754,7 +800,7 @@ export default function HomePage() {
    * from the offer list, not from a pin, so this market's detail level is a
    * surface they never asked for and have never seen, pushing it would seat a
    * full level under the Get it modal and leave the map covered by two surfaces
-   * at once. The camera is `setMapCenter`'s job and needs nothing from the atom.
+   * at once. The camera is `setCameraCenter`'s job and needs nothing from the atom.
    *
    * The narrowed pins in `itemOffers` are deliberately left standing: they are
    * what remains visible behind the modal, and the geometry any route drawn
@@ -764,7 +810,7 @@ export default function HomePage() {
     const signal = offerSignal(offer);
 
     setDetailItem(null);
-    setMapCenter({ lat: offer.lat, lng: offer.lng });
+    setCameraCenter({ lat: offer.lat, lng: offer.lng });
     setGetItTarget({
       placeId: offer.placeId,
       placeName: offer.placeName,
@@ -797,7 +843,7 @@ export default function HomePage() {
   const handleSelectExchangeLocation = useEventCallback(
     (location: ExchangeSampleLocation) => {
       setSelectedExchangeLocationId(location.id);
-      setMapCenter({ lat: location.lat, lng: location.lng });
+      setCameraCenter({ lat: location.lat, lng: location.lng });
       setActiveDetent("medium");
     }
   );
@@ -824,7 +870,7 @@ export default function HomePage() {
 
     const match = allPlaces.find((p) => p.id === placeId);
     if (match) {
-      setMapCenter({ lat: match.location.lat, lng: match.location.lng });
+      setCameraCenter({ lat: match.location.lat, lng: match.location.lng });
     }
   });
 
@@ -925,12 +971,27 @@ export default function HomePage() {
    * RouteGeometry.
    */
   const [route, setRoute] = useState<RouteGeometry | null>(null);
+  const [routeOrigin, setRouteOrigin] = useState<DisclosedRouteOrigin | null>(
+    null
+  );
   const routeTargetLat = getItTarget?.lat ?? null;
   const routeTargetLng = getItTarget?.lng ?? null;
+  const handleOriginDisclosed = useEventCallback(
+    (origin: DisclosedRouteOrigin) => {
+      setRouteOrigin(origin);
+    }
+  );
+
+  useEffect(() => {
+    setRouteOrigin(null);
+    setRoute(null);
+  }, [getItTarget?.placeId]);
+
   useEffect(() => {
     setRoute(null);
     if (
       activeCategory !== "food" ||
+      routeOrigin === null ||
       routeTargetLat === null ||
       routeTargetLng === null
     )
@@ -938,7 +999,7 @@ export default function HomePage() {
 
     const controller = new AbortController();
     void fetchRoute(
-      { lat: locPosition.lat, lng: locPosition.lng },
+      routeOrigin,
       { lat: routeTargetLat, lng: routeTargetLng },
       controller.signal
     ).then((geometry) => {
@@ -947,7 +1008,7 @@ export default function HomePage() {
     });
 
     return () => controller.abort();
-  }, [activeCategory, routeTargetLat, routeTargetLng, locPosition.lat, locPosition.lng]);
+  }, [activeCategory, routeOrigin, routeTargetLat, routeTargetLng]);
 
   // 1. Map node (base layer)
   const mapNode = (
@@ -969,7 +1030,7 @@ export default function HomePage() {
           activeCategory === "money" ? selectedExchangeLocationId : detailPlaceId
         }
         onMarkerClick={handleMarkerSelection}
-        center={mapCenter}
+        center={cameraCenter}
         selfIdentity={selfIdentity}
         route={route}
         /* At regular width the shell mounts no bottom sheet, so there is nothing
@@ -1039,15 +1100,20 @@ export default function HomePage() {
         }}
       >
         <MapRecenterControl
-          /* recenterTo ONLY. Writing the position to the store here would fire
-             the mapCenter effect above, and its state-driven flyTo would land a
-             commit later and interrupt this animation mid-flight, freezing the
-             zoom at whatever value it had reached. Two things must never drive
-             the camera for one interaction. This is the camera control; the
-             location pill is the position control. */
-          onLocate={({ lat, lng }) => {
+          /* Recenter refreshes physical evidence and moves presentation state.
+             It never mutates the persisted browsing/search context. */
+          onLocate={(deviceLocation) => {
             setLocateError(null);
-            mapCameraRef.current?.recenterTo(lat, lng);
+            if (!recordDeviceLocation(deviceLocation)) {
+              setLocateError(
+                "A newer device location is already active. The older response was ignored."
+              );
+              return;
+            }
+            setCameraCenter({
+              lat: deviceLocation.lat,
+              lng: deviceLocation.lng,
+            });
           }}
           onError={(message) => setLocateError(message)}
         />
@@ -1288,7 +1354,7 @@ export default function HomePage() {
               <MapPin className="h-3.5 w-3.5 text-accent mr-1 shrink-0" />
               {/* From the user, not from the camera, this panel opens by
                   tapping a pin, which centres the camera ON that pin, so
-                  measuring from `mapCenter` printed "0 m away" for every
+                  measuring from `cameraCenter` printed "0 m away" for every
                   market you clicked. */}
               {formatDistance(
                 getHaversineDistance(
@@ -1404,7 +1470,7 @@ export default function HomePage() {
         open={activeCategory === "food" && Boolean(getItTarget)}
         onClose={() => setGetItTarget(null)}
         target={getItTarget}
-        origin={searchOrigin}
+        onOriginDisclosed={handleOriginDisclosed}
         onGoThere={handleArmVisit}
       />
 
@@ -1424,7 +1490,7 @@ export default function HomePage() {
         surface={surface}
         onClose={closeSurface}
         radiusKm={activeRadiusKm}
-        onCommitLocation={(coords) => setMapCenter(coords)}
+        onCommitLocation={(coords) => setCameraCenter(coords)}
         signedIn={Boolean(sessionUser)}
         onReportPrice={() => {
           // The empty-state exit from My reports: close this surface, then open

@@ -1,4 +1,9 @@
 import type { RouteGeometry } from "@/integrations/maps/MapboxAdapter";
+import {
+  ROUTE_ORIGIN_FRESH_MS,
+  isDeviceLocationFresh,
+  type DeviceLocation,
+} from "@/core/state/locationStore";
 
 /**
  * Where a route starts and where it ends. `{ lat, lng }` because that is the
@@ -8,6 +13,36 @@ import type { RouteGeometry } from "@/integrations/maps/MapboxAdapter";
 export interface RoutePoint {
   lat: number;
   lng: number;
+}
+
+/**
+ * Exact origin may cross the provider boundary only after the action sheet has
+ * disclosed that egress for a freshly acquired device fix.
+ */
+export interface DisclosedRouteOrigin extends DeviceLocation {
+  disclosedAt: number;
+}
+
+export function disclosedRouteOrigin(
+  location: DeviceLocation,
+  now: number = Date.now()
+): DisclosedRouteOrigin | null {
+  if (!isDeviceLocationFresh(location, ROUTE_ORIGIN_FRESH_MS, now)) return null;
+  return { ...location, disclosedAt: now };
+}
+
+export function isDisclosedRouteOriginAdmissible(
+  origin: DisclosedRouteOrigin,
+  now: number = Date.now()
+): boolean {
+  return (
+    origin.provenance === "device" &&
+    Number.isFinite(origin.disclosedAt) &&
+    origin.disclosedAt >= origin.capturedAt &&
+    origin.disclosedAt <= now &&
+    now - origin.disclosedAt <= ROUTE_ORIGIN_FRESH_MS &&
+    isDeviceLocationFresh(origin, ROUTE_ORIGIN_FRESH_MS, now)
+  );
 }
 
 /** A route with a non-geographic endpoint is not a route request. */
@@ -50,14 +85,19 @@ const PROFILES = ["driving-traffic", "driving"] as const;
  * request never falls back.
  */
 export async function fetchRoute(
-  origin: RoutePoint,
+  origin: DisclosedRouteOrigin,
   destination: RoutePoint,
   signal?: AbortSignal
 ): Promise<RouteGeometry | null> {
   // Coordinates can cross this boundary from persisted location state as well
   // as from a selected place. Never put NaN into a provider URL, and never let
   // a bad endpoint become a map-rendering failure.
-  if (!isRoutePoint(origin) || !isRoutePoint(destination)) return null;
+  if (
+    !isRoutePoint(origin) ||
+    !isDisclosedRouteOriginAdmissible(origin) ||
+    !isRoutePoint(destination)
+  )
+    return null;
 
   const token = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN;
   // The same token that fetches the tiles under this line. It is public by
@@ -65,6 +105,9 @@ export async function fetchRoute(
   if (!token) return null;
 
   for (const profile of PROFILES) {
+    // A slow/rate-limited first profile must not authorize a second provider
+    // request after the one-minute disclosure window has elapsed.
+    if (!isDisclosedRouteOriginAdmissible(origin)) return null;
     const geometry = await requestRoute(profile, origin, destination, token, signal);
     if (geometry) return geometry;
     if (signal?.aborted) return null;
