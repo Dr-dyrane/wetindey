@@ -212,6 +212,20 @@ semantics, and every current output. Require exact source-shape comparison, focu
 type/static evidence, and independent default-to-REFUTED review. Later modularization slices
 remain pathless.
 
+##### Live-app modularization Slice 2 — ACTIVE
+
+Owner: Antigravity (External Approved Contractor - Product Engineering & UX Department). Exclusive paths:
+
+- new `src/app/_components/map-presentation/MapPresentation.tsx`
+- new `src/app/_components/map-presentation/MapPresentationView.tsx`
+- new `src/app/_components/map-presentation/useMapPresentation.ts`
+- new `src/app/_components/map-presentation/imports.ts`
+- new `src/app/_components/map-presentation/copy.ts`
+- new `src/app/_components/map-presentation/MapPresentation.css`
+- `src/app/page.tsx`
+
+Extract the map presentation, floating controls, notice, and recenter callback assembly out of the monolithic `src/app/page.tsx` into a deeply modular component structure under `src/app/_components/map-presentation/`. Ensure zero functional regression: preserve theme states, bottom-sheet detents, and camera padding. Require static and build verification.
+
 ##### P1 authentication recovery — SUPERSEDED / PATHLESS
 
 Former owner: Authentication / Client Reliability. Former paths:
