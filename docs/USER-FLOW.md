@@ -1,10 +1,11 @@
 # WetinDey — user flow
 
-> Status: **verified against `cc689ef` on 2026-07-16.**
-> This document was written when the flow was a plan. Most of it has since
-> shipped, and the parts that had not were still described as gaps. Both halves
-> were wrong. Every claim below is now checked against the code, with a
-> file:line. Anything unverified says so.
+> Status: **re-audited against the live call graph on 2026-07-18.**
+> This is a current-behaviour record, not an implementation promise. Accepted
+> [ADR-023](adr/023-browsing-context-and-device-location.md) corrects the
+> location architecture but claims no runtime work. Proposed
+> [ADR-024](adr/024-progressive-information-to-action-seams.md) authorizes
+> nothing; ADR-001 remains binding.
 
 ---
 
@@ -13,11 +14,14 @@
 ```
 User opens WetinDey
         ↓
-Map loads around the last position the user committed
+Map loads around a persisted/default browsing point
+        ↓
+That same point currently also renders as Me/avatar and route origin
+        ← AUDIT DEFECT: browsing context is not physical location
         ↓
 Location is changeable from:
     • Location pill on map chrome
-    • Recenter control
+    • Recenter control (camera-only today)
     • Profile → Change area
         ↓
 User searches "rice"
@@ -38,29 +42,25 @@ Taps "Get it"
 Chooses:
     • Go there   → hands off to the platform maps app
     • Share      → share sheet, clipboard, or on-screen text
-    • Contact seller → DEAD END. See below.
+    • Contact seller → display-only and unavailable
         ↓
-User goes to the market
+User may go to the market
         ↓
 On return, WetinDey asks:
     • Was it there?
     • Was the price right?
     • Did you buy it?
         ↓
-The result becomes fresher and more trustworthy
-for the next user
+Post-visit submission is currently contained/disabled
 ```
 
-**The last two steps are the whole product.** Everything above them is a price
-lookup, which is commoditisable. The closing loop — asking the person who
-actually went whether the answer was right — is what makes the next lookup
-better, and it is the part that compounds. It is now built
-(`ConfirmVisitSheet.tsx`, armed at `page.tsx:567-571`, collected at
-`page.tsx:471-485`).
+**The closing loop is still the product thesis, not a current completion claim.**
+Visit arming and the confirmation surface exist, but the public contribution write is
+contained. The app must not claim that a return answer currently becomes trusted evidence.
 
 **Fulfilment is out.** ADR-001: no delivery, dispatch, courier, cart, checkout
-or payment. Buyer and seller arrange it themselves. The flow ends at "Go there"
-or at "Contact seller" — and today one of those two does not work.
+or payment. ADR-024 is only a proposal for bounded external action seams; it does not
+supersede that rule.
 
 ---
 
@@ -68,9 +68,9 @@ or at "Contact seller" — and today one of those two does not work.
 
 | Step | Today |
 |---|---|
-| Map loads around last committed position | ✅ Persisted to `localStorage`, rehydrated on mount (`locationStore.ts:107,140-142`; camera driven at `page.tsx:264-267`). Default before any commit is Festac Town (`locationStore.ts:71-75`) |
+| Map loads around persisted/default browsing point | ✅ The point drives search and camera. ❌ It is also reused as physical identity and route origin |
 | Location pill on map chrome | ✅ A real button; presents `LocationSheet` (`page.tsx:876-885`) |
-| Recenter control | ✅ `MapRecenterControl`, real `navigator.geolocation` fix, errors surfaced in `MapNotice` (`page.tsx:908-920`) |
+| Recenter control | ⚠️ Obtains a device fix and moves the camera, but does not update the persisted browsing point or authoritative self marker |
 | Change area from profile | ✅ `ProfileSheet` → `onChangeArea` → `LocationSheet` (`page.tsx:1263`) |
 | Search "rice" | ✅ Incl. alias search ("ewa", "dodo") |
 | Choose variant → unit | ✅ `ItemDetailSheet` walks item → variant → unit (`ItemDetailSheet.tsx:282-290, 336-339`) |
@@ -78,52 +78,57 @@ or at "Contact seller" — and today one of those two does not work.
 | Rank by nearest / cheapest / freshest | ✅ (`ItemDetailSheet.tsx:264-266`) |
 | Compare availability/price/freshness/distance/confidence | ✅ One row; colour carries freshness, confidence is a neutral meter (`ItemDetailSheet.tsx:181-200`) |
 | Select a place from a pin | ✅ Detail level with that market's prices (`page.tsx:1073-1185`) |
-| "Get it" → **Go there** | ✅ Platform-detected handoff: Apple Maps, `geo:` URI with a web-fallback watchdog, or Google Maps (`GetItSheet.tsx:99-123, 181-204, 396-417`) |
-| "Get it" → **Share** | ✅ Three tiers: `navigator.share` → clipboard → on-screen selectable text (`GetItSheet.tsx:419-442, 510-519`) |
-| "Get it" → **Contact seller** | ❌ **Renders "Not shared" for every place.** See below |
-| Post-visit confirmation | ✅ Three questions, one tap each; queued offline and flushed on reconnect (`ConfirmVisitSheet.tsx`; drain at `page.tsx:412-458`) |
+| Open **Get it** | ❌ Automatically requests Mapbox directions with exact overloaded origin and destination before the user chooses Go there |
+| "Get it" → **Go there** | ✅ Platform maps handoff exists, but exact-origin disclosure/freshness is not separated |
+| "Get it" → **Share** | ⚠️ Native/clipboard/text fallbacks work; copy says `Price confirmed` without trust/availability qualification and shares a Google Maps pin instead of the existing canonical place route |
+| "Get it" → **Contact seller** | ❌ Display-only. No consented contact value is returned and no action fires |
+| Place-detail offer action | ❌ Rows are informational and inert |
+| Public review read | ❌ Can expose a stable account ID and use account email as the public reviewer name |
+| Post-visit confirmation | ⚠️ Arming/surface code exists; public submission remains contained and must not be described as closing the loop |
 
 ---
 
-## The end of the journey is a dead end
+## Location truth boundary
 
-ADR-001 hands fulfilment to **Contact seller**. Contact seller does not work,
-for any place, and cannot be made to work by the UI:
+The current point is overloaded. A default, simulated, or manually selected browse point
+can become the map's `Me` marker, a signed-in avatar, distance/search origin, and exact
+route origin. A device fix outside Lagos coverage is discarded, while accepted fixes
+discard browser accuracy and capture time and may persist stale.
 
-- `places.contactVisibility` defaults to `'private'` (`src/db/schema/index.ts:109`)
-  and no seed or write path sets it otherwise. Private means private.
-- `contact_channel_kind` and `contact_channel_value` exist as columns
-  (`schema/index.ts:129-130`, migration `0002_calm_meteorite.sql`) but are
-  **written by nothing and read by nothing** — `getPlaceContactPolicy`
-  (`actions.ts:1222`) does not even select them.
+ADR-023 settles the architecture: `browsingContext`, `deviceLocation`, `cameraCenter`,
+and `selectedPlace` are separate. Until its later implementation is proved, WetinDey
+must not describe default/manual/simulated points as physical location or silently send
+them as exact origin.
 
-So the row says "Not shared", honestly, forever
-(`GetItSheet.tsx:311-320`). The sheet is right; the data is missing. **This is
-the single most important open item in the product**: ADR-001 removed
-delivery on the promise that Contact seller would carry the handover, and
-Contact seller carries nothing.
+## The action boundary is incomplete
 
-Fixing it needs a write path for the channel columns and a trader-facing way to
-opt in. Neither exists. Until then, "Go there" is the only working exit.
+Contact seller requires ADR-022 place control and explicit publication consent. ADR-024
+proposes—but does not authorize—seller-approved contact, allowlisted redirects, minimal
+disclosed handoff payloads, and provider-returned status. Today the honest exits are
+information, canonical sharing once corrected, and an explicit maps handoff.
 
 ---
 
 ## What is left to build
 
-### 1. Contact seller, end to end
-The channel columns, a way for a trader to set them, and a reader that honours
-`contactVisibility` as a gate. Everything else in "Get it" is done.
+### 1. Implement ADR-023 as one live location vertical
 
-### 2. A place-detail route
-`sharePinUrl` (`GetItSheet.tsx:161-163`) shares a Google Maps pin because there
-is no WetinDey URL that resolves to a market. It should be replaced with the
-place-detail URL the moment that route ships.
+Separate browsing, device, camera, and selected-place state; retain device accuracy and
+capture time even outside coverage; define freshness; unify acquisition; remove personal
+identity from non-device points; and disclose exact provider egress. This work is not
+claimed by the ADR.
 
-### 3. Real routing geometry
-`route` (`page.tsx:819-825`) draws two points — a bearing and a distance, which
-is exactly what we know. `setRoute` takes geometry and asks nothing about its
-provenance, so a road-following path is more coordinates through the same seam.
-Not a delivery integration; ADR-001 permits directions.
+### 2. Correct current privacy and truth defects
+
+Fail closed on public review identity; stop automatic exact-origin routing; make share
+copy reflect evidence; share the existing canonical `/place/[slug]` route; and do not
+style inert place rows as actions.
+
+### 3. Contact seller only through ADR-022
+
+Build the seller/place-control, scoped authorization, explicit publication consent,
+revocation, redacted audit, and discriminated public resolver before exposing a channel.
+ADR-024 must be separately accepted before any broader external handoff.
 
 ---
 
@@ -158,14 +163,9 @@ unmet: `sources` has no `user_id` and `actions.ts` has no session awareness.
 
 ---
 
-## Open questions
+## Remaining governed questions
 
-1. **What is "best-known location"?** Today it is the last position the user
-   committed, defaulting to Festac Town. Geolocation is offered but never
-   assumed. Whether a user in Ikeja opening a Festac pilot should see Festac is
-   still unanswered.
-2. **How fresh is "recently confirmed"?** `offers_current.expiresAt` is set to
-   72h on write (`actions.ts:357, 624`). Whether anything *enforces* expiry at
-   read time is **unverified** — not traced in this pass.
-3. **Contact seller — via what channel, and who opts a trader in?** See above.
-   This is question 1 of the product, not question 3.
+1. ADR-023 deliberately leaves the numeric device-fix freshness and accuracy thresholds
+   to the later implementation evidence.
+2. Contact channel types and audiences require ADR-022's seller-consent implementation.
+3. ADR-024 remains Proposed; no external commerce/order-status seam is authorized.

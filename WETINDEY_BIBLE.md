@@ -172,6 +172,11 @@ Version One is not:
 - a feed designed to maximize scrolling;
 - or a collection of fuel, electricity, medicine, traffic, weather, and food features.
 
+[ADR-024](docs/adr/024-progressive-information-to-action-seams.md) proposes a later,
+bounded information-to-action ladder. It is not accepted and does not weaken ADR-001:
+WetinDey currently owns no checkout, funds, order, courier, inventory, or delivery
+capability.
+
 ## 2.6 Long-term architecture, short-term discipline
 
 The code should permit additional problem modules later, but the product should launch with one complete module: **Food**.
@@ -798,6 +803,12 @@ A result should lead to one primary next action, usually:
 - view place details;
 - call a verified vendor;
 - or report an update.
+
+Today, only real wired actions may be presented as actions. Contact seller remains
+display-only until ADR-022 place-control and publication consent exist. ADR-024 is a
+proposal for explicit seller-approved contact, allowlisted external redirects, minimal
+disclosed handoff payloads, and provider-returned status; it authorizes none of those
+capabilities while Proposed.
 
 ### Stage 9 — Close the loop
 
@@ -1472,6 +1483,12 @@ Map state that matters should be shareable where practical:
 
 Do not expose precise private location in share URLs without an explicit user action. Prefer area or rounded coordinates.
 
+Under [ADR-023](docs/adr/023-browsing-context-and-device-location.md), a shareable map
+context is not a physical self-location. Default, simulated, and manually selected area
+centres may be shared only as browsing context. Exact device origin requires a fresh
+browser fix, explicit action-stage disclosure, and a separately validated provider
+handoff; it never enters an ordinary share URL.
+
 ---
 
 # 15. Complete screen inventory
@@ -1999,6 +2016,23 @@ Displays:
 - recenter action.
 
 It must not reveal precise coordinates as normal UI.
+
+### Location concepts
+
+[ADR-023](docs/adr/023-browsing-context-and-device-location.md) requires four independent
+concepts:
+
+- `browsingContext` — the area or coordinate whose information is being explored;
+- `deviceLocation` — a browser-provided physical fix with accuracy and capture time;
+- `cameraCenter` — presentation state only; and
+- `selectedPlace` — the current market, seller, stall, or venue.
+
+A pilot default, simulated coordinate, or manual area centre may drive browsing and the
+camera but cannot render as `Me`, use a personal avatar, authorize Nearby Presence, or
+become an exact route origin. A valid device fix remains truthful even outside Lagos
+coverage. Recenter refreshes physical location and the camera without replacing the
+browsing context; stale, denied, timed-out, unavailable, inaccurate, and out-of-order
+fixes fail honestly.
 
 ## 18.6 ItemResult
 
@@ -4024,6 +4058,25 @@ Outputs:
 - user interviews;
 - and documented go/no-go decision.
 
+**Accepted browsing-context/device-location architecture; implementation unclaimed.**
+[ADR-023](docs/adr/023-browsing-context-and-device-location.md) separates persisted
+browsing context, session-scoped physical device evidence, camera state, and selected
+place. Before any truthful-location completion claim, the later live vertical must stop
+personal identity on default/manual/simulated points; retain valid outside-coverage fixes;
+preserve accuracy and capture time; bound freshness and out-of-order results; unify
+recenter and Location Sheet acquisition; and require explicit disclosure before exact
+origin reaches Mapbox or another provider. This requires no database migration. Active
+page/map paths, an exact controller claim, privacy refutation, browser/device evidence,
+and release authority remain separate gates.
+
+**Proposed progressive information-to-action roadmap; ADR-001 still binds.**
+[ADR-024](docs/adr/024-progressive-information-to-action-seams.md) proposes four stages:
+information/confidence, direct seller-approved action, minimal disclosed external
+handoff, and attributed provider-returned status. It remains Proposed and authorizes no
+seller link, cart, courier, tracking, schema, provider, code, or deployment. Only separate
+Founder acceptance may supersede ADR-001; even then WetinDey would not run checkout,
+funds, payment, order creation, courier dispatch, or inventory/delivery guarantees.
+
 **Accepted nearby-user presence architecture; rollout gate remains closed.**
 [ADR-016](docs/adr/016-nearby-user-presence.md) accepts implementation architecture only:
 signed-in reciprocal opt-in, a fixed 500 m centroid, an explicit foreground lease of no
@@ -4581,6 +4634,7 @@ The team should consider pivoting the mechanism or problem when:
 | Per-request nonce Content Security Policy architecture | Accepted — see [ADR-020](docs/adr/020-per-request-nonce-content-security-policy.md); implementation unclaimed | One request-boundary nonce policy is copied byte-identically to Next 15.5.20 request headers and the browser response. The later enforcing change removes the static Vercel CSP in the same commit, nonces all three raw layout scripts plus parser-inserted Mapbox, and serves nonce HTML dynamic/private/no-store. Report-only evidence, environment separation, exact Blob origin admission, and independent security refutation remain gates; duplicate enforcement is prohibited |
 | Account deletion lifecycle | Accepted — see [ADR-021](docs/adr/021-account-deletion-lifecycle.md); implementation unclaimed | A persisted idempotent saga verifies fresh OTP/re-auth, deletes Auth through server-only exact-branch Neon administration, then retries profile, attribution, ordinary problem-report, Presence, and exact-prefix Blob cleanup. Observations remain unchanged; safety retention is minimal/tombstoned/details-cleared; terminal completion requires every phase receipt |
 | Earned seller stewardship and extensible role onboarding | Accepted — see [ADR-022](docs/adr/022-earned-seller-and-role-onboarding.md); implementation unclaimed | Application-owned scoped RBAC separates Auth, business verification, place control, roles, explicit contact-publication consent, seller accuracy, Food confidence, and badges. Owner/manager/staff permissions, moderation, independent appeal, and redacted audit precede any contact or dashboard. Identity/business verification, place-control approval, roles, lifecycle/status, accuracy/ranking, and badges cannot be purchased; implementation follows Food truth, corrected `0012`, and contribution integrity at `0013` or later |
+| Browsing context and device location are separate | Accepted — see [ADR-023](docs/adr/023-browsing-context-and-device-location.md); implementation unclaimed | Browsing context, physical device evidence, camera centre, and selected place are distinct. Default/manual/simulated points never become `Me`, personal avatar, exact route origin, or Presence evidence. Valid fixes retain accuracy and capture time outside coverage; exact origin egress requires freshness and explicit disclosure. Acceptance does not claim code, schema, provider, deployment, or rollout. |
 
 > **Section 25 and Section 26 describe a TARGET, not the current system.** Verified 16 July 2026:
 > `WetinDeyModule` has zero live implementations, `src/modules/food/` is orphaned, and
@@ -4590,6 +4644,12 @@ The team should consider pivoting the mechanism or problem when:
 
 ## 40.2 Open decisions
 
+- [ADR-024](docs/adr/024-progressive-information-to-action-seams.md): proposed
+  information-to-action progression. It would permit only seller-approved contact,
+  explicit allowlisted external redirects, minimal disclosed handoff payloads, and
+  attributed provider-returned status. ADR-001 remains binding unless the Founder
+  separately accepts ADR-024. No WetinDey checkout, funds, payment, order creation,
+  courier dispatch, inventory guarantee, or delivery guarantee is authorized.
 - [ADR-016](docs/adr/016-nearby-user-presence.md): implementation architecture is
   accepted, but every operational gate remains open and fail-closed. Commit `4e25b8c7`
   remains containment; no shared migration, deployment, pilot traffic, or public rollout

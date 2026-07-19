@@ -15,7 +15,7 @@ Written against the working tree at `main` / `019f3f3`, which was dirty at autho
 
 ## Read this first
 
-Seven things. If you read nothing else, read these.
+Nine things. If you read nothing else, read these.
 
 1. **`AGENTS.md` documents an architecture that does not exist.** It mandates that every capability implement `WetinDeyModule` (`src/core/module-contract.ts`). The contract has exactly one importer — its own orphaned implementation, `src/modules/food/application/FoodModule.ts`, which is backed by a five-item mock array. Capabilities implementing it: **zero**. The real application is `src/app/page.tsx` (~1,241 lines) plus `src/app/actions.ts` (~1,358 lines) doing everything directly. `src/db/queries/` — where the data layer is documented to live — contains one `.gitkeep`. Treat the docs in `docs/` as archaeology, not specification. `docs/APP-MAP.md` is confidently wrong about its own headline finding and cites files that are not on disk.
 
@@ -45,13 +45,27 @@ independently validated but has not been applied to a shared database; final ing
 receive pending deltas, and their remote ledger is never edited merely because repository
 files changed. Operational guidance starts at [docs/database/README.md](../database/README.md).
 
+8. **Browsing context is not physical self-location.** Accepted
+[ADR-023](../adr/023-browsing-context-and-device-location.md) separates the area being
+explored, the latest browser device fix, camera state, and selected place. The current
+tree violates that boundary: one persisted coordinate can become search origin,
+`Me`/avatar, route origin, and camera centre; outside-coverage fixes are discarded;
+accuracy and browser capture time are dropped; and stale device points can persist.
+Acceptance records architecture only. It authorizes no source edit or rollout.
+
+9. **Information-to-action remains a proposal.** [ADR-024](../adr/024-progressive-information-to-action-seams.md)
+proposes seller-approved contact, explicit allowlisted redirects, minimal disclosed
+handoff payloads, and attributed provider-returned status. It does not supersede
+ADR-001 while Proposed. There is no WetinDey cart, checkout, order, courier, delivery, or
+tracking capability, and no service or schema should be invented in anticipation of one.
+
 ---
 
 ## 1. Product Summary
 
 A Lagos **live local information** PWA whose current V1 vertical is Food price and availability. One question, asked well: *what is the current nearby state of the thing I need to decide about, and how much should I trust that answer?* The product's output is a decision, not a transaction. If the answer is wrong, the product has no reason to exist.
 
-**Shipping shape.** Next.js App Router PWA on Vercel · Neon Postgres + PostGIS · Mapbox GL loaded from the runtime CDN, not a package dependency · anonymous browse · **one page route** (`src/app/page.tsx`) · Server Actions for all product data · modular monolith in name only.
+**Shipping shape.** Next.js App Router PWA on Vercel · Neon Postgres + PostGIS · Mapbox GL loaded from the runtime CDN, not a package dependency · anonymous browse · map-first root plus indexable `/item/[slug]` and `/place/[slug]` routes · Server Actions for product data plus the Auth proxy · modular monolith in name only.
 
 > **CORRECTION, 16 July 2026 — this section was stale within hours of being written.**
 > It originally read "no auth" and "Server Actions only — `find src -name "route.*"` → zero".
@@ -108,16 +122,33 @@ The strategic bet is supply, not software. The Bible says it plainly: "Data is a
 
 1. **Land → browse (works).** Map mounts → `getPlaces()` returns the **entire places table**, unconditionally → `getPopularItems({lat,lng,radiusKm,limit})` ranks what is actually within radius. The radius from Settings is honoured throughout.
 2. **Search → narrow → decide (works, and is the good part).** `searchFoodItems` fires per keystroke over canonical names, slugs and Nigerian-language aliases — ewa, shinkafa, dodo. `ItemDetailSheet` runs its own narrowing and publishes the narrowed set **upward**, so the map pins *are* the list. One query, one answer; pin and row cannot disagree about *which* offers exist. They can still disagree about freshness.
-3. **Decide → go (works, one exit of three).** `GetItSheet` offers **Go there** (platform-detected maps handoff), **Share/Copy** (three tiers, none silent), and **Contact seller**. **Contact seller is the affordance ADR-001 leans on when it cut fulfilment — and it can never fire.** `contactVisibility` is always `'private'` and there is no channel value to publish. `GetItSheet` correctly refuses to invent one. `docs/USER-FLOW.md` still promises the user "contacts, visits or orders from the seller." One of those three is possible.
-4. **Go → confirm (works, and it's the whole product).** `GetItSheet` arms a visit on departure, localStorage-persisted because Android's "Go there" is a real navigation away. 90s minimum dwell, 4h expiry. On return, `takeDueVisit` **consumes** the arm so the question is asked exactly once. Three questions, one tap each; "Wasn't there" auto-submits. This loop closes.
+3. **Decide → go (partly works, with a privacy defect).** `GetItSheet` offers **Go
+there** (platform-detected maps handoff), **Share/Copy** (three tiers, none silent), and
+**Contact seller**. Opening the sheet—not tapping Go there—immediately sends the
+overloaded exact origin and destination to Mapbox Directions. Share still says `Price
+confirmed` for any timestamp and shares a Google Maps coordinate even though a canonical
+`/place/[slug]` route exists. Contact seller is display-only: the server returns visibility
+metadata but no consented channel, and the row has no action. Place-detail offer rows are
+also informational and inert. ADR-001 remains binding; ADR-024 proposes but does not
+authorize later seams.
+4. **Go → confirm (surface and arming exist; public submission is contained).**
+`GetItSheet` can arm a local visit and `takeDueVisit` can consume it for a one-time return
+prompt. The confirmation UI and validation code remain, but the public write does not
+currently close the evidence loop and must not be described as doing so.
 5. **Report a price (works, with a permanently-corrupting bug).** Pickers + price + availability → `submitObservation` → append observation → recompute `offers_current`. Offline, it queues. The queue replays duplicates forever — see R5.
+6. **Public review read is not privacy-safe.** `getReviewsForEntity` can return a stable
+account identifier and can use account email as the public reviewer name. Public review
+write is contained, but the read DTO still needs a separate fail-closed privacy
+correction; neither identity field belongs in a public action response.
 
 ### Navigation and information architecture
 
-**One route. No tab bar. Everything is a sheet over a persistent WebGL map.**
+**One map application root, two indexable content routes, no tab bar.** Interactive
+discovery remains sheets over a persistent WebGL map; `/item/[slug]` and
+`/place/[slug]` are read-only public pages.
 
 ```
-/  (page.tsx — the only route)
+/  (page.tsx — the primary map route)
 ├── Map (persistent, mounted once above the shell branch so
 │        WebGL survives an iPad Split View drag)
 │   ├── Location pill ──────────► LocationSheet
@@ -210,7 +241,11 @@ Nothing below is a directory today. All of it is a set of functions that share a
 
 ### 2.3 Geo
 
-**Purpose.** Own "where" — the administrative tree a Lagosian actually says ("Ojo", not 6.46,3.19), the physical stalls, and — because it owns `places` — a real trader's phone number.
+**Purpose.** Own "where" without collapsing its meanings: browsing context, physical
+device evidence, and place coordinates. Discovery owns camera composition; a selected
+place is task state. Geo also owns the administrative tree a Lagosian actually says
+("Ojo", not 6.46,3.19), the physical stalls, and—because it owns `places`—the consent
+boundary around a real trader's contact value.
 
 **Owns:** `LocationSheet`, the location pill, `MapNotice`, `MapRecenterControl`, `locationStore`, distance formatting.
 **Backend:** `getAreaTree`, `getPlaces`, `getPlacesNear`, `getCoverageForPoint`, `getPlaceContactPolicy`.
@@ -219,6 +254,13 @@ Nothing below is a directory today. All of it is a set of functions that share a
 
 **What is broken.**
 
+- **One persisted coordinate still stands for four concepts.** `locationStore.position`
+  is correctly provenance-tagged, but `page.tsx` strips that provenance and uses the
+  coordinate for search, the `Me`/avatar marker, route origin, and camera. A
+  default/manual/simulated browsing point can therefore impersonate physical identity.
+  Device accuracy and browser timestamp are dropped, stale device fixes persist, and a
+  valid outside-coverage fix is discarded rather than retained separately. ADR-023
+  accepts the correction architecture; implementation is unclaimed.
 - **`getPlacesNear` is the correct radius query — `ST_DWithin` on geography, index-served — and has zero callers, while `getPlaces` returns the whole table on every boot.** The comment above it says exactly this: "getPlaces() returns the whole table unconditionally; this is the query to use whenever a radius is in play." Nobody took the advice. The good implementation is dead and the crude one is live.
 - **The PII gate is safe by omission, and the omission is one line from being reversed.** The schema states the rule correctly: *"The column being non-null is consent to store, never consent to publish."* Enforcement is entirely that `getPlaceContactPolicy` **happens not to SELECT the column** — so, to be precise and fair: **no number is on any wire today.** But `contactVisibility` comes back as a raw untyped string and the actual consent check is a string comparison in a client component. The trigger is not an attack; it is the ticket "make Contact seller work," which ADR-001 made inevitable. See R4.
 - **`areas.parent_area_id` is a self-FK with no database constraint**, and three INNER JOINs depend on it. Every other FK is present in migration 0000; this one is absent. A dangling parent **silently drops neighbourhoods** — an inner join returns fewer rows, it does not error. That is exactly the silent-wrong-answer class the schema goes to war against everywhere else. The tree is seed-written today, so the constraint is safe to apply now and is what keeps it safe when it stops being seed-only.
@@ -227,7 +269,13 @@ Nothing below is a directory today. All of it is a set of functions that share a
 - **Duplicate geolocation stacks.** `LocationSheet` distinguishes insecure-context / no-API / permission-denied / position-unavailable / timeout, each with its own title, body and retry affordance, plus an `outside` state with a "Use {nearest} instead" escape. It is the best error handling in the codebase. `MapRecenterControl` collapses all of it into two strings and uses different options.
 - **Four files cite `geographyPoint.fromDriver` as living in `src/lib/geospatial.ts`. It lives in the schema.** The cite is wrong in every instance.
 
-**What is right.** `locationStore`'s **required** `provenance` field — `simulated | manual | device | default` — is the best design decision in the repo, and the reasoning is exact: a simulated drop and a device fix produce identical `{lat,lng}`, and every distance in the product is measured from it. `skipHydration` plus effect-driven rehydrate is correctly reasoned for SSR. `LocationSheet` draws single-child LGAs as the area row itself — no drill onto a single row you cannot deselect. `getAreaTree`'s inner joins are deliberate: a neighbourhood with no country vanishes rather than rendering under "undefined". `getCoverageForPoint` uses a world coordinate parser, not a Nigeria-bounded one, so a Nigerian opening the app from London gets an honest answer instead of a throw. `getPlaceContactPolicy` throws, with reasoning, on a missing row.
+**What is right.** `locationStore`'s **required** `provenance` field — `simulated |
+manual | device | default` — is the correct evidence seed for ADR-023. `skipHydration`
+plus effect-driven rehydrate is correctly reasoned for SSR. `LocationSheet` draws
+single-child LGAs as the area row itself. `getAreaTree` fails closed on a broken
+administrative chain. `getCoverageForPoint` accepts a world coordinate and can truthfully
+say coverage is absent; the defect is that the caller then discards the physical fix.
+`getPlaceContactPolicy` throws, with reasoning, on a missing row.
 
 ### 2.4 Contribution
 
@@ -250,7 +298,11 @@ Nothing below is a directory today. All of it is a set of functions that share a
 - **No transaction.** The observation insert and the offer write are separate statements. A crash between them leaves an observation with no offer.
 - **`moderationStatus` is a state machine nothing can enter.** Defaults `'pending'`; every writer hardcodes `'approved'`. Readers correctly use `<> 'rejected'` rather than `= 'approved'`, because an equality filter would return zero sources for the seeder's rows. **Either wire it or delete the vocabulary** — a schema that looks moderated and isn't is worse than both alternatives.
 
-**What is right.** Both public write paths are **genuinely protected**, and the claim holds. The input schemas are `.strict()`, band price to ₦5–₦5,000,000 (deliberately below the int4 kobo overflow), enforce UUIDs, and refuse (0,0) by name. The visit path is a **discriminated union on `wasAvailable`**, which closes a real back door: it delegates to `submitObservation`, so an uncapped `actualPrice` would have written ₦900M through the side entrance. `validation.ts` documents the constraint that shapes it — a `"use server"` module may only export async functions, which is why the schemas live elsewhere — and `actions.ts` explains why `assertValid` must be called *inside* the action body: a server action's ID binds to the original exported reference, so an appended same-named export is never called. `getVisitContext` snapshots the claim on the way **out**, so the question is in the user's hand before they lose signal, and refuses to build a half-filled context. `armVisit`/`takeDueVisit` shape-check the deserialised context rather than trusting disk. An online rejection is **not** queued — the server had an opinion; replaying collects the same rejection. Correct and rare.
+**What remains useful inside the contained write code.** The input schemas are `.strict()`,
+band price to ₦5–₦5,000,000, enforce UUIDs, and refuse (0,0) by name. The visit shape is
+a discriminated union on `wasAvailable`; `getVisitContext` refuses a half-filled context;
+and `armVisit`/`takeDueVisit` shape-check disk state. These are implementation assets,
+not evidence that a public contribution currently succeeds or closes the loop.
 
 ### 2.5 Offers
 
@@ -541,21 +593,29 @@ The one edge that looks like a cycle and is not: **Contribution → Offers** (a 
 
 | | |
 |---|---|
-| **Answers** | "Where is this person, where can they go, do we cover it — and may we share this trader's number?" |
+| **Answers** | "What context is being browsed, what physical fix is actually known, where can this person go, do we cover it — and may we share this trader's contact?" |
 | **Owner** | Field operations. Places are a field decision, not a taxonomy decision. |
 | **UI** | `LocationSheet`, `locationStore`, the location pill, `MapNotice`, `MapRecenterControl`, distance formatting. |
 | **Data** | `areas`, `places` — **including the PII**. |
 | **Integrations** | Mapbox via `MapboxAdapter`, browser Geolocation, PostGIS. |
 | **Depends on** | **Nothing.** Leaf. |
 
-**Exports:** `areaTree()` · `placesNear(center, radiusKm)` · `resolvePoint(point, radiusKm)` · `distanceFrom(origin, place)` · **`resolveContact(placeId) → {kind:'public', channel} | {withheld:'private'} | {withheld:'none'}`**.
+**Exports:** `areaTree()` · `placesNear(browsingContext, radiusKm)` ·
+`resolvePoint(point, radiusKm)` · `distanceFrom(browsingContext, place)` · named
+`deviceLocation` admission/freshness operations · **`resolveContact(placeId) →
+{kind:'public', channel} | {withheld:'private'} | {withheld:'none'}`**.
 
 **Hard rules.**
 - **One radius predicate, owned here.** `ST_DWithin(location, origin::geography, r)` for the **cut**; `ST_Distance` (geography, also spheroid) for the **displayed number**. Both spheroid, both index-friendly, no artefact. **No caller writes PostGIS.**
-- **`contactChannelValue` may never leave this module.** Not as a field, not on any returned type. `resolveContact()` is the only door and it is server-side.
+- **`contactChannelValue` may never leave this module except on the authorized public
+  branch.** `resolveContact()` is the only server-side door; every withheld/error branch
+  has no value field.
 - **Places and Items meet at an Offer and nowhere else.** Geo never reads items, variants or prices, and today it does not need to.
 - `areas.parent_area_id` gets a real self-referencing FK.
-- **Geo owns origin; Discovery owns the camera.** One interaction, two owners, and Geo must be told — otherwise the recenter trap survives the refactor.
+- **Geo owns named location meanings; Discovery owns camera composition.** Search accepts
+  browsing context. Personal markers, Presence, and exact routing accept only admitted
+  fresh device evidence. Recenter refreshes device state and calls Discovery to move the
+  camera without replacing browsing context.
 
 **Later.** Area boundary geometry when coverage needs polygons. A trader self-service write path for `contactVisibility` — which is precisely why the gate must be a function boundary *before* that ships.
 
@@ -619,6 +679,11 @@ The one edge that looks like a cycle and is not: **Contribution → Offers** (a 
 - Composes through module functions — it never writes SQL joining Catalog, Geo and Offers tables.
 - **Every input validated at the edge.** All 15 read actions are public HTTP endpoints and 12 written, reviewed parsers sit unwired. See Section 7 for exactly which endpoints get which parser.
 - **Search is a Discovery entry point, not a module.** Splitting it creates a module whose only consumer is the other half of itself, threading the same context — locale, origin, radius, alias vocabulary — across a boundary for no gain.
+- **A query `origin` means browsing context, not physical self-location.** Exact device
+  origin may cross a provider boundary only under ADR-023 freshness and disclosure.
+- **ADR-024 remains Proposed.** Discovery may not grow speculative contact, redirect,
+  order, courier, tracking, or provider-status services. A later accepted seam must own
+  one wired call site and its failure/disablement path.
 
 **Debt it inherits and must clear.** The discarded `selectedPlaceId` prop. The search list's missing error path. The dead-end empty states. The missing photo credits on the search path.
 
@@ -741,7 +806,7 @@ Line numbers are omitted deliberately. This document's own verdict on `docs/APP-
 
 | # | Surface / state | Owner | File | Status |
 |---|---|---|---|---|
-| 1 | `HomePage` — the only route | **Platform** *(composition root only)* | `src/app/page.tsx` | **Violated.** Currently owns all five modules' logic. What remains after eviction is the shell, the mounts, the wiring. |
+| 1 | `HomePage` — map application root | **Platform** *(composition root only)* | `src/app/page.tsx` | **Violated.** Currently owns all five modules' logic. `/item/[slug]` and `/place/[slug]` are separate read-only public routes. |
 | 2 | `AdaptiveShell` — the 768px branch | Platform | `AdaptiveShell.tsx` | live |
 | 3 | `CompactShell` | Platform | `CompactShell.tsx` | live |
 | 4 | `RegularShell` | Platform | `RegularShell.tsx` | live |
@@ -771,25 +836,25 @@ Line numbers are omitted deliberately. This document's own verdict on `docs/APP-
 | 28 | `ItemDetailSheet` — the narrowing loop | Discovery | `ItemDetailSheet.tsx` | live |
 | 29 | `offerSignal` + `confidenceFor` | **Offers** | in `ItemDetailSheet.tsx` | **Violated.** A freshness window and a confidence score computed in a client component and imported back out to colour pins. **Delete; the model already exists in `lib/trust.ts`.** |
 | 30 | `ItemDetailSheet` hand-rolled load/error/empty | Discovery | `ItemDetailSheet.tsx` | partial — no retry on error; empty state sends the user to Settings from inside a modal that occludes it |
-| 31 | `GetItSheet` — lookup becomes a trip | Discovery | `GetItSheet.tsx` | live; arms a visit on departure |
-| 32 | Contact seller row | **Geo** | in `GetItSheet.tsx` | **Can never fire.** `contactVisibility` is always private; no writer exists. The consent check is a string compare in a client component. |
-| 33 | Share / Copy + manual fallback | Discovery | `GetItSheet.tsx` | live; three tiers, none silent |
+| 31 | `GetItSheet` — lookup becomes a trip | Discovery | `GetItSheet.tsx` | **Privacy defect.** Merely opening sends overloaded exact origin plus destination to Mapbox; ADR-023 requires explicit fresh-device admission and disclosure. |
+| 32 | Contact seller row | **Geo** | in `GetItSheet.tsx` | **Display-only.** No consented value crosses the server boundary. ADR-022 consent is required; ADR-024 remains Proposed. |
+| 33 | Share / Copy + manual fallback | Discovery | `GetItSheet.tsx` | Three fallbacks work, but copy overstates `Price confirmed` and bypasses the existing canonical place route. |
 | 34 | `ItemCard` — the list row | **Catalog** | `ItemCard.tsx` | live. *It renders an Offers badge; it does not own it. A component may compose two modules' outputs — the one-owner rule is about tables and modules, not pixels.* |
 | 35 | `toStatus` | **Offers** | in `ItemCard.tsx` | **Violated.** Reads `freshest` raw, never consults age. **Third** trust derivation. Delete. |
 | 36 | `PhotoCredits` | **Catalog** | in `ItemCard.tsx` | **Licence breach.** Rendered under the popular list only; search shows the same images with no credit. One line. |
 | 37 | `StatusBadge` / `StatusDot` | **Offers** | `StatusBadge.tsx` | live; always label-paired so meaning survives greyscale |
 | 38 | `LocationSheet` — the administrative tree | **Geo** | `LocationSheet.tsx` | live |
 | 39 | Geolocation states — 4 problems plus `outside` | Geo | `LocationSheet.tsx` | live; **best error handling in the codebase** |
-| 40 | `MapRecenterControl` | **Geo** | `MapboxCanvas.tsx` | **Duplicate + trap.** Collapses #39's taxonomy into two strings with different options, and moves the camera without writing `locationStore`. *"One interaction, two owners" is the diagnosis, not the design:* **Geo owns it, and Discovery gets a camera callback.** |
+| 40 | `MapRecenterControl` | **Geo** | `MapboxCanvas.tsx` | **Duplicate + trap.** It collapses #39's errors and moves only the camera. Under ADR-023 Geo refreshes device evidence while Discovery receives a camera callback; browsing context does not change. |
 | 41 | Location pill | Geo | `page.tsx` | live |
 | 42 | `MapNotice` | Geo | `page.tsx` | live; the app's only toast-shaped thing |
-| 43 | `locationStore` — position + **provenance** | Geo | `locationStore.ts` | live; provenance-as-required-field is the best design call in the repo |
+| 43 | `locationStore` — position + **provenance** | Geo | `locationStore.ts` | provenance is sound, but the persisted position is overloaded across browsing, personal marker, camera, and routing; ADR-023 requires separation |
 | 44 | `ReportPriceSheet` | **Contribution** | `ReportPriceSheet.tsx` | live; fully controlled, zero local state |
 | 45 | Report submit states | Contribution | `page.tsx` | partial — **four independent booleans**, not a machine. `reportingMachine` models exactly this and is dead. The try/catch wraps write *and* refresh, so a flaky refresh reports "Submission failed" after a committed write. |
 | 46 | Price-report offline queue | Contribution | `page.tsx` | **Broken.** Dequeue after the loop → duplicate replay forever. No attempts cap, no TTL, no idempotency key. |
-| 47 | `ConfirmVisitSheet` — the loop that closes | Contribution | `ConfirmVisitSheet.tsx` | live; "Wasn't there" is one tap and auto-submits |
+| 47 | `ConfirmVisitSheet` — intended closing-loop surface | Contribution | `ConfirmVisitSheet.tsx` | UI and local arming exist; public submission is contained |
 | 48 | Visit arming — 90s dwell / 4h expiry | Contribution | `ConfirmVisitSheet.tsx` | live; `takeDueVisit` consumes the arm so the question is asked once |
-| 49 | Visit submit states | Contribution | `ConfirmVisitSheet.tsx` | live; an online rejection is correctly *not* queued |
+| 49 | Visit submit states | Contribution | `ConfirmVisitSheet.tsx` | present in contained code; not a live-write completion claim |
 | 50 | Visit-confirmation offline queue | Contribution | `ConfirmVisitSheet.tsx` | live; has the attempts cap and staleness TTL **#46 lacks** |
 | 51 | The stale-data treatment | **Offers** | — | **Missing.** No last-sync anywhere. `sw.js` already stamps a cached-at header and nothing reads it. |
 
