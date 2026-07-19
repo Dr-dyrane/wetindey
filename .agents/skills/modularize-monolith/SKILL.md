@@ -31,6 +31,19 @@ When refactoring a monolith component (e.g. `MyMonolith.tsx`), split it into the
 6. **CSS Override**: `MyMonolith.css`
    - Declares floating controls offsets, z-index hierarchies, scroll configurations, and surface container styling.
 
+## 📏 Target File Size & Line Limits
+
+To prevent bloated sub-monoliths, adhere to the following target line count limits:
+
+| File Role | File Name | Max Target Lines | Guidelines |
+| :--- | :--- | :---: | :--- |
+| **Controller** | `MyMonolith.tsx` | **20 – 50 lines** | Thin entry point only. Invokes hook and passes props to View. |
+| **Imports** | `imports/imports.ts` | **20 – 60 lines** | Clean, consolidated re-exports of dependencies and icons. |
+| **Copy** | `copy/copy.ts` | **20 – 80 lines** | Dictionary object of local copy and Pidgin strings. |
+| **Styles** | `styles/MyMonolith.css` | **20 – 100 lines** | Scoped CSS overrides. |
+| **JSX View** | `views/MyMonolithView.tsx` | **150 – 300 lines** | Pure presentational layout. Split into sub-views (`SubSectionView.tsx`) if over 300 lines. |
+| **Logic Hook** | `hooks/useMyMonolith.ts` | **150 – 300 lines** | State, effects, and event handlers. Extract sub-hooks (`useSubLogic.ts`) if over 300 lines. |
+
 ## Execution Checklist
 
 - [ ] **Lane Verification**: Claim the lane in `LANES.md` listing the monolithic file to modify and the five new paths to be created.
