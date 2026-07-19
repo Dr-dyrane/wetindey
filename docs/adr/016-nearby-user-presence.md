@@ -110,8 +110,8 @@ its account moves.
 | Interaction | An accessible Community Presence Card offers `Wave`, Block, Report, and Close; `Wave` is ephemeral, rate-limited, in-app, and never opens chat or shares contact data |
 | Radius | Server-owned maximum 5 km from the viewer's stored coarse centroid; no client center, viewport, or radius override |
 | Result cap | Maximum 50 subjects per snapshot; no count, pagination, replacement sweep, or hidden remainder |
-| Projection | Coarse centroid plus opaque per-snapshot display/action capabilities only |
-| Excluded fields | Except for separately consented chosen display name and avatar, no profile or identity field; never email, phone, WhatsApp, contact channel, stable auth ID, exact coordinate, precise per-user timestamp, reputation, verification, status, role, or contribution history |
+| Projection | Coarse centroid plus fresh, cryptographically opaque per-snapshot display/action capabilities only; no stable account, lease, or Wave identifier |
+| Excluded fields | Except for separately consented chosen display name and avatar, no profile or identity field; never email, phone, WhatsApp, contact channel, stable auth ID, stable account/lease/Wave ID, exact coordinate, precise per-user timestamp, reputation, verification, status, role, or contribution history |
 | Response | Authenticated and private with `Cache-Control: private, no-store`; memory only; never stored by the service worker or offline cache |
 | Transport | Foreground near-real-time snapshots and capability interactions use a bounded authenticated transport with explicit frequency, fan-out, retry, and payload budgets; never claim instantaneous or continuously live accuracy |
 | Controls | Default-off application feature flag and an independent server-owned database kill switch; both must allow the operation |
@@ -121,6 +121,69 @@ The 500 m centroid reduces precision; it does not anonymize a person in a sparse
 prove that the input was inside the cell. The same lease returns the same centroid. The
 system must not issue multiple jittered representations that can be averaged toward the
 exact input.
+
+### Security amendment — capability, idempotency, and safety serialization
+
+The following controls are part of the accepted target architecture and are required
+before any Presence implementation can be considered pilot-ready. They do not authorize
+implementation, a shared migration, a deployment, UI wiring, or pilot traffic.
+
+- **Server-owned activation status:** the server authenticates the actor and binds any
+  opaque retry nonce to that actor and session before creating a server-owned operation
+  record with a bounded TTL. The server owns the normalized idempotency key and the
+  status machine (`pending` is nonterminal; terminal states are `committed`, `rejected`,
+  `expired`, or `revoked`). A pending record reaching its TTL transitions atomically to
+  `expired` and cannot be revived; the record stores no coordinate, cell, profile, or
+  response capability. A retry of one
+  operation may return only the same internal result while it is valid; it must never
+  renew a lease, accept a client cell or centroid, or expose the operation record. A
+  retry after expiry, preference withdrawal, sign-out, suspension, block, stop, deletion,
+  or kill-switch revocation is a generic denial.
+  Exact coordinates and raw retry material remain request-memory/internal state only.
+- **Report idempotency:** every private report action is bound to a server-validated,
+  purpose-specific idempotency value and a bounded-TTL server record keyed by the
+  normalized idempotency value, authenticated viewer, capability purpose/snapshot, and
+  canonical subject. The server owns normalization and uniqueness for that key. Retries
+  return one internal outcome and create at most one report; replay after capability
+  revocation is a generic denial and never exposes report details or subject identity. A
+  value cannot be reused for another subject, viewer, purpose, or snapshot.
+- **Canonical pair serialization:** Wave, Block, and Report operations over a pair use
+  one exact byte serialization of the two internal account keys in sorted order and one
+  transaction-scoped pair lock. The operation locks the server-owned kill-switch
+  generation row for the same transaction, then rechecks reciprocity, expiry, blocks,
+  reports, and generation after acquiring both locks and again before commit. Kill-switch
+  mutation uses that same generation lock. Block and Report safety decisions always win:
+  in that same transaction they revoke the pair's capabilities and remove pending Waves
+  before success; no Wave may commit after a committed Block, Report, or kill-switch
+  generation change, including under concurrent requests.
+- **Capability boundary:** every display, Wave, Block, and Report capability is freshly
+  random and opaque, bound server-side to exactly one viewer, one subject, one purpose,
+  one snapshot, and an expiry no later than the relevant lease. Capabilities are rejected
+  after expiry, stop, preference withdrawal, sign-out, block, report, account deletion,
+  or kill-switch generation change. They are never account IDs, lease IDs, Wave IDs,
+  profile URLs, general lookup keys, or interchangeable action tokens.
+- **Presence-specific avatar projection:** an opted-in avatar is projected through a
+  random Presence-owned object/key or equivalent opaque proxy and is re-keyed when the
+  Presence-profile consent or selected avatar changes. The projection storage and fetch
+  path are non-public and use private/no-store response headers; if a URL is needed, it
+  is short-lived and capability-bound. Both forms require deletion/revocation cleanup.
+  The stable profile Blob URL, user-scoped object key, and public profile asset are never
+  returned in a Presence snapshot or capability response.
+- **No sensitive residue:** exact coordinates, stable account/lease/Wave IDs, capability
+  strings, display/avatar source URLs, image-fetch metadata, contact data, report
+  details, activation idempotency material, coarse centroids, lease issuance/expiry,
+  viewer-subject
+  mappings, abuse-control digests, and request metadata must not enter logs, analytics,
+  traces, crash/error payloads, URLs, query strings, local/session/IndexedDB/Cache
+  Storage, service-worker state, response caches, image caches, or offline state.
+  Presence responses, capability state, and avatar projections are authenticated,
+  private, in-memory, and `no-store`.
+- **Independent controls:** a default-false, server-owned runtime flag and the
+  server-owned database kill switch are independent gates for activation, reads, and
+  every capability action. Missing, malformed, stale, or non-true runtime configuration
+  is denial, and the flag is evaluated per operation rather than trusted from a client.
+  Either gate denying must fail closed; enabling either gate never restores an old lease,
+  snapshot, capability, or idempotency operation.
 
 ## Separation of concepts
 
