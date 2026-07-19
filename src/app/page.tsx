@@ -1212,7 +1212,7 @@ export default function HomePage() {
     const getItAction = (
       <div
         className={`stack-surface z-10 shrink-0 ${
-          isRegular ? "static pt-1" : "sticky top-0 py-2"
+          isRegular ? "static pt-1" : "static py-2"
         }`}
       >
         <Button
@@ -1240,7 +1240,7 @@ export default function HomePage() {
     );
 
     return (
-      <div className="flex min-h-full flex-col gap-4 md:h-full md:min-h-0 md:overflow-hidden">
+      <div className="flex h-[calc(100%-max(var(--sheet-hidden,0px),var(--safe-area-bottom))-24px)] min-h-0 flex-col gap-4 md:h-full md:overflow-hidden">
         <div className="flex shrink-0 items-start justify-between">
           <div className="flex-1 pr-4">
             <h2 className="text-headline tracking-tight text-text-primary">{detailPlace.name}</h2>
@@ -1275,8 +1275,9 @@ export default function HomePage() {
           </button>
         </div>
 
-        {/* Compact keeps the persistent action after the place context, then
-            lets the sheet's one scroller carry prices beneath it. */}
+        {/* Compact keeps one persistent in-flow action after the place context.
+            Prices own the only moving region beneath it, so rows never pass
+            behind the action and the translated sheet creates no blank tail. */}
         {!isRegular ? getItAction : null}
 
         {/* What this market is currently selling. */}
@@ -1284,7 +1285,10 @@ export default function HomePage() {
           <h4 className="shrink-0 text-footnote text-text-secondary">
             Prices in market
           </h4>
-          <div className="flex-1 pr-1 md:min-h-0 md:overflow-y-auto">
+          <div
+            data-navigation-detail-scroller
+            className="min-h-0 flex-1 overflow-y-auto overscroll-y-none pr-1"
+          >
             <AsyncList
               items={placeOffers}
               isLoading={isPlaceOffersLoading}
@@ -1310,14 +1314,6 @@ export default function HomePage() {
 
         {/* Regular preserves the action's established bottom placement. */}
         {isRegular ? getItAction : null}
-
-        {/* Compact keeps the translated-sheet tail inside the sticky action's
-            content boundary. Regular retains NavigationStack's established
-            safe-area padding instead. */}
-        <div
-          aria-hidden
-          className="h-[calc(max(var(--sheet-hidden,0px),var(--safe-area-bottom))+24px)] shrink-0 md:hidden"
-        />
       </div>
     );
   }, [

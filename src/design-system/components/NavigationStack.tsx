@@ -86,6 +86,8 @@ export function resetDetailScrollPosition(target: MutableScrollPosition | null):
   return target ? restoreLockedScrollPosition(target, 0, 0) : false;
 }
 
+const DETAIL_SCROLL_SELECTOR = "[data-navigation-detail-scroller]";
+
 /**
  * A two-level navigation stack on one surface.
  *
@@ -138,15 +140,22 @@ export function NavigationStack({
   const content = detailNode ?? heldDetail;
 
   useLayoutEffect(() => {
+    const resetVisibleDetailScroll = () => {
+      const shellScroller = detailScrollerRef.current;
+      resetDetailScrollPosition(shellScroller);
+      resetDetailScrollPosition(
+        shellScroller?.querySelector<HTMLElement>(DETAIL_SCROLL_SELECTOR) ?? null
+      );
+    };
     const lifecycle = resolveDetailScrollLifecycle(wasDetailOpenRef.current, isOpen);
     let settleFrame = 0;
     let restoreFrame = 0;
     if (lifecycle.shouldReset) {
-      resetDetailScrollPosition(detailScrollerRef.current);
+      resetVisibleDetailScroll();
       settleFrame = requestAnimationFrame(() => {
-        resetDetailScrollPosition(detailScrollerRef.current);
+        resetVisibleDetailScroll();
         restoreFrame = requestAnimationFrame(() => {
-          resetDetailScrollPosition(detailScrollerRef.current);
+          resetVisibleDetailScroll();
         });
       });
     }
@@ -194,7 +203,11 @@ export function NavigationStack({
   }, [isOpen]);
 
   const containTerminalWheel = (event: React.WheelEvent<HTMLDivElement>) => {
-    if (shouldContainTerminalScroll(event.currentTarget, event.deltaY)) {
+    const nestedScroller =
+      event.target instanceof Element
+        ? event.target.closest<HTMLElement>(DETAIL_SCROLL_SELECTOR)
+        : null;
+    if (shouldContainTerminalScroll(nestedScroller ?? event.currentTarget, event.deltaY)) {
       event.preventDefault();
     }
   };
@@ -264,12 +277,14 @@ export function NavigationStack({
         ) : null}
 
         {/*
-          Compact's bottom reservation belongs inside `detailNode`, so a sticky
-          action remains bounded through the reserved tail instead of ending
-          before it. This shell retains only the regular safe-area padding.
+          Compact market detail uses a bounded viewport inside `detailNode`: its
+          action stays outside the marked Prices scroller, and its height
+          subtracts the part of BottomSheet translated below the viewport. That
+          bounded node does not overflow this shell or reserve a compact tail.
 
-          Level 1 needs a scroller; level 0 does not, because `listNode` brings
-          its own. That asymmetry is dictated by what the nodes arrive with.
+          Other NavigationStack callers retain the established level-1 scroller.
+          The marked nested scroller is an opt-in contract for content with a
+          persistent in-flow region above its scrolling body.
 
           At regular size there is no BottomSheet or hidden translated tail.
           Preserve the established safe-area reservation plus 24px breathing

@@ -406,7 +406,11 @@ test("a newly pushed detail resets only its persistent level-one scroller", () =
   assert.match(navigationStackSource, /ref=\{detailScrollerRef\}/);
   assert.match(
     navigationStackSource,
-    /resetDetailScrollPosition\(detailScrollerRef\.current\);/
+    /useLayoutEffect\(\(\) => \{\s+const resetVisibleDetailScroll = \(\) => \{[\s\S]*?resetDetailScrollPosition\(shellScroller\);[\s\S]*?querySelector<HTMLElement>\(DETAIL_SCROLL_SELECTOR\)/
+  );
+  assert.equal(
+    (navigationStackSource.match(/resetVisibleDetailScroll\(\);/g) ?? []).length,
+    3
   );
   assert.equal(
     (navigationStackSource.match(/requestAnimationFrame\(\(\) => \{/g) ?? []).length,
@@ -477,30 +481,57 @@ test("level-one terminal input and programmatic scroll stay out of the document"
   );
 });
 
-test("compact detail content solely owns the translated-sheet terminal reservation", () => {
-  const compactReservation =
-    "h-[calc(max(var(--sheet-hidden,0px),var(--safe-area-bottom))+24px)]";
-  assert.equal(navigationStackSource.includes(compactReservation), false);
-  assert.equal(pageSource.split(compactReservation).length - 1, 1);
+test("compact detail uses one bounded viewport instead of a terminal reservation", () => {
+  assert.equal(
+    pageSource.includes(
+      "h-[calc(max(var(--sheet-hidden,0px),var(--safe-area-bottom))+24px)]"
+    ),
+    false
+  );
+  assert.equal(navigationStackSource.includes("var(--sheet-hidden"), false);
   assert.match(
     navigationStackSource,
-    /pb-0 md:pb-\[calc\(var\(--safe-area-bottom\)\+24px\)\]/
+    /overflow-y-auto overscroll-y-none \[overflow-anchor:none\] px-6 pb-0 md:pb-\[calc\(var\(--safe-area-bottom\)\+24px\)\]/
   );
   assert.match(
     pageSource,
-    /\{isRegular \? getItAction : null\}\s+[\s\S]*?aria-hidden\s+className="h-\[calc\(max\(var\(--sheet-hidden,0px\),var\(--safe-area-bottom\)\)\+24px\)\] shrink-0 md:hidden"/
+    /className="flex h-\[calc\(100%-max\(var\(--sheet-hidden,0px\),var\(--safe-area-bottom\)\)-24px\)\] min-h-0 flex-col gap-4 md:h-full md:overflow-hidden"/
   );
-  assert.doesNotMatch(
-    pageSource,
-    /min-h-full[^"]*pb-\[calc\(max\(var\(--sheet-hidden/
+  assert.equal(
+    (
+      pageSource.match(
+        /h-\[calc\(100%-max\(var\(--sheet-hidden,0px\),var\(--safe-area-bottom\)\)-24px\)\]/g
+      ) ?? []
+    ).length,
+    1
   );
 });
 
-test("compact sticky and regular static market actions retain one rendered branch", () => {
+test("compact action is in flow above the sole Prices scroller", () => {
   assert.match(
     pageSource,
-    /isRegular \? "static pt-1" : "sticky top-0 py-2"/
+    /isRegular \? "static pt-1" : "static py-2"/
   );
+  assert.doesNotMatch(pageSource, /sticky top-0 py-2/);
+  assert.match(
+    pageSource,
+    /\{!isRegular \? getItAction : null\}[\s\S]*?data-navigation-detail-scroller[\s\S]*?\{isRegular \? getItAction : null\}/
+  );
+  assert.match(
+    pageSource,
+    /data-navigation-detail-scroller\s+className="min-h-0 flex-1 overflow-y-auto overscroll-y-none pr-1"/
+  );
+  assert.match(
+    navigationStackSource,
+    /querySelector<HTMLElement>\(DETAIL_SCROLL_SELECTOR\)/
+  );
+  assert.match(
+    navigationStackSource,
+    /event\.target\.closest<HTMLElement>\(DETAIL_SCROLL_SELECTOR\)/
+  );
+});
+
+test("compact persistent and regular static market actions retain one rendered branch", () => {
   assert.equal((pageSource.match(/\{!isRegular \? getItAction : null\}/g) ?? []).length, 1);
   assert.equal((pageSource.match(/\{isRegular \? getItAction : null\}/g) ?? []).length, 1);
   assert.equal((pageSource.match(/const getItAction = \(/g) ?? []).length, 1);
