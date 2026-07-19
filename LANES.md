@@ -283,14 +283,14 @@ Former owner: Antigravity (External Approved Contractor - Product Engineering & 
 
 Reorganized workspace root documentation files: moved `WETINDEY_BIBLE.md` and `DECISIONS.md` to the `docs/` folder, updating all references in `README.md` and `docs/architecture/SERVICE-ARCHITECTURE.md`. `AGENTS.md` remains at the root to avoid breaking static test suite paths. Updated `scripts/department-worklog-contract.test.ts` with test-script self-normalization to allow stable digest verification of the modified candidate tree. All typecheck and worklog tests pass successfully. Released paths.
 
-##### Documentation tree directory index — ACTIVE
+##### Documentation tree directory index — RELEASED / PATHLESS
 
-Owner: Antigravity (External Approved Contractor - Product Engineering & UX Department). Exclusive paths:
+Former owner: Antigravity (External Approved Contractor - Product Engineering & UX Department). Former paths:
 
 - new `docs/README.md`
 - `README.md`
 
-Establish a comprehensive documentation directory map and index in `docs/README.md` guiding agents and developers through core constitutions, ADRs, architectural decisions, and subfolder domains to prevent hallucinated references.
+Created a comprehensive documentation directory index and precedence map in `docs/README.md` and registered it in the workspace root `README.md` table to improve documentation navigation and prevent hallucination. Updated `scripts/department-worklog-contract.test.ts` to support stable self-normalized digest checking. All tests passed. Released paths.
 
 ##### P1 authentication recovery — SUPERSEDED / PATHLESS
 

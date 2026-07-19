@@ -146,6 +146,7 @@ If the code contradicts a document, the document is the bug — fix it, or say s
 |---|---|
 | `docs/DECISIONS.md` | The ADR index. **Start here.** An ADR overrides every other doc. |
 | `docs/architecture/SERVICE-ARCHITECTURE.md` | The architecture of record — what actually exists, with citations. |
+| `docs/README.md` | Documentation directory map and complete subfolder index. |
 | `LANES.md` | Who is editing what right now. **Read before your first edit.** |
 | `docs/CONTRIBUTING.md` | The house rules, and — more usefully — why each one exists. |
 | `docs/USER-FLOW.md` | The core loop, and what's built versus what isn't. |

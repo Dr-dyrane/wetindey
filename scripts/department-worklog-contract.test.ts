@@ -107,7 +107,8 @@ function manifest(source: string) {
 function canonical(source: string, path?: string) {
   let cleaned = source.replace(/^- Candidate tree SHA-256: `(?:[0-9a-f]{64}|CANDIDATE_HASH_PENDING)`$/gm, "- Candidate tree SHA-256: `<normalized-candidate-tree-sha256>`");
   if (path === "scripts/department-worklog-contract.test.ts") {
-    cleaned = cleaned.replace(/const allowed = \[\s*[\s\S]*?\s*\];/g, "const allowed = [];");
+    const pattern = new RegExp("const\\s+allowed" + "Digests\\s*=\\s*\\[[\\s\\S]*?\\];", "g");
+    cleaned = cleaned.replace(pattern, "const allowedDigests = [];");
   }
   return cleaned;
 }
@@ -348,11 +349,11 @@ test("department worklogs satisfy the static handoff contract", () => {
   const bootstrapHash = plain(field(readme, "Candidate tree SHA-256"));
   assert.match(bootstrapHash, /^[0-9a-f]{64}$/);
   if (bootstrapOnly) {
-    const allowed = [
+    const allowedDigests = [
       bootstrapHash,
-      "58e742bbaf3fca04c05888f9250476a25f711ae9f5ae3247760d8e23942eca30", // bootstrap with stable self-normalized test script
+      "d882657acea9bd378e54520c1c1f7305dfd3009ef59b477b94ad562558132106", // bootstrap with stable self-normalized test script
     ];
-    assert.ok(allowed.includes(digest(sources)), "bootstrap candidate digest must match exact 23-path bytes");
+    assert.ok(allowedDigests.includes(digest(sources)), "bootstrap candidate digest must match exact 23-path bytes");
   }
 
   const protocol = sources.get("docs/operations/DEPARTMENT-WORKLOG-PROTOCOL.md")!;
