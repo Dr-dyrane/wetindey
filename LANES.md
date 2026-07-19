@@ -226,6 +226,19 @@ Owner: Antigravity (External Approved Contractor - Product Engineering & UX Depa
 
 The map presentation rendering UI, floating controls, notice display, and recenter callback assembly are successfully extracted out of the monolithic `src/app/page.tsx` into a deeply modular component structure under `src/app/_components/map-presentation/`. Bounded verification passed successfully (strict types compiled cleanly, lint passed with 0 warnings on modified files). Release all 7 paths. Commit `aea79fa` is pushed locally.
 
+##### Live-app modularization Slice 3 — ACTIVE
+
+Owner: Antigravity (External Approved Contractor - Product Engineering & UX Department). Exclusive paths:
+
+- `src/app/page.tsx`
+- new `src/app/useHomePage.ts`
+- new `src/app/HomePageView.tsx`
+- new `src/app/imports.ts`
+- new `src/app/copy.ts`
+- new `src/app/HomePage.css`
+
+Strangulate and modularize the monolithic root page `src/app/page.tsx` into a deeply separated component structure under `src/app/`, maintaining all developer inline comments and rollback notes. Require strict static typing and build checks.
+
 ##### P1 authentication recovery — SUPERSEDED / PATHLESS
 
 Former owner: Authentication / Client Reliability. Former paths:
