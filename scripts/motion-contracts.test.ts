@@ -33,6 +33,7 @@ import {
   shouldMoveInitialFocus,
 } from "../src/design-system/components/ModalSheet";
 import {
+  reconcileTerminalDetailHeight,
   resetDetailScrollPosition,
   resolveDetailScrollLifecycle,
   restoreLockedScrollPosition,
@@ -504,6 +505,8 @@ test("level-one terminal input and programmatic scroll stay out of the document"
 });
 
 test("compact detail uses one bounded viewport instead of a terminal reservation", () => {
+  assert.equal(reconcileTerminalDetailHeight(600, 838, 790), 624);
+  assert.equal(reconcileTerminalDetailHeight(624, 838, 814), 624);
   assert.equal(
     pageSource.includes(
       "h-[calc(max(var(--sheet-hidden,0px),var(--safe-area-bottom))+24px)]"
@@ -529,7 +532,7 @@ test("compact detail uses one bounded viewport instead of a terminal reservation
   );
   assert.match(
     navigationStackSource,
-    /const shellBottom = shellScroller\.getBoundingClientRect\(\)\.bottom;\s+const visibleBottom = Math\.min\(window\.innerHeight, shellBottom\);[\s\S]*?visibleBottom - boundedDetail\.getBoundingClientRect\(\)\.top/
+    /const shellBottom = shellScroller\.getBoundingClientRect\(\)\.bottom;\s+return Math\.min\(window\.innerHeight, shellBottom\);/
   );
   assert.doesNotMatch(
     navigationStackSource,
@@ -545,19 +548,35 @@ test("compact detail uses one bounded viewport instead of a terminal reservation
   );
   assert.match(
     navigationStackSource,
-    /const renderedInset =\s+visibleBottom - nestedScroller\.getBoundingClientRect\(\)\.bottom;/
+    /const GEOMETRY_CONVERGENCE_WINDOW_MS = motion\.duration\.slow \+ 50;/
   );
   assert.match(
     navigationStackSource,
-    /visibleHeight \+ renderedInset - COMPACT_TERMINAL_INSET_PX/
+    /const geometryObserver = new ResizeObserver\(\s+requestGeometryConvergence/
   );
-  assert.equal(
-    (
-      navigationStackSource.match(
-        /boundedDetail\.style\.setProperty\(\s+"--navigation-detail-visible-height"/g
-      ) ?? []
-    ).length,
-    2
+  assert.match(
+    navigationStackSource,
+    /geometryObserver\.observe\(shellScroller\);[\s\S]*?geometryObserver\.observe\(boundedDetail\);[\s\S]*?geometryObserver\.observe\(nestedScroller\);/
+  );
+  assert.match(
+    navigationStackSource,
+    /requestAnimationFrame\(convergeGeometry\)/
+  );
+  assert.match(
+    navigationStackSource,
+    /convergenceDeadline =\s+performance\.now\(\) \+ GEOMETRY_CONVERGENCE_WINDOW_MS;/
+  );
+  assert.match(
+    navigationStackSource,
+    /if \(timestamp < convergenceDeadline\)/
+  );
+  assert.match(
+    navigationStackSource,
+    /Math\.abs\(correctedHeight - publishedHeight\) <=\s+GEOMETRY_TOLERANCE_PX/
+  );
+  assert.match(
+    navigationStackSource,
+    /geometryObserver\.disconnect\(\);/
   );
   assert.match(
     navigationStackSource,

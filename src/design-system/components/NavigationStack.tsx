@@ -96,6 +96,8 @@ export function resetDetailScrollPosition(target: MutableScrollPosition | null):
 const DETAIL_SCROLL_SELECTOR = "[data-navigation-detail-scroller]";
 const BOUNDED_DETAIL_SELECTOR = "[data-navigation-detail-bounded]";
 const COMPACT_TERMINAL_INSET_PX = 24;
+const GEOMETRY_TOLERANCE_PX = 0.5;
+const GEOMETRY_CONVERGENCE_WINDOW_MS = motion.duration.slow + 50;
 
 interface BoundedDetailProps {
   "data-navigation-detail-bounded"?: true;
@@ -105,6 +107,20 @@ function isBoundedDetailNode(node: React.ReactNode): boolean {
   return (
     React.isValidElement<BoundedDetailProps>(node) &&
     node.props["data-navigation-detail-bounded"] === true
+  );
+}
+
+export function reconcileTerminalDetailHeight(
+  publishedHeight: number,
+  visibleBottom: number,
+  renderedScrollportBottom: number
+): number {
+  return Math.max(
+    0,
+    publishedHeight +
+      visibleBottom -
+      COMPACT_TERMINAL_INSET_PX -
+      renderedScrollportBottom
   );
 }
 
@@ -195,80 +211,113 @@ export function NavigationStack({
     const boundedDetail =
       shellScroller.querySelector<HTMLElement>(BOUNDED_DETAIL_SELECTOR);
     if (!boundedDetail) return;
+    const nestedScroller =
+      shellScroller.querySelector<HTMLElement>(DETAIL_SCROLL_SELECTOR);
+    if (!nestedScroller) return;
 
-    let geometryFrame = 0;
-    let sampleUntil = performance.now() + motion.duration.slow + 50;
+    let convergenceFrame = 0;
+    let convergenceDeadline = 0;
 
-    const measureVisibleHeight = () => {
-      /*
-       * The terminal edge is the visible intersection of this level and the
-       * layout viewport. `visualViewport` can end above Safari's rendered sheet
-       * bottom, manufacturing blank space after the real Prices scrollport.
-       */
+    const visibleBottomForCurrentLayout = () => {
       const shellBottom = shellScroller.getBoundingClientRect().bottom;
-      const visibleBottom = Math.min(window.innerHeight, shellBottom);
-      const visibleHeight = Math.max(
-        0,
-        visibleBottom - boundedDetail.getBoundingClientRect().top
-      );
-      boundedDetail.style.setProperty(
-        "--navigation-detail-visible-height",
-        `${visibleHeight}px`
-      );
-
-      /*
-       * The bounded detail owns internal flex geometry that NavigationStack
-       * must not duplicate or predict. Reconcile the published height against
-       * the marked Prices scrollport's rendered bottom instead: this absorbs
-       * only the measured tail error and leaves one 24px terminal inset.
-       */
-      const nestedScroller =
-        shellScroller.querySelector<HTMLElement>(DETAIL_SCROLL_SELECTOR);
-      if (!nestedScroller) return;
-      const renderedInset =
-        visibleBottom - nestedScroller.getBoundingClientRect().bottom;
-      const correctedHeight = Math.max(
-        0,
-        visibleHeight + renderedInset - COMPACT_TERMINAL_INSET_PX
-      );
-      boundedDetail.style.setProperty(
-        "--navigation-detail-visible-height",
-        `${correctedHeight}px`
-      );
+      return Math.min(window.innerHeight, shellBottom);
     };
 
-    const sampleGeometry = (timestamp: number) => {
-      measureVisibleHeight();
-      if (timestamp < sampleUntil) {
-        geometryFrame = requestAnimationFrame(sampleGeometry);
+    const readPublishedHeight = () => {
+      const value = Number.parseFloat(
+        boundedDetail.style.getPropertyValue(
+          "--navigation-detail-visible-height"
+        )
+      );
+      return Number.isFinite(value) ? value : null;
+    };
+
+    const convergeGeometry = (timestamp: number) => {
+      convergenceFrame = 0;
+      const visibleBottom = visibleBottomForCurrentLayout();
+      const publishedHeight = readPublishedHeight();
+
+      if (publishedHeight === null) {
+        const initialHeight = Math.max(
+          0,
+          visibleBottom - boundedDetail.getBoundingClientRect().top
+        );
+        boundedDetail.style.setProperty(
+          "--navigation-detail-visible-height",
+          `${initialHeight}px`
+        );
       } else {
-        geometryFrame = 0;
+        const correctedHeight = reconcileTerminalDetailHeight(
+          publishedHeight,
+          visibleBottom,
+          nestedScroller.getBoundingClientRect().bottom
+        );
+        if (
+          Math.abs(correctedHeight - publishedHeight) <=
+          GEOMETRY_TOLERANCE_PX
+        ) {
+          convergenceDeadline = 0;
+          return;
+        }
+        boundedDetail.style.setProperty(
+          "--navigation-detail-visible-height",
+          `${correctedHeight}px`
+        );
+      }
+
+      if (timestamp < convergenceDeadline) {
+        convergenceFrame = requestAnimationFrame(convergeGeometry);
       }
     };
 
-    const restartGeometrySampling = () => {
-      sampleUntil = performance.now() + motion.duration.slow + 50;
-      measureVisibleHeight();
-      if (geometryFrame === 0) {
-        geometryFrame = requestAnimationFrame(sampleGeometry);
+    const requestGeometryConvergence = () => {
+      convergenceDeadline =
+        performance.now() + GEOMETRY_CONVERGENCE_WINDOW_MS;
+      if (convergenceFrame === 0) {
+        convergenceFrame = requestAnimationFrame(convergeGeometry);
       }
     };
+
+    /*
+     * A CSS-variable height write changes the nested flex scrollport on the
+     * following layout. Observe all three boxes and converge across frames
+     * instead of measuring the pre-write boundary in the same callback.
+     */
+    const geometryObserver = new ResizeObserver(
+      requestGeometryConvergence
+    );
+    geometryObserver.observe(shellScroller);
+    geometryObserver.observe(boundedDetail);
+    geometryObserver.observe(nestedScroller);
 
     const viewport = window.visualViewport;
-    restartGeometrySampling();
-    window.addEventListener("resize", restartGeometrySampling);
-    window.addEventListener("pointermove", measureVisibleHeight, { passive: true });
-    window.addEventListener("touchmove", measureVisibleHeight, { passive: true });
-    viewport?.addEventListener("resize", restartGeometrySampling);
-    viewport?.addEventListener("scroll", restartGeometrySampling);
+    requestGeometryConvergence();
+    window.addEventListener("resize", requestGeometryConvergence);
+    window.addEventListener("pointermove", requestGeometryConvergence, {
+      passive: true,
+    });
+    window.addEventListener("touchmove", requestGeometryConvergence, {
+      passive: true,
+    });
+    viewport?.addEventListener("resize", requestGeometryConvergence);
+    viewport?.addEventListener("scroll", requestGeometryConvergence);
 
     return () => {
-      if (geometryFrame !== 0) cancelAnimationFrame(geometryFrame);
-      window.removeEventListener("resize", restartGeometrySampling);
-      window.removeEventListener("pointermove", measureVisibleHeight);
-      window.removeEventListener("touchmove", measureVisibleHeight);
-      viewport?.removeEventListener("resize", restartGeometrySampling);
-      viewport?.removeEventListener("scroll", restartGeometrySampling);
+      geometryObserver.disconnect();
+      if (convergenceFrame !== 0) {
+        cancelAnimationFrame(convergenceFrame);
+      }
+      window.removeEventListener("resize", requestGeometryConvergence);
+      window.removeEventListener(
+        "pointermove",
+        requestGeometryConvergence
+      );
+      window.removeEventListener(
+        "touchmove",
+        requestGeometryConvergence
+      );
+      viewport?.removeEventListener("resize", requestGeometryConvergence);
+      viewport?.removeEventListener("scroll", requestGeometryConvergence);
     };
   }, [content, isBoundedDetail, isOpen]);
 
