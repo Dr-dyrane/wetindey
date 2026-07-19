@@ -354,15 +354,15 @@ Former owner: Antigravity (External Approved Contractor - Product Engineering & 
 
 Modularized the 37.3 KB GetItSheet component into a 6-file MVC subfolder slice under `src/app/_components/get-it-sheet/` (`hooks/`, `views/`, `styles/`, `copy/`, `imports/`, `GetItSheet.tsx`). All typechecks and static contract tests passed cleanly. Released paths.
 
-##### ExchangePanel component modularization — ACTIVE
+##### ExchangePanel component modularization — RELEASED / PATHLESS
 
-Owner: Antigravity (External Approved Contractor - Product Engineering & UX Department). Exclusive paths:
+Former owner: Antigravity (External Approved Contractor - Product Engineering & UX Department). Former paths:
 
 - `src/app/_components/ExchangePanel.tsx`
 - new `src/app/_components/exchange-panel/`
 - `LANES.md`
 
-Modularize the 30.5 KB ExchangePanel component into a 6-file MVC subfolder slice under `src/app/_components/exchange-panel/` (Controller, Hook, View, Style, Copy, Imports) satisfying the modularization structure contract.
+Modularized the 30.5 KB ExchangePanel component into a 6-file MVC subfolder slice under `src/app/_components/exchange-panel/` (`hooks/`, `views/`, `styles/`, `copy/`, `imports/`, `ExchangePanel.tsx`). All typechecks and static contract tests passed cleanly. Released paths.
 
 #### Developer Relations & Engineering Enablement: department worklog protocol — active exact claim
 
