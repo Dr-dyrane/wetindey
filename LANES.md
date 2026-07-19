@@ -250,8 +250,24 @@ Owner: Antigravity (External Approved Contractor - Product Engineering & UX Depa
 - delete `src/app/imports.ts`
 - delete `src/app/copy.ts`
 - delete `src/app/HomePage.css`
+- new `src/app/_actions/`
+- delete `src/app/actions.ts`
+- delete `src/app/currency-actions.ts`
+- delete `src/app/problem-report-actions.ts`
+- `src/design-system/components/PlaceOfferRow.tsx`
+- `src/design-system/components/MapboxCanvas.tsx`
+- `src/integrations/maps/MapboxAdapter.ts`
+- `src/app/_hooks/useLocationIdentity.ts`
+- `src/app/_components/ManageProfileSheet.tsx`
+- `src/app/_components/MyReportsSheet.tsx`
+- `src/app/_components/LocationSheet.tsx`
+- `src/app/_components/ItemDetailSheet.tsx`
+- `src/app/_components/GetItSheet.tsx`
+- `src/app/_components/ProfileSheet.tsx`
+- `src/app/_components/ExchangePanel.tsx`
+- `src/app/_components/ReportProblemSheet.tsx`
 
-Organize the homepage modular files into structured subfolders under `src/app/_components/home-page/` (hooks, views, styles, copy, imports, and HomePage controller) to keep the app directory clean. Require strict static typing and build checks.
+Organize the homepage modular files into structured subfolders under `src/app/_components/home-page/` and relocate loose server action files into `src/app/_actions/` to establish root directory hygiene. Require strict static typing and build checks.
 
 ##### P1 authentication recovery — SUPERSEDED / PATHLESS
 
