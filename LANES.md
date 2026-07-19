@@ -487,12 +487,16 @@ keyboard/focus/screen-reader labels, >=44px targets, light/dark/forced-colors/re
 and no nested blur/card slabs. Exclude page, actions, Mapbox, GetItSheet, schema, copy
 catalog, and active Maps paths. Require independent exact-path refutation.
 
-##### FF-025 density disclosure — Get It — ACTIVE
+##### FF-025 density disclosure — Get It — COMPLETE / PASS
 
 Owner: Human Interface Design Engineer. Exclusive path:
 `src/app/_components/GetItSheet.tsx`.
 
-Show place, price/unit, one freshness/status signal, and “Go there” first. Keep origin
+Commit `a6149fdd56dd0fc80e864948af6cfe05a788a36e` changed only
+`src/app/_components/GetItSheet.tsx`; independent static refuter **PASS**ed with no P1/P2,
+`git diff --check` passed, and exact-path ESLint had no errors (one pre-existing `<img>`
+warning). Release the file; runtime visual remains unverified by scope. The compact first
+view shows place, price/unit, one freshness/status signal, and “Go there” first. Keep origin
 disclosure, contact, reviews/history, share, attribution, and other secondary actions
 reachable behind one labeled accessible disclosure without removing handlers or data.
 Preserve maps/privacy/fulfilment limits, loading/error/offline states, >=44px targets,
