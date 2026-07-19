@@ -14,9 +14,12 @@ import {
 import { PRIMARY_LOCATION, SW_LAGOS_AREAS, SW_LAGOS_PLACES } from "../src/db/lagosSouthWest";
 import { MapboxAdapter, type MapStyleLifecycleState } from "../src/integrations/maps/MapboxAdapter";
 import {
+  INITIAL_MAP_CANVAS_RUNTIME_STATE,
   INITIAL_MAP_CANVAS_STYLE_STATE,
   mapCanvasOverlay,
+  reduceMapCanvasRuntimeState,
   reduceMapCanvasStyleState,
+  type MapCanvasRuntimeState,
   type MapCanvasStyleState,
 } from "../src/design-system/components/MapboxCanvas";
 import { disclosedRouteOrigin, isDisclosedRouteOriginAdmissible } from "../src/lib/directions";
@@ -695,6 +698,110 @@ class FakePopup {
     return this.open;
   }
 }
+
+test("Canvas current readiness clears stale failure without admitting stale callbacks", () => {
+  const overlayFor = (state: MapCanvasRuntimeState) =>
+    mapCanvasOverlay(state.adapterReady, state.libraryFailed, state.style);
+  const lifecycle = (
+    status: MapStyleLifecycleState["status"],
+    generation: number
+  ): MapStyleLifecycleState =>
+    status === "failed"
+      ? {
+          status,
+          generation,
+          theme: "light",
+          attempt: 2,
+          reason: "timeout",
+        }
+      : {
+          status,
+          generation,
+          theme: "light",
+          attempt: 1,
+        };
+
+  let state = reduceMapCanvasRuntimeState(INITIAL_MAP_CANVAS_RUNTIME_STATE, {
+    type: "adapter-started",
+    adapterEpoch: 7,
+  });
+  state = reduceMapCanvasRuntimeState(state, {
+    type: "style-lifecycle",
+    adapterEpoch: 7,
+    lifecycle: lifecycle("failed", 4),
+  });
+  state = {
+    ...state,
+    adapterReady: true,
+    libraryFailed: true,
+  };
+  assert.equal(overlayFor(state), "failed");
+
+  const staleAdapter = reduceMapCanvasRuntimeState(state, {
+    type: "style-lifecycle",
+    adapterEpoch: 6,
+    lifecycle: lifecycle("ready", 99),
+  });
+  assert.equal(staleAdapter, state);
+  assert.equal(overlayFor(staleAdapter), "failed");
+
+  const staleGeneration = reduceMapCanvasRuntimeState(state, {
+    type: "style-lifecycle",
+    adapterEpoch: 7,
+    lifecycle: lifecycle("ready", 3),
+  });
+  assert.equal(staleGeneration, state);
+  assert.equal(overlayFor(staleGeneration), "failed");
+
+  state = reduceMapCanvasRuntimeState(state, {
+    type: "style-lifecycle",
+    adapterEpoch: 7,
+    lifecycle: lifecycle("ready", 4),
+  });
+  assert.equal(state.adapterReady, true);
+  assert.equal(state.libraryFailed, false);
+  assert.equal(overlayFor(state), null);
+
+  const lateFailure = reduceMapCanvasRuntimeState(state, {
+    type: "style-lifecycle",
+    adapterEpoch: 7,
+    lifecycle: lifecycle("failed", 4),
+  });
+  assert.equal(lateFailure, state);
+  assert.equal(overlayFor(lateFailure), null);
+
+  state = reduceMapCanvasRuntimeState(state, {
+    type: "library-failed",
+    adapterEpoch: 7,
+  });
+  assert.equal(overlayFor(state), "failed");
+  state = reduceMapCanvasRuntimeState(state, {
+    type: "retry-library",
+    adapterEpoch: 7,
+  });
+  assert.equal(overlayFor(state), "loading");
+  assert.equal(state.adapterReady, false);
+  assert.equal(state.libraryFailed, false);
+
+  state = reduceMapCanvasRuntimeState(state, {
+    type: "adapter-started",
+    adapterEpoch: 8,
+  });
+  state = reduceMapCanvasRuntimeState(state, {
+    type: "style-lifecycle",
+    adapterEpoch: 8,
+    lifecycle: lifecycle("ready", 1),
+  });
+  assert.equal(overlayFor(state), null);
+
+  const supersededReady = reduceMapCanvasRuntimeState(state, {
+    type: "style-lifecycle",
+    adapterEpoch: 7,
+    lifecycle: lifecycle("ready", 100),
+  });
+  assert.equal(supersededReady, state);
+  assert.equal(overlayFor(supersededReady), null);
+});
 
 test("style lifecycle clears stale failures only for ready current generations", () => {
   const host = globalThis as unknown as {
@@ -1414,6 +1521,10 @@ test("renderer readiness is render-bound, categorically diagnosed, epoch-bound a
   assert.match(adapterSource, /handleStyleLoadTimeout\(generation, false\)/);
   assert.match(
     sources["src/design-system/components/MapboxCanvas.tsx"],
-    /setStyleState\(\(current\) =>[\s\S]*reduceMapCanvasStyleState\(current, state\)/
+    /adapterRef\.current === adapter[\s\S]*type: "style-lifecycle"[\s\S]*adapterEpoch/
+  );
+  assert.match(
+    sources["src/design-system/components/MapboxCanvas.tsx"],
+    /event\.adapterEpoch !== current\.adapterEpoch[\s\S]*reduceMapCanvasStyleState/
   );
 });

@@ -7,6 +7,7 @@ import React, {
   useImperativeHandle,
   useLayoutEffect,
   useMemo,
+  useReducer,
   useRef,
   useState
 } from "react";
@@ -98,7 +99,32 @@ export interface MapCanvasStyleState {
 
 export const INITIAL_MAP_CANVAS_STYLE_STATE: MapCanvasStyleState = {
   status: "loading",
-  generation: 0
+  generation: 0,
+};
+
+export interface MapCanvasRuntimeState {
+  adapterEpoch: number;
+  adapterReady: boolean;
+  libraryFailed: boolean;
+  style: MapCanvasStyleState;
+}
+
+export type MapCanvasRuntimeEvent =
+  | { type: "adapter-started"; adapterEpoch: number }
+  | { type: "adapter-ready"; adapterEpoch: number }
+  | { type: "library-failed"; adapterEpoch: number }
+  | { type: "retry-library"; adapterEpoch: number }
+  | {
+      type: "style-lifecycle";
+      adapterEpoch: number;
+      lifecycle: MapStyleLifecycleState;
+    };
+
+export const INITIAL_MAP_CANVAS_RUNTIME_STATE: MapCanvasRuntimeState = {
+  adapterEpoch: 0,
+  adapterReady: false,
+  libraryFailed: false,
+  style: INITIAL_MAP_CANVAS_STYLE_STATE,
 };
 
 /**
@@ -119,6 +145,67 @@ export function reduceMapCanvasStyleState(
     return current;
   }
   return { status: event.status, generation: event.generation };
+}
+
+/**
+ * Adapter construction and style readiness used to update independent React
+ * states. A recovered Adapter could therefore report `ready` while a stale
+ * library failure continued to win `mapCanvasOverlay` and paint the failure
+ * card. Keep those authorities in one reducer, and identify every callback by
+ * the Adapter epoch that installed it.
+ */
+export function reduceMapCanvasRuntimeState(
+  current: MapCanvasRuntimeState,
+  event: MapCanvasRuntimeEvent
+): MapCanvasRuntimeState {
+  if (event.type === "adapter-started") {
+    if (event.adapterEpoch <= current.adapterEpoch) return current;
+    return {
+      adapterEpoch: event.adapterEpoch,
+      adapterReady: false,
+      libraryFailed: false,
+      style: INITIAL_MAP_CANVAS_STYLE_STATE,
+    };
+  }
+
+  if (event.adapterEpoch !== current.adapterEpoch) return current;
+
+  if (event.type === "adapter-ready") {
+    return {
+      ...current,
+      adapterReady: true,
+      libraryFailed: false,
+    };
+  }
+
+  if (event.type === "library-failed") {
+    return {
+      ...current,
+      adapterReady: false,
+      libraryFailed: true,
+    };
+  }
+
+  if (event.type === "retry-library") {
+    return {
+      ...current,
+      adapterReady: false,
+      libraryFailed: false,
+      style: INITIAL_MAP_CANVAS_STYLE_STATE,
+    };
+  }
+
+  const style = reduceMapCanvasStyleState(current.style, event.lifecycle);
+  if (style === current.style) return current;
+  return {
+    ...current,
+    // A current Adapter proving a current generation usable is stronger than
+    // stale initialization failure. Loading/failed style events do not alter
+    // the separate library authority.
+    adapterReady: event.lifecycle.status === "ready" ? true : current.adapterReady,
+    libraryFailed: event.lifecycle.status === "ready" ? false : current.libraryFailed,
+    style,
+  };
 }
 
 export function mapCanvasOverlay(
@@ -268,14 +355,13 @@ export const MapboxCanvas = forwardRef<MapCameraHandle, MapboxCanvasProps>(funct
   const { theme } = useTheme();
   const containerRef = useRef<HTMLDivElement>(null);
   const adapterRef = useRef<MapboxAdapter | null>(null);
+  const adapterEpochRef = useRef(0);
   const initialCenterRef = useRef(center);
-  /** The adapter exists; marker/camera effects may safely address it. */
-  const [ready, setReady] = useState(false);
-  /** The current basemap, unlike DOM markers, is owned by the live style. */
-  const [styleState, setStyleState] = useState<MapCanvasStyleState>(
-    INITIAL_MAP_CANVAS_STYLE_STATE
+  const [runtimeState, dispatchRuntime] = useReducer(
+    reduceMapCanvasRuntimeState,
+    INITIAL_MAP_CANVAS_RUNTIME_STATE
   );
-  const [failed, setFailed] = useState(false);
+  const { adapterReady: ready, libraryFailed: failed, style: styleState } = runtimeState;
   /** Bumped by 'Try again'; re-runs the init effect. */
   const [attempt, setAttempt] = useState(0);
 
@@ -312,21 +398,25 @@ export const MapboxCanvas = forwardRef<MapCameraHandle, MapboxCanvasProps>(funct
   // Initialize once the library is actually available.
   useEffect(() => {
     let cancelled = false;
+    const adapterEpoch = ++adapterEpochRef.current;
+    dispatchRuntime({ type: "adapter-started", adapterEpoch });
 
     whenMapboxReady().then((gl) => {
       if (cancelled || !containerRef.current) return;
       if (!gl) {
-        setFailed(true);
+        dispatchRuntime({ type: "library-failed", adapterEpoch });
         return;
       }
       const accessToken = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN || "";
       const adapter = new MapboxAdapter(accessToken);
       adapterRef.current = adapter;
       adapter.setStyleLifecycleListener((state) => {
-        if (!cancelled) {
-          setStyleState((current) =>
-            reduceMapCanvasStyleState(current, state)
-          );
+        if (!cancelled && adapterRef.current === adapter) {
+          dispatchRuntime({
+            type: "style-lifecycle",
+            adapterEpoch,
+            lifecycle: state,
+          });
         }
       });
       // Read the theme at init, not at first render: ThemeContext resolves
@@ -344,16 +434,13 @@ export const MapboxCanvas = forwardRef<MapCameraHandle, MapboxCanvasProps>(funct
       } catch {
         adapter.destroy();
         if (adapterRef.current === adapter) adapterRef.current = null;
-        setReady(false);
-        setStyleState(INITIAL_MAP_CANVAS_STYLE_STATE);
-        setFailed(true);
+        dispatchRuntime({ type: "library-failed", adapterEpoch });
         return;
       }
-      setFailed(false);
       // Flips marker/camera effects once the adapter exists. Style completion
       // has its own state above: markers are DOM and must not be rebuilt merely
       // because the basemap is swapping underneath them.
-      setReady(true);
+      dispatchRuntime({ type: "adapter-ready", adapterEpoch });
     });
 
     return () => {
@@ -502,14 +589,15 @@ export const MapboxCanvas = forwardRef<MapCameraHandle, MapboxCanvasProps>(funct
 
   const retryMap = useCallback(() => {
     if (failed) {
-      setReady(false);
-      setStyleState(INITIAL_MAP_CANVAS_STYLE_STATE);
-      setFailed(false);
+      dispatchRuntime({
+        type: "retry-library",
+        adapterEpoch: runtimeState.adapterEpoch,
+      });
       setAttempt((currentAttempt) => currentAttempt + 1);
       return;
     }
     adapterRef.current?.retryStyle();
-  }, [failed]);
+  }, [failed, runtimeState.adapterEpoch]);
 
   const overlay = mapCanvasOverlay(ready, failed, styleState);
 
