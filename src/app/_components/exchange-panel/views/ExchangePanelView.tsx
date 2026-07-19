@@ -7,6 +7,8 @@ import {
   REFERENCE_CURRENCY_META,
   CurrencyFlag,
   CurrencyPickerSheet,
+  formatDistance,
+  getHaversineDistance,
 } from "../imports/imports";
 import {
   RATE_FORMATTER,
@@ -371,7 +373,9 @@ export function ExchangePanelView({
         <div className="space-y-2">
           {locations.map((location) => {
             const selected = location.id === selectedLocationId;
-            const distance = "0.5 km";
+            const distance = formatDistance(
+              getHaversineDistance(origin.lat, origin.lng, location.lat, location.lng)
+            );
             return (
               <button
                 key={location.id}

@@ -1,0 +1,15 @@
+export const copy = {
+  fallbackTitle: "Prices",
+  type: "Type", chooseType: "Choose type", anyType: "Any type",
+  size: "Size", chooseSize: "Choose size", anySize: "Any size",
+  choose: "Choose", nothingNearby: "Nothing nearby", noneNearby: "None nearby",
+  checkingPrices: "Checking prices…", moreDetails: "More details", hideDetails: "Hide details",
+  nearest: "Nearest", cheapest: "Cheapest", freshest: "Freshest",
+  photoCredit: "Photo credit:", lastObserved: "Last observed", sampleDate: "Sample date",
+  referenceDate: "Reference date", projectionDate: "Projection date",
+  error: "We no fit reach the price data right now.", retry: "Check your network and try again.",
+  nothingWithin: "Nothing within",
+  noReportsPrefix: "No one has reported",
+  noReportsSuffix: "yet. Widen the radius in Settings, or report a price you have seen.",
+  cheapestChip: "Cheapest", closestChip: "Closest", to: "to", per: "per",
+};

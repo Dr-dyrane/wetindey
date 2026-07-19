@@ -364,15 +364,37 @@ Former owner: Antigravity (External Approved Contractor - Product Engineering & 
 
 Modularized the 30.5 KB ExchangePanel component into a 6-file MVC subfolder slice under `src/app/_components/exchange-panel/` (`hooks/`, `views/`, `styles/`, `copy/`, `imports/`, `ExchangePanel.tsx`). All typechecks and static contract tests passed cleanly. Released paths.
 
-##### ItemDetailSheet component modularization — ACTIVE
+##### ExchangePanel distance parity correction — COMPLETE / PATHS RELEASED
 
-Owner: Antigravity (External Approved Contractor - Product Engineering & UX Department). Exclusive paths:
+Owner: released.
+Exclusive paths:
+
+- `src/app/_components/exchange-panel/views/ExchangePanelView.tsx`
+- `LANES.md`
+
+Restored the pre-modularization Haversine distance calculation and original coordinate
+order after the extracted view replaced it with a hardcoded `0.5 km`. Typecheck,
+exact-path lint, diff checks, and localhost hot reload passed. Luna independently
+returned NOT_REFUTED with no P1/P2/P3.
+
+##### ItemDetailSheet component modularization — COMPLETE / PATHS RELEASED
+
+Owner: released. Exclusive paths:
 
 - `src/app/_components/ItemDetailSheet.tsx`
 - new `src/app/_components/item-detail-sheet/`
 - `LANES.md`
 
 Modularize the 27.8 KB ItemDetailSheet component into a 6-file MVC subfolder slice under `src/app/_components/item-detail-sheet/` (Controller, Hook, View, Style, Copy, Imports) satisfying the modularization structure contract.
+
+Controller takeover on 19 July 2026: Antigravity left only untracked copy/import/style
+stubs. Codex completed the compatibility export, thin controller, model/presentation
+hooks, focused subviews, copy, imports, and scoped CSS while preserving public exports.
+Terra's structural, type, exact-path lint, and diff checks passed; Luna independently
+returned NOT_REFUTED with no P1/P2/P3. Production build and localhost transport/render
+gates passed. Direct visual pixels remain technically unverified because the reused
+Safari capture returned a known off-screen black frame; no application error was
+observed.
 
 #### Developer Relations & Engineering Enablement: department worklog protocol — active exact claim
 
