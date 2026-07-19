@@ -1,11 +1,12 @@
 "use client";
 
 import React from "react";
-import { AlertTriangle } from "lucide-react";
+import { IconOrb } from "@/design-system/components/IconOrb";
 import { ModalSheet } from "@/design-system/components/ModalSheet";
 import { SheetPicker } from "@/design-system/components/SheetPicker";
 import { Button } from "@/design-system/components/Button";
 import { Input } from "@/design-system/components/Input";
+import { SolidIcon } from "@/design-system/icons/SolidIcon";
 
 interface Option {
   id: string;
@@ -58,7 +59,14 @@ export function ReportPriceSheet(p: ReportPriceSheetProps) {
   return (
     <ModalSheet open={p.open} onClose={p.onClose} title={p.t.report_price} size="page">
       <form onSubmit={(event) => event.preventDefault()} className="space-y-5 py-4">
-        <Banner kind="caution" icon={<AlertTriangle className="h-4 w-4" />}>
+        <Banner
+          kind="caution"
+          icon={
+            <IconOrb size={32} tone="status-caution">
+              <SolidIcon name="warning" size={18} />
+            </IconOrb>
+          }
+        >
           <span>
             <span className="block font-semibold">{p.t["contribution.paused_title"]}</span>
             <span className="mt-0.5 block font-normal">{p.t["contribution.paused_body"]}</span>
