@@ -517,7 +517,11 @@ test("compact detail uses one bounded viewport instead of a terminal reservation
   );
   assert.match(
     pageSource,
-    /data-navigation-detail-bounded\s+className="flex h-\[calc\(var\(--navigation-detail-visible-height,100dvh\)-var\(--safe-area-bottom\)-24px\)\] min-h-0 flex-col gap-4 md:h-full md:overflow-hidden"/
+    /data-navigation-detail-bounded\s+className="flex h-\[calc\(var\(--navigation-detail-visible-height,100dvh\)-24px\)\] min-h-0 flex-col gap-4 md:h-full md:overflow-hidden"/
+  );
+  assert.doesNotMatch(
+    pageSource,
+    /navigation-detail-visible-height,100dvh\)-var\(--safe-area-bottom\)/
   );
   assert.match(
     navigationStackSource,
