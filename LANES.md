@@ -244,7 +244,7 @@ network failure, so reveal the existing code-entry/resend path without promising
 Late resolution must not regress state; malformed-email validation remains unchanged. No
 provider, environment, strings, schema, or action changes were included.
 
-##### Problem-report Actions modularization — ACTIVE
+##### Problem-report Actions modularization — COMPLETE / STATIC PASS
 
 Owner: Software Architecture / Developer Experience. Exclusive paths:
 
@@ -252,13 +252,13 @@ Owner: Software Architecture / Developer Experience. Exclusive paths:
 - existing `src/app/actions.ts`
 - existing `src/app/_components/ReportProblemSheet.tsx`
 
-Move only `submitProblemReport` and its parser/schema imports, then rewire the sole live
-caller in the same commit. Preserve anonymous-first/session attribution, validation,
-single-insert behavior, serialization, and error handling. No schema, migration, runtime
-flag, page, map, or Presence changes. Independent refutation must prove there is no stale
-import or dead export. Seller-contact, review, profile, location, and Food slices remain
-pathless until separately allocated. This claim is invalidated if Contribution operational
-work reports an `actions.ts` source conflict.
+Commit `cb200bf81503cbfed298808222abd867268363e0` moved only
+`submitProblemReport` and its required parser/schema imports, rewiring the sole live caller
+in the same change. Anonymous-first/session attribution, validation, single-insert behavior,
+serialization, and stable error handling are preserved. A fresh independent static refuter
+passed: the module is a live `"use server"` action, no stale export/import remains, and
+`ReportProblemSheet` is its sole caller. No schema, migration, runtime flag, page, map, or
+Presence change occurred. Release all three paths.
 
 ##### Quality Engineering / Developer Tools — executable quality pipeline Slice A — COMPLETE / PASS
 
