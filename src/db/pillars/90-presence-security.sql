@@ -31,6 +31,7 @@ ALTER ROLE wetindey_presence_lifecycle NOLOGIN NOBYPASSRLS;
 GRANT wetindey_presence_owner TO SESSION_USER WITH INHERIT FALSE;
 GRANT wetindey_presence_owner TO SESSION_USER WITH SET TRUE;
 GRANT CREATE ON SCHEMA public TO wetindey_presence_owner;
+SET LOCAL ROLE wetindey_presence_owner;
 
 ALTER TABLE public.presence_control ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.presence_control FORCE ROW LEVEL SECURITY;
@@ -376,6 +377,7 @@ ALTER FUNCTION public.presence_report_v2(
   uuid, text, text, public.presence_report_kind, text, text, text, text
 ) OWNER TO wetindey_presence_owner;
 
+RESET ROLE;
 REVOKE CREATE ON SCHEMA public FROM wetindey_presence_owner;
 REVOKE wetindey_presence_owner FROM SESSION_USER
   GRANTED BY SESSION_USER;

@@ -2,6 +2,13 @@
 -- The complete forward delta is assembled below from the canonical schema,
 -- services, and security pillars. It must run only after 0000-0013.
 
+-- Temporarily assume the dedicated owner for all 0014 DDL. The membership and
+-- schema CREATE grant are revoked after ownership transfers and postconditions.
+GRANT wetindey_presence_owner TO SESSION_USER WITH INHERIT FALSE;
+GRANT wetindey_presence_owner TO SESSION_USER WITH SET TRUE;
+GRANT CREATE ON SCHEMA public TO wetindey_presence_owner;
+SET LOCAL ROLE wetindey_presence_owner;
+
 CREATE TYPE public.presence_activation_status AS ENUM ('accepted', 'rejected', 'expired');
 CREATE TYPE public.presence_capability_purpose AS ENUM ('wave', 'block', 'report');
 CREATE TYPE public.presence_capability_state AS ENUM ('active', 'revoked', 'consumed');
@@ -133,14 +140,6 @@ BEGIN
 END;
 $$;
 
--- PostgreSQL 17 grants a non-superuser CREATEROLE principal ADMIN TRUE but
--- SET FALSE on a role it creates. Ownership transfer requires SET TRUE and
--- CREATE on the containing schema. Both capabilities are transaction-local:
--- the migration fails closed if they cannot be granted or fully removed.
-GRANT wetindey_presence_owner TO SESSION_USER WITH INHERIT FALSE;
-GRANT wetindey_presence_owner TO SESSION_USER WITH SET TRUE;
-GRANT CREATE ON SCHEMA public TO wetindey_presence_owner;
-
 -- 0014 forward security boundary. The 0012 functions remain in the historical
 -- pillar for lineage, but runtime grants are replaced by these opaque-token
 -- contracts. Raw account, lease, Wave, report, and profile-Blob identifiers never
@@ -232,6 +231,12 @@ BEGIN
       revocation_reason = 'lease-revoked'
   WHERE state = 'active'
     AND (viewer_lease_id = OLD.id OR subject_lease_id = OLD.id);
+  UPDATE public.presence_activation_requests
+  SET status = 'expired',
+      failure_code = 'lease-revoked',
+      lease_id = NULL,
+      updated_at = clock_timestamp()
+  WHERE lease_id = OLD.id AND status = 'accepted';
   RETURN OLD;
 END;
 $$;
@@ -258,7 +263,7 @@ BEGIN
   PERFORM public.presence_assert_digest('snapshot digest', p_snapshot_digest);
   PERFORM public.presence_assert_digest('avatar projection token', p_avatar_projection_token);
   LOOP
-    v_token := encode(gen_random_bytes(32), 'hex');
+    v_token := encode(public.gen_random_bytes(32), 'hex');
     v_token_digest := public.presence_v2_digest(v_token);
     EXIT WHEN NOT EXISTS (
       SELECT 1 FROM public.presence_capabilities
@@ -427,8 +432,8 @@ BEGIN
   END IF;
 
   IF EXISTS (
-    SELECT 1 FROM public.presence_leases
-    WHERE account_id = p_actor AND revoked_at IS NULL AND expires_at > clock_timestamp()
+    SELECT 1 FROM public.presence_leases lease
+    WHERE lease.account_id = p_actor AND lease.revoked_at IS NULL AND lease.expires_at > clock_timestamp()
   ) THEN
     INSERT INTO public.presence_activation_requests (
       account_id, request_digest, cell_x, cell_y, status, failure_code, expires_at
@@ -520,7 +525,7 @@ DECLARE
   v_control public.presence_control%ROWTYPE;
   v_viewer public.presence_leases%ROWTYPE;
   v_subject record;
-  v_snapshot_digest text := public.presence_v2_digest(encode(gen_random_bytes(32), 'hex'));
+  v_snapshot_digest text := public.presence_v2_digest(encode(public.gen_random_bytes(32), 'hex'));
   v_avatar_projection_token text;
   v_wave_token text;
   v_block_token text;
@@ -531,11 +536,11 @@ BEGIN
   PERFORM public.presence_cleanup_internal();
   v_control := public.presence_assert_allowed_account(p_actor);
   SELECT * INTO STRICT v_viewer
-  FROM public.presence_leases
-  WHERE account_id = p_actor
-    AND revoked_at IS NULL
-    AND expires_at > clock_timestamp()
-    AND control_generation = v_control.generation;
+  FROM public.presence_leases viewer
+  WHERE viewer.account_id = p_actor
+    AND viewer.revoked_at IS NULL
+    AND viewer.expires_at > clock_timestamp()
+    AND viewer.control_generation = v_control.generation;
   IF NOT EXISTS (
     SELECT 1 FROM public.presence_preferences
     WHERE account_id = p_actor AND presence_opted_in
@@ -570,7 +575,7 @@ BEGIN
   LOOP
     v_count := v_count + 1;
     v_expires_at := least(v_viewer.expires_at, v_subject.expires_at, clock_timestamp() + interval '60 seconds');
-    v_avatar_projection_token := encode(gen_random_bytes(32), 'hex');
+    v_avatar_projection_token := encode(public.gen_random_bytes(32), 'hex');
     v_wave_token := public.presence_v2_issue_capability(
       p_actor, v_subject.account_id, 'wave', v_snapshot_digest, v_avatar_projection_token,
       v_viewer.id, v_subject.lease_id, v_expires_at
@@ -947,6 +952,7 @@ ALTER FUNCTION public.presence_report_v2(
   uuid, text, text, public.presence_report_kind, text, text, text, text
 ) OWNER TO wetindey_presence_owner;
 
+RESET ROLE;
 REVOKE CREATE ON SCHEMA public FROM wetindey_presence_owner;
 REVOKE wetindey_presence_owner FROM SESSION_USER
   GRANTED BY SESSION_USER;

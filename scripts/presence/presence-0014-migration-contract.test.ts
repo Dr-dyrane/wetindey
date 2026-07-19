@@ -68,6 +68,8 @@ test("0014 metadata contains only the capability correction delta", () => {
   assert.match(migration, /ALTER TABLE public\.presence_control[\s\S]*ADD COLUMN runtime_allowed boolean NOT NULL DEFAULT false/);
   assert.match(migration, /UPDATE public\.presence_preferences[\s\S]*profile_consented/);
   assert.match(migration, /DROP COLUMN IF EXISTS profile_consented[\s\S]*DROP COLUMN IF EXISTS avatar_url/);
+  assert.match(migration, /GRANT wetindey_presence_owner TO SESSION_USER[\s\S]*SET LOCAL ROLE wetindey_presence_owner/);
+  assert.match(migration, /RESET ROLE[\s\S]*REVOKE CREATE ON SCHEMA public/);
 });
 
 test("opaque capability and idempotency contracts are present", () => {
@@ -94,6 +96,8 @@ test("opaque capability and idempotency contracts are present", () => {
   assert.match(services, /presence_v2_lease_revoke_trigger/);
   assert.match(services, /runtime_allowed/);
   assert.match(services, /gen_random_bytes\(32\)/);
+  assert.match(services, /public\.gen_random_bytes\(32\)/);
+  assert.match(services, /presence_activation_requests[\s\S]*lease-revoked/);
   assert.match(services, /avatar_projection_token/);
   assert.doesNotMatch(services.match(/presence_snapshot_v2\([\s\S]*?\n\$\$;/)?.[0] ?? "", /subject_account_id|subject_lease_id|wave_id/);
   assert.doesNotMatch(
