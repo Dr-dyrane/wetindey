@@ -1132,18 +1132,12 @@ category, and stale-response cancellation, without automatic `online` retry. Run
 fault-injection evidence remains a separate pathless gate. This is not a Maps or
 Contribution claim and creates no server, database, schema, migration, or deployment path.
 
-#### Client Reliability: bootstrap visibility fail-closed correction — urgent active exact claim
+#### Client Reliability: bootstrap visibility fail-open correction — COMPLETE / RELEASED
 
-Owner: Client Reliability & Offline Engineer `019f75d3-65d0-7033-bef7-11a83aca9723`.
-Own exactly `src/core/context/ThemeContext.tsx`. The blocking head script already establishes
-theme, but ThemeProvider applies `visibility:hidden` to the whole application until its
-effect marks the tree mounted, creating a fail-closed black shell when Next JS does not
-bootstrap. Remove only that whole-tree visibility gate; preserve theme synchronization and
-the user theme toggle. No layout, map, H26, provider, schema, migration, or service-worker
-path is authorized. Required independent executable bootstrap-failure refutation proves HTML
-remains visible with Next JS blocked, followed by normal light/dark hydration correctness.
-Theme fail-open commit `d42454b` is complete and released: Production deployment
-`dpl_Dat5W4KZz6wNYb37jcCq1DKjyKrY` promptly rendered the initial shell.
+Commit `d42454b` removed the whole-tree visibility gate while preserving theme
+synchronization and the user theme toggle. Its independent bootstrap-failure refutation and
+Production deployment `dpl_Dat5W4KZz6wNYb37jcCq1DKjyKrY` passed; release
+`src/core/context/ThemeContext.tsx`. No active source claim remains.
 
 #### H10 large-detent typed sheet-hosted retry — source complete / runtime gate pathless
 
