@@ -50,7 +50,7 @@ does not prove the requested experience without relevant runtime evidence.
 
 FF-024 evidence note: the benchmark’s symbol-based source references and current `min-h-11`
 guard are documentation evidence only; neither substitutes for the required live pixels,
-AX, and interaction proof. All cited implementation paths are fully qualified.
+AX, and interaction proof.
 
 ## Mechanical reconciliation rule
 

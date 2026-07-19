@@ -72,7 +72,7 @@ The claims below are sequenced future proposals, not active implementation claim
 allocate exact locks before any proposal is called disjoint or implementation-ready; each
 path has one proposed owner in that sequence. The pathless regular-panel diagnosis cannot
 be used to bypass active Presence, Contribution, migration, Frameworks, Market Details, or
-retained Maps ownership locks.
+retained Maps ownership locks. The sequence table itself uses fully qualified paths.
 
 | Sequence | One proposed owner | Exact future paths | Release condition |
 |---|---|---|---|
