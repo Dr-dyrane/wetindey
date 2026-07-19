@@ -7,6 +7,28 @@ WetinDey adopts Apple interaction principles where they improve clarity, reachab
 accessibility. It does **not** copy Apple assets, proprietary components, visual trade
 dress, or product-specific styling.
 
+## Founder acceptance correction (docs-only governance)
+
+This benchmark is a behavior, layout, and accessibility reference. Apple HIG supplies the
+interaction and spatial rules; Shop is used only as a communication-density and hierarchy
+reference. Neither source authorizes copying assets, trade dress, proprietary components,
+or visual styling.
+
+The accepted experience must prove all of the following in direct pixels and assistive
+semantics:
+
+- Compact place surfaces are floating peek/half sheets that preserve map context; the
+  expanded state is an edge-to-edge docked sheet rather than a second floating card.
+- Visible chrome may be slimmer, but every interactive hit region remains at least
+  44×44 pt. Controls expose real press/release feedback and honor reduced-motion settings.
+- Nested surface/card/pill containment is flattened. Separation comes from restrained
+  semantic material and elevation depth, not borders or sharp contrast.
+- Licensed imagery may bleed to the card edge and blend with its surrounding surface;
+  image gutters and nested-radius seams are not accepted by default.
+- Solid glyphs are optically balanced inside semantic orbs, paired with labels or another
+  non-color distinction, and remain truthful in light, dark, grayscale, and forced-colors
+  modes where those modes are observable.
+
 ## Adaptation matrix
 
 | Official principle | WetinDey adaptation | Acceptance evidence |
@@ -19,6 +41,29 @@ dress, or product-specific styling.
 | Color and icons communicate consistent meaning without relying on color alone. | Combine stable icons with semantic families: confirmed/available, unavailable, caution/stale, and genuinely unknown. Preserve explicit text or another noncolor signal. | Light, dark, grayscale, and forced-colors evidence keeps types and states distinguishable; accessible names remain truthful. |
 | Place cards and lists stay compact and scannable. | Let imagery carry hierarchy, keep item/variant and price/unit concise, retain essential availability/freshness/provenance, and remove redundant explanatory copy. | Compact and regular evidence shows readable facts, no collisions, 44×44 actions, logical accessibility order, and working attribution/source links. |
 | Responsive layouts preserve behavior rather than merely fitting pixels. | Compact and regular layouts may redistribute space, but must preserve selection context, control reachability, information order, and interaction semantics. | Use one reused tab across compact/regular and light/dark transitions. Verify grayscale, detent changes, push/pop/reopen, loading/empty/error states where represented, and absence of stale state or document-scroll escape. |
+| Compact sheets communicate hierarchy through progressive disclosure. | Use a floating peek/half sheet over visible map context, then dock the expanded sheet edge-to-edge; do not stack redundant cards or leave an unexplained dead region. | Direct pixels at each live detent show map context, the selected place, and the sheet boundary; AX order matches the visible hierarchy. |
+| Controls need feedback without consuming visual mass. | Keep visible chrome slender while retaining ≥44×44 hit geometry, real press/release states, and reduced-motion-safe transitions. | Pointer edge hits, keyboard focus, visible press/release, and reduced-motion evidence where tooling supports it. |
+| Material depth should clarify, not fragment. | Flatten nested surface/card/pill containment; use restrained semantic material/elevation with no borders or sharp contrast jumps. | Light/dark/grayscale screenshots show one coherent surface hierarchy with no nested-card seams or border dependence. |
+| Imagery can carry hierarchy. | Let licensed imagery bleed/blend to the edge of its containing surface; avoid a gutter or nested-radius frame unless content requires it. | Narrow and regular offer/place pixels show edge alignment, readable attribution, and no image collision or overflow. |
+| Icons communicate intent beyond color. | Use solid, optically balanced glyphs in named semantic orbs, with labels or another non-color distinction. | AX names plus light/dark/grayscale/forced-colors screenshots distinguish states without hue alone. |
+
+## Read-only current-code violation inventory (2026-07-18)
+
+This is an evidence inventory, not an implementation claim. Findings are based on current
+source inspection and the paired reused-tab runtime; no source path is claimed here.
+
+| Finding | Current evidence | Smallest future lane and acceptance evidence |
+|---|---|---|
+| Compact/regular surface behavior is split across a page-local tree and shared shell geometry. | `src/app/page.tsx:1058-1148` owns the sheet header, hit regions, and level-0 scroller; `src/design-system/components/BottomSheet.tsx:1107-1152` owns transformed detents and rounded floating/docked presentation; `src/design-system/components/RegularShell.tsx:91-108` owns the regular island. | **Sheet hierarchy lane:** `src/app/page.tsx`, `src/design-system/components/BottomSheet.tsx`, `src/design-system/components/RegularShell.tsx`, `src/design-system/components/CompactShell.tsx`, `src/design-system/components/AdaptiveShell.tsx`. Prove peek/half map context, edge-to-edge large docking, no duplicate surfaces, and AX/pixel order at every detent. |
+| Outer targets are 44px while visible chrome is 32px; press feedback is utility-class based and not independently evidenced for every control. | `page.tsx:1066-1077`, `1084-1108`; `MapboxCanvas.tsx:512-529`; `BottomSheet.tsx:1142-1148`. | **Interaction evidence lane:** the same UI paths plus a bounded contract script. Prove edge hits, keyboard focus, visible press/release, and reduced-motion behavior without changing hit geometry. |
+| Nested rounded surfaces and status pills remain common in offer/list surfaces. | `src/design-system/components/PlaceOfferRow.tsx:152-213` nests a rounded article, artwork frame, and status badge; `StatusBadge.tsx:67-69` emits a pill. | **Offer hierarchy lane:** `src/design-system/components/PlaceOfferRow.tsx`, `src/design-system/components/StatusBadge.tsx`, and only the owning call site. Prove flattened containment, semantic material/elevation, no border/sharp-contrast dependency, and readable attribution. |
+| Artwork is boxed into a fixed frame rather than proven as edge-bleed/blended imagery. | `PlaceOfferRow.tsx:69-116` uses `w-[88px]`, `min-h-[104px]`, and `object-cover`; source attribution is separate at `:210-213`. | **Imagery lane:** `src/design-system/components/PlaceOfferRow.tsx` only. Prove licensed image edge bleed/blending, no gutter or nested radius, source-link focusability, and no narrow collision. |
+| Avatar semantics distinguish image, initials, and anonymous silhouette in source, but persistent recognition chrome is not itself an acceptance proof. | `src/app/page.tsx:1097-1108` renders a 44px Profile target with `Avatar` size 32; `src/app/_components/ProfileSheet.tsx:779-809` falls from image to initials to silhouette and marks the visual span `aria-hidden`. | **Identity lane:** `src/app/page.tsx`, `src/app/_components/ProfileSheet.tsx`, and the retained Maps self-marker path only after an exact owner claim. Prove signed-in uploaded avatar, missing/failed-image initials, guest fallback, separate precision/halo, truthful AX names, and no peer publication. |
+| Recenter placement consumes the live shell inset in source, but full drag/detent proof remains a paired Maps+HI gate. | `page.tsx:1031-1054` positions the control from `--shell-bottom-inset`; `AdaptiveShell.tsx:104-142` publishes shell geometry; `MapboxCanvas.tsx:151-184` retains camera-padding approximations. | **Maps runtime lane:** retained `src/app/page.tsx` plus `src/integrations/maps/MapboxAdapter.ts` under Maps ownership. Prove visibility/reachability through drag, peek, half, and large detents, marker selection, safe area, and AX names. |
+| Reduced-motion and forced-colors hooks exist, but this run did not exercise those modes. | `src/app/globals.css:769-813` and `src/design-system/motion.ts:224-247` define reduced-motion/transparency and forced-colors behavior. | **Accessibility evidence lane:** no implementation path is implied. Capture direct reduced-motion, grayscale, and forced-colors evidence when tooling supports it; otherwise record each as unverified. |
+
+These lanes are proposals for future controller assignment, intentionally disjoint from the
+active Presence, Contribution, migration, and retained Maps ownership locks.
 
 ## Required runtime evidence
 
