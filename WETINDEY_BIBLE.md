@@ -4077,6 +4077,19 @@ seller link, cart, courier, tracking, schema, provider, code, or deployment. Onl
 Founder acceptance may supersede ADR-001; even then WetinDey would not run checkout,
 funds, payment, order creation, courier dispatch, or inventory/delivery guarantees.
 
+**Proposed Trusted People / Remote Presence; ADR-016 and ADR-023 still bind.**
+[ADR-025](docs/adr/025-trusted-people-remote-presence.md) proposes a separate relationship
+capability for a person outside Lagos to view one specifically invited Festac person only
+after opaque invite/QR/handle resolution, mutual invite/accept, directional subject
+consent, relationship-scoped profile-display consent, and an active ADR-016 foreground
+lease. Viewer location is optional; any broad viewer disclosure is truthful, separately
+consented, and never a Festac peer marker. The
+proposal forbids public directories, contact sync, follower/popularity effects, exact
+coordinates, background tracking, and messaging, and authorizes no schema, migration,
+server, UI, provider, pilot, or rollout. Revocation, block, report, deletion, expiry, and
+the kill switch must clear relationship state fail-closed before any future implementation
+claim.
+
 **Accepted nearby-user presence architecture; rollout gate remains closed.**
 [ADR-016](docs/adr/016-nearby-user-presence.md) accepts implementation architecture only:
 signed-in reciprocal opt-in, a fixed 500 m centroid, an explicit foreground lease of no
@@ -4650,6 +4663,16 @@ The team should consider pivoting the mechanism or problem when:
   attributed provider-returned status. ADR-001 remains binding unless the Founder
   separately accepts ADR-024. No WetinDey checkout, funds, payment, order creation,
   courier dispatch, inventory guarantee, or delivery guarantee is authorized.
+- [ADR-025](docs/adr/025-trusted-people-remote-presence.md): proposed relationship-scoped
+  remote presence. A person outside Lagos may view one specifically invited Festac person
+  only after opaque invite/QR/handle resolution, mutual invite/accept, directional subject
+  consent, relationship-scoped profile-display consent, and an active ADR-016 foreground
+  lease. Viewer location is optional; any broad viewer disclosure is truthful, separately
+  consented, and never a Festac peer marker. No
+  public directory, contact sync, follower/popularity effect, exact coordinate, background
+  tracking, or messaging is allowed. This proposal authorizes no schema, migration, server,
+  UI, provider, pilot, or rollout; revocation, block, report, deletion, expiry, and kill
+  switch must clear relationship state fail-closed before implementation.
 - [ADR-016](docs/adr/016-nearby-user-presence.md): implementation architecture is
   accepted, but every operational gate remains open and fail-closed. Commit `4e25b8c7`
   remains containment; no shared migration, deployment, pilot traffic, or public rollout
