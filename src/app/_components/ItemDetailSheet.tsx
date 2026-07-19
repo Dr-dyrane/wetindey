@@ -107,6 +107,17 @@ function formatAge(ageHours: number | null): string {
   return days === 1 ? "yesterday" : `${days} days ago`;
 }
 
+const OBSERVED_AT = new Intl.DateTimeFormat("en-NG", {
+  dateStyle: "medium",
+  timeStyle: "short",
+  timeZone: "Africa/Lagos",
+});
+
+function formatObservedAt(iso: string): string {
+  const date = new Date(iso);
+  return Number.isNaN(date.getTime()) ? "time unavailable" : OBSERVED_AT.format(date);
+}
+
 export interface OfferPresentation {
   kind: StatusKind;
   label: string;
@@ -136,9 +147,12 @@ function presentOffer(
   const sold = offer.trust.availability === "unavailable";
 
   if (!observed) {
+    const availability = sold
+      ? translate("item.a11y_not_available")
+      : translate("item.a11y_available");
     return {
       kind,
-      label: offer.trust.provenanceLabel,
+      label: `${availability} · ${offer.trust.provenanceLabel}`,
       short: offer.trust.provenanceLabel,
       sold,
     };
@@ -283,6 +297,7 @@ export function ItemDetailSheet({
   const [variantId, setVariantId] = useState<string>(ANY);
   const [unitId, setUnitId] = useState<string>(ANY);
   const [sort, setSort] = useState<OfferSort>("nearest");
+  const [detailsOpen, setDetailsOpen] = useState(false);
 
   const [variants, setVariants] = useState<
     { id: string; displayName: string; offerCount: number; placeCount: number }[]
@@ -323,6 +338,7 @@ export function ItemDetailSheet({
     setVariantId(ANY);
     setUnitId(ANY);
     setSort("nearest");
+    setDetailsOpen(false);
     setOffers([]);
     setError(null);
     setImageBroken(false);
@@ -489,22 +505,6 @@ export function ItemDetailSheet({
             onError={() => setImageBroken(true)}
           />
 
-          {/* The licence obligation, not a caption — CC BY / CC BY-SA hold only
-              while the author and licence appear with the image.
-
-              On material for the reason the close control above it is: the photo
-              has unknown luminance and no ink token is light in both themes, so
-              nothing here can be legible against the image itself. Bottom-
-              trailing keeps it clear of the centred name's column. */}
-          {item.imageAttribution && (
-            <span
-              className="absolute bottom-1.5 right-1.5 squircle-full material-thick
-                         px-2 py-[2px] text-caption-2 text-text-secondary"
-            >
-              {item.imageAttribution}
-              {item.imageLicense ? ` · ${item.imageLicense}` : ""}
-            </span>
-          )}
         </div>
 
         {/* Restores the heading ModalSheet's hero path drops. `title` still
@@ -537,30 +537,54 @@ export function ItemDetailSheet({
           />
         </div>
 
-        <p className="mx-4 text-footnote text-text-secondary">
-          {loading ? "Checking prices…" : `${countLabel} within ${radiusKm} km`}
-        </p>
-
-        {/* Sort is a segmented control, not a picker: three short, mutually
-            exclusive options that are worth switching between repeatedly while
-            comparing. A sheet per switch would cost two taps a look. */}
-        <div className="mx-4 grid grid-cols-3 gap-1 squircle bg-fillTertiary p-1">
-          {SORTS.map((s) => {
-            const active = sort === s.id;
-            return (
-              <button
-                key={s.id}
-                type="button"
-                aria-pressed={active}
-                onClick={() => setSort(s.id)}
-                className={`min-h-tap squircle text-footnote font-medium transition duration-micro
-                  ${active ? "bg-surface text-text-primary shadow-card" : "text-text-secondary"}`}
-              >
-                {s.label}
-              </button>
-            );
-          })}
+        <div className="mx-4 flex items-center justify-between gap-3">
+          <p className="text-footnote text-text-secondary">
+            {loading ? "Checking prices…" : `${countLabel} within ${radiusKm} km`}
+          </p>
+          <button
+            type="button"
+            aria-expanded={detailsOpen}
+            aria-controls="item-detail-secondary"
+            onClick={() => setDetailsOpen((openState) => !openState)}
+            className="min-h-tap shrink-0 px-2 text-footnote font-medium text-text-secondary transition duration-micro active:opacity-60 focus-visible:outline-2 focus-visible:outline-accent"
+          >
+            {detailsOpen ? "Hide details" : "More details"}
+          </button>
         </div>
+
+        {detailsOpen && (
+          <div
+            id="item-detail-secondary"
+            className="mx-4 space-y-3 px-0 py-1"
+          >
+            {item?.imageAttribution && (
+              <p className="text-caption-1 text-text-secondary">
+                Photo credit: {item.imageAttribution}
+                {item.imageLicense ? ` · ${item.imageLicense}` : ""}
+              </p>
+            )}
+
+            {/* Secondary ordering belongs with the other comparison detail, not
+                in the first scan of the selected item. */}
+            <div className="grid grid-cols-3 gap-1 squircle bg-fillTertiary p-1">
+              {SORTS.map((s) => {
+                const active = sort === s.id;
+                return (
+                  <button
+                    key={s.id}
+                    type="button"
+                    aria-pressed={active}
+                    onClick={() => setSort(s.id)}
+                    className={`min-h-tap squircle text-footnote font-medium transition duration-micro
+                      ${active ? "bg-surface text-text-primary shadow-card" : "text-text-secondary"}`}
+                  >
+                    {s.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         {error ? (
           <div className="mx-4 space-y-2 squircle-card bg-surface dark:bg-surface-elevated p-5 text-center shadow-card">
@@ -607,7 +631,7 @@ export function ItemDetailSheet({
                 /* `dark:active:` is not redundant: `dark:bg-surface-elevated` and
                    `active:bg-fillTertiary` both weigh (0,2,0), and Tailwind emits
                    the dark rule second, so it would win the press state on a tie. */
-                className="flex w-full items-start gap-3 bg-surface dark:bg-surface-elevated p-4 text-left shadow-card squircle-card
+                className="flex w-full items-start gap-3 bg-surface dark:bg-surface-elevated p-3 text-left shadow-card squircle-card
                            transition-colors duration-instant active:bg-fillTertiary dark:active:bg-fillTertiary"
               >
                 <span className="mt-[7px]">
@@ -617,8 +641,6 @@ export function ItemDetailSheet({
                 <span className="min-w-0 flex-1">
                   <span className="flex items-center gap-1.5">
                     <span className="truncate text-headline text-text-primary">{offer.placeName}</span>
-                    {isCheapest && <LeadChip>Cheapest</LeadChip>}
-                    {isClosest && <LeadChip>Closest</LeadChip>}
                   </span>
 
                   {/* Hue — the one saturated thing in the row. */}
@@ -626,24 +648,30 @@ export function ItemDetailSheet({
                     {signal.label}
                   </span>
 
-                  <span className="mt-1.5 flex min-w-0 items-center gap-2">
-                    <span className="shrink-0 whitespace-nowrap text-footnote tabular-nums text-text-secondary">
-                      {formatDistance(offer.distanceM / 1000)}
-                    </span>
-                    <span
-                      className="flex min-w-0 flex-1 items-center gap-1"
-                      title={`${confidence.word} confidence`}
-                    >
-                      {confidence.showMeter && (
-                        <span className="shrink-0">
-                          <ConfidenceMeter bars={confidence.bars} />
-                        </span>
-                      )}
-                      <span className="min-w-0 truncate text-caption-1 text-text-secondary">
-                        {confidence.label}
+                  {detailsOpen && (
+                    <span className="mt-1.5 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-caption-1 text-text-secondary">
+                      <span className="shrink-0 whitespace-nowrap tabular-nums">
+                        {formatDistance(offer.distanceM / 1000)}
                       </span>
+                      <span className="inline-flex min-w-0 items-center gap-1" title={`${confidence.word} confidence`}>
+                        {confidence.showMeter && <ConfidenceMeter bars={confidence.bars} />}
+                        <span className="min-w-0 truncate">{confidence.label}</span>
+                      </span>
+                      {isCheapest && <LeadChip>Cheapest</LeadChip>}
+                      {isClosest && <LeadChip>Closest</LeadChip>}
+                      <span>
+                        {offer.trust.origin === "observed"
+                          ? "Last observed"
+                          : offer.trust.origin === "synthetic"
+                            ? "Sample date"
+                            : offer.trust.origin === "inadmissible"
+                              ? "Reference date"
+                              : "Projection date"}{" "}
+                        {formatObservedAt(offer.lastObservedAt)}
+                      </span>
+                      <span>{offer.trust.provenanceLabel}</span>
                     </span>
-                  </span>
+                  )}
                 </span>
 
                 <span className="shrink-0 text-right">
