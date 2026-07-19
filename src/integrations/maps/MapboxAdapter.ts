@@ -720,6 +720,8 @@ interface FitBoundsOptions {
   duration?: number;
 }
 
+type MapboxStyleReadinessEvent = "style.load" | "idle" | "render";
+
 interface MapboxMap {
   flyTo(options: MapboxCameraOptions): void;
   easeTo(options: MapboxCameraOptions): void;
@@ -732,9 +734,9 @@ interface MapboxMap {
   fitBounds(bounds: BoundsTuple, options?: FitBoundsOptions): void;
   project(lnglat: [number, number]): ScreenPoint;
   setStyle(style: string): void;
-  on(type: "style.load", listener: () => void): void;
+  on(type: MapboxStyleReadinessEvent, listener: () => void): void;
   on(type: "error", listener: (event: MapboxErrorEvent) => void): void;
-  off(type: "style.load", listener: () => void): void;
+  off(type: MapboxStyleReadinessEvent, listener: () => void): void;
   off(type: "error", listener: (event: MapboxErrorEvent) => void): void;
   isStyleLoaded(): boolean;
   getStyle():
@@ -842,7 +844,8 @@ export class MapboxAdapter implements MapProviderAdapter {
    */
   private styleReady = false;
   private styleLifecycleListener: MapStyleLifecycleListener | null = null;
-  private styleLoadListener: (() => void) | null = null;
+  private styleReadyListener: (() => void) | null = null;
+  private styleRenderListener: (() => void) | null = null;
   private styleLoadTimer: number | null = null;
   private styleLoadAttempt = 0;
   private styleGeneration = 0;
@@ -927,8 +930,8 @@ export class MapboxAdapter implements MapProviderAdapter {
    * Markers need none of this: mapboxgl.Marker is a DOM element parked over the
    * canvas, so it is not part of the style and a style swap cannot touch it.
    *
-   * Each attempt installs its own generation-bound listener. Removing the old
-   * listener stops ordinary superseded events; the generation check also makes
+   * Each attempt installs its own generation-bound listeners. Removing the old
+   * listeners stops ordinary superseded events; the generation check also makes
    * an already-queued callback harmless after a rapid theme change.
    */
   private completeStyleAttempt(
@@ -936,10 +939,10 @@ export class MapboxAdapter implements MapProviderAdapter {
     theme: "light" | "dark",
     attempt: number
   ): void {
-    if (generation !== this.styleGeneration || !this.styleMatchesTheme(theme)) return;
+    if (generation !== this.styleGeneration) return;
 
     this.clearStyleLoadTimer();
-    this.clearStyleLoadListener();
+    this.clearStyleReadinessListeners();
     // Set BEFORE the applies: this event IS the fact they guard on.
     this.styleReady = true;
     this.applyCartography();
@@ -972,26 +975,33 @@ export class MapboxAdapter implements MapProviderAdapter {
     this.styleLoadTimer = null;
   }
 
-  private clearStyleLoadListener(): void {
-    if (!this.mapInstance || !this.styleLoadListener) return;
-    this.mapInstance.off("style.load", this.styleLoadListener);
-    this.styleLoadListener = null;
+  private clearStyleReadinessListeners(): void {
+    const map = this.mapInstance;
+    if (!map) return;
+    if (this.styleReadyListener) {
+      map.off("style.load", this.styleReadyListener);
+      map.off("idle", this.styleReadyListener);
+      this.styleReadyListener = null;
+    }
+    if (this.styleRenderListener) {
+      map.off("render", this.styleRenderListener);
+      this.styleRenderListener = null;
+    }
   }
 
-  /** Confirm that a `style.load` belongs to the requested stock style. */
-  private styleMatchesTheme(theme: "light" | "dark"): boolean {
-    const style = this.mapInstance?.getStyle();
-    if (!style) return false;
-
-    const expectedId = theme === "dark" ? "dark-v11" : "streets-v12";
-    const expectedName = theme === "dark" ? "Mapbox Dark" : "Mapbox Streets";
-    if (style.name === expectedName) return true;
-
-    const spriteUrls =
-      typeof style.sprite === "string"
-        ? [style.sprite]
-        : (style.sprite?.map((sprite) => sprite.url) ?? []);
-    return spriteUrls.some((url) => url.includes(`/mapbox/${expectedId}`));
+  /**
+   * `style.load` and `idle` are definitive events. `render` is deliberately
+   * only a recovery signal: a render can be an empty transitional frame, so it
+   * wins only when Mapbox also reports the current style loaded.
+   */
+  private recognizeLoadedStyle(
+    generation: number,
+    theme: "light" | "dark",
+    attempt: number
+  ): boolean {
+    if (generation !== this.styleGeneration || !this.mapInstance?.isStyleLoaded()) return false;
+    this.completeStyleAttempt(generation, theme, attempt);
+    return true;
   }
 
   /**
@@ -1004,51 +1014,73 @@ export class MapboxAdapter implements MapProviderAdapter {
     if (!map) return;
 
     this.clearStyleLoadTimer();
-    this.clearStyleLoadListener();
+    this.clearStyleReadinessListeners();
     const generation = ++this.styleGeneration;
     this.currentTheme = theme;
     this.styleReady = false;
     this.styleLoadAttempt = attempt;
     this.styleErrorObserved = false;
     this.emitStyleLifecycle({ status: "loading", theme, attempt });
-    const loadListener = () => this.completeStyleAttempt(generation, theme, attempt);
-    this.styleLoadListener = loadListener;
-    map.on("style.load", loadListener);
+    if (replaceStyle) {
+      try {
+        map.setStyle(MapboxAdapter.styleFor(theme));
+      } catch {
+        // A synchronous style rejection follows the same bounded retry policy
+        // as an asynchronous resource error; it must not escape to React.
+        this.styleErrorObserved = true;
+        this.handleStyleLoadTimeout(generation, false);
+        return;
+      }
+    }
+
+    const readyListener = () => this.completeStyleAttempt(generation, theme, attempt);
+    const renderListener = () => this.recognizeLoadedStyle(generation, theme, attempt);
+    this.styleReadyListener = readyListener;
+    this.styleRenderListener = renderListener;
+    map.on("style.load", readyListener);
+    map.on("idle", readyListener);
+    map.on("render", renderListener);
     this.styleLoadTimer = window.setTimeout(
       () => this.handleStyleLoadTimeout(generation),
       STYLE_LOAD_TIMEOUT_MS
     );
 
-    if (!replaceStyle) return;
-
-    try {
-      map.setStyle(MapboxAdapter.styleFor(theme));
-    } catch {
-      // A synchronous style rejection follows the same bounded retry policy as
-      // an asynchronous resource error; it must not escape to React's boundary.
-      this.styleErrorObserved = true;
-      this.handleStyleLoadTimeout(generation);
-    }
+    // setStyle can complete before its asynchronous event reaches this
+    // listener. Recognize that state now instead of waiting for the timeout.
+    this.recognizeLoadedStyle(generation, theme, attempt);
   }
 
-  private handleStyleLoadTimeout(generation: number): void {
+  private handleStyleLoadTimeout(
+    generation: number,
+    recognizeAlreadyLoaded = true
+  ): void {
     if (generation !== this.styleGeneration) return;
     this.clearStyleLoadTimer();
     if (!this.mapInstance || this.styleReady) return;
+    if (
+      recognizeAlreadyLoaded &&
+      this.recognizeLoadedStyle(
+        generation,
+        this.currentTheme,
+        this.styleLoadAttempt
+      )
+    ) {
+      return;
+    }
 
     if (this.styleLoadAttempt < STYLE_LOAD_MAX_ATTEMPTS) {
       // This generation is being superseded by a retry, so detach it before
       // installing the next generation's listener.
-      this.clearStyleLoadListener();
+      this.clearStyleReadinessListeners();
       this.beginStyleAttempt(this.currentTheme, this.styleLoadAttempt + 1, true);
       return;
     }
 
     // Failure is observable after the bounded attempts, but it is not terminal.
-    // A slow, otherwise valid style may still emit `style.load`; keeping this
-    // final generation's listener lets that event clear the failure overlay and
-    // restore cartography/routes without rebuilding the map. A manual retry or
-    // theme switch clears this listener and increments the generation first.
+    // A slow, otherwise valid style may still become ready; keeping this final
+    // generation's readiness listeners lets that state clear the failure
+    // overlay and restore cartography/routes without rebuilding the map. A
+    // manual retry or theme switch clears them and increments the generation.
     this.emitStyleLifecycle({
       status: "failed",
       theme: this.currentTheme,
@@ -1945,7 +1977,7 @@ export class MapboxAdapter implements MapProviderAdapter {
   public destroy(): void {
     this.styleGeneration += 1;
     this.clearStyleLoadTimer();
-    this.clearStyleLoadListener();
+    this.clearStyleReadinessListeners();
     if (this.mapInstance) {
       this.clearMarkers();
       this.setUserPosition(null);
@@ -1959,7 +1991,8 @@ export class MapboxAdapter implements MapProviderAdapter {
     }
     this.styleReady = false;
     this.styleLoadAttempt = 0;
-    this.styleLoadListener = null;
+    this.styleReadyListener = null;
+    this.styleRenderListener = null;
     this.styleErrorObserved = false;
     this.styleLifecycleListener = null;
     this.routeCoords = null;
