@@ -32,6 +32,11 @@ import {
   shouldActivateModalContainment,
   shouldMoveInitialFocus,
 } from "../src/design-system/components/ModalSheet";
+import {
+  restoreLockedScrollPosition,
+  shouldContainTerminalScroll,
+  shouldResetDetailScroll,
+} from "../src/design-system/components/NavigationStack";
 
 function test(name: string, run: () => void) {
   try {
@@ -144,6 +149,10 @@ const pickerSource = readFileSync(
 );
 const bottomSheetSource = readFileSync(
   join(process.cwd(), "src/design-system/components/BottomSheet.tsx"),
+  "utf8"
+);
+const navigationStackSource = readFileSync(
+  join(process.cwd(), "src/design-system/components/NavigationStack.tsx"),
   "utf8"
 );
 const globalCss = readFileSync(join(process.cwd(), "src/app/globals.css"), "utf8");
@@ -371,6 +380,72 @@ test("SheetPicker pushes into an existing presentation shell", () => {
   assert.match(pickerSource, /useModalSheetNavigation/);
   assert.match(pickerSource, /navigation\.pushChild/);
   assert.match(modalSource, /ModalSheetNavigationContext/);
+});
+
+test("a newly pushed detail resets only its persistent level-one scroller", () => {
+  assert.equal(shouldResetDetailScroll(false, true), true);
+  assert.equal(shouldResetDetailScroll(true, true), false);
+  assert.match(navigationStackSource, /ref=\{detailScrollerRef\}/);
+  assert.match(
+    navigationStackSource,
+    /scroller\.scrollTop = 0;\s+scroller\.scrollLeft = 0;/
+  );
+  assert.doesNotMatch(navigationStackSource, /listNode[\s\S]{0,120}scrollTo/);
+});
+
+test("async detail updates and level-zero lifetime do not reset scroll", () => {
+  assert.equal(shouldResetDetailScroll(true, true), false);
+  assert.equal(shouldResetDetailScroll(true, false), false);
+  assert.match(navigationStackSource, /\}, \[isOpen\]\);/);
+  assert.equal((navigationStackSource.match(/\{content\}/g) ?? []).length, 1);
+  assert.match(navigationStackSource, /detailNode \?\? heldDetail/);
+  assert.match(navigationStackSource, /window\.setTimeout\(\(\) => setHeldDetail\(null\)/);
+});
+
+test("level-one terminal input and programmatic scroll stay out of the document", () => {
+  assert.equal(
+    shouldContainTerminalScroll(
+      { scrollTop: 0, scrollHeight: 1000, clientHeight: 400 },
+      -1
+    ),
+    true
+  );
+  assert.equal(
+    shouldContainTerminalScroll(
+      { scrollTop: 600, scrollHeight: 1000, clientHeight: 400 },
+      1
+    ),
+    true
+  );
+  assert.equal(
+    shouldContainTerminalScroll(
+      { scrollTop: 300, scrollHeight: 1000, clientHeight: 400 },
+      1
+    ),
+    false
+  );
+  assert.equal(
+    shouldContainTerminalScroll(
+      { scrollTop: 300, scrollHeight: 1000, clientHeight: 400 },
+      -1
+    ),
+    false
+  );
+
+  const documentPosition = { scrollTop: 240, scrollLeft: 12 };
+  assert.equal(restoreLockedScrollPosition(documentPosition, 0, 0), true);
+  assert.deepEqual(documentPosition, { scrollTop: 0, scrollLeft: 0 });
+  assert.equal(restoreLockedScrollPosition(documentPosition, 0, 0), false);
+  assert.match(navigationStackSource, /onWheel=\{containTerminalWheel\}/);
+  assert.match(navigationStackSource, /overscroll-y-none/);
+  assert.match(
+    navigationStackSource,
+    /document\.addEventListener\("scroll", containDocumentScroll/
+  );
+  assert.match(
+    navigationStackSource,
+    /document\.removeEventListener\("scroll", containDocumentScroll, true\)/
+  );
 });
 
 test("the drag path schedules DOM work instead of setting per-frame React state", () => {

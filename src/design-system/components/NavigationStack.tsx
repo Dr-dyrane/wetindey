@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { ChevronLeft } from "lucide-react";
 import { motion, transition } from "@/design-system/motion";
 
@@ -37,6 +37,43 @@ interface NavigationStackProps {
  */
 const POP_HOLD_MS = motion.duration.slow;
 
+interface ScrollMetrics {
+  scrollTop: number;
+  scrollHeight: number;
+  clientHeight: number;
+}
+
+interface MutableScrollPosition {
+  scrollTop: number;
+  scrollLeft: number;
+}
+
+export function shouldResetDetailScroll(previousOpen: boolean, currentOpen: boolean): boolean {
+  return currentOpen && !previousOpen;
+}
+
+export function shouldContainTerminalScroll(
+  metrics: ScrollMetrics,
+  deltaY: number
+): boolean {
+  const top = Math.max(0, metrics.scrollTop);
+  const maximum = Math.max(0, metrics.scrollHeight - metrics.clientHeight);
+  if (deltaY < 0) return top <= 0;
+  if (deltaY > 0) return top >= maximum;
+  return false;
+}
+
+export function restoreLockedScrollPosition(
+  target: MutableScrollPosition,
+  lockedTop: number,
+  lockedLeft: number
+): boolean {
+  if (target.scrollTop === lockedTop && target.scrollLeft === lockedLeft) return false;
+  target.scrollTop = lockedTop;
+  target.scrollLeft = lockedLeft;
+  return true;
+}
+
 /**
  * A two-level navigation stack on one surface.
  *
@@ -68,6 +105,8 @@ export function NavigationStack({
   backLabel = "Back",
 }: NavigationStackProps) {
   const [heldDetail, setHeldDetail] = useState<React.ReactNode>(null);
+  const detailScrollerRef = useRef<HTMLDivElement>(null);
+  const wasDetailOpenRef = useRef(false);
 
   /**
    * Latch the newest detail while the level is open. This is React's documented
@@ -86,6 +125,17 @@ export function NavigationStack({
   const isOpen = detailNode != null;
   const content = detailNode ?? heldDetail;
 
+  useLayoutEffect(() => {
+    if (shouldResetDetailScroll(wasDetailOpenRef.current, isOpen)) {
+      const scroller = detailScrollerRef.current;
+      if (scroller) {
+        scroller.scrollTop = 0;
+        scroller.scrollLeft = 0;
+      }
+    }
+    wasDetailOpenRef.current = isOpen;
+  }, [isOpen]);
+
   /**
    * The pop has no exit animation for free: React unmounts `detailNode` the
    * frame the selection clears, and level 0 would slide back over nothing. So
@@ -100,6 +150,32 @@ export function NavigationStack({
     const t = window.setTimeout(() => setHeldDetail(null), POP_HOLD_MS);
     return () => window.clearTimeout(t);
   }, [detailNode, heldDetail]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const scrollingElement = document.scrollingElement;
+    if (!scrollingElement) return;
+    const lockedTop = scrollingElement.scrollTop;
+    const lockedLeft = scrollingElement.scrollLeft;
+    const containDocumentScroll = () => {
+      restoreLockedScrollPosition(scrollingElement, lockedTop, lockedLeft);
+    };
+
+    document.addEventListener("scroll", containDocumentScroll, {
+      capture: true,
+      passive: true,
+    });
+    return () => {
+      document.removeEventListener("scroll", containDocumentScroll, true);
+      containDocumentScroll();
+    };
+  }, [isOpen]);
+
+  const containTerminalWheel = (event: React.WheelEvent<HTMLDivElement>) => {
+    if (shouldContainTerminalScroll(event.currentTarget, event.deltaY)) {
+      event.preventDefault();
+    }
+  };
 
   return (
     <div className="relative h-full w-full overflow-hidden">
@@ -188,7 +264,9 @@ export function NavigationStack({
           no branch on size class.
         */}
         <div
-          className={`flex-1 overflow-y-auto overscroll-contain px-6 pb-[calc(max(var(--sheet-hidden,0px),var(--safe-area-bottom))+24px)] ${
+          ref={detailScrollerRef}
+          onWheel={containTerminalWheel}
+          className={`flex-1 overflow-y-auto overscroll-y-none px-6 pb-[calc(max(var(--sheet-hidden,0px),var(--safe-area-bottom))+24px)] ${
             onDetailBack && content ? "pt-2" : "pt-6"
           }`}
         >
