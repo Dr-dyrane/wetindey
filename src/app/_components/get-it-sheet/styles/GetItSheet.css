@@ -1,0 +1,11 @@
+/* GetItSheet custom scoped style overrides */
+.get-it-sheet-header {
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--border-subtle, rgba(0,0,0,0.05));
+}
+
+.get-it-sheet-action-bar {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
