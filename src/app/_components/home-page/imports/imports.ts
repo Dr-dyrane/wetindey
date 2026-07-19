@@ -74,7 +74,7 @@ import {
   type DisclosedRouteOrigin,
 } from "@/lib/directions";
 import { MapPresentation } from "@/app/_components/map-presentation/MapPresentation";
-import { useMapPresentation } from "@/app/_components/map-presentation/useMapPresentation";
+import { useMapPresentation } from "@/app/_components/map-presentation/hooks/useMapPresentation";
 import type { DeviceLocation } from "@/core/state/locationStore";
 
 export {

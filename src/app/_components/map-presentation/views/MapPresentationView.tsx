@@ -9,9 +9,9 @@ import {
   Moon,
   X,
   MapCameraHandle
-} from "./imports";
-import { copy } from "./copy";
-import "./MapPresentation.css";
+} from "../imports/imports";
+import { copy } from "../copy/copy";
+import "../styles/MapPresentation.css";
 
 function MapNotice({ message, onDismiss }: { message: string; onDismiss: () => void }) {
   useEffect(() => {

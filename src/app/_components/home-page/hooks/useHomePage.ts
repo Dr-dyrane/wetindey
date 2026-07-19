@@ -48,7 +48,7 @@ import {
   type DisclosedRouteOrigin
 } from "@/lib/directions";
 import type { RouteGeometry } from "@/integrations/maps/MapboxAdapter";
-import { useMapPresentation } from "@/app/_components/map-presentation/useMapPresentation";
+import { useMapPresentation } from "@/app/_components/map-presentation/hooks/useMapPresentation";
 
 interface PlaceData {
   id: string;
