@@ -366,6 +366,23 @@ utility lists retain their context-specific scan layouts. Independent static ref
 passed. Reused-tab visual confirmation remains a later evidence gate; no data/action/map/
 schema/copy change occurred. Release `src/design-system/components/PlaceOfferRow.tsx`.
 
+##### Human Interface — Market Details status and report-signal legibility — ACTIVE
+
+Owner: Controller temporary recovery claim. Exclusive path:
+`src/design-system/components/PlaceOfferRow.tsx`.
+
+Founder runtime screenshots refute the released card scan: the status chip blends into the
+image and the freshness/report cue is too faint and detached to guide a decision. Correct
+only the card hierarchy. The existing semantic chip itself, not a second wrapper or glass
+layer, must remain clearly legible over media and retain icon-plus-text meaning. Surface one
+concise, readable report-freshness cue in each regular card without restoring date,
+attribution, provenance, or other detail clutter. Price remains dominant on media, item and
+variant remain the primary text, and compact layout remains unchanged. Preserve the internal
+item-detail target, status truth, accessibility, forced colors, reduced motion, no-border
+rule, and no action/data/copy/schema/map changes. Require independent default-to-REFUTED
+source review and a path-scoped commit; reused-tab light/dark visual evidence remains a later
+gate.
+
 ##### Human Interface — Market Details grid, CTA, and attribution correction — COMPLETE / PASS
 
 Owner: persistent HI Engineer `019f75a5-0fc6-7f40-9a0f-8097ead3b45d`. Exclusive paths:
