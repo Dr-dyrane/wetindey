@@ -8,20 +8,21 @@
  *   [osm]        OpenStreetMap via Nominatim, bounded to the Festac viewbox
  *   [derived]    interpolated from confirmed neighbours — see the note below
  *
- * On the primary location: "D Close, 6th Avenue, Festac" is a real address but
- * 6th Avenue is NOT in Mapbox Streets or OSM — a grid sweep of the whole of
- * Festac returns only 1st, 2nd, 4th, 5th and 7th Avenue; 3rd and 6th are gaps
- * in the data. Festac's avenues run north-south with longitude falling as the
- * number rises (7th at ~3.2716, 5th at ~3.2789), so 6th interpolates to
- * ~3.2753. A tilequery at the resulting point lands 52m from "24 Rd", a real
- * Festac cross-street, which corroborates the block. Treat it as accurate to
- * roughly a block, not to a doorway.
+ * "D Close, 6th Avenue, Festac" is a real address but 6th Avenue is NOT in
+ * Mapbox Streets or OSM — a grid sweep of the whole of Festac returns only
+ * 1st, 2nd, 4th, 5th and 7th Avenue; 3rd and 6th are gaps in the data. Festac's
+ * avenues run north-south with longitude falling as the number rises (7th at
+ * ~3.2716, 5th at ~3.2789), so 6th interpolates to ~3.2753. That block-level
+ * estimate remains useful provenance for nearby derived demo places, but it is
+ * not an honest default for the user's approximate identity: it is not a GPS
+ * fix or a choice the user made, and it landed 5.96 m from 24 Road Stalls.
  *
  * Do NOT "correct" it with a geocoder. They answer this address confidently and
  * wrongly: Mapbox puts "D Close, Lagos 10" at 6.4634, 3.4562 — 20km east of
  * Festac — and "6th Avenue" at 6.4466, 3.5108, 26km away; Nominatim returns
- * nothing at all. Taking either moves the pilot across Lagos and every distance
- * in the app becomes garbage. A block of interpolation error is the good outcome.
+ * nothing at all. Taking either would corrupt any derived demo-place evidence
+ * still anchored to that block. For those places, block-level interpolation is
+ * the honest limit; it is simply no longer used as the user's default.
  */
 
 export interface SeedArea {
@@ -42,16 +43,22 @@ export interface SeedPlace {
   source: string;
 }
 
+/**
+ * The default represents only "somewhere around Festac". Use the same sourced
+ * area centre as manual Festac selection, never a block-level address that can
+ * be mistaken for the user's position or for a place at that address.
+ */
+const FESTAC_AREA_CENTER = { lat: 6.4655, lng: 3.279 };
+
 /** Default map centre for the pilot. */
 export const PRIMARY_LOCATION = {
-  label: "D Close, 6th Avenue, Festac",
-  lat: 6.4641,
-  lng: 3.2753,
-  source: "derived: midpoint of 5th/7th Ave longitude; 52m from 24 Rd",
+  label: "Festac Town area centre",
+  ...FESTAC_AREA_CENTER,
+  source: "osm: Festac avenue grid",
 };
 
 export const SW_LAGOS_AREAS: SeedArea[] = [
-  { slug: "festac", name: "Festac Town", center: { lat: 6.4655, lng: 3.2790 }, source: "osm: Festac avenue grid" },
+  { slug: "festac", name: "Festac Town", center: FESTAC_AREA_CENTER, source: "osm: Festac avenue grid" },
   { slug: "amuwo-odofin", name: "Amuwo Odofin", center: { lat: 6.46858, lng: 3.28266 }, source: "osm: Amowo-Odofin" },
   { slug: "satellite-town", name: "Satellite Town", center: { lat: 6.44093, lng: 3.25719 }, source: "osm: Nwankwo Street" },
   { slug: "ojo", name: "Ojo", center: { lat: 6.46493, lng: 3.18887 }, source: "osm: Ojo" },

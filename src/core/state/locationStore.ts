@@ -70,6 +70,10 @@ interface UserPosition {
   setAt: number;
 }
 
+interface PersistedLocationState {
+  position: UserPosition;
+}
+
 const DEFAULT_POSITION: UserPosition = {
   lat: PRIMARY_LOCATION.lat,
   lng: PRIMARY_LOCATION.lng,
@@ -78,6 +82,61 @@ const DEFAULT_POSITION: UserPosition = {
   areaSlug: "festac",
   setAt: 0,
 };
+
+function persistedUserPosition(value: unknown): UserPosition | null {
+  if (typeof value !== "object" || value === null) return null;
+  const position = value as Record<string, unknown>;
+  const provenance = position.provenance;
+  if (
+    provenance !== "simulated" &&
+    provenance !== "manual" &&
+    provenance !== "device" &&
+    provenance !== "default"
+  )
+    return null;
+  if (
+    typeof position.lat !== "number" ||
+    !Number.isFinite(position.lat) ||
+    typeof position.lng !== "number" ||
+    !Number.isFinite(position.lng) ||
+    (position.areaName !== null && typeof position.areaName !== "string") ||
+    (position.areaSlug !== null && typeof position.areaSlug !== "string") ||
+    typeof position.setAt !== "number" ||
+    !Number.isFinite(position.setAt)
+  )
+    return null;
+
+  return {
+    lat: position.lat,
+    lng: position.lng,
+    provenance,
+    areaName: position.areaName,
+    areaSlug: position.areaSlug,
+    setAt: position.setAt,
+  };
+}
+
+/**
+ * Move only the untouched synthetic default to the canonical Festac centre.
+ * Every chosen, simulated, or device-derived coordinate belongs to the user
+ * and survives byte-for-byte in meaning; a release must never turn a real GPS
+ * fix into the product's default merely because the persisted version changed.
+ */
+export function migratePersistedLocationState(
+  persistedState: unknown,
+  _version: number
+): PersistedLocationState {
+  if (typeof persistedState !== "object" || persistedState === null)
+    return { position: DEFAULT_POSITION };
+
+  const position = persistedUserPosition(
+    (persistedState as Record<string, unknown>).position
+  );
+  if (!position || position.provenance === "default")
+    return { position: DEFAULT_POSITION };
+
+  return { position };
+}
 
 /** 4 dp ≈ 11 m. Enough to name a block, not enough to imply a doorway. */
 export function formatCoordinate(lat: number, lng: number): string {
@@ -101,6 +160,33 @@ interface LocationState {
   /** Back to the pilot's opening coordinate, provenance and all. */
   resetToDefault: () => void;
   setHydrated: (v: boolean) => void;
+}
+
+/**
+ * Zustand calls `migrate` only for a version mismatch. Validate again in
+ * `merge`, which runs for every hydration, so a malformed payload that already
+ * claims the current version cannot replace the live position with null or an
+ * incomplete object. Default provenance is normalized on every path; the other
+ * three provenances retain their validated coordinate and metadata.
+ */
+export function mergePersistedLocationState(
+  persistedState: unknown,
+  currentState: LocationState
+): LocationState {
+  const position =
+    typeof persistedState === "object" && persistedState !== null
+      ? persistedUserPosition(
+          (persistedState as Record<string, unknown>).position
+        )
+      : null;
+
+  return {
+    ...currentState,
+    position:
+      position && position.provenance !== "default"
+        ? position
+        : DEFAULT_POSITION,
+  };
 }
 
 export const LOCATION_STORAGE_KEY = "wetindey.location.v1";
@@ -154,7 +240,12 @@ export const useLocationStore = create<LocationState>()(
         if (error) console.error("locationStore: rehydrate failed", error);
         state?.setHydrated(true);
       },
-      version: 1,
+      // Payload version, independent of the long-lived localStorage key name.
+      // Version 2 moves only the synthetic default; migrate preserves every
+      // user-chosen, simulated, and device-GPS coordinate.
+      version: 2,
+      migrate: migratePersistedLocationState,
+      merge: mergePersistedLocationState,
     }
   )
 );
