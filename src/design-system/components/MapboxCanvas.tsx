@@ -225,7 +225,7 @@ function whenMapboxReady(timeoutMs = 10_000): Promise<unknown | null> {
 export const MapboxCanvas = forwardRef<MapCameraHandle, MapboxCanvasProps>(function MapboxCanvas(
   {
     candidates,
-    selectedPlaceId: _selectedPlaceId,
+    selectedPlaceId,
     onMarkerClick,
     center,
     selfIdentity,
@@ -352,6 +352,7 @@ export const MapboxCanvas = forwardRef<MapCameraHandle, MapboxCanvasProps>(funct
         lng: candidate.lng,
         label: candidate.placeName,
         placeType: candidate.placeType,
+        selected: candidate.placeId === selectedPlaceId,
         status: candidate.detail
           ? (candidate.detail.confidenceLevel === "confirmed"
               ? "confirmed"
@@ -362,7 +363,7 @@ export const MapboxCanvas = forwardRef<MapCameraHandle, MapboxCanvasProps>(funct
         onClick: () => onMarkerClick(candidate.placeId)
       });
     });
-  }, [candidates, onMarkerClick, ready]);
+  }, [candidates, onMarkerClick, ready, selectedPlaceId]);
 
   /**
    * Draw the user. Always — there is no state in which the map has nobody on it.

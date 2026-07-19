@@ -6,6 +6,7 @@ export interface MapMarkerOptions {
   lng: number;
   label: string;
   placeType?: string | null;
+  selected?: boolean;
   status: "confirmed" | "caution" | "unavailable" | "neutral";
   onClick?: () => void;
 }
@@ -1159,6 +1160,10 @@ export class MapboxAdapter implements MapProviderAdapter {
     // Create custom borderless marker element following Apple HIG
     const el = document.createElement("div");
     el.className = `h-9 w-9 rounded-full shadow-md flex items-center justify-center cursor-pointer transition-transform hover:scale-105 active:scale-95 duration-micro`;
+    el.setAttribute("aria-current", options.selected ? "true" : "false");
+    el.style.transform = options.selected ? "scale(1.16)" : "scale(1)";
+    el.style.outline = options.selected ? "3px solid var(--color-accent)" : "none";
+    el.style.outlineOffset = "3px";
 
     // Status colors conforming to Section 17.3 (Borderless)
     if (options.status === "confirmed") {
@@ -1182,7 +1187,11 @@ export class MapboxAdapter implements MapProviderAdapter {
         ${symbol ?? '<path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/>'}
       </svg>
     `;
-    el.setAttribute("aria-label", symbolLabel ? `${options.label}, ${symbolLabel}` : options.label);
+    const accessibleLabel = symbolLabel ? `${options.label}, ${symbolLabel}` : options.label;
+    el.setAttribute(
+      "aria-label",
+      options.selected ? `${accessibleLabel}, selected` : accessibleLabel
+    );
 
     if (options.onClick) {
       el.addEventListener("click", () => {
