@@ -71,6 +71,7 @@ import {
   getPlaceOffers,
   getInitialSubmissionData,
   getVisitContext,
+  getMyProfile,
   type PlaceOffer,
   type NarrowedOffer
 } from "@/app/actions";
@@ -327,6 +328,48 @@ export default function HomePage() {
   } = useLocationIdentity({
     setCameraCenter,
   });
+  const [selfAvatarUrl, setSelfAvatarUrl] = useState<string | null>(null);
+  const selfAvatarRequestId = useRef(0);
+  const refreshSelfProfileAvatar = useEventCallback(async () => {
+    const requestId = ++selfAvatarRequestId.current;
+    if (!sessionUser) {
+      setSelfAvatarUrl(null);
+      return;
+    }
+
+    try {
+      const latestProfile = await getMyProfile();
+      if (requestId !== selfAvatarRequestId.current) return;
+      setSelfAvatarUrl(latestProfile?.avatarUrl ?? null);
+    } catch {
+      // Keep the current marker/name state; failed profile refreshes are non-blocking
+      // and the initials fallback is the expected UX.
+    }
+  });
+
+  useEffect(() => {
+    if (!sessionUser) {
+      setSelfAvatarUrl(null);
+      return;
+    }
+    void refreshSelfProfileAvatar();
+  }, [sessionUser, refreshSelfProfileAvatar]);
+
+  const handleSessionChange = useEventCallback(async () => {
+    await refetchSession();
+    await refreshSelfProfileAvatar();
+  });
+
+  const resolvedSelfIdentity = useMemo(() => {
+    if (!selfIdentity) return null;
+    if (!selfAvatarUrl) return selfIdentity;
+    return {
+      ...selfIdentity,
+      avatarUrl: selfAvatarUrl,
+    };
+  }, [selfIdentity, selfAvatarUrl]);
+
+  const resolvedSelfAvatarUrl = selfAvatarUrl ?? userProfile?.avatarUrl;
 
   // Report submission lookup metadata
   const [submitPlaces, setSubmitPlaces] = useState<{ id: string; name: string }[]>([]);
@@ -917,7 +960,7 @@ export default function HomePage() {
         }
         onMarkerClick={handleMarkerSelection}
         center={cameraCenter}
-        selfIdentity={selfIdentity}
+        selfIdentity={resolvedSelfIdentity}
         route={route}
         /* At regular width the shell mounts no bottom sheet, so there is nothing
            below to compensate for, but the panel covers the leading edge, and
@@ -1046,7 +1089,11 @@ export default function HomePage() {
                   signing in changed nothing anyone could see: you were
                   recognised only inside the sheet you had to reopen to check.
                   `||`, not `??`, email OTP mints users with name: "". */}
-              <Avatar name={sessionUser ? sessionUser.name || sessionUser.email : undefined} url={userProfile?.avatarUrl} size={32} />
+              <Avatar
+                name={sessionUser ? sessionUser.name || sessionUser.email : undefined}
+                url={resolvedSelfAvatarUrl}
+                size={32}
+              />
             </button>
           </div>
           </div>
@@ -1384,7 +1431,7 @@ export default function HomePage() {
           setIsReportOpen(true);
         }}
         manageProfileUser={sessionUser}
-        onSessionChange={refetchSession}
+        onSessionChange={handleSessionChange}
       />
 
       <SettingsSheet
@@ -1410,7 +1457,7 @@ export default function HomePage() {
         onOpenManageProfile={() => openSurface({ kind: "manage-profile" })}
         currentAreaName={location.label}
         user={sessionUser}
-        onSessionChange={refetchSession}
+        onSessionChange={handleSessionChange}
       />
 
       <ReportPriceSheet

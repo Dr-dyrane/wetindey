@@ -190,6 +190,19 @@ test("the truthful vertical keeps concepts and persistence separate", () => {
   assert.match(page, /return \(\) => \{\s*cancelled = true;/);
 });
 
+test("avatar session callbacks directly refresh map self identity avatar state", () => {
+  const page = sources["src/app/page.tsx"];
+  assert.match(
+    page,
+    /const handleSessionChange = useEventCallback\(async \(\) => \{[\s\S]{0,140}await refetchSession\(\);[\s\S]{0,140}await refreshSelfProfileAvatar\(\);[\s\S]{0,80}\}\);/
+  );
+  assert.match(page, /const refreshSelfProfileAvatar = useEventCallback\(async \(\) => \{/);
+  assert.match(page, /const resolvedSelfIdentity = useMemo\(\(\) => \{/);
+  assert.match(page, /selfIdentity=\{resolvedSelfIdentity\}/);
+  assert.match(page, /url=\{resolvedSelfAvatarUrl\}/);
+  assert.doesNotMatch(page, /selfIdentity=\{selfIdentity\}/);
+});
+
 test("device identity, accuracy halo and route disclosure remain explicit", () => {
   const canvas = sources["src/design-system/components/MapboxCanvas.tsx"];
   const adapter = sources["src/integrations/maps/MapboxAdapter.ts"];
