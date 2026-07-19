@@ -596,43 +596,17 @@ export default function HomePage() {
   ]);
 
   useEffect(() => {
-    const categoryInfo: Record<CategoryPillar, { title: string; desc: string }> = {
-      food: {
-        title: "WetinDey — Food Prices & Availability in Lagos",
-        desc: "Find where specific food items are available nearby and compare current market prices in Lagos in real time."
-      },
-      home: {
-        title: "WetinDey — Home & Building Materials in Lagos",
-        desc: "Check prices and local stock of cement, paint, tiles, and household cooking fuels around you."
-      },
-      health: {
-        title: "WetinDey — Medicine & Skincare Availability",
-        desc: "Search nearby pharmacy prices, drug stock levels, and personal care/cosmetics in your neighborhood."
-      },
-      money: {
-        title: "WetinDey — Official CBN Exchange Reference",
-        desc: "Convert USD, GBP, and EUR with the official CBN reference rate and explore clearly labelled Sample exchange-place UI."
-      },
-      transport: {
-        title: "WetinDey — Local Transport Fares & Ride Prices",
-        desc: "Check Danfo bus routes, ferry options, and standard private ride-hailing fares in Lagos."
-      },
-      community: {
-        title: "WetinDey — Local Services & NEPA Power Status",
-        desc: "See real-time NEPA power outage reports and find local service providers (mechanics, tailors)."
-      }
-    };
-
-    const info = categoryInfo[activeCategory] || categoryInfo.food;
-    document.title = info.title;
+    const title = "WetinDey: nearby live local information";
+    const description = "Know before you go. Live local information near you.";
+    document.title = title;
 
     const metaDesc = document.querySelector('meta[name="description"]');
     if (metaDesc) {
-      metaDesc.setAttribute("content", info.desc);
+      metaDesc.setAttribute("content", description);
     } else {
       const newMeta = document.createElement("meta");
       newMeta.name = "description";
-      newMeta.content = info.desc;
+      newMeta.content = description;
       document.head.appendChild(newMeta);
     }
   }, [activeCategory]);
