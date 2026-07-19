@@ -38,6 +38,7 @@ import {
   restoreLockedScrollPosition,
   shouldContainTerminalScroll,
   shouldResetDetailScroll,
+  terminalScrollBoundary,
 } from "../src/design-system/components/NavigationStack";
 
 function test(name: string, run: () => void) {
@@ -458,6 +459,27 @@ test("level-one terminal input and programmatic scroll stay out of the document"
     false
   );
   assert.equal(
+    terminalScrollBoundary(
+      { scrollTop: 598, scrollHeight: 1000, clientHeight: 400 },
+      8
+    ),
+    600
+  );
+  assert.equal(
+    terminalScrollBoundary(
+      { scrollTop: 2, scrollHeight: 1000, clientHeight: 400 },
+      -8
+    ),
+    0
+  );
+  assert.equal(
+    terminalScrollBoundary(
+      { scrollTop: 300, scrollHeight: 1000, clientHeight: 400 },
+      8
+    ),
+    null
+  );
+  assert.equal(
     shouldContainTerminalScroll(
       { scrollTop: 300, scrollHeight: 1000, clientHeight: 400 },
       -1
@@ -491,7 +513,7 @@ test("compact detail uses one bounded viewport instead of a terminal reservation
   assert.equal(navigationStackSource.includes("var(--sheet-hidden"), false);
   assert.match(
     navigationStackSource,
-    /isBoundedDetail\s+\? "overflow-hidden md:overflow-y-auto"\s+: "overflow-y-auto"/
+    /isBoundedDetail\s+\? "overflow-clip md:overflow-y-auto"\s+: "overflow-y-auto"/
   );
   assert.match(
     pageSource,
@@ -548,6 +570,18 @@ test("compact action is in flow above the sole Prices scroller", () => {
   assert.match(
     navigationStackSource,
     /event\.target\.closest\(DETAIL_SCROLL_SELECTOR\)[\s\S]*?event\.stopPropagation\(\)/
+  );
+  assert.match(
+    navigationStackSource,
+    /addEventListener\("wheel", containWheel, \{ passive: false \}\)/
+  );
+  assert.match(
+    navigationStackSource,
+    /addEventListener\("touchmove", containTouchMove, \{\s+passive: false/
+  );
+  assert.match(
+    navigationStackSource,
+    /const boundary = terminalScrollBoundary\([\s\S]*?event\.preventDefault\(\);[\s\S]*?nestedScroller\.scrollTop = boundary;/
   );
 });
 

@@ -64,11 +64,18 @@ export function shouldContainTerminalScroll(
   metrics: ScrollMetrics,
   deltaY: number
 ): boolean {
+  return terminalScrollBoundary(metrics, deltaY) !== null;
+}
+
+export function terminalScrollBoundary(
+  metrics: ScrollMetrics,
+  deltaY: number
+): number | null {
   const top = Math.max(0, metrics.scrollTop);
   const maximum = Math.max(0, metrics.scrollHeight - metrics.clientHeight);
-  if (deltaY < 0) return top <= 0;
-  if (deltaY > 0) return top >= maximum;
-  return false;
+  if (deltaY < 0 && top + deltaY <= 0) return 0;
+  if (deltaY > 0 && top + deltaY >= maximum) return maximum;
+  return null;
 }
 
 export function restoreLockedScrollPosition(
@@ -239,6 +246,85 @@ export function NavigationStack({
     };
   }, [content, isBoundedDetail, isOpen]);
 
+  useEffect(() => {
+    if (!isOpen || !isBoundedDetail) return;
+    const shellScroller = detailScrollerRef.current;
+    if (!shellScroller) return;
+
+    let lastTouchY: number | null = null;
+
+    const nestedScrollerFor = (target: EventTarget | null) =>
+      target instanceof Element
+        ? target.closest<HTMLElement>(DETAIL_SCROLL_SELECTOR)
+        : null;
+
+    const containWheel = (event: WheelEvent) => {
+      const nestedScroller = nestedScrollerFor(event.target);
+      if (!nestedScroller) return;
+      event.stopPropagation();
+
+      const multiplier =
+        event.deltaMode === WheelEvent.DOM_DELTA_LINE
+          ? 16
+          : event.deltaMode === WheelEvent.DOM_DELTA_PAGE
+            ? nestedScroller.clientHeight
+            : 1;
+      const boundary = terminalScrollBoundary(
+        nestedScroller,
+        event.deltaY * multiplier
+      );
+      if (boundary === null) return;
+
+      event.preventDefault();
+      nestedScroller.scrollTop = boundary;
+    };
+
+    const containTouchStart = (event: TouchEvent) => {
+      if (!nestedScrollerFor(event.target)) return;
+      lastTouchY = event.touches[0]?.clientY ?? null;
+      event.stopPropagation();
+    };
+
+    const containTouchMove = (event: TouchEvent) => {
+      const nestedScroller = nestedScrollerFor(event.target);
+      const currentY = event.touches[0]?.clientY;
+      if (!nestedScroller || currentY == null) return;
+      event.stopPropagation();
+
+      const deltaY = lastTouchY == null ? 0 : lastTouchY - currentY;
+      lastTouchY = currentY;
+      const boundary = terminalScrollBoundary(nestedScroller, deltaY);
+      if (boundary === null) return;
+
+      event.preventDefault();
+      nestedScroller.scrollTop = boundary;
+    };
+
+    const containTouchEnd = (event: TouchEvent) => {
+      if (!nestedScrollerFor(event.target)) return;
+      lastTouchY = null;
+      event.stopPropagation();
+    };
+
+    shellScroller.addEventListener("wheel", containWheel, { passive: false });
+    shellScroller.addEventListener("touchstart", containTouchStart, {
+      passive: true,
+    });
+    shellScroller.addEventListener("touchmove", containTouchMove, {
+      passive: false,
+    });
+    shellScroller.addEventListener("touchend", containTouchEnd);
+    shellScroller.addEventListener("touchcancel", containTouchEnd);
+
+    return () => {
+      shellScroller.removeEventListener("wheel", containWheel);
+      shellScroller.removeEventListener("touchstart", containTouchStart);
+      shellScroller.removeEventListener("touchmove", containTouchMove);
+      shellScroller.removeEventListener("touchend", containTouchEnd);
+      shellScroller.removeEventListener("touchcancel", containTouchEnd);
+    };
+  }, [isBoundedDetail, isOpen]);
+
   /**
    * The pop has no exit animation for free: React unmounts `detailNode` the
    * frame the selection clears, and level 0 would slide back over nothing. So
@@ -280,8 +366,11 @@ export function NavigationStack({
         ? event.target.closest<HTMLElement>(DETAIL_SCROLL_SELECTOR)
         : null;
     if (nestedScroller) event.stopPropagation();
-    if (shouldContainTerminalScroll(nestedScroller ?? event.currentTarget, event.deltaY)) {
+    const scrollTarget = nestedScroller ?? event.currentTarget;
+    const boundary = terminalScrollBoundary(scrollTarget, event.deltaY);
+    if (boundary !== null) {
       event.preventDefault();
+      scrollTarget.scrollTop = boundary;
     }
   };
 
@@ -387,7 +476,7 @@ export function NavigationStack({
           onTouchCancel={containNestedDetailGesture}
           className={`flex-1 ${
             isBoundedDetail
-              ? "overflow-hidden md:overflow-y-auto"
+              ? "overflow-clip md:overflow-y-auto"
               : "overflow-y-auto"
           } overscroll-y-none [overflow-anchor:none] px-6 pb-0 md:pb-[calc(var(--safe-area-bottom)+24px)] ${
             onDetailBack && content ? "pt-2" : "pt-6"
