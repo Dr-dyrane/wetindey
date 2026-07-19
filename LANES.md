@@ -345,7 +345,7 @@ handle-to-first-content dead space while retaining the invisible >=44x44 target,
 drag/snap, safe-area, focus/scroll handoff, and island/dock behavior. Remaining runtime
 visual verification is shared and pathless.
 
-##### Maps Canvas stale-failure recovery — ACTIVE
+##### Maps Canvas stale-failure recovery — COMPLETE / PASS
 
 Owner: Maps & Location Experience Engineer `019f787c-4f49-78b0-aaa2-bd403d721a1d`.
 Exclusive paths:
@@ -353,13 +353,15 @@ Exclusive paths:
 - `src/design-system/components/MapboxCanvas.tsx`
 - `scripts/location-default-contract.test.ts`
 
-Release `src/integrations/maps/MapboxAdapter.ts`. Unify Canvas lifecycle/error authority so
+Commit `041dfb525a7e0588a2f777825b957721c798848d` independently **PASS**ed and is pushed to
+`main`. Release both exact paths. `src/integrations/maps/MapboxAdapter.ts` is already
+released. The implementation unifies Canvas lifecycle/error authority so
 accepted current-adapter/current-generation readiness clears stale initialization failure;
 gate callbacks by adapter epoch plus style generation; stale adapter/lower generation may
 not clear a real failure; late current readiness may heal; preserve one-action retry with no
 loop. Extend the focused contract for stale library failure/generation/adapter epoch/retry/
 current-ready recovery. Exclude page, MapLoader, BottomSheet, Market, Presence, and Adapter
-changes. Require independent refutation, then Safari/Chrome runtime evidence.
+changes. Safari/Chrome runtime refutation remains the post-deploy gate.
 
 ##### Product identity — app metadata correction — COMPLETE / PASS
 
