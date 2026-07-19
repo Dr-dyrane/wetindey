@@ -6,9 +6,9 @@ const LOCK_TIMEOUT = "2s";
 const IDLE_TRANSACTION_TIMEOUT = "15s";
 
 interface PresenceRetentionClient {
-  connect(): Promise<void>;
+  connect(): Promise<unknown>;
   query(statement: string): Promise<unknown>;
-  end(): Promise<void>;
+  end(): Promise<unknown>;
 }
 
 export type PresenceRetentionClientFactory = (connectionString: string) => PresenceRetentionClient;

@@ -204,6 +204,8 @@ test("route and deployment configuration stay private and narrow", async () => {
   assert.match(helper, /timingSafeEqual\(actual, expected\)/);
   assert.match(helper, /SET LOCAL ROLE wetindey_presence_safety/);
   assert.match(helper, /SELECT public\.presence_run_retention_cleanup\(\)/);
+  assert.match(helper, /connect\(\): Promise<unknown>/);
+  assert.match(helper, /end\(\): Promise<unknown>/);
   assert.match(helper, /private, no-store, max-age=0/);
   assert.doesNotMatch(helper, /Content-Length/i);
   assert.doesNotMatch(helper, /console\./);
