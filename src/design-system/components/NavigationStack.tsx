@@ -189,18 +189,23 @@ export function NavigationStack({
 
   useLayoutEffect(() => {
     if (!isOpen || !isBoundedDetail) return;
+    const shellScroller = detailScrollerRef.current;
+    if (!shellScroller) return;
     const boundedDetail =
-      detailScrollerRef.current?.querySelector<HTMLElement>(BOUNDED_DETAIL_SELECTOR);
+      shellScroller.querySelector<HTMLElement>(BOUNDED_DETAIL_SELECTOR);
     if (!boundedDetail) return;
 
     let geometryFrame = 0;
     let sampleUntil = performance.now() + motion.duration.slow + 50;
 
     const measureVisibleHeight = () => {
-      const viewport = window.visualViewport;
-      const visibleBottom = viewport
-        ? viewport.offsetTop + viewport.height
-        : window.innerHeight;
+      /*
+       * The terminal edge is the visible intersection of this level and the
+       * layout viewport. `visualViewport` can end above Safari's rendered sheet
+       * bottom, manufacturing blank space after the real Prices scrollport.
+       */
+      const shellBottom = shellScroller.getBoundingClientRect().bottom;
+      const visibleBottom = Math.min(window.innerHeight, shellBottom);
       const visibleHeight = Math.max(
         0,
         visibleBottom - boundedDetail.getBoundingClientRect().top

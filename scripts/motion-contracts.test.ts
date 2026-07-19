@@ -529,7 +529,11 @@ test("compact detail uses one bounded viewport instead of a terminal reservation
   );
   assert.match(
     navigationStackSource,
-    /window\.visualViewport[\s\S]*?visibleBottom - boundedDetail\.getBoundingClientRect\(\)\.top/
+    /const shellBottom = shellScroller\.getBoundingClientRect\(\)\.bottom;\s+const visibleBottom = Math\.min\(window\.innerHeight, shellBottom\);[\s\S]*?visibleBottom - boundedDetail\.getBoundingClientRect\(\)\.top/
+  );
+  assert.doesNotMatch(
+    navigationStackSource,
+    /viewport\.offsetTop \+ viewport\.height/
   );
   assert.match(
     navigationStackSource,
@@ -554,6 +558,10 @@ test("compact action is in flow above the sole Prices scroller", () => {
   assert.match(
     pageSource,
     /data-navigation-detail-scroller\s+className="min-h-0 flex-1 overflow-y-auto overscroll-y-none pr-1"/
+  );
+  assert.doesNotMatch(
+    pageSource,
+    /data-navigation-detail-scroller[\s\S]{0,120}\bpb-/
   );
   assert.match(
     navigationStackSource,
