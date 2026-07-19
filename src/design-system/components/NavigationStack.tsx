@@ -95,6 +95,7 @@ export function resetDetailScrollPosition(target: MutableScrollPosition | null):
 
 const DETAIL_SCROLL_SELECTOR = "[data-navigation-detail-scroller]";
 const BOUNDED_DETAIL_SELECTOR = "[data-navigation-detail-bounded]";
+const COMPACT_TERMINAL_INSET_PX = 24;
 
 interface BoundedDetailProps {
   "data-navigation-detail-bounded"?: true;
@@ -213,6 +214,26 @@ export function NavigationStack({
       boundedDetail.style.setProperty(
         "--navigation-detail-visible-height",
         `${visibleHeight}px`
+      );
+
+      /*
+       * The bounded detail owns internal flex geometry that NavigationStack
+       * must not duplicate or predict. Reconcile the published height against
+       * the marked Prices scrollport's rendered bottom instead: this absorbs
+       * only the measured tail error and leaves one 24px terminal inset.
+       */
+      const nestedScroller =
+        shellScroller.querySelector<HTMLElement>(DETAIL_SCROLL_SELECTOR);
+      if (!nestedScroller) return;
+      const renderedInset =
+        visibleBottom - nestedScroller.getBoundingClientRect().bottom;
+      const correctedHeight = Math.max(
+        0,
+        visibleHeight + renderedInset - COMPACT_TERMINAL_INSET_PX
+      );
+      boundedDetail.style.setProperty(
+        "--navigation-detail-visible-height",
+        `${correctedHeight}px`
       );
     };
 

@@ -541,6 +541,26 @@ test("compact detail uses one bounded viewport instead of a terminal reservation
   );
   assert.match(
     navigationStackSource,
+    /const COMPACT_TERMINAL_INSET_PX = 24;/
+  );
+  assert.match(
+    navigationStackSource,
+    /const renderedInset =\s+visibleBottom - nestedScroller\.getBoundingClientRect\(\)\.bottom;/
+  );
+  assert.match(
+    navigationStackSource,
+    /visibleHeight \+ renderedInset - COMPACT_TERMINAL_INSET_PX/
+  );
+  assert.equal(
+    (
+      navigationStackSource.match(
+        /boundedDetail\.style\.setProperty\(\s+"--navigation-detail-visible-height"/g
+      ) ?? []
+    ).length,
+    2
+  );
+  assert.match(
+    navigationStackSource,
     /md:pb-\[calc\(var\(--safe-area-bottom\)\+24px\)\]/
   );
 });
