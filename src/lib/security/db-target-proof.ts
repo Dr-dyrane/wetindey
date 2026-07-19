@@ -7,6 +7,7 @@ import {
 
 export const DB_TARGET_PROOF_TOKEN_ENV = "DB_TARGET_PROOF_TOKEN_V1";
 export const DB_TARGET_PROOF_NONCE_HEADER = "x-db-target-proof-nonce";
+export const DB_TARGET_PROOF_BODY_EOF_TIMEOUT_MS = 250;
 
 const PROTOCOL = "wetindey/db-target-proof/v1";
 const TOKEN_LIFETIME_SECONDS = 15 * 60;
@@ -343,6 +344,62 @@ function authorized(authorization: string | null, configuredToken: string): bool
   return supplied.byteLength === expected.byteLength && timingSafeEqual(supplied, expected);
 }
 
+type BodyVerification = "empty" | "present" | "unavailable";
+
+function cancelBodyReader(reader: ReadableStreamDefaultReader<Uint8Array>): void {
+  try {
+    void reader.cancel().catch(() => undefined);
+  } catch {
+    // Cancellation is best-effort; the request still fails closed.
+  }
+}
+
+async function verifyBodyIsEmpty(request: Request): Promise<BodyVerification> {
+  if (request.body === null) return "empty";
+
+  let reader: ReadableStreamDefaultReader<Uint8Array>;
+  try {
+    reader = request.body.getReader();
+  } catch {
+    return "unavailable";
+  }
+
+  type ReadOutcome =
+    | { kind: "read"; result: ReadableStreamReadResult<Uint8Array> }
+    | { kind: "read-error" }
+    | { kind: "timeout" };
+  let timeout: ReturnType<typeof setTimeout> | undefined;
+  const outcome = await Promise.race<ReadOutcome>([
+    reader.read().then(
+      (result) => ({ kind: "read", result }),
+      () => ({ kind: "read-error" }),
+    ),
+    new Promise<ReadOutcome>((resolve) => {
+      timeout = setTimeout(
+        () => resolve({ kind: "timeout" }),
+        DB_TARGET_PROOF_BODY_EOF_TIMEOUT_MS,
+      );
+    }),
+  ]);
+  if (timeout !== undefined) clearTimeout(timeout);
+
+  if (outcome.kind !== "read") {
+    cancelBodyReader(reader);
+    return "unavailable";
+  }
+  if (!outcome.result.done) {
+    cancelBodyReader(reader);
+    return "present";
+  }
+  try {
+    reader.releaseLock();
+  } catch {
+    cancelBodyReader(reader);
+    return "unavailable";
+  }
+  return "empty";
+}
+
 export function createDbTargetProofHandler(options: {
   claimToken: ClaimDbTargetProofToken;
 }): (
@@ -356,7 +413,6 @@ export function createDbTargetProofHandler(options: {
     const contentLength = request.headers.get("content-length");
     if (contentLength !== null && contentLength !== "0") return emptyResponse(400);
     if (request.headers.has("transfer-encoding")) return emptyResponse(400);
-    if (request.body !== null) return emptyResponse(400);
 
     const nowSeconds = Math.floor(now.getTime() / 1_000);
     let configuredToken: string;
@@ -378,6 +434,10 @@ export function createDbTargetProofHandler(options: {
     } catch {
       return emptyResponse(401);
     }
+
+    const bodyVerification = await verifyBodyIsEmpty(request);
+    if (bodyVerification === "present") return emptyResponse(400);
+    if (bodyVerification === "unavailable") return emptyResponse(503);
 
     const tokenKey = createHash("sha256").update(configuredToken, "utf8").digest("hex");
     let proof: DbTargetProof;

@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import {
+  DB_TARGET_PROOF_BODY_EOF_TIMEOUT_MS,
   createDbTargetProof,
   createDbTargetProofHandler,
   DB_TARGET_PROOF_NONCE_HEADER,
@@ -60,6 +61,17 @@ function request(options: {
     headers,
     body: options.body,
   });
+}
+
+function withBodyStream(
+  baseRequest: Request,
+  body: ReadableStream<Uint8Array>,
+): Request {
+  Object.defineProperty(baseRequest, "body", {
+    configurable: true,
+    value: body,
+  });
+  return baseRequest;
 }
 
 const environment = {
@@ -142,12 +154,20 @@ async function main(): Promise<void> {
 
   const claimToken = atomicClaim();
   const handler = createDbTargetProofHandler({ claimToken });
+  const vercelEmptyBody = new ReadableStream<Uint8Array>({
+    start(controller) {
+      controller.close();
+    },
+  });
   const success = await handler(
-    request({
-      authorization: `Bearer ${TOKEN}`,
-      callerNonce: NONCE_A,
-      contentLength: null,
-    }),
+    withBodyStream(
+      request({
+        authorization: `Bearer ${TOKEN}`,
+        callerNonce: NONCE_A,
+        contentLength: null,
+      }),
+      vercelEmptyBody,
+    ),
     environment,
     NOW,
   );
@@ -186,6 +206,29 @@ async function main(): Promise<void> {
       return true;
     },
   });
+  let zeroChunkCanceled = false;
+  const zeroChunkBody = new ReadableStream<Uint8Array>({
+    start(controller) {
+      controller.enqueue(new Uint8Array(0));
+    },
+    cancel() {
+      zeroChunkCanceled = true;
+    },
+  });
+  let hangingBodyCanceled = false;
+  const hangingBody = new ReadableStream<Uint8Array>({
+    pull() {
+      return new Promise<void>(() => undefined);
+    },
+    cancel() {
+      hangingBodyCanceled = true;
+    },
+  }, { highWaterMark: 0 });
+  const erroringBody = new ReadableStream<Uint8Array>({
+    pull(controller) {
+      controller.error(new Error());
+    },
+  }, { highWaterMark: 0 });
   for (const [badRequest, badEnvironment, status] of [
     [request(), environment, 401],
     [request({ authorization: "Bearer wrong", callerNonce: NONCE_A }), environment, 401],
@@ -221,6 +264,42 @@ async function main(): Promise<void> {
       400,
     ],
     [
+      withBodyStream(
+        request({
+          authorization: `Bearer ${TOKEN}`,
+          callerNonce: NONCE_A,
+          contentLength: null,
+        }),
+        zeroChunkBody,
+      ),
+      environment,
+      400,
+    ],
+    [
+      withBodyStream(
+        request({
+          authorization: `Bearer ${TOKEN}`,
+          callerNonce: NONCE_A,
+          contentLength: null,
+        }),
+        hangingBody,
+      ),
+      environment,
+      503,
+    ],
+    [
+      withBodyStream(
+        request({
+          authorization: `Bearer ${TOKEN}`,
+          callerNonce: NONCE_A,
+          contentLength: null,
+        }),
+        erroringBody,
+      ),
+      environment,
+      503,
+    ],
+    [
       request({
         authorization: `Bearer ${TOKEN}`,
         callerNonce: NONCE_A,
@@ -244,6 +323,37 @@ async function main(): Promise<void> {
     assertPrivateEmpty(await freshHandler(badRequest, badEnvironment, NOW), status);
   }
   assert.equal(invalidClaimCalls, 0);
+  assert.equal(zeroChunkCanceled, true);
+  assert.equal(hangingBodyCanceled, true);
+
+  let unauthorizedBodyReads = 0;
+  let unauthorizedBodyCanceled = false;
+  const unauthorizedBody = new ReadableStream<Uint8Array>({
+    pull() {
+      unauthorizedBodyReads += 1;
+      return new Promise<void>(() => undefined);
+    },
+    cancel() {
+      unauthorizedBodyCanceled = true;
+    },
+  }, { highWaterMark: 0 });
+  assertPrivateEmpty(
+    await freshHandler(
+      withBodyStream(
+        request({
+          authorization: "Bearer wrong",
+          callerNonce: NONCE_A,
+          contentLength: null,
+        }),
+        unauthorizedBody,
+      ),
+      environment,
+      NOW,
+    ),
+    401,
+  );
+  assert.equal(unauthorizedBodyReads, 0);
+  assert.equal(unauthorizedBodyCanceled, false);
 
   const expiredToken = `v1.${NOW_SECONDS - 700}.${NOW_SECONDS - 100}.${TOKEN_SECRET}`;
   assertPrivateEmpty(
@@ -290,6 +400,7 @@ async function main(): Promise<void> {
   assert.doesNotMatch(routeSource, /(?:del|deleteBlob|getBlob)\(/);
   assert.match(helperSource, /hkdfSync\(/);
   assert.match(helperSource, /createHmac\("sha256"/);
+  assert.equal(DB_TARGET_PROOF_BODY_EOF_TIMEOUT_MS, 250);
 
   process.stdout.write("db-target-proof-contract: PASS\n");
 }
