@@ -137,7 +137,7 @@ export type MapStyleLifecycleState =
       generation: number;
       theme: "light" | "dark";
       attempt: number;
-      reason: "context" | "error" | "renderer" | "timeout";
+      reason: "context" | "error" | "probe" | "renderer" | "timeout";
     };
 
 type MapStyleLifecycleListener = (state: MapStyleLifecycleState) => void;
@@ -191,14 +191,26 @@ const STYLE_LOAD_TIMEOUT_MS = 5_000;
 const STYLE_LOAD_MAX_ATTEMPTS = 2;
 /**
  * `style.load` proves that style-owned mutations are safe; it does not prove
- * that Safari presented a usable WebGL frame. Give the painter one bounded
- * window, replace the whole Map once, then fail visibly instead of looping.
+ * that the current WebGL context produced a later render. Give the painter one
+ * bounded window, reconstruct once only for confirmed renderer/context failure,
+ * then fail visibly instead of looping.
  */
 const STYLE_FRAME_TIMEOUT_MS = 5_000;
 const MAX_AUTOMATIC_MAP_RECONSTRUCTIONS = 1;
-/** The shipped dark land is ~38/255, so this rejects only genuinely black output. */
+/** The shipped dark land is ~38/255; readback remains diagnostic-only. */
 const VISIBLE_FRAME_CHANNEL_FLOOR = 8;
 const FRAME_SAMPLE_FRACTIONS = [0.18, 0.38, 0.5, 0.62, 0.82] as const;
+const FRAME_READ_SENTINEL = [0xde, 0xad, 0xbe, 0xef] as const;
+
+type FrameEvidence =
+  | "pending"
+  | "visible"
+  | "opaque-black-readback"
+  | "context-unavailable"
+  | "context-lost"
+  | "zero-buffer"
+  | "read-error"
+  | "transparent";
 
 /**
  * How close `fitRoute` is allowed to pull in. 16.5 is a street, not a doorway.
@@ -893,7 +905,7 @@ export class MapboxAdapter implements MapProviderAdapter {
    * true from each `style.load`. It mirrors Mapbox's private `_loaded`.
    */
   private styleReady = false;
-  /** Current generation has painted enough basemap to remove Canvas overlays. */
+  /** Current style generation produced a later render on a structurally live context. */
   private styleUsable = false;
   private styleLifecycleListener: MapStyleLifecycleListener | null = null;
   private styleReadyListener: (() => void) | null = null;
@@ -914,8 +926,10 @@ export class MapboxAdapter implements MapProviderAdapter {
   private contextLost = false;
   private contextRecoveryStyleWasReady = false;
   private routeIsolationFailed = false;
+  /** Safe, generation-local renderer evidence; never contains request or location data. */
+  private frameEvidence: FrameEvidence = "pending";
   private automaticMapReconstructions = 0;
-  private lastFailureReason: "context" | "error" | "renderer" | "timeout" | null = null;
+  private lastFailureReason: "context" | "error" | "probe" | "renderer" | "timeout" | null = null;
   /**
    * Kept only if the old Map has already been removed but constructing its
    * replacement throws. Explicit Retry can then start a fresh bounded episode
@@ -1091,9 +1105,9 @@ export class MapboxAdapter implements MapProviderAdapter {
   /**
    * Mapbox's `error` event also covers recoverable tile failures, so treating
    * every event as fatal would replace a usable map with an error card. Once a
-   * frame is pixel-proven, errors stay recoverable. Before that, retain only the
-   * fact an error happened; never log its message, which may contain request
-   * details that do not belong in diagnostics.
+   * current-generation usable render arrives, errors stay recoverable. Before
+   * that, retain only the fact an error happened; never log its message, which
+   * may contain request details that do not belong in diagnostics.
    */
   private handleMapError(
     event: MapboxErrorEvent,
@@ -1117,7 +1131,30 @@ export class MapboxAdapter implements MapProviderAdapter {
   }
 
   private emitStyleLifecycle(state: MapStyleLifecycleState): void {
+    this.setSafeDiagnostic("data-map-lifecycle", state.status);
+    if (state.status === "failed") {
+      this.setSafeDiagnostic("data-map-failure-reason", state.reason);
+    } else {
+      this.clearSafeDiagnostic("data-map-failure-reason");
+    }
     this.styleLifecycleListener?.(state);
+  }
+
+  private setSafeDiagnostic(name: string, value: string): void {
+    const container = this.mapContainer;
+    if (!container || typeof container.setAttribute !== "function") return;
+    container.setAttribute(name, value);
+  }
+
+  private clearSafeDiagnostic(name: string): void {
+    const container = this.mapContainer;
+    if (!container || typeof container.removeAttribute !== "function") return;
+    container.removeAttribute(name);
+  }
+
+  private recordFrameEvidence(evidence: FrameEvidence): void {
+    this.frameEvidence = evidence;
+    this.setSafeDiagnostic("data-map-frame-evidence", evidence);
   }
 
   private clearStyleLoadTimer(): void {
@@ -1157,37 +1194,64 @@ export class MapboxAdapter implements MapProviderAdapter {
   }
 
   /**
-   * Read only a bounded grid while readiness is pending. `preserveDrawingBuffer`
-   * remains false; the probe runs synchronously inside Mapbox's `render` event,
-   * immediately after Painter.render and before the browser presents the frame.
+   * Read a bounded diagnostic grid while readiness is pending.
+   * `preserveDrawingBuffer` remains false, so Safari is allowed to return black,
+   * transparent or failed readback for a frame it presents. The result may
+   * diagnose a renderer but never independently controls the user-visible
+   * overlay.
    */
-  private frameHasVisiblePixels(map: MapboxMap): boolean {
+  private inspectFrameEvidence(map: MapboxMap): FrameEvidence {
+    let gl: WebGL2RenderingContext | null = null;
+    let width = 0;
+    let height = 0;
     try {
       const canvas = map.getCanvas();
-      const gl = canvas.getContext("webgl2");
-      if (!gl || gl.isContextLost()) return false;
-      const width = gl.drawingBufferWidth;
-      const height = gl.drawingBufferHeight;
-      if (width <= 0 || height <= 0) return false;
+      gl = canvas.getContext("webgl2");
+      if (!gl) return "context-unavailable";
+      if (gl.isContextLost()) return "context-lost";
+      width = gl.drawingBufferWidth;
+      height = gl.drawingBufferHeight;
+      if (width <= 0 || height <= 0) return "zero-buffer";
+    } catch {
+      return "context-unavailable";
+    }
 
-      const pixel = new Uint8Array(4);
+    const pixel = new Uint8Array(4);
+    let opaqueBlackSamples = 0;
+    let transparentSamples = 0;
+    try {
       for (const xFraction of FRAME_SAMPLE_FRACTIONS) {
         for (const yFraction of FRAME_SAMPLE_FRACTIONS) {
           const x = Math.min(width - 1, Math.max(0, Math.floor(width * xFraction)));
           const y = Math.min(height - 1, Math.max(0, Math.floor(height * yFraction)));
+          pixel.set(FRAME_READ_SENTINEL);
           gl.readPixels(x, y, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, pixel);
+          if (FRAME_READ_SENTINEL.every((channel, index) => pixel[index] === channel)) {
+            return "read-error";
+          }
           if (
             pixel[3] > 0 &&
             Math.max(pixel[0], pixel[1], pixel[2]) >= VISIBLE_FRAME_CHANNEL_FLOOR
           ) {
-            return true;
+            return "visible";
           }
+          if (pixel[3] === 0) transparentSamples += 1;
+          else opaqueBlackSamples += 1;
         }
       }
+      if (opaqueBlackSamples === FRAME_SAMPLE_FRACTIONS.length ** 2) {
+        return "opaque-black-readback";
+      }
+      if (transparentSamples > 0) return "transparent";
     } catch {
-      // A lost/tearing-down WebGL context may throw instead of returning black.
+      try {
+        if (gl?.isContextLost()) return "context-lost";
+      } catch {
+        // Context inspection can itself fail while Safari tears the GPU state down.
+      }
+      return "read-error";
     }
-    return false;
+    return "read-error";
   }
 
   private completeUsableFrame(
@@ -1202,8 +1266,22 @@ export class MapboxAdapter implements MapProviderAdapter {
       generation !== this.styleGeneration ||
       !this.styleReady ||
       this.contextLost ||
-      this.routeIsolationFailed ||
-      !this.frameHasVisiblePixels(map)
+      this.routeIsolationFailed
+    ) {
+      return false;
+    }
+    const evidence = this.inspectFrameEvidence(map);
+    this.recordFrameEvidence(evidence);
+    if (evidence === "context-lost") this.contextLost = true;
+    // Mapbox uses preserveDrawingBuffer:false. Safari may therefore return
+    // black, transparent or failed readback after a frame that it visibly
+    // presented. Readback is diagnostic only: current-generation style
+    // readiness plus a subsequent render on a live, non-zero WebGL2 context is
+    // the usable-frame authority. Only confirmed context structure blocks it.
+    if (
+      evidence === "context-unavailable" ||
+      evidence === "context-lost" ||
+      evidence === "zero-buffer"
     ) {
       return false;
     }
@@ -1214,8 +1292,7 @@ export class MapboxAdapter implements MapProviderAdapter {
     this.rendererErrorObserved = false;
     this.clearStyleFrameTimer();
     this.clearStyleRenderListener();
-    // A retained custom route must not be allowed to prove the basemap usable.
-    // Replay only after the current style's own pixels have passed the probe;
+    // Replay only after the current style's subsequent usable render;
     // applyRoute still requires styleReady, so mutation safety is unchanged.
     this.applyRoute();
     if (!wasUsable) {
@@ -1230,9 +1307,9 @@ export class MapboxAdapter implements MapProviderAdapter {
   }
 
   /**
-   * `style.load` and `idle` are definitive events. `render` is deliberately
-   * split: a positive style probe may recover a missed mutation-safe event, but
-   * only the later framebuffer probe may expose the map.
+   * `style.load` and `idle` are definitive mutation-safe events. A later render
+   * may recover a missed mutation-safe event, then exposes the map only while
+   * the current WebGL2 context remains present, non-lost and non-zero.
    */
   private recognizeLoadedStyle(
     generation: number,
@@ -1275,6 +1352,8 @@ export class MapboxAdapter implements MapProviderAdapter {
     this.contextLost = false;
     this.contextRecoveryStyleWasReady = false;
     this.routeIsolationFailed = false;
+    this.frameEvidence = "pending";
+    this.setSafeDiagnostic("data-map-frame-evidence", "pending");
     this.lastFailureReason = null;
     this.styleInstalledGeneration = replaceStyle ? null : generation;
     this.pendingMutationSafeGeneration = null;
@@ -1411,13 +1490,28 @@ export class MapboxAdapter implements MapProviderAdapter {
     }
     this.clearStyleFrameTimer();
 
-    if (this.automaticMapReconstructions < MAX_AUTOMATIC_MAP_RECONSTRUCTIONS) {
+    const hasReconstructionEvidence =
+      this.contextLost ||
+      this.frameEvidence === "context-unavailable" ||
+      this.frameEvidence === "context-lost" ||
+      this.rendererErrorObserved;
+
+    if (
+      hasReconstructionEvidence &&
+      this.automaticMapReconstructions < MAX_AUTOMATIC_MAP_RECONSTRUCTIONS
+    ) {
       this.automaticMapReconstructions += 1;
       this.reconstructMap(map, epoch);
       return;
     }
 
-    const reason = this.contextLost ? "context" : "renderer";
+    const reason = hasReconstructionEvidence
+      ? this.contextLost ||
+        this.frameEvidence === "context-unavailable" ||
+        this.frameEvidence === "context-lost"
+        ? "context"
+        : "renderer"
+      : "probe";
     this.lastFailureReason = reason;
     this.emitStyleLifecycle({
       status: "failed",
@@ -1456,6 +1550,8 @@ export class MapboxAdapter implements MapProviderAdapter {
     this.contextLost = true;
     this.contextRecoveryStyleWasReady = styleWasReady;
     this.routeIsolationFailed = false;
+    this.frameEvidence = "context-lost";
+    this.setSafeDiagnostic("data-map-frame-evidence", "context-lost");
     if (styleWasUsable) this.automaticMapReconstructions = 0;
     this.lastFailureReason = null;
     this.emitStyleLifecycle({
@@ -1569,6 +1665,8 @@ export class MapboxAdapter implements MapProviderAdapter {
     this.contextLost = false;
     this.contextRecoveryStyleWasReady = false;
     this.routeIsolationFailed = false;
+    this.frameEvidence = "pending";
+    this.setSafeDiagnostic("data-map-frame-evidence", "pending");
     this.lastFailureReason = null;
     this.detachedRecoverySnapshot = null;
     this.attachMapLifecycleListeners(replacement, replacementEpoch);
@@ -1598,7 +1696,12 @@ export class MapboxAdapter implements MapProviderAdapter {
   }
 
   private failRendererRecovery(): void {
-    const reason = this.contextLost ? "context" : "renderer";
+    const reason =
+      this.contextLost ||
+      this.frameEvidence === "context-unavailable" ||
+      this.frameEvidence === "context-lost"
+        ? "context"
+        : "renderer";
     this.lastFailureReason = reason;
     this.emitStyleLifecycle({
       status: "failed",
@@ -2589,10 +2692,14 @@ export class MapboxAdapter implements MapProviderAdapter {
     this.contextLost = false;
     this.contextRecoveryStyleWasReady = false;
     this.routeIsolationFailed = false;
+    this.frameEvidence = "pending";
     this.automaticMapReconstructions = 0;
     this.lastFailureReason = null;
     this.detachedRecoverySnapshot = null;
     this.mapboxgl = null;
+    this.clearSafeDiagnostic("data-map-frame-evidence");
+    this.clearSafeDiagnostic("data-map-failure-reason");
+    this.clearSafeDiagnostic("data-map-lifecycle");
     this.mapContainer = null;
     this.styleLifecycleListener = null;
     this.routeCoords = null;

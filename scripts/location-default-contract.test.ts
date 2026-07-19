@@ -275,6 +275,9 @@ class FakeWebGLContext {
   black = false;
   lost = false;
   routeOnlyPixel = false;
+  transparent = false;
+  leaveReadTargetUntouched = false;
+  throwOnRead = false;
 
   isContextLost() {
     return this.lost;
@@ -289,7 +292,13 @@ class FakeWebGLContext {
     _type: number,
     target: Uint8Array
   ) {
+    if (this.throwOnRead) throw new Error("readback rejected");
+    if (this.leaveReadTargetUntouched) return;
     const routeOnlySample = this.routeOnlyPixel && x < 70 && y < 55;
+    if (this.transparent) {
+      target.fill(0);
+      return;
+    }
     target[0] = this.black && !routeOnlySample ? 0 : 36;
     target[1] = this.black && !routeOnlySample ? 0 : 48;
     target[2] = this.black && !routeOnlySample ? 0 : 56;
@@ -299,9 +308,10 @@ class FakeWebGLContext {
 
 class FakeCanvas {
   readonly context = new FakeWebGLContext();
+  contextAvailable = true;
 
   getContext(type: string) {
-    return type === "webgl2" ? this.context : null;
+    return type === "webgl2" && this.contextAvailable ? this.context : null;
   }
 }
 
@@ -443,6 +453,26 @@ class FakeMap {
 
   setBlackFrame(black: boolean) {
     this.canvas.context.black = black;
+  }
+
+  setFrameProbeMode(
+    mode:
+      | "visible"
+      | "black"
+      | "transparent"
+      | "read-noop"
+      | "read-throw"
+      | "context-unavailable"
+      | "zero-buffer"
+  ) {
+    const context = this.canvas.context;
+    this.canvas.contextAvailable = mode !== "context-unavailable";
+    context.black = mode === "black";
+    context.transparent = mode === "transparent";
+    context.leaveReadTargetUntouched = mode === "read-noop";
+    context.throwOnRead = mode === "read-throw";
+    context.drawingBufferWidth = mode === "zero-buffer" ? 0 : 320;
+    context.drawingBufferHeight = mode === "zero-buffer" ? 0 : 240;
   }
 
   setEmitStyleLoadInsideSetStyle(emit: boolean) {
@@ -1004,7 +1034,7 @@ test("style lifecycle clears stale failures only for ready current generations",
   }
 });
 
-test("black WebGL frames reconstruct once, preserve state, and then fail visibly", () => {
+test("confirmed WebGL failures reconstruct once, preserve state, and then fail visibly", () => {
   const host = globalThis as unknown as {
     window?: Window;
     document?: Document;
@@ -1048,12 +1078,17 @@ test("black WebGL frames reconstruct once, preserve state, and then fail visibly
   try {
     const states: MapStyleLifecycleState[] = [];
     let canvasState: MapCanvasStyleState = INITIAL_MAP_CANVAS_STYLE_STATE;
+    const diagnostics = new Map<string, string>();
+    const container = {
+      setAttribute: (name: string, value: string) => diagnostics.set(name, value),
+      removeAttribute: (name: string) => diagnostics.delete(name),
+    };
     const adapter = new MapboxAdapter("test-token");
     adapter.setStyleLifecycleListener((state) => {
       states.push(state);
       canvasState = reduceMapCanvasStyleState(canvasState, state);
     });
-    adapter.initialize({} as HTMLDivElement, { lat: 6.5, lng: 3.4 }, 14, "dark", {
+    adapter.initialize(container as unknown as HTMLDivElement, { lat: 6.5, lng: 3.4 }, 14, "dark", {
       top: 12,
       right: 8,
       bottom: 120,
@@ -1066,33 +1101,78 @@ test("black WebGL frames reconstruct once, preserve state, and then fail visibly
       [3.5, 6.6],
     ]);
 
-    // Slow tiles are not a false failure: mutation safety replays the route,
-    // then a non-black background frame proves visibility.
+    // Slow tiles are not a false failure: mutation safety plus the subsequent
+    // render makes the current generation usable before every tile settles.
     first.emitStyleLoadBeforeTilesSettle();
     assert.equal(first.isStyleLoaded(), false);
     assert.equal(states.at(-1)?.status, "ready");
     assert.equal(first.getRouteReplayCount(), 1);
 
-    // Both shipped themes require the same pixel authority.
+    // Both shipped themes require the same current-generation render authority.
     adapter.setTheme("light");
     first.emitStyleLoad();
     assert.equal(states.at(-1)?.status, "ready");
     assert.equal(states.at(-1)?.theme, "light");
 
-    // Mapbox-supported context restoration is allowed to heal only after its
-    // replacement painter produces a current non-black basemap frame. The
-    // retained route is removed before probing so its one bright sample cannot
-    // certify an otherwise black restoration.
+    // Safari may return black, transparent or untouched readback from a
+    // presented default framebuffer when preserveDrawingBuffer is false.
+    // Each category remains safely observable but the current style's later
+    // render wins and no Map reconstruction occurs.
+    const instancesBeforeAmbiguousReadback = FakeMap.instances.length;
+    adapter.setTheme("dark");
+    first.setFrameProbeMode("black");
+    first.emitBlackStyleLoad();
+    assert.equal(states.at(-1)?.status, "ready");
+    assert.equal(diagnostics.get("data-map-frame-evidence"), "opaque-black-readback");
+
+    adapter.setTheme("light");
+    first.setFrameProbeMode("transparent");
+    first.emitStyleLoad();
+    assert.equal(states.at(-1)?.status, "ready");
+    assert.equal(diagnostics.get("data-map-frame-evidence"), "transparent");
+
+    adapter.setTheme("dark");
+    first.setFrameProbeMode("read-noop");
+    first.emitStyleLoad();
+    assert.equal(states.at(-1)?.status, "ready");
+    assert.equal(diagnostics.get("data-map-frame-evidence"), "read-error");
+
+    adapter.setTheme("light");
+    first.setFrameProbeMode("read-throw");
+    first.emitStyleLoad();
+    assert.equal(states.at(-1)?.status, "ready");
+    assert.equal(diagnostics.get("data-map-frame-evidence"), "read-error");
+    assert.equal(FakeMap.instances.length, instancesBeforeAmbiguousReadback);
+
+    // A zero buffer cannot become usable from this render callback, but may be
+    // transient layout state, so it fails recoverably without spending the
+    // reconstruction.
+    adapter.setTheme("dark");
+    first.setFrameProbeMode("zero-buffer");
+    first.emitStyleLoad();
+    assert.equal(states.at(-1)?.status, "loading");
+    runNextTimer();
+    const zeroBufferFailure = states.at(-1);
+    assert.equal(zeroBufferFailure?.status, "failed");
+    assert.equal(zeroBufferFailure?.status === "failed" ? zeroBufferFailure.reason : null, "probe");
+    assert.equal(diagnostics.get("data-map-frame-evidence"), "zero-buffer");
+    assert.equal(FakeMap.instances.length, instancesBeforeAmbiguousReadback);
+
+    adapter.retryStyle();
+    first.setFrameProbeMode("visible");
+    first.emitStyleLoad();
+    assert.equal(states.at(-1)?.status, "ready");
+    assert.equal(diagnostics.get("data-map-frame-evidence"), "visible");
+    assert.equal(diagnostics.has("data-map-failure-reason"), false);
+
+    // Black readback after context restoration remains diagnostic-only:
+    // preserveDrawingBuffer:false permits it even for a presented frame.
     const instanceCountBeforeRestore = FakeMap.instances.length;
     const routeReplaysBeforeRestore = first.getRouteReplayCount();
     first.loseContext();
     assert.equal(states.at(-1)?.status, "loading");
     first.restoreContext(true);
     assert.equal(states.at(-1)?.status, "loading");
-    first.emitRender();
-    assert.equal(states.at(-1)?.status, "loading");
-    assert.equal(first.getRouteReplayCount(), routeReplaysBeforeRestore);
-    first.setBlackFrame(false);
     first.emitRender();
     assert.equal(states.at(-1)?.status, "ready");
     assert.equal(first.getRouteReplayCount(), routeReplaysBeforeRestore + 1);
@@ -1118,20 +1198,22 @@ test("black WebGL frames reconstruct once, preserve state, and then fail visibly
       internals.activeUserPopup = null;
     });
 
-    // A mutation-safe but black current frame never clears loading. Its first
-    // bounded expiry replaces the whole Map, not merely its style.
-    const routeReplayCountBeforeBlack = first.getRouteReplayCount();
-    adapter.setTheme("dark");
+    // A confirmed missing current WebGL2 context without a later usable render
+    // consumes the one bounded reconstruction. Ambiguous readback does not.
+    const routeReplayCountBeforeFailure = first.getRouteReplayCount();
+    adapter.setTheme("light");
     const staleRender = first.snapshotRenderListeners()[0];
     const staleContextLost = first.snapshotContextLostListeners()[0];
-    first.emitBlackStyleLoad();
+    first.setFrameProbeMode("context-unavailable");
+    first.emitStyleLoad();
     assert.equal(states.at(-1)?.status, "loading");
     assert.equal(mapCanvasOverlay(true, false, canvasState), "loading");
     assert.equal(
       first.getRouteReplayCount(),
-      routeReplayCountBeforeBlack,
-      "a retained route must not be drawn early enough to prove a black basemap usable"
+      routeReplayCountBeforeFailure,
+      "a retained route must wait for a subsequent usable render"
     );
+    assert.equal(diagnostics.get("data-map-frame-evidence"), "context-unavailable");
     runNextTimer();
     const replacement = FakeMap.latest as FakeMap | null;
     assert.ok(replacement);
@@ -1146,6 +1228,7 @@ test("black WebGL frames reconstruct once, preserve state, and then fail visibly
     assert.equal(popup.maps.at(-1), replacement);
     assert.equal(internals.activeUserPopup, popup);
     const statesAfterReplacement = states.length;
+    const evidenceAfterReplacement = diagnostics.get("data-map-frame-evidence");
     staleRender?.();
     staleContextLost?.();
     assert.equal(
@@ -1153,29 +1236,36 @@ test("black WebGL frames reconstruct once, preserve state, and then fail visibly
       statesAfterReplacement,
       "removed-map callbacks cannot mutate the replacement generation"
     );
+    assert.equal(
+      diagnostics.get("data-map-frame-evidence"),
+      evidenceAfterReplacement,
+      "removed-map callbacks cannot overwrite current diagnostic evidence"
+    );
     replacement.emitStyleLoad();
     assert.equal(states.at(-1)?.status, "ready");
     assert.equal(replacement.getRouteReplayCount(), 1);
 
-    // A fresh theme episode gets one automatic reconstruction. If the
-    // replacement is black too, failure is visible and there is no loop.
-    adapter.setTheme("light");
-    replacement.emitBlackStyleLoad();
+    // A fresh theme episode gets one automatic reconstruction. If its
+    // replacement also has a confirmed renderer failure, failure is visible
+    // and there is no loop.
+    adapter.setTheme("dark");
+    replacement.setStyleLoaded(true);
+    replacement.emitIdle();
+    replacement.emitError("WebGL shader failed");
     runNextTimer();
     const secondReplacement = FakeMap.latest as FakeMap | null;
     assert.ok(secondReplacement);
     assert.notEqual(secondReplacement, replacement);
-    const countBeforeSecondBlack = FakeMap.instances.length;
-    secondReplacement.emitBlackStyleLoad();
+    const countBeforeSecondFailure = FakeMap.instances.length;
+    secondReplacement.setStyleLoaded(true);
+    secondReplacement.emitIdle();
+    secondReplacement.emitError("WebGL shader failed");
     runNextTimer();
     const failedState = states.at(-1);
     assert.equal(failedState?.status, "failed");
     assert.equal(failedState?.status === "failed" ? failedState.reason : null, "renderer");
     assert.equal(mapCanvasOverlay(true, false, canvasState), "failed");
-    assert.equal(FakeMap.instances.length, countBeforeSecondBlack);
-    secondReplacement.emitBlackRender();
-    assert.equal(FakeMap.instances.length, countBeforeSecondBlack);
-
+    assert.equal(FakeMap.instances.length, countBeforeSecondFailure);
     // Explicit Retry starts a fresh bounded episode and therefore replaces the
     // failed WebGL context. A good replacement clears the visible failure.
     adapter.retryStyle();
@@ -1201,6 +1291,9 @@ test("black WebGL frames reconstruct once, preserve state, and then fail visibly
     adapter.destroy();
     assert.equal(lossReplacement.totalLifecycleListenerCount(), 0);
     assert.equal(timers.size, 0);
+    assert.equal(diagnostics.has("data-map-frame-evidence"), false);
+    assert.equal(diagnostics.has("data-map-failure-reason"), false);
+    assert.equal(diagnostics.has("data-map-lifecycle"), false);
     lossReplacement.emitRender();
     lossReplacement.loseContext();
     assert.equal(states.length, stateCountBeforeDestroy);
@@ -1214,7 +1307,9 @@ test("black WebGL frames reconstruct once, preserve state, and then fail visibly
     constructorAdapter.initialize({} as HTMLDivElement, { lat: 6.51, lng: 3.41 }, 13, "dark");
     const constructorMap = FakeMap.latest as FakeMap | null;
     assert.ok(constructorMap);
-    constructorMap.emitBlackStyleLoad();
+    constructorMap.setStyleLoaded(true);
+    constructorMap.emitIdle();
+    constructorMap.emitError("WebGL shader failed");
     FakeMap.rejectNextConstruction = true;
     const countBeforeRejectedReplacement = FakeMap.instances.length;
     runNextTimer();
@@ -1241,7 +1336,9 @@ test("black WebGL frames reconstruct once, preserve state, and then fail visibly
     removalAdapter.initialize({} as HTMLDivElement, { lat: 6.52, lng: 3.42 }, 12, "light");
     const removalMap = FakeMap.latest as FakeMap | null;
     assert.ok(removalMap);
-    removalMap.emitBlackStyleLoad();
+    removalMap.setStyleLoaded(true);
+    removalMap.emitIdle();
+    removalMap.emitError("WebGL shader failed");
     removalMap.setRejectNextRemove(true);
     const countBeforeRejectedRemoval = FakeMap.instances.length;
     runNextTimer();
@@ -1266,27 +1363,43 @@ test("black WebGL frames reconstruct once, preserve state, and then fail visibly
   }
 });
 
-test("renderer readiness is pixel-proven, epoch-bound and bounded", () => {
+test("renderer readiness is render-bound, categorically diagnosed, epoch-bound and bounded", () => {
   const adapterSource = sources["src/integrations/maps/MapboxAdapter.ts"];
   const mutationBody =
     adapterSource.match(/private completeMutationSafeStyleAttempt[\s\S]*?\n  }\n\n  \/\*\*/)?.[0] ??
     "";
+  const usableBody =
+    adapterSource.match(/private completeUsableFrame[\s\S]*?\n  }\n\n  \/\*\*/)?.[0] ?? "";
+  const frameTimeoutBody =
+    adapterSource.match(/private handleStyleFrameTimeout[\s\S]*?\n  }\n\n  private/)?.[0] ?? "";
   assert.match(mutationBody, /this\.styleReady = true/);
   assert.doesNotMatch(mutationBody, /this\.styleUsable = true/);
   assert.match(mutationBody, /this\.applyCartography\(\)/);
   assert.doesNotMatch(mutationBody, /this\.applyRoute\(\)/);
   assert.match(mutationBody, /this\.armStyleFrameTimer/);
-  assert.match(adapterSource, /private frameHasVisiblePixels/);
+  assert.match(adapterSource, /private inspectFrameEvidence/);
+  assert.match(adapterSource, /FRAME_READ_SENTINEL/);
   assert.match(adapterSource, /map\.getCanvas\(\)/);
   assert.match(adapterSource, /getContext\("webgl2"\)/);
   assert.match(adapterSource, /gl\.isContextLost\(\)/);
   assert.match(adapterSource, /gl\.readPixels/);
-  assert.match(adapterSource, /private completeUsableFrame/);
-  assert.match(adapterSource, /this\.styleUsable = true;[\s\S]*this\.applyRoute\(\)/);
+  assert.match(usableBody, /this\.recordFrameEvidence\(evidence\)/);
+  assert.match(usableBody, /evidence === "context-unavailable"/);
+  assert.match(usableBody, /evidence === "context-lost"/);
+  assert.match(usableBody, /evidence === "zero-buffer"/);
+  assert.doesNotMatch(usableBody, /evidence !== "visible"/);
+  assert.match(usableBody, /this\.styleUsable = true;[\s\S]*this\.applyRoute\(\)/);
+  assert.match(adapterSource, /data-map-frame-evidence/);
+  assert.match(adapterSource, /data-map-failure-reason/);
+  assert.doesNotMatch(adapterSource, /preserveDrawingBuffer\s*:\s*true/);
   assert.match(adapterSource, /map\.on\("webglcontextlost"/);
   assert.match(adapterSource, /map\.on\("webglcontextrestored"/);
   assert.match(adapterSource, /this\.currentMapIs\(map, epoch\)/);
   assert.match(adapterSource, /MAX_AUTOMATIC_MAP_RECONSTRUCTIONS = 1/);
+  assert.match(frameTimeoutBody, /this\.contextLost/);
+  assert.match(frameTimeoutBody, /this\.frameEvidence === "context-unavailable"/);
+  assert.match(frameTimeoutBody, /this\.rendererErrorObserved/);
+  assert.doesNotMatch(frameTimeoutBody, /opaque-black-readback/);
   assert.match(adapterSource, /private reconstructMap/);
   assert.match(
     adapterSource,
@@ -1297,7 +1410,7 @@ test("renderer readiness is pixel-proven, epoch-bound and bounded", () => {
   assert.match(adapterSource, /bearing: snapshot\.camera\.bearing/);
   assert.match(adapterSource, /pitch: snapshot\.camera\.pitch/);
   assert.match(adapterSource, /this\.beginStyleAttempt\(theme, 1, false\)/);
-  assert.match(adapterSource, /reason = this\.contextLost \? "context" : "renderer"/);
+  assert.match(adapterSource, /: "probe"/);
   assert.match(adapterSource, /handleStyleLoadTimeout\(generation, false\)/);
   assert.match(
     sources["src/design-system/components/MapboxCanvas.tsx"],
