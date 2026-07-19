@@ -315,6 +315,8 @@ class FakeMap {
   private rejectStyleChanges = false;
   private usableStyleFrame = false;
   private emitStyleLoadInsideSetStyle = false;
+  private emitRenderInsideSetStyle = false;
+  private emitRenderBeforeRejectedSetStyle = false;
   private mutationSafe = false;
   private routeSourcePresent = false;
   private routeLayerPresent = false;
@@ -342,13 +344,24 @@ class FakeMap {
   }
 
   setStyle(style: string) {
-    if (this.rejectStyleChanges) throw new Error("style rejected");
+    if (this.rejectStyleChanges) {
+      if (this.emitRenderBeforeRejectedSetStyle) {
+        this.reportedStyle = style;
+        this.usableStyleFrame = true;
+        for (const listener of [...this.renderListeners]) listener();
+      }
+      throw new Error("style rejected");
+    }
     this.reportedStyle = style;
     this.styleLoaded = false;
     this.usableStyleFrame = false;
     this.mutationSafe = false;
     this.routeSourcePresent = false;
     this.routeLayerPresent = false;
+    if (this.emitRenderInsideSetStyle) {
+      this.usableStyleFrame = true;
+      for (const listener of [...this.renderListeners]) listener();
+    }
     if (this.emitStyleLoadInsideSetStyle) {
       // Model Mapbox's documented edge: style.load makes style mutation safe,
       // while isStyleLoaded can still remain false until sources settle.
@@ -370,6 +383,10 @@ class FakeMap {
 
   snapshotStyleListeners(): StyleListener[] {
     return [...this.styleListeners];
+  }
+
+  snapshotRenderListeners(): StyleListener[] {
+    return [...this.renderListeners];
   }
 
   listenerCount(type: "style.load" | "idle" | "render") {
@@ -395,6 +412,14 @@ class FakeMap {
     this.emitStyleLoadInsideSetStyle = emit;
   }
 
+  setEmitRenderInsideSetStyle(emit: boolean) {
+    this.emitRenderInsideSetStyle = emit;
+  }
+
+  setEmitRenderBeforeRejectedSetStyle(emit: boolean) {
+    this.emitRenderBeforeRejectedSetStyle = emit;
+  }
+
   setRejectStyleChanges(reject: boolean) {
     this.rejectStyleChanges = reject;
   }
@@ -413,9 +438,8 @@ class FakeMap {
     for (const listener of [...this.renderListeners]) listener();
   }
 
-  triggerRepaint() {
-    this.emitRender();
-  }
+  // Real Mapbox schedules work; the call itself is not a render acknowledgement.
+  triggerRepaint() {}
 
   easeTo(_options: unknown) {}
   flyTo(_options: unknown) {}
@@ -636,10 +660,11 @@ test("style lifecycle clears stale failures only for ready current generations",
     assert.equal(states.at(-1)?.status, "failed");
     assert.equal(states.at(-1)?.theme, "light");
 
-    // A synchronous rejection leaves the previous light style loaded. It must
-    // still exhaust the requested dark generation's attempts rather than
-    // mistaking the old style for a successful dark swap.
+    // Even a requested-style render observed inside a setStyle call that then
+    // throws has no installation authority. The latch must be cleared before
+    // the bounded retry and may never cover the failure.
     map.emitStyleLoad();
+    map.setEmitRenderBeforeRejectedSetStyle(true);
     map.setRejectStyleChanges(true);
     adapter.setTheme("dark");
     const rejectedState = states.at(-1);
@@ -647,6 +672,7 @@ test("style lifecycle clears stale failures only for ready current generations",
     assert.equal(rejectedState.theme, "dark");
     assert.equal(rejectedState.attempt, 2);
     assert.equal(rejectedState.reason, "error");
+    map.setEmitRenderBeforeRejectedSetStyle(false);
     map.setRejectStyleChanges(false);
     adapter.retryStyle();
     assert.equal(states.at(-1)?.status, "loading");
@@ -670,6 +696,60 @@ test("style lifecycle clears stale failures only for ready current generations",
       "synchronous mutation-safe event must replay route after successful return"
     );
     map.setEmitStyleLoadInsideSetStyle(false);
+
+    // Safari may deliver the only qualifying usable render synchronously
+    // inside setStyle, while triggerRepaint itself provides no acknowledgement.
+    // Latch that render, authorize it only after setStyle returns, and keep
+    // route mutation deferred until the later style.load event.
+    const replayCountBeforeSynchronousRender = map.getRouteReplayCount();
+    map.setEmitRenderInsideSetStyle(true);
+    adapter.setTheme("dark");
+    assert.equal(states.at(-1)?.status, "ready");
+    assert.equal(states.at(-1)?.theme, "dark");
+    assert.equal(mapCanvasOverlay(true, false, canvasState), null);
+    assert.equal(map.isStyleLoaded(), false);
+    assert.equal(
+      map.getRouteReplayCount(),
+      replayCountBeforeSynchronousRender,
+      "usable render must remain isolated from route mutation"
+    );
+    map.setEmitRenderInsideSetStyle(false);
+    map.emitStyleLoad();
+    assert.equal(
+      map.getRouteReplayCount(),
+      replayCountBeforeSynchronousRender + 1,
+      "mutation-safe style.load must still replay the retained route"
+    );
+
+    // A queued old-theme render invoking the current listener cannot qualify:
+    // requested-style identity remains part of the latch authority.
+    adapter.setTheme("light");
+    const currentLightRenderListener = map.snapshotRenderListeners()[0];
+    map.setReportedTheme("dark");
+    map.setUsableStyleFrame(true);
+    currentLightRenderListener?.();
+    assert.equal(states.at(-1)?.status, "loading");
+    assert.equal(states.at(-1)?.theme, "light");
+    map.setReportedTheme("light");
+    currentLightRenderListener?.();
+    assert.equal(states.at(-1)?.status, "ready");
+    assert.equal(states.at(-1)?.theme, "light");
+    map.emitStyleLoad();
+
+    // An already-queued render closure from a superseded generation cannot
+    // clear the replacement generation even when its old theme is reported.
+    adapter.setTheme("dark");
+    const staleDarkRenderListener = map.snapshotRenderListeners()[0];
+    adapter.setTheme("light");
+    map.setReportedTheme("dark");
+    map.setUsableStyleFrame(true);
+    staleDarkRenderListener?.();
+    assert.equal(states.at(-1)?.status, "loading");
+    assert.equal(states.at(-1)?.theme, "light");
+    map.setReportedTheme("light");
+    map.snapshotRenderListeners()[0]?.();
+    assert.equal(states.at(-1)?.status, "ready");
+    assert.equal(states.at(-1)?.theme, "light");
 
     // Canvas rejects stale generations independently of Adapter cleanup, and a
     // same-generation late timeout cannot cover a proven usable frame.
@@ -714,13 +794,25 @@ test("a valid final style generation can recover after bounded failure", () => {
   assert.match(adapterSource, /generation !== this\.styleGeneration/);
   assert.match(adapterSource, /map\.on\("idle", readyListener\)/);
   assert.match(adapterSource, /map\.on\("render", renderListener\)/);
-  assert.match(adapterSource, /recognizeUsableStyleFrame\(generation, theme, attempt\)/);
+  assert.match(adapterSource, /observeUsableStyleFrame\(generation, theme, attempt\)/);
   assert.match(adapterSource, /this\.styleInstalledGeneration === generation/);
   assert.match(adapterSource, /this\.styleMatchesTheme\(theme\)/);
   assert.match(adapterSource, /this\.pendingMutationSafeGeneration = generation/);
   assert.match(
     adapterSource,
     /this\.pendingMutationSafeGeneration === generation[\s\S]*completeMutationSafeStyleAttempt/
+  );
+  assert.match(
+    adapterSource,
+    /this\.pendingUsableRenderGeneration = generation[\s\S]*this\.styleInstalledGeneration !== generation/
+  );
+  assert.match(
+    adapterSource,
+    /this\.pendingUsableRenderGeneration === generation[\s\S]*completeUsableStyleAttempt/
+  );
+  assert.match(
+    timeoutBody,
+    /pendingUsableRenderGeneration === generation[\s\S]*completeUsableStyleAttempt/
   );
   assert.match(
     adapterSource,

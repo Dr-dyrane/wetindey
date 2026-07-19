@@ -855,6 +855,8 @@ export class MapboxAdapter implements MapProviderAdapter {
   private styleRenderListener: (() => void) | null = null;
   private styleInstalledGeneration: number | null = null;
   private pendingMutationSafeGeneration: number | null = null;
+  /** A requested-style render observed before setStyle returned successfully. */
+  private pendingUsableRenderGeneration: number | null = null;
   private styleLoadTimer: number | null = null;
   private styleLoadAttempt = 0;
   private styleGeneration = 0;
@@ -970,6 +972,7 @@ export class MapboxAdapter implements MapProviderAdapter {
     // Set BEFORE the applies: this event IS the fact they guard on.
     this.styleReady = true;
     this.pendingMutationSafeGeneration = null;
+    this.pendingUsableRenderGeneration = null;
     const wasUsable = this.styleUsable;
     this.styleUsable = true;
     this.applyCartography();
@@ -998,6 +1001,7 @@ export class MapboxAdapter implements MapProviderAdapter {
     if (!this.styleAttemptIsCurrent(generation, theme)) return false;
     this.clearStyleLoadTimer();
     this.clearStyleRenderListener();
+    this.pendingUsableRenderGeneration = null;
     if (this.styleUsable) return true;
     this.styleUsable = true;
     this.emitStyleLifecycle({
@@ -1098,7 +1102,7 @@ export class MapboxAdapter implements MapProviderAdapter {
    * longer a blank transition, while a frame left over from the old theme
    * cannot qualify merely because its old layer stack still exists.
    */
-  private recognizeUsableStyleFrame(
+  private observeUsableStyleFrame(
     generation: number,
     theme: "light" | "dark",
     attempt: number
@@ -1107,6 +1111,11 @@ export class MapboxAdapter implements MapProviderAdapter {
       return false;
     const layers = this.mapInstance?.getStyle()?.layers;
     if (!layers || layers.length === 0) return false;
+    // A cached style may paint synchronously inside setStyle. Record the
+    // current requested-style frame now, but do not tell Canvas until setStyle
+    // returns successfully and authorizes this generation.
+    this.pendingUsableRenderGeneration = generation;
+    if (this.styleInstalledGeneration !== generation) return false;
     return this.completeUsableStyleAttempt(generation, theme, attempt);
   }
 
@@ -1129,6 +1138,7 @@ export class MapboxAdapter implements MapProviderAdapter {
     this.styleErrorObserved = false;
     this.styleInstalledGeneration = replaceStyle ? null : generation;
     this.pendingMutationSafeGeneration = null;
+    this.pendingUsableRenderGeneration = null;
     this.emitStyleLifecycle({ status: "loading", generation, theme, attempt });
 
     const readyListener = () => {
@@ -1148,7 +1158,7 @@ export class MapboxAdapter implements MapProviderAdapter {
     };
     const renderListener = () => {
       if (this.recognizeLoadedStyle(generation, theme, attempt)) return;
-      this.recognizeUsableStyleFrame(generation, theme, attempt);
+      this.observeUsableStyleFrame(generation, theme, attempt);
     };
     this.styleReadyListener = readyListener;
     this.styleRenderListener = renderListener;
@@ -1170,6 +1180,7 @@ export class MapboxAdapter implements MapProviderAdapter {
         // admit the still-loaded old theme.
         this.styleErrorObserved = true;
         this.pendingMutationSafeGeneration = null;
+        this.pendingUsableRenderGeneration = null;
         this.clearStyleReadinessListeners();
         this.handleStyleLoadTimeout(generation, false);
         return;
@@ -1178,6 +1189,10 @@ export class MapboxAdapter implements MapProviderAdapter {
 
     if (this.pendingMutationSafeGeneration === generation) {
       this.completeMutationSafeStyleAttempt(generation, theme, attempt);
+      return;
+    }
+    if (this.pendingUsableRenderGeneration === generation) {
+      this.completeUsableStyleAttempt(generation, theme, attempt);
       return;
     }
 
@@ -1197,6 +1212,16 @@ export class MapboxAdapter implements MapProviderAdapter {
     if (generation !== this.styleGeneration) return;
     this.clearStyleLoadTimer();
     if (!this.mapInstance || this.styleReady || this.styleUsable) return;
+    if (
+      this.pendingUsableRenderGeneration === generation &&
+      this.completeUsableStyleAttempt(
+        generation,
+        this.currentTheme,
+        this.styleLoadAttempt
+      )
+    ) {
+      return;
+    }
     if (
       recognizeAlreadyLoaded &&
       this.recognizeLoadedStyle(
@@ -2136,6 +2161,7 @@ export class MapboxAdapter implements MapProviderAdapter {
     this.styleRenderListener = null;
     this.styleInstalledGeneration = null;
     this.pendingMutationSafeGeneration = null;
+    this.pendingUsableRenderGeneration = null;
     this.styleErrorObserved = false;
     this.styleLifecycleListener = null;
     this.routeCoords = null;
