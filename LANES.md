@@ -212,9 +212,9 @@ semantics, and every current output. Require exact source-shape comparison, focu
 type/static evidence, and independent default-to-REFUTED review. Later modularization slices
 remain pathless.
 
-##### P1 authentication recovery — ACTIVE
+##### P1 authentication recovery — SUPERSEDED / PATHLESS
 
-Owner: Authentication / Client Reliability. Exclusive paths:
+Former owner: Authentication / Client Reliability. Former paths:
 
 - `src/app/_components/ProfileSheet.tsx`
 - `src/core/i18n/strings.ts`
@@ -224,8 +224,25 @@ truthfully. Replace the unbounded post-OTP spinner with a bounded session-refres
 state that cannot hang forever. Preserve existing Neon and Hostinger delivery; no provider,
 SMTP, or email-webhook changes are authorized unless separate runtime evidence proves one.
 Current evidence distinguishes malformed-email `400 INVALID_EMAIL`, first-time-plus-alias
-signup suppression, and the old-account verified-spinner hang. Require focused static and
-independent runtime refutation of the bounded recovery behavior.
+signup suppression, and the old-account verified-spinner hang. This broader two-path claim is
+superseded by the exact one-file OTP client-recovery lane below; `strings.ts` is
+released/unclaimed. Preserve malformed-email validation as read-only context.
+
+##### Urgent OTP client recovery — COMPLETE / PASS
+
+Owner: Auth/OTP employee `019f772e-32b4-7e93-a4eb-21212efb600e`. Exclusive path:
+`src/app/_components/ProfileSheet.tsx`.
+
+Commit `38c9754` changed only `ProfileSheet.tsx` and independently returned **NOT REFUTED**;
+release the path.
+
+Production evidence shows Neon `Custom SMTP provider`, webhooks off, and successful
+same-origin unknown-user OTP delivery despite the UI remaining indefinitely disabled in
+`sending` without exposing code entry. Bound the client wait around
+`authClient.emailOtp.sendVerificationOtp`; a timeout is indeterminate delivery, not a false
+network failure, so reveal the existing code-entry/resend path without promising delivery.
+Late resolution must not regress state; malformed-email validation remains unchanged. No
+provider, environment, strings, schema, or action changes were included.
 
 ##### Problem-report Actions modularization — ACTIVE
 
@@ -327,6 +344,22 @@ focused Liquid Glass contract, and independently **PASS**ed. Release the path. I
 handle-to-first-content dead space while retaining the invisible >=44x44 target,
 drag/snap, safe-area, focus/scroll handoff, and island/dock behavior. Remaining runtime
 visual verification is shared and pathless.
+
+##### Maps Canvas stale-failure recovery — ACTIVE
+
+Owner: Maps & Location Experience Engineer `019f787c-4f49-78b0-aaa2-bd403d721a1d`.
+Exclusive paths:
+
+- `src/design-system/components/MapboxCanvas.tsx`
+- `scripts/location-default-contract.test.ts`
+
+Release `src/integrations/maps/MapboxAdapter.ts`. Unify Canvas lifecycle/error authority so
+accepted current-adapter/current-generation readiness clears stale initialization failure;
+gate callbacks by adapter epoch plus style generation; stale adapter/lower generation may
+not clear a real failure; late current readiness may heal; preserve one-action retry with no
+loop. Extend the focused contract for stale library failure/generation/adapter epoch/retry/
+current-ready recovery. Exclude page, MapLoader, BottomSheet, Market, Presence, and Adapter
+changes. Require independent refutation, then Safari/Chrome runtime evidence.
 
 ##### Product identity — app metadata correction — COMPLETE / PASS
 
@@ -650,16 +683,23 @@ Observation reporting. A missing-item submission must follow a reviewed catalog-
 an observation/report must never create a catalog row. This records product direction only and
 allocates no schema, API, RLS, UI, migration, or implementation path.
 
-#### Catalog Stewardship workflow — active exact docs-only claim
+#### Catalog Stewardship workflow — COMPLETE / PASS
 
 Owner: Catalog Stewardship worker `019f7999-37d0-7231-8b89-0e71c2569ce2`. The sole write
 path is new `docs/product/CATALOG-STEWARDSHIP-WORKFLOW.md`.
 
-Deliver an executable role/UI/operations contract separating canonical item, alias, variant,
-unit, category, and reference-imagery CRUD; duplicate merge/revision; seller proposals; and
-contributor missing-item requests from immutable Observation reporting. No code, schema,
+Commit `8a072e2` changed only this documentation path and its independent docs refuter
+**PASS**ed; release the path.
+
+Deliver the executable role/UI/operations contract and correct the refuted policy: reporting
+or escalating a case is a non-mutating communication right. A Catalog Safety Responder may
+open, route, or escalate evidence but may not approve catalog truth, modify canonical item
+data, merge records, or widen grants. Its only direct enforcement mutations remain deny
+exposure and revoke anonymous grants. Preserve the separation of canonical item/alias/
+variant/unit/category/reference-imagery CRUD, duplicate merge/revision, seller proposals,
+and contributor missing-item requests from immutable Observation reporting. No code, schema,
 migration, ADR, or `LANES.md` path ownership follows. Require an independent docs refutation
-and one path-scoped commit.
+and one path-scoped commit; the worker commit must exclude LANES.
 
 #### Human Interface density and containment program — pathless / inventory first
 
