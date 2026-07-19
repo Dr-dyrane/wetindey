@@ -129,6 +129,22 @@ Motion retains only `src/design-system/components/NavigationStack.tsx` and
 `scripts/motion-contracts.test.ts`. `page.tsx` belongs to Maps; no Motion ownership of it
 remains.
 
+#### Frameworks: live sheet inset publication
+
+Status: active claim awaiting Frameworks worker. Exact paths:
+
+- `src/design-system/components/BottomSheet.tsx`
+- `src/design-system/components/CompactShell.tsx`
+- `src/design-system/components/AdaptiveShell.tsx`
+- new `scripts/live-sheet-inset-contract.test.ts`
+
+Publish the actual continuously changing BottomSheet `liveFraction` and pixel inset during
+drag and snap to the shared shell CSS variable consumed by the map control. Preserve
+regular layout at zero inset, additive safe-area behavior, detents, keyboard/focus, and
+motion. Do not touch page, map, or Presence paths. This exact Frameworks boundary closes
+the Maps refuter P2 once implemented and independently refuted; this governance claim does
+not claim implementation.
+
 The Quality & Release Controller is this orchestrator thread. It is not a separate pinned
 employee task. The repeating `wetindey-orchestrator-recovery` automation is deleted and
 must not be recreated or assigned work. Portfolio auditing and Lagos Food ingestion keep
