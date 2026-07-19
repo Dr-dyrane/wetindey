@@ -213,6 +213,36 @@ const submitObservationInput = z
 
 type SubmitObservationInput = z.infer<typeof submitObservationInput>;
 
+const contributionIdentity = {
+  idempotencyKey: uuidField("idempotencyKey"),
+  itemVariantId: uuidField("itemVariantId"),
+  unitId: uuidField("unitId"),
+  placeId: uuidField("placeId"),
+};
+
+const contributionAdmissionInput = z.discriminatedUnion(
+  "availabilityState",
+  [
+    z
+      .object({
+        ...contributionIdentity,
+        availabilityState: z.literal("available"),
+        priceAmount: priceNaira,
+      })
+      .strict(),
+    z
+      .object({
+        ...contributionIdentity,
+        availabilityState: z.literal("unavailable"),
+      })
+      .strict(),
+  ]
+);
+
+export type ContributionAdmissionInput = z.infer<
+  typeof contributionAdmissionInput
+>;
+
 /**
  * `submitVisitConfirmation`.
  *
@@ -518,6 +548,12 @@ function assertValid<T>(schema: z.ZodType<T>, data: unknown, action: string): T 
 
 export function parseSubmitObservation(data: unknown): SubmitObservationInput {
   return assertValid(submitObservationInput, data, "submitObservation");
+}
+
+export function parseContributionAdmission(
+  data: unknown
+): ContributionAdmissionInput {
+  return assertValid(contributionAdmissionInput, data, "submitObservation");
 }
 
 export function parseVisitConfirmation(data: unknown): VisitConfirmationInput {
