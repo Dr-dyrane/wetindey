@@ -174,6 +174,7 @@ Every user interface element must comply with the following Apple HIG principles
 
 - **Strict TypeScript**: TypeScript strict mode is enabled. Do not use `any` types. Prefix deliberately unused parameters with an underscore (`_`).
 - **Apple HIG Adaptations**: Ensure UI touch targets are at least 44x44px (48px preferred), and layouts respect dynamic safe-area insets.
+- **Monolith strangulation & modularization**: Large/monolithic components (e.g., sheets and panels) should be separated into MVC slices consisting of a Controller (`MyComponent.tsx`), Logic Hook (`useMyComponent.ts`), JSX View (`MyComponentView.tsx`), CSS style overrides (`MyComponent.css`), and copy dictionary (`copy.ts`). See `.agents/skills/modularize-monolith/SKILL.md` for details.
 - **DoD (Definition of Done)**: A feature is not complete until:
   - It handles empty, loading, error, stale, and offline states.
   - Light and Dark modes are verified.
