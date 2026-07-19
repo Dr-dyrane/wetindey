@@ -9,8 +9,8 @@ import { ListGroup } from "@/design-system/components/ListRow";
 import { Skeleton } from "@/design-system/components/Skeleton";
 import { StatusBadge } from "@/design-system/components/StatusBadge";
 import { IconOrb } from "@/design-system/components/IconOrb";
-import { getAreaTree, getCoverageForPoint } from "@/app/actions";
-import type { AreaGroup, AreaSummary, AreaTree } from "@/app/actions";
+import { getAreaTree, getCoverageForPoint } from "@/app/_actions/actions";
+import type { AreaGroup, AreaSummary, AreaTree } from "@/app/_actions/actions";
 import { getHaversineDistance, formatDistance } from "@/lib/geospatial";
 import {
   acquireDeviceLocation,

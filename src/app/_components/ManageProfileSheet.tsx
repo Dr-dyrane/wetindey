@@ -15,7 +15,7 @@ import {
   uploadMyAvatar,
   removeMyAvatar,
   type MyProfile,
-} from "@/app/actions";
+} from "@/app/_actions/actions";
 import { Avatar } from "@/app/_components/ProfileSheet";
 import { haptics } from "@/lib/haptics";
 

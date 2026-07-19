@@ -7,7 +7,7 @@ import { AsyncList } from "@/design-system/components/AsyncList";
 import { Button } from "@/design-system/components/Button";
 import { useT } from "@/core/i18n";
 import { formatNaira } from "@/lib/money";
-import { getMyReports, type MyReport } from "@/app/actions";
+import { getMyReports, type MyReport } from "@/app/_actions/actions";
 
 /**
  * The prices you reported, read back to you.

@@ -56,9 +56,9 @@ function toReadTrust(
       : provenanceSummary.synthetic > 0
         ? "synthetic"
         : provenanceSummary.partner +
-              provenanceSummary.reference +
-              provenanceSummary.inferred >
-            0
+          provenanceSummary.reference +
+          provenanceSummary.inferred >
+          0
           ? "inadmissible"
           : "empty";
 
@@ -1579,15 +1579,15 @@ export async function getCoverageForPoint(input: {
   return {
     nearestArea: nearest
       ? {
-          id: nearest.id,
-          slug: nearest.slug,
-          name: nearest.name,
-          lat: nearest.center.lat,
-          lng: nearest.center.lng,
-          placeCount: nearest.placeCount,
-          coverageStatus: nearest.coverageStatus,
-          distanceKm: nearest.distanceKm,
-        }
+        id: nearest.id,
+        slug: nearest.slug,
+        name: nearest.name,
+        lat: nearest.center.lat,
+        lng: nearest.center.lng,
+        placeCount: nearest.placeCount,
+        coverageStatus: nearest.coverageStatus,
+        distanceKm: nearest.distanceKm,
+      }
       : null,
     placesInRadius: countRows[0]?.n ?? 0,
     radiusKm: input.radiusKm,

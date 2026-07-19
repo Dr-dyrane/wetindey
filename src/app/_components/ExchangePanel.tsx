@@ -10,7 +10,7 @@ import {
   getReferenceRate,
   type ReferenceCurrencyCatalogEntry,
   type ReferenceRate,
-} from "@/app/currency-actions";
+} from "@/app/_actions/currency-actions";
 import {
   REFERENCE_CURRENCY_META,
   isReferenceCurrencyCode,

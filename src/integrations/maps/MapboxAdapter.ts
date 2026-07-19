@@ -1,4 +1,4 @@
-import type { SharedUserLocation } from "@/app/actions";
+import type { SharedUserLocation } from "@/app/_actions/actions";
 
 export interface MapMarkerOptions {
   id: string;

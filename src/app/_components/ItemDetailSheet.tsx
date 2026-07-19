@@ -14,7 +14,7 @@ import {
   getOffersNarrowed,
   type NarrowedOffer,
   type OfferSort,
-} from "@/app/actions";
+} from "@/app/_actions/actions";
 import { useT } from "@/core/i18n";
 
 /* ───────────────────────────────────────────────────────────────────────────

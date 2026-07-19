@@ -27,7 +27,7 @@ import {
   type Detent,
   type MapRetryCapability
 } from "./BottomSheet";
-import type { SharedUserLocation } from "@/app/actions";
+import type { SharedUserLocation } from "@/app/_actions/actions";
 import { useTheme } from "@/core/context/ThemeContext";
 import {
   acquireDeviceLocation,

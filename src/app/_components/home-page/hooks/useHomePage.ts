@@ -42,7 +42,7 @@ import {
   getMyProfile,
   type PlaceOffer,
   type NarrowedOffer
-} from "@/app/actions";
+} from "@/app/_actions/actions";
 import {
   fetchRoute,
   type DisclosedRouteOrigin

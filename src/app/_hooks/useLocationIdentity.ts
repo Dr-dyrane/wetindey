@@ -8,7 +8,7 @@ import {
 } from "react";
 
 import { authClient } from "@/lib/auth-client";
-import { getMyProfile, type MyProfile } from "@/app/actions";
+import { getMyProfile, type MyProfile } from "@/app/_actions/actions";
 import {
   useLocationChrome,
   useLocationHydration,

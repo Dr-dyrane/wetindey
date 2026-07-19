@@ -1,18 +1,12 @@
 "use client";
 
 import React from "react";
-import { useHomePage } from "./useHomePage";
-import { HomePageView } from "./HomePageView";
+import { HomePage } from "./_components/home-page/HomePage";
 
 /**
  * Root Controller Component for the WetinDey Application.
- *
- * It invokes the useHomePage logic hook to acquire the application state,
- * hooks, and handlers, and passes them directly to the HomePageView component
- * to separate state logic from the render tree.
+ * Routes directly to the modular HomePage orchestrator under components/home-page/
  */
-export default function HomePage() {
-  const homePageState = useHomePage();
-
-  return <HomePageView {...homePageState} />;
+export default function page() {
+  return <HomePage />;
 }

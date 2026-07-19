@@ -14,7 +14,7 @@ import {
   type PlaceContactPolicy,
   type ReviewData,
   type ReviewAggregateData
-} from "@/app/actions";
+} from "@/app/_actions/actions";
 import { formatNaira } from "@/lib/money";
 import {
   ROUTE_ORIGIN_FRESH_MS,

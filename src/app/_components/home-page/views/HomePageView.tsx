@@ -28,9 +28,9 @@ import {
   MapPresentation,
   formatDistance,
   getHaversineDistance
-} from "./imports";
-import { useHomePage } from "./useHomePage";
-import "./HomePage.css";
+} from "../imports/imports";
+import { useHomePage } from "../hooks/useHomePage";
+import "../styles/HomePage.css";
 
 type HomePageViewProps = ReturnType<typeof useHomePage>;
 

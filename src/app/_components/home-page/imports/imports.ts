@@ -67,7 +67,7 @@ import {
   getMyProfile,
   type PlaceOffer,
   type NarrowedOffer
-} from "@/app/actions";
+} from "@/app/_actions/actions";
 import { getHaversineDistance, formatDistance } from "@/lib/geospatial";
 import {
   fetchRoute,

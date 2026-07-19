@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Image from "next/image";
 
-import type { PlaceOffer } from "@/app/actions";
+import type { PlaceOffer } from "@/app/_actions/actions";
 import { formatNaira } from "@/lib/money";
 import { SolidIcon } from "@/design-system/icons/SolidIcon";
 import { StatusBadge, type StatusKind } from "./StatusBadge";

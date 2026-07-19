@@ -7,7 +7,7 @@ import { SheetPicker } from "@/design-system/components/SheetPicker";
 import { Button } from "@/design-system/components/Button";
 import { IconOrb } from "@/design-system/components/IconOrb";
 import { useT, useLocaleControl } from "@/core/i18n";
-import { submitProblemReport } from "@/app/problem-report-actions";
+import { submitProblemReport } from "@/app/_actions/problem-report-actions";
 
 /** The four problem kinds, in the order the picker shows them. Each id is the
  *  exact enum value `submitProblemReportInput` (src/lib/validation.ts) admits, so

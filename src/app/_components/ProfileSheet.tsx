@@ -9,7 +9,7 @@ import { Button } from "@/design-system/components/Button";
 import { useT } from "@/core/i18n";
 import { authClient } from "@/lib/auth-client";
 import Image from "next/image";
-import { getMyProfile, type MyProfile } from "@/app/actions";
+import { getMyProfile, type MyProfile } from "@/app/_actions/actions";
 
 interface ProfileSheetProps {
   open: boolean;
