@@ -372,6 +372,7 @@ export function GetItSheet({
   const [aggregate, setAggregate] = useState<ReviewAggregateData | null>(null);
   const [loadingReviews, setLoadingReviews] = useState(false);
   const [originState, setOriginState] = useState<OriginState>({ kind: "idle" });
+  const [detailsOpen, setDetailsOpen] = useState(false);
   const recordDeviceLocation = useLocationStore((state) => state.recordDeviceLocation);
   const originGeneration = useRef(0);
 
@@ -441,12 +442,14 @@ export function GetItSheet({
       originGeneration.current += 1;
       setShareResult({ kind: "idle" });
       setOriginState({ kind: "idle" });
+      setDetailsOpen(false);
     }
   }, [open]);
 
   useEffect(() => {
     originGeneration.current += 1;
     setOriginState({ kind: "idle" });
+    setDetailsOpen(false);
   }, [placeId]);
 
   useEffect(() => {
@@ -497,6 +500,7 @@ export function GetItSheet({
 
   const handleGoThere = useCallback(() => {
     if (!target) return;
+    setDetailsOpen(true);
     setOriginState({ kind: "disclosure" });
   }, [target]);
 
@@ -619,26 +623,6 @@ export function GetItSheet({
               <p className="truncate text-headline text-text-primary">{target.placeName}</p>
               {where && <p className="mt-0.5 truncate text-footnote text-text-secondary">{where}</p>}
 
-              {aggregate && aggregate.ratingCount > 0 && (
-                <div className="mt-1.5 flex items-center gap-1.5">
-                  <div className="flex items-center text-rating">
-                    {Array.from({ length: 5 }).map((_, i) => (
-                      <Star
-                        key={i}
-                        className={`h-3.5 w-3.5 ${
-                          i < Math.round(aggregate.ratingAverage)
-                            ? "fill-current"
-                            : "text-rating-muted"
-                        }`}
-                      />
-                    ))}
-                  </div>
-                  <span className="text-caption-1 font-semibold text-text-secondary">
-                    {aggregate.ratingAverage.toFixed(1)} ({aggregate.ratingCount} {aggregate.ratingCount === 1 ? "review" : "reviews"})
-                  </span>
-                </div>
-              )}
-
               {target.offer && (
                 <p className="mt-2 text-subhead text-text-secondary">
                   <span className="text-text-primary font-semibold">{formatPriceRange(target.offer)}</span>
@@ -666,23 +650,61 @@ export function GetItSheet({
                 detail={platform ? mapsAppName(platform) : undefined}
                 onClick={handleGoThere}
               />
-              <ListRow
-                icon={
-                  canShare ? (
-                    <SolidIcon name="share" size={16} />
-                  ) : (
-                    <SolidIcon name="copy" size={16} />
-                  )
-                }
-                label={shareLabel}
-                detail={shareResult.kind === "copied" ? "Copied" : undefined}
-                onClick={() => {
-                  void handleShare();
-                }}
-              />
             </ListGroup>
 
-            {originState.kind !== "idle" && (
+            <button
+              type="button"
+              aria-expanded={detailsOpen}
+              aria-controls="get-it-secondary"
+              onClick={() => setDetailsOpen((open) => !open)}
+              className="mx-4 min-h-tap flex w-[calc(100%-2rem)] items-center justify-between squircle px-3 text-subhead font-semibold text-text-secondary active:opacity-70"
+            >
+              <span>{detailsOpen ? "Hide details" : "More details"}</span>
+              <span className={detailsOpen ? "rotate-180" : ""}>
+                <SolidIcon name="chevron-down" size={16} />
+              </span>
+            </button>
+
+            {detailsOpen && (
+              <div id="get-it-secondary" className="space-y-6">
+                {aggregate && aggregate.ratingCount > 0 && (
+                  <div className="mx-4 flex items-center gap-1.5">
+                    <div className="flex items-center text-rating">
+                      {Array.from({ length: 5 }).map((_, i) => (
+                        <Star
+                          key={i}
+                          className={`h-3.5 w-3.5 ${
+                            i < Math.round(aggregate.ratingAverage)
+                              ? "fill-current"
+                              : "text-rating-muted"
+                          }`}
+                        />
+                      ))}
+                    </div>
+                    <span className="text-caption-1 font-semibold text-text-secondary">
+                      {aggregate.ratingAverage.toFixed(1)} ({aggregate.ratingCount} {aggregate.ratingCount === 1 ? "review" : "reviews"})
+                    </span>
+                  </div>
+                )}
+
+                <ListGroup>
+                  <ListRow
+                    icon={
+                      canShare ? (
+                        <SolidIcon name="share" size={16} />
+                      ) : (
+                        <SolidIcon name="copy" size={16} />
+                      )
+                    }
+                    label={shareLabel}
+                    detail={shareResult.kind === "copied" ? "Copied" : undefined}
+                    onClick={() => {
+                      void handleShare();
+                    }}
+                  />
+                </ListGroup>
+
+                {originState.kind !== "idle" && (
               <div
                 role={originState.kind === "problem" ? "alert" : undefined}
                 className="mx-4 space-y-3 squircle-card bg-fillSecondary px-4 py-3"
@@ -742,37 +764,37 @@ export function GetItSheet({
                   </button>
                 </div>
               </div>
-            )}
+                )}
 
-            {/* Last resort: no share sheet, no clipboard. The text is still the
-                thing the user wanted, so it goes on screen where they can take it
-                by hand. select-all makes one tap select the lot. */}
-            {shareResult.kind === "manual" && (
-              <div className="mx-4 space-y-1.5">
-                <p className="text-footnote text-text-secondary">
-                  This browser will not let WetinDey copy for you. Select and copy:
-                </p>
-                <p className="squircle bg-fillTertiary px-3 py-2.5 text-footnote text-text-primary select-all break-words">
-                  {shareResult.text}
-                </p>
-              </div>
-            )}
+                {/* Last resort: no share sheet, no clipboard. The text is still the
+                    thing the user wanted, so it goes on screen where they can take it
+                    by hand. select-all makes one tap select the lot. */}
+                {shareResult.kind === "manual" && (
+                  <div className="mx-4 space-y-1.5">
+                    <p className="text-footnote text-text-secondary">
+                      This browser will not let WetinDey copy for you. Select and copy:
+                    </p>
+                    <p className="squircle bg-fillTertiary px-3 py-2.5 text-footnote text-text-primary select-all break-words">
+                      {shareResult.text}
+                    </p>
+                  </div>
+                )}
 
-            {/* Informational, not disabled: a greyed-out button implies it might
-                light up. It will not — the seller said no, or there is nothing to
-                dial. The row states the fact and the footer gives the reason. */}
-            <ListGroup footer={contactText.footer ?? undefined}>
-              <ListRow
-                icon={<SolidIcon name="phone" size={16} />}
-                iconTone="context-contact"
-                label="Contact seller"
-                detail={contactText.detail}
-                chevron={false}
-              />
-            </ListGroup>
+                {/* Informational, not disabled: a greyed-out button implies it might
+                    light up. It will not — the seller said no, or there is nothing to
+                    dial. The row states the fact and the footer gives the reason. */}
+                <ListGroup footer={contactText.footer ?? undefined}>
+                  <ListRow
+                    icon={<SolidIcon name="phone" size={16} />}
+                    iconTone="context-contact"
+                    label="Contact seller"
+                    detail={contactText.detail}
+                    chevron={false}
+                  />
+                </ListGroup>
 
-            {/* Reviews Section */}
-            <div className="px-4 pt-5 space-y-4">
+                {/* Reviews Section */}
+                <div className="px-4 pt-5 space-y-4">
               <div>
                 <h3 className="text-headline text-text-primary font-bold">Reviews</h3>
                 <p className="mt-1 text-footnote text-text-secondary">
@@ -858,7 +880,9 @@ export function GetItSheet({
                   })}
                 </div>
               )}
-            </div>
+                </div>
+              </div>
+            )}
         </>
       </div>
     </ModalSheet>
