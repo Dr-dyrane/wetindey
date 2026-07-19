@@ -422,6 +422,21 @@ handle-to-first-content dead space while retaining the invisible >=44x44 target,
 drag/snap, safe-area, focus/scroll handoff, and island/dock behavior. Remaining runtime
 visual verification is shared and pathless.
 
+##### Motion — compact/mid handle reservation and detent geometry — ACTIVE
+
+Owner: Motion & Interaction Engineer `019f71ca-8646-7452-9171-439f5d78e71a`. Exclusive
+path: `src/design-system/components/BottomSheet.tsx`.
+
+Two independent static refuters found the released compact/mid geometry still leaves the
+absolute handle hit region over an unreserved child scroller, then changes its flex-flow
+footprint at the large detent. Correct only this boundary: retain the slim visible handle and
+its >=44x44 interaction region, but reserve its content space consistently across compact
+detents so it cannot intercept child scrolling or cause a 44px first-content shift. Preserve
+drag/snap/scroll handoff, safe areas, focus, reduced motion, modal stacking, expanded dock
+behavior, and child-owned content. No page, shell, NavigationStack, map, data, schema, copy,
+or test-path change is authorized. Require independent default-to-REFUTED source review and a
+path-scoped commit; reused-tab compact and mid visual evidence remains a later shared gate.
+
 ##### Maps Canvas stale-failure recovery — COMPLETE / PASS
 
 Owner: Maps & Location Experience Engineer `019f787c-4f49-78b0-aaa2-bd403d721a1d`.
