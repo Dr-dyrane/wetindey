@@ -180,7 +180,7 @@ export default async function OpengraphImage() {
               letterSpacing: "-0.02em",
             }}
           >
-            South-west Lagos food prices & availability may change before you arrive.
+            Know before you go. Live local information near you.
           </div>
 
           {/* Separation is fill, never a stroke. The location pill sits on the
