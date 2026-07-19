@@ -27,6 +27,10 @@ export interface UserPositionOptions {
   lat: number;
   lng: number;
   precision: UserPositionPrecision;
+  identity: {
+    name: string;
+    avatarUrl: string | null;
+  } | null;
   /** Accessible name. The shape carries the precision; this carries it in words. */
   label: string;
 }
@@ -620,7 +624,7 @@ const DARK_PARK = "hsl(140, 22%, 18%)";
 const DARK_SUBDIVISION_LABEL = "hsl(220, 15%, 62%)";
 
 /** Diameter of the device-fix dot, px. Small on purpose: it is a point. */
-const USER_POINT_SIZE = 16;
+const USER_POINT_SIZE = 40;
 /**
  * Diameter of the area disc, px. Large on purpose — a region is not a point —
  * and deliberately not 36, which is the place marker's size.
@@ -779,6 +783,7 @@ export class MapboxAdapter implements MapProviderAdapter {
   private userMarkerEl: HTMLDivElement | null = null;
   /** What the live element was built to claim; rebuild only when this changes. */
   private userMarkerPrecision: UserPositionPrecision | null = null;
+  private userMarkerIdentityKey: string | null = null;
   /** The route as last asked for, so a style rebuild can restore it. */
   private routeCoords: RouteGeometry | null = null;
   private routeTint: RouteTint = "accent";
@@ -1215,6 +1220,7 @@ export class MapboxAdapter implements MapProviderAdapter {
       this.userMarker = null;
       this.userMarkerEl = null;
       this.userMarkerPrecision = null;
+      this.userMarkerIdentityKey = null;
       return;
     }
 
@@ -1225,19 +1231,29 @@ export class MapboxAdapter implements MapProviderAdapter {
     // Move the existing element when only the coordinate changed. A device fix
     // updates far more often than its precision does, and rebuilding the node
     // each time would churn the DOM for no visible gain.
-    if (this.userMarker && this.userMarkerPrecision === options.precision) {
+    const identityKey = `${options.identity?.name ?? ""}\u0000${options.identity?.avatarUrl ?? ""}`;
+    if (
+      this.userMarker &&
+      this.userMarkerPrecision === options.precision &&
+      this.userMarkerIdentityKey === identityKey
+    ) {
       this.userMarkerEl?.setAttribute("aria-label", options.label);
       this.userMarker.setLngLat([options.lng, options.lat]);
       return;
     }
 
     this.userMarker?.remove();
-    const el = MapboxAdapter.buildUserPositionElement(options.precision, options.label);
+    const el = MapboxAdapter.buildUserPositionElement(
+      options.precision,
+      options.label,
+      options.identity
+    );
     this.userMarker = new mapboxgl.Marker(el)
       .setLngLat([options.lng, options.lat])
       .addTo(this.mapInstance);
     this.userMarkerEl = el;
     this.userMarkerPrecision = options.precision;
+    this.userMarkerIdentityKey = identityKey;
   }
 
   public setSharedUserMarkers(users: SharedUserLocation[]): void {
@@ -1511,33 +1527,68 @@ export class MapboxAdapter implements MapProviderAdapter {
    */
   private static buildUserPositionElement(
     precision: UserPositionPrecision,
-    label: string
+    label: string,
+    identity: UserPositionOptions["identity"]
   ): HTMLDivElement {
     const el = document.createElement("div");
     el.setAttribute("role", "img");
-    el.setAttribute("aria-label", label);
+    const identityName = identity?.name.trim() || "Me";
+    el.setAttribute("aria-label", `${identityName}; ${label}`);
     // The indicator is never a target. Without this the area disc would swallow
     // taps across 48px of map, including any place marker underneath it.
     el.style.pointerEvents = "none";
 
-    if (precision === "point") {
-      el.style.width = `${USER_POINT_SIZE}px`;
-      el.style.height = `${USER_POINT_SIZE}px`;
-      el.style.borderRadius = "50%";
-      el.style.background = "var(--color-status-info)";
-      el.style.boxShadow = "var(--shadow-raised)";
-      return el;
+    const size = precision === "point" ? USER_POINT_SIZE : USER_AREA_SIZE;
+    el.style.width = `${size}px`;
+    el.style.height = `${size}px`;
+    el.style.display = "grid";
+    el.style.placeItems = "center";
+    el.style.borderRadius = "50%";
+
+    if (precision === "area") {
+      // The halo communicates uncertainty; the centered orb still communicates
+      // identity. It must not be replaced by a blur or a point-like location dot.
+      el.style.background =
+        "radial-gradient(circle closest-side, var(--color-status-info-bg) 0%," +
+        " var(--color-status-info-bg) 58%, transparent 100%)";
     }
 
-    el.style.width = `${USER_AREA_SIZE}px`;
-    el.style.height = `${USER_AREA_SIZE}px`;
-    // No border-radius: the gradient reaches transparent at the closest side, so
-    // the corners are already empty and a radius would only be decoration.
-    el.style.background =
-      "radial-gradient(circle closest-side," +
-      " var(--color-status-info-bg) 0%," +
-      " var(--color-status-info-bg) 58%," +
-      " transparent 100%)";
+    const orb = document.createElement("span");
+    const orbSize = precision === "point" ? 32 : 30;
+    orb.style.width = `${orbSize}px`;
+    orb.style.height = `${orbSize}px`;
+    orb.style.display = "grid";
+    orb.style.placeItems = "center";
+    orb.style.borderRadius = "50%";
+    orb.style.overflow = "hidden";
+    orb.style.background = "var(--color-status-info)";
+    orb.style.color = "var(--color-text-on-accent, #FFFFFF)";
+    orb.style.boxShadow = "var(--shadow-raised)";
+
+    const fallback = document.createElement("span");
+    fallback.textContent = identityName === "Me" ? "Me" : identityName
+      .split(/\s+/)
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((part) => part[0]?.toUpperCase() ?? "")
+      .join("") || "Me";
+    fallback.style.fontSize = "11px";
+    fallback.style.fontWeight = "700";
+    fallback.style.lineHeight = "1";
+    orb.appendChild(fallback);
+
+    if (identity?.avatarUrl) {
+      const image = document.createElement("img");
+      image.src = identity.avatarUrl;
+      image.alt = "";
+      image.style.width = "100%";
+      image.style.height = "100%";
+      image.style.objectFit = "cover";
+      image.onerror = () => image.remove();
+      orb.appendChild(image);
+    }
+
+    el.appendChild(orb);
     return el;
   }
 

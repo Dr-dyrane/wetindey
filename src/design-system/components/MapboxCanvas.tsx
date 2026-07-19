@@ -48,6 +48,10 @@ interface MapboxCanvasProps {
   selectedPlaceId: string | null;
   onMarkerClick: (placeId: string) => void;
   center: { lat: number; lng: number };
+  selfIdentity: {
+    name: string;
+    avatarUrl: string | null;
+  } | null;
   /**
    * How far the bottom sheet is up. The camera compensates for it, so anything
    * we fly to lands in the strip of map the user can actually see. `null` for
@@ -224,6 +228,7 @@ export const MapboxCanvas = forwardRef<MapCameraHandle, MapboxCanvasProps>(funct
     selectedPlaceId: _selectedPlaceId,
     onMarkerClick,
     center,
+    selfIdentity,
     detent = null,
     padding,
     route = null,
@@ -380,11 +385,12 @@ export const MapboxCanvas = forwardRef<MapCameraHandle, MapboxCanvasProps>(funct
       lat: userPosition.lat,
       lng: userPosition.lng,
       precision,
+      identity: selfIdentity,
       // The shape says "precisely" or "roughly" to everyone who can see it.
       // This says the same thing to everyone who cannot.
       label: precision === "point" ? "You are here" : `Somewhere around ${locationLabel}`
     });
-  }, [userPosition, locationLabel, ready]);
+  }, [userPosition, locationLabel, selfIdentity, ready]);
 
   // Render other location-sharing users on the map
   useEffect(() => {

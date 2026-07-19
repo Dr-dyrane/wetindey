@@ -21,7 +21,7 @@ import {
 } from "@/design-system/components/MapboxCanvas";
 import type { RouteGeometry } from "@/integrations/maps/MapboxAdapter";
 import { authClient } from "@/lib/auth-client";
-import { DETENT_FRACTION, type Detent } from "@/design-system/components/BottomSheet";
+import { type Detent } from "@/design-system/components/BottomSheet";
 import { useModalPresented } from "@/design-system/components/ModalSheet";
 import { AsyncList } from "@/design-system/components/AsyncList";
 import { NigeriaLogo } from "@/design-system/components/NigeriaLogo";
@@ -357,6 +357,17 @@ export default function HomePage() {
     // the email rather than rendering an empty identity.
     return { name: u.name ?? "", email: u.email };
   }, [session]);
+
+  const selfIdentity = useMemo(
+    () =>
+      sessionUser
+        ? {
+            name: sessionUser.name || sessionUser.email,
+            avatarUrl: userProfile?.avatarUrl ?? null
+          }
+        : null,
+    [sessionUser, userProfile?.avatarUrl]
+  );
 
   // Load the signed-in user's profile for their avatar.
   useEffect(() => {
@@ -937,6 +948,7 @@ export default function HomePage() {
         }
         onMarkerClick={handleMarkerSelection}
         center={mapCenter}
+        selfIdentity={selfIdentity}
         route={route}
         /* At regular width the shell mounts no bottom sheet, so there is nothing
            below to compensate for, but the panel covers the leading edge, and
@@ -994,12 +1006,15 @@ export default function HomePage() {
         {locateError && <MapNotice message={locateError} onDismiss={dismissLocateError} />}
       </div>
 
-      {/* Recenter. Parked above the peek detent so the sheet never covers it ,
-          the fraction is imported rather than typed as "20vh", so retuning the
-          detent moves this with it. */}
+      {/* Recenter. The shell publishes the live active detent inset; safe-area
+          padding is additive so this remains reachable on gesture-navigation
+          devices at every compact detent and on regular layouts. */}
       <div
         className="absolute right-4 z-10 pointer-events-none"
-        style={{ bottom: isRegular ? "1rem" : `calc(${DETENT_FRACTION.peek * 100}vh + 16px)` }}
+        style={{
+          bottom:
+            "calc(var(--shell-bottom-inset, 0px) + env(safe-area-inset-bottom, 0px) + 16px)"
+        }}
       >
         <MapRecenterControl
           /* recenterTo ONLY. Writing the position to the store here would fire
