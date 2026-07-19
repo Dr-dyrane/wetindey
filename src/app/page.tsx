@@ -1278,8 +1278,7 @@ export default function HomePage() {
         <div
           className="stack-surface sticky z-10 shrink-0 py-2
                      bottom-[calc(max(var(--sheet-hidden,0px),var(--safe-area-bottom))+24px)]
-                     -mb-[calc(max(var(--sheet-hidden,0px),var(--safe-area-bottom))+24px)]
-                     md:static md:mb-0 md:py-0 md:pt-1"
+                     md:static md:py-0 md:pt-1"
         >
           <Button
             variant="primary"
