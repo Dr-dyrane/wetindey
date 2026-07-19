@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useRef } from "react";
-import { BottomSheet, type Detent } from "./BottomSheet";
+import { BottomSheet, type Detent, type LiveSheetInset } from "./BottomSheet";
 import { NavigationStack } from "./NavigationStack";
 
 interface CompactShellProps {
@@ -12,6 +12,7 @@ interface CompactShellProps {
   backLabel?: string;
   activeDetent: Detent;
   setActiveDetent: (detent: Detent) => void;
+  onLiveInsetChange: (inset: LiveSheetInset | null) => void;
 }
 
 /**
@@ -34,6 +35,7 @@ export function CompactShell({
   backLabel,
   activeDetent,
   setActiveDetent,
+  onLiveInsetChange,
 }: CompactShellProps) {
   const hasDetail = detailNode != null;
   const hadDetail = useRef(hasDetail);
@@ -63,7 +65,11 @@ export function CompactShell({
     // No background and no map here: AdaptiveShell mounts the map once, beneath
     // this layer. Anything opaque at this level hides it outright.
     <div className="relative h-full w-full">
-      <BottomSheet detent={activeDetent} onDetentChange={setActiveDetent}>
+      <BottomSheet
+        detent={activeDetent}
+        onDetentChange={setActiveDetent}
+        onLiveInsetChange={onLiveInsetChange}
+      >
         <NavigationStack
           listNode={listNode}
           detailNode={detailNode}

@@ -1,10 +1,10 @@
 "use client";
 
-import React from "react";
+import React, { useCallback, useLayoutEffect, useRef } from "react";
 import { CompactShell } from "./CompactShell";
 import { RegularShell, PANEL_LEADING_OCCLUSION } from "./RegularShell";
 import { useMediaQuery } from "@/core/hooks/useMediaQuery";
-import { DETENT_FRACTION, type Detent } from "./BottomSheet";
+import { type Detent, type LiveSheetInset } from "./BottomSheet";
 
 interface AdaptiveShellProps {
   mapNode: React.ReactNode;
@@ -40,6 +40,15 @@ interface AdaptiveShellProps {
  */
 const REGULAR_QUERY = "(min-width: 768px)";
 
+export function shellBottomInset(
+  isRegular: boolean,
+  shellBottom: number,
+  inset: LiveSheetInset | null
+): string {
+  if (isRegular || inset === null) return "0px";
+  return `${Math.max(0, shellBottom - inset.sheetTop).toFixed(2)}px`;
+}
+
 export function AdaptiveShell({
   mapNode,
   sheetNode,
@@ -65,6 +74,23 @@ export function AdaptiveShell({
    * so this frame is never seen.
    */
   const isRegular = useMediaQuery(REGULAR_QUERY);
+  const shellRef = useRef<HTMLDivElement>(null);
+  const isRegularRef = useRef(isRegular === true);
+  isRegularRef.current = isRegular === true;
+
+  /** Keep drag-rate geometry outside React state and its detent feedback loop. */
+  const publishLiveInset = useCallback((inset: LiveSheetInset | null) => {
+    const shell = shellRef.current;
+    if (!shell) return;
+    shell.style.setProperty(
+      "--shell-bottom-inset",
+      shellBottomInset(isRegularRef.current, shell.getBoundingClientRect().bottom, inset)
+    );
+  }, []);
+
+  useLayoutEffect(() => {
+    if (isRegular !== false) publishLiveInset(null);
+  }, [isRegular, publishLiveInset]);
 
   /** One set of stack props, one detail node, both size classes. */
   const stack = {
@@ -77,6 +103,7 @@ export function AdaptiveShell({
 
   return (
     <div
+      ref={shellRef}
       className="relative h-full min-h-screen w-full overflow-hidden bg-page"
       /**
        * The edges the shell occludes, published for the map layer.
@@ -99,11 +126,10 @@ export function AdaptiveShell({
        * sideways. It is also the wrong quantity (the part hanging BELOW the
        * viewport, not the part covering it).
        *
-       * Bound to the DETENT, not the live drag fraction — same rule BottomSheet
-       * states for its own dock geometry, so this cannot reflow every frame.
-       * Publishing `fraction` rather than `fraction + ISLAND_INSET` keeps the
-       * sheet's island geometry private and matches the ~5px approximation
-       * `sheetMapPadding` already documents and accepts.
+       * BottomSheet publishes the rendered compact geometry directly here.
+       * This keeps drag-rate updates outside React while map controls inherit
+       * the actual layout-coordinate pixel inset through the shared shell
+       * variable. Safe-area padding has one owner: its map-control consumer.
        *
        * Both consumers live in files owned elsewhere; these are the numbers they
        * need, made available rather than described.
@@ -111,10 +137,8 @@ export function AdaptiveShell({
       style={
         {
           "--shell-leading-inset": isRegular ? PANEL_LEADING_OCCLUSION : "0px",
-          // RegularShell mounts no sheet, so it occludes nothing at the bottom.
-          "--shell-bottom-inset": isRegular
-            ? "0px"
-            : `${(DETENT_FRACTION[activeDetent] * 100).toFixed(3)}vh`,
+          // BottomSheet replaces this after it measures its rendered rect.
+          "--shell-bottom-inset": "0px",
         } as React.CSSProperties
       }
     >
@@ -137,6 +161,7 @@ export function AdaptiveShell({
               {...stack}
               activeDetent={activeDetent}
               setActiveDetent={setActiveDetent}
+              onLiveInsetChange={publishLiveInset}
             />
           )}
         </div>

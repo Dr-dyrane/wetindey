@@ -25,6 +25,96 @@ interface BottomSheetProps {
   children: React.ReactNode;
   detent: Detent;
   onDetentChange: (detent: Detent) => void;
+  /** Rendered compact-sheet geometry for map controls in the sibling layer. */
+  onLiveInsetChange?: (inset: LiveSheetInset | null) => void;
+}
+
+export interface LiveSheetInset {
+  fraction: number;
+  /** Layout-viewport coordinate; AdaptiveShell derives the sibling inset. */
+  sheetTop: number;
+}
+
+export function liveSheetInset(fraction: number, sheetTop: number): LiveSheetInset {
+  return { fraction, sheetTop };
+}
+
+export function translateYFromTransform(transform: string): number | null {
+  const values = transform.match(/^matrix(?:3d)?\((.*)\)$/)?.[1]?.split(",");
+  if (!values) return null;
+  const is3d = transform.startsWith("matrix3d(");
+  if (values.length !== (is3d ? 16 : 6)) return null;
+  const translateY = Number.parseFloat(values[is3d ? 13 : 5]!);
+  return Number.isFinite(translateY) ? translateY : null;
+}
+
+export function nextInsetPublicationGeneration(previous: number): number {
+  return previous + 1;
+}
+
+export function isCurrentInsetPublication(generation: number, current: number): boolean {
+  return generation === current;
+}
+
+export function shouldTrackSettlingInset(
+  viewportHeight: number,
+  dragOwnsInset: boolean
+): boolean {
+  return viewportHeight > 0 && !dragOwnsInset;
+}
+
+export type InsetPublicationPath =
+  | "guard"
+  | "tap"
+  | "horizontal"
+  | "scroll"
+  | "pointercancel"
+  | "release"
+  | "vertical-drag";
+
+export function insetPublicationOwnerAfter(path: InsetPublicationPath): "snap" | "drag" {
+  return path === "vertical-drag" ? "drag" : "snap";
+}
+
+export function shouldCommitViewportHeightToReact(dragOwnsInset: boolean): boolean {
+  return !dragOwnsInset;
+}
+
+export function snapPublicationStarter(
+  nextDetent: Detent,
+  currentDetent: Detent
+): "settle" | "detent-effect" {
+  return nextDetent === currentDetent ? "settle" : "detent-effect";
+}
+
+export function pointerDownPublicationAction(
+  activePointerId: number | null,
+  pointerId: number
+): "ignore-active-owner" | "invalidate-prior-publication" {
+  return activePointerId !== null && !isActiveDragPointer(activePointerId, pointerId)
+    ? "ignore-active-owner"
+    : "invalidate-prior-publication";
+}
+
+export function isActiveDragPointer(
+  activePointerId: number | null,
+  pointerId: number
+): boolean {
+  return activePointerId === pointerId;
+}
+
+export function shouldHandlePointerCancellation(
+  activePointerId: number | null,
+  pointerId: number
+): boolean {
+  return isActiveDragPointer(activePointerId, pointerId);
+}
+
+export function shouldHandleTouchCancellation(
+  activePointerId: number | null,
+  remainingTouchCount: number
+): boolean {
+  return activePointerId !== null && remainingTouchCount === 0;
 }
 
 /** The shared shape token is re-exported for ModalSheet. */
@@ -185,15 +275,27 @@ interface DragState {
  * descendants out of the 60/120Hz drag path and gives the gesture sole
  * ownership of the transform.
  */
-export function BottomSheet({ children, detent, onDetentChange }: BottomSheetProps) {
+export function BottomSheet({
+  children,
+  detent,
+  onDetentChange,
+  onLiveInsetChange,
+}: BottomSheetProps) {
   const sheetRef = useRef<HTMLElement>(null);
   const backdropRef = useRef<HTMLDivElement>(null);
   const detentRef = useRef(detent);
   detentRef.current = detent;
+  const liveInsetCallbackRef = useRef(onLiveInsetChange);
+  liveInsetCallbackRef.current = onLiveInsetChange;
   const activeTouchCountRef = useRef(0);
   const dragRef = useRef<DragState | null>(null);
   const liveFrameRef = useRef<number | null>(null);
   const settleFrameRef = useRef<number | null>(null);
+  const insetFrameRef = useRef<number | null>(null);
+  const insetGenerationRef = useRef(0);
+  const viewportHeightRef = useRef(0);
+  const deferredViewportHeightRef = useRef<number | null>(null);
+  const pendingDetentPublicationRef = useRef<Detent | null>(null);
   const scrollEndFrameRef = useRef<number | null>(null);
   const liveFractionRef = useRef<number | null>(null);
   const wheelDetentGesture = useRef<WheelDetentGesture | null>(null);
@@ -236,6 +338,12 @@ export function BottomSheet({ children, detent, onDetentChange }: BottomSheetPro
     settleFrameRef.current = null;
   }, []);
 
+  const cancelInsetFrame = useCallback(() => {
+    insetGenerationRef.current = nextInsetPublicationGeneration(insetGenerationRef.current);
+    if (insetFrameRef.current !== null) cancelAnimationFrame(insetFrameRef.current);
+    insetFrameRef.current = null;
+  }, []);
+
   const cancelScrollEndFrame = useCallback(() => {
     if (scrollEndFrameRef.current !== null) cancelAnimationFrame(scrollEndFrameRef.current);
     scrollEndFrameRef.current = null;
@@ -256,12 +364,30 @@ export function BottomSheet({ children, detent, onDetentChange }: BottomSheetPro
     [translateForFraction]
   );
 
+  const publishLiveInset = useCallback((fraction: number) => {
+    const sheet = sheetRef.current;
+    const callback = liveInsetCallbackRef.current;
+    if (!sheet || !callback) return;
+    callback(liveSheetInset(fraction, sheet.getBoundingClientRect().top));
+  }, []);
+
+  const reconcileDeferredViewportHeight = useCallback((): boolean => {
+    const deferred = deferredViewportHeightRef.current;
+    if (deferred === null) return false;
+    deferredViewportHeightRef.current = null;
+    viewportHeightRef.current = deferred;
+    if (viewportHeight === deferred) return false;
+    setViewportHeight((current) => (current === deferred ? current : deferred));
+    return true;
+  }, [viewportHeight]);
+
   const renderLiveFraction = useCallback(() => {
     liveFrameRef.current = null;
     const fraction = liveFractionRef.current;
     if (fraction === null) return;
     applyFraction(fraction);
-  }, [applyFraction]);
+    publishLiveInset(fraction);
+  }, [applyFraction, publishLiveInset]);
 
   const scheduleLiveFraction = useCallback(
     (fraction: number) => {
@@ -273,25 +399,28 @@ export function BottomSheet({ children, detent, onDetentChange }: BottomSheetPro
   );
 
   useLayoutEffect(() => {
-    const measure = () =>
-      setViewportHeight(Math.round(window.visualViewport?.height ?? window.innerHeight));
+    const measure = () => {
+      const nextHeight = Math.round(window.visualViewport?.height ?? window.innerHeight);
+      if (!shouldCommitViewportHeightToReact(dragRef.current?.claim === "sheet")) {
+        deferredViewportHeightRef.current = nextHeight;
+        return;
+      }
+      viewportHeightRef.current = nextHeight;
+      setViewportHeight((current) => (current === nextHeight ? current : nextHeight));
+    };
     measure();
     window.addEventListener("resize", measure);
     window.visualViewport?.addEventListener("resize", measure);
     return () => {
       window.removeEventListener("resize", measure);
       window.visualViewport?.removeEventListener("resize", measure);
-    };
-  }, []);
-
-  useEffect(
-    () => () => {
       cancelLiveFrame();
       cancelSettlingFrame();
+      cancelInsetFrame();
       cancelScrollEndFrame();
-    },
-    [cancelLiveFrame, cancelScrollEndFrame, cancelSettlingFrame]
-  );
+      liveInsetCallbackRef.current?.(null);
+    };
+  }, [cancelInsetFrame, cancelLiveFrame, cancelScrollEndFrame, cancelSettlingFrame]);
 
   const initialDetent = useRef(true);
   useEffect(() => {
@@ -313,33 +442,6 @@ export function BottomSheet({ children, detent, onDetentChange }: BottomSheetPro
       if (next !== detent) onDetentChange(next);
     },
     [detent, onDetentChange]
-  );
-
-  const settle = useCallback(
-    (next: Detent) => {
-      cancelLiveFrame();
-      cancelSettlingFrame();
-      setIsDragging(false);
-
-      /* A direct drag leaves an inline transform that React does not know it
-         owns. Waiting one frame gives the snap recipe its transition again,
-         then writes the target even when the chosen detent equals the prior
-         prop (the otherwise easy-to-miss "drag, release, never snap back"
-         case). */
-      settleFrameRef.current = requestAnimationFrame(() => {
-        settleFrameRef.current = null;
-        const sheet = sheetRef.current;
-        const backdrop = backdropRef.current;
-        if (!sheet || !backdrop) return;
-
-        sheet.style.transition = "";
-        backdrop.style.transition = "";
-        applyFraction(DETENT_FRACTION[next]);
-        setSettlingFraction(DETENT_FRACTION[next]);
-        if (next !== detentRef.current) onDetentChange(next);
-      });
-    },
-    [applyFraction, cancelLiveFrame, cancelSettlingFrame, onDetentChange]
   );
 
   const scrollersFrom = useCallback((target: EventTarget | null): HTMLElement[] => {
@@ -388,12 +490,104 @@ export function BottomSheet({ children, detent, onDetentChange }: BottomSheetPro
   const renderedFraction = useCallback(() => {
     const sheet = sheetRef.current;
     if (!sheet || viewportHeight === 0) return restingFraction;
-    const transform = getComputedStyle(sheet).transform;
-    const matrix = transform.match(/^matrix\([^,]+,[^,]+,[^,]+,[^,]+,[^,]+,\s*([^)]+)\)$/);
-    const translateY = matrix ? Number.parseFloat(matrix[1]!) : Number.NaN;
-    if (!Number.isFinite(translateY)) return restingFraction;
+    const translateY = translateYFromTransform(getComputedStyle(sheet).transform);
+    if (translateY === null) return restingFraction;
     return DETENT_FRACTION.large - translateY / viewportHeight;
   }, [restingFraction, viewportHeight]);
+
+  const renderSettlingInset = useCallback(
+    function renderSettlingInset(targetFraction: number, generation: number) {
+      if (!isCurrentInsetPublication(generation, insetGenerationRef.current)) return;
+      const fraction = renderedFraction();
+      publishLiveInset(fraction);
+      if (Math.abs(fraction - targetFraction) < 0.0001) {
+        insetFrameRef.current = null;
+        return;
+      }
+      insetFrameRef.current = requestAnimationFrame(() =>
+        renderSettlingInset(targetFraction, generation)
+      );
+    },
+    [publishLiveInset, renderedFraction]
+  );
+
+  const scheduleSettlingInset = useCallback(
+    (targetFraction: number) => {
+      cancelInsetFrame();
+      const generation = insetGenerationRef.current;
+      insetFrameRef.current = requestAnimationFrame(() =>
+        renderSettlingInset(targetFraction, generation)
+      );
+    },
+    [cancelInsetFrame, renderSettlingInset]
+  );
+  const scheduleSettlingInsetRef = useRef(scheduleSettlingInset);
+  scheduleSettlingInsetRef.current = scheduleSettlingInset;
+
+  const transferInsetPublication = useCallback(
+    (path: InsetPublicationPath) => {
+      if (insetPublicationOwnerAfter(path) === "drag") {
+        cancelInsetFrame();
+        return;
+      }
+      scheduleSettlingInset(DETENT_FRACTION[detentRef.current]);
+    },
+    [cancelInsetFrame, scheduleSettlingInset]
+  );
+
+  useLayoutEffect(() => {
+    if (!shouldTrackSettlingInset(viewportHeight, dragRef.current?.claim === "sheet")) return;
+    const pendingDetent = pendingDetentPublicationRef.current;
+    if (pendingDetent !== null) {
+      if (detent !== pendingDetent) return;
+      pendingDetentPublicationRef.current = null;
+      scheduleSettlingInsetRef.current(DETENT_FRACTION[detent]);
+      return;
+    }
+    scheduleSettlingInsetRef.current(DETENT_FRACTION[detent]);
+  }, [detent, viewportHeight]);
+
+  const settle = useCallback(
+    (next: Detent) => {
+      cancelLiveFrame();
+      cancelSettlingFrame();
+      cancelInsetFrame();
+      setIsDragging(false);
+
+      /* A direct drag leaves an inline transform that React does not know it
+         owns. Waiting one frame gives the snap recipe its transition again,
+         then writes the target even when the chosen detent equals the prior
+         prop (the otherwise easy-to-miss "drag, release, never snap back"
+         case). */
+      settleFrameRef.current = requestAnimationFrame(() => {
+        settleFrameRef.current = null;
+        const sheet = sheetRef.current;
+        const backdrop = backdropRef.current;
+        if (!sheet || !backdrop) return;
+
+        sheet.style.transition = "";
+        backdrop.style.transition = "";
+        applyFraction(DETENT_FRACTION[next]);
+        setSettlingFraction(DETENT_FRACTION[next]);
+        const reconciledViewport = reconcileDeferredViewportHeight();
+        if (snapPublicationStarter(next, detentRef.current) === "detent-effect") {
+          pendingDetentPublicationRef.current = next;
+          onDetentChange(next);
+        } else if (!reconciledViewport) {
+          scheduleSettlingInset(DETENT_FRACTION[next]);
+        }
+      });
+    },
+    [
+      applyFraction,
+      cancelInsetFrame,
+      cancelLiveFrame,
+      cancelSettlingFrame,
+      onDetentChange,
+      reconcileDeferredViewportHeight,
+      scheduleSettlingInset,
+    ]
+  );
 
   const handoffToSheet = useCallback(
     (drag: DragState, clientY: number, timeStamp: number, carriedTravelPx = 0) => {
@@ -410,23 +604,43 @@ export function BottomSheet({ children, detent, onDetentChange }: BottomSheetPro
       drag.startY = clientY + carriedTravelPx;
       drag.lastY = clientY;
       drag.lastTime = timeStamp;
+      transferInsetPublication("vertical-drag");
       sheetRef.current!.style.transition = "none";
       backdropRef.current!.style.transition = "none";
       applyFraction(drag.currentFraction);
+      publishLiveInset(drag.currentFraction);
       setIsDragging(true);
       sheetRef.current?.setPointerCapture(drag.pointerId);
     },
-    [applyFraction, renderedFraction, viewportHeight]
+    [
+      applyFraction,
+      publishLiveInset,
+      renderedFraction,
+      transferInsetPublication,
+      viewportHeight,
+    ]
   );
 
   const onPointerDown = (event: React.PointerEvent<HTMLElement>) => {
+    if (
+      pointerDownPublicationAction(
+        dragRef.current?.pointerId ?? null,
+        event.pointerId
+      ) === "ignore-active-owner"
+    ) {
+      return;
+    }
+
+    cancelInsetFrame();
     const target = event.target;
     if (viewportHeight === 0 || !event.isPrimary) {
+      transferInsetPublication("guard");
       return;
     }
     if (target instanceof Element && target.closest(EDITABLE_SELECTOR)) {
       cancelScrollEndFrame();
       dragRef.current = null;
+      transferInsetPublication("guard");
       return;
     }
     cancelSettlingFrame();
@@ -481,6 +695,7 @@ export function BottomSheet({ children, detent, onDetentChange }: BottomSheetPro
         drag.claim = "horizontal";
         drag.lastY = event.clientY;
         drag.lastTime = event.timeStamp;
+        transferInsetPublication("horizontal");
         return;
       }
       const direction: ScrollDirection = travelPx > 0 ? 1 : -1;
@@ -492,6 +707,8 @@ export function BottomSheet({ children, detent, onDetentChange }: BottomSheetPro
       if (drag.claim === "sheet") {
         handoffToSheet(drag, event.clientY, event.timeStamp);
         travelPx = 0;
+      } else {
+        transferInsetPublication("scroll");
       }
     }
 
@@ -546,6 +763,7 @@ export function BottomSheet({ children, detent, onDetentChange }: BottomSheetPro
         travelPx >= 0 ||
         scrollerForDirection(drag.scrollers, -1) !== null
       ) {
+        transferInsetPublication("scroll");
         return;
       }
 
@@ -559,7 +777,7 @@ export function BottomSheet({ children, detent, onDetentChange }: BottomSheetPro
         })
       );
     },
-    [cancelScrollEndFrame, renderedFraction, settle]
+    [cancelScrollEndFrame, renderedFraction, settle, transferInsetPublication]
   );
 
   const scheduleScrolledDragEnd = useCallback(
@@ -592,15 +810,22 @@ export function BottomSheet({ children, detent, onDetentChange }: BottomSheetPro
       drag.lastTime = event.timeStamp;
       if (drag.pointerType !== "touch") {
         if (scrollerForDirection(drag.scrollers, -1) === null) finishScrolledDrag(drag);
-        else dragRef.current = null;
+        else {
+          dragRef.current = null;
+          transferInsetPublication("release");
+        }
         return;
       }
+      transferInsetPublication("release");
       scheduleScrolledDragEnd(drag);
       return;
     }
 
     dragRef.current = null;
-    if (drag.claim !== "sheet") return;
+    if (drag.claim !== "sheet") {
+      transferInsetPublication("tap");
+      return;
+    }
     sheetRef.current?.releasePointerCapture?.(event.pointerId);
     const travelPx = drag.startY - drag.lastY;
     const velocityAge = Math.max(0, event.timeStamp - drag.lastTime);
@@ -621,11 +846,12 @@ export function BottomSheet({ children, detent, onDetentChange }: BottomSheetPro
 
   const cancelDrag = (event: React.PointerEvent<HTMLElement>) => {
     const drag = dragRef.current;
-    if (drag && drag.pointerId !== event.pointerId) return;
+    if (!shouldHandlePointerCancellation(drag?.pointerId ?? null, event.pointerId)) return;
     if (drag?.pointerType === "touch" && activeTouchCountRef.current > 1) {
       cancelScrollEndFrame();
       dragRef.current = null;
       if (drag.claim === "sheet") settle(drag.startDetent);
+      else transferInsetPublication("pointercancel");
       return;
     }
 
@@ -650,17 +876,22 @@ export function BottomSheet({ children, detent, onDetentChange }: BottomSheetPro
            arriving. Retain the gesture until touchend so travel beyond the
            list's top is not lost. */
         drag.pointerCancelled = true;
+        transferInsetPublication("pointercancel");
         return;
       }
 
       cancelScrollEndFrame();
       dragRef.current = null;
+      transferInsetPublication("pointercancel");
       return;
     }
 
     cancelScrollEndFrame();
     dragRef.current = null;
-    if (!drag || drag.claim !== "sheet") return;
+    if (!drag || drag.claim !== "sheet") {
+      transferInsetPublication("pointercancel");
+      return;
+    }
     const travelPx = drag.startY - drag.lastY;
     const next = resolveSheetCancellation({ startDetent: drag.startDetent, travelPx });
     settle(next);
@@ -713,10 +944,17 @@ export function BottomSheet({ children, detent, onDetentChange }: BottomSheetPro
   const cancelCancelledTouch = (event: React.TouchEvent<HTMLElement>) => {
     activeTouchCountRef.current = event.touches.length;
     const drag = dragRef.current;
-    if (!drag || drag.pointerType !== "touch") return;
+    if (
+      !drag ||
+      drag.pointerType !== "touch" ||
+      !shouldHandleTouchCancellation(drag.pointerId, event.touches.length)
+    ) {
+      return;
+    }
     cancelScrollEndFrame();
     dragRef.current = null;
     if (drag.claim === "sheet") settle(drag.startDetent);
+    else transferInsetPublication("pointercancel");
   };
 
   const cycleDetent = () => {
