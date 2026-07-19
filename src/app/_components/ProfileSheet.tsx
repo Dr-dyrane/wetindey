@@ -153,7 +153,13 @@ type AuthErrorKey =
 type SignIn =
   | { kind: "idle" }
   | { kind: "email"; sending: boolean; error: AuthErrorKey | null }
-  | { kind: "code"; email: string; checking: boolean; error: AuthErrorKey | null }
+  | {
+      kind: "code";
+      email: string;
+      checking: boolean;
+      error: AuthErrorKey | null;
+      delivery: "confirmed" | "indeterminate";
+    }
   | { kind: "verified"; email: string; stalled: boolean };
 
 /**
@@ -212,9 +218,46 @@ function codeErrorKey(e: FetchError): AuthErrorKey {
  * minute apart, no rolling 60s window can ever hold three sends.
  */
 const RESEND_COOLDOWN_MS = 60_000;
+const OTP_SEND_WAIT_TIMEOUT_MS = 5_000;
 const SESSION_REFRESH_DELAYS_MS = [0, 300, 800, 1_600] as const;
 const SESSION_REFRESH_ATTEMPT_TIMEOUT_MS = 1_500;
 const EMAIL_ADDRESS_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+type OtpSendResult = Awaited<ReturnType<typeof authClient.emailOtp.sendVerificationOtp>>;
+type BoundedOtpSendResult =
+  | { kind: "settled"; result: OtpSendResult }
+  | { kind: "timed_out" };
+
+/**
+ * Delivery and the client promise are not one fact. Production has delivered
+ * an OTP while this promise remained pending, so the UI may stop waiting
+ * without calling that a failure. Handlers stay attached after the timeout so
+ * a late rejection is consumed, but no late settlement can mutate UI state.
+ */
+function waitForOtpSend(send: Promise<OtpSendResult>): Promise<BoundedOtpSendResult> {
+  return new Promise((resolve, reject) => {
+    let finished = false;
+    const timeout = window.setTimeout(() => {
+      finished = true;
+      resolve({ kind: "timed_out" });
+    }, OTP_SEND_WAIT_TIMEOUT_MS);
+
+    void send.then(
+      (result) => {
+        if (finished) return;
+        finished = true;
+        window.clearTimeout(timeout);
+        resolve({ kind: "settled", result });
+      },
+      (error: unknown) => {
+        if (finished) return;
+        finished = true;
+        window.clearTimeout(timeout);
+        reject(error);
+      }
+    );
+  });
+}
 
 /**
  * Mini profile, in the shape Apple Maps uses for its account sheet.
@@ -268,6 +311,7 @@ export function ProfileSheet({
   const emailRef = useRef<HTMLInputElement>(null);
   const codeRef = useRef<HTMLInputElement>(null);
   const sessionChangeRef = useRef(onSessionChange);
+  const sendAttemptRef = useRef(0);
 
   useEffect(() => {
     sessionChangeRef.current = onSessionChange;
@@ -279,6 +323,7 @@ export function ProfileSheet({
   // to retype and never goes stale.
   useEffect(() => {
     if (open) return;
+    sendAttemptRef.current += 1;
     setSignIn({ kind: "idle" });
     setCode("");
     setSentAt(0);
@@ -290,7 +335,10 @@ export function ProfileSheet({
   // this reset, signing out in the same open sheet would reveal the old
   // "verified" state instead of the normal sign-in entry point.
   useEffect(() => {
-    if (signedIn) setSignIn({ kind: "idle" });
+    if (signedIn) {
+      sendAttemptRef.current += 1;
+      setSignIn({ kind: "idle" });
+    }
   }, [signedIn]);
 
   /**
@@ -384,21 +432,42 @@ export function ProfileSheet({
       return;
     }
     setSignIn({ kind: "email", sending: true, error: null });
-    try {
-      const { error } = await authClient.emailOtp.sendVerificationOtp({
-        email: address,
-        type: "sign-in",
-      });
-      if (error) {
-        setSignIn({ kind: "email", sending: false, error: sendErrorKey(error) });
-        return;
-      }
+    const attempt = ++sendAttemptRef.current;
+    const enterCodeStep = (delivery: "confirmed" | "indeterminate") => {
+      if (sendAttemptRef.current !== attempt) return;
       const at = Date.now();
       setCode("");
       setSentAt(at);
       setNow(at);
-      setSignIn({ kind: "code", email: address, checking: false, error: null });
+      setSignIn({
+        kind: "code",
+        email: address,
+        checking: false,
+        error: null,
+        delivery,
+      });
+    };
+
+    try {
+      const outcome = await waitForOtpSend(
+        authClient.emailOtp.sendVerificationOtp({
+          email: address,
+          type: "sign-in",
+        })
+      );
+      if (sendAttemptRef.current !== attempt) return;
+      if (outcome.kind === "timed_out") {
+        enterCodeStep("indeterminate");
+        return;
+      }
+      const { error } = outcome.result;
+      if (error) {
+        setSignIn({ kind: "email", sending: false, error: sendErrorKey(error) });
+        return;
+      }
+      enterCodeStep("confirmed");
     } catch (err) {
+      if (sendAttemptRef.current !== attempt) return;
       console.error("ProfileSheet: could not send the sign-in code", err);
       const providerError = thrownFetchError(err);
       setSignIn({
@@ -424,36 +493,59 @@ export function ProfileSheet({
     const address = signIn.email;
     const at = Date.now();
     setCode("");
+    const attempt = ++sendAttemptRef.current;
     // Optimistic: the countdown is the receipt, on the same frame as the tap.
     setSentAt(at);
     setNow(at);
-    setSignIn({ kind: "code", email: address, checking: false, error: null });
+    setSignIn({
+      kind: "code",
+      email: address,
+      checking: false,
+      error: null,
+      delivery: signIn.delivery,
+    });
     try {
       const { error } = await authClient.emailOtp.sendVerificationOtp({
         email: address,
         type: "sign-in",
       });
+      if (sendAttemptRef.current !== attempt) return;
       if (error) {
         // No code is coming, so a cooldown would only be a second dead end.
         setSentAt(0);
-        setSignIn({ kind: "code", email: address, checking: false, error: sendErrorKey(error) });
+        setSignIn((current) =>
+          current.kind === "code" && current.email === address
+            ? { ...current, checking: false, error: sendErrorKey(error) }
+            : current
+        );
+        return;
       }
+      setSignIn((current) =>
+        current.kind === "code" && current.email === address
+          ? { ...current, delivery: "confirmed" }
+          : current
+      );
     } catch (err) {
+      if (sendAttemptRef.current !== attempt) return;
       console.error("ProfileSheet: could not resend the sign-in code", err);
       setSentAt(0);
       const providerError = thrownFetchError(err);
-      setSignIn({
-        kind: "code",
-        email: address,
-        checking: false,
-        error: providerError ? sendErrorKey(providerError) : "auth.err_send_network",
-      });
+      setSignIn((current) =>
+        current.kind === "code" && current.email === address
+          ? {
+              ...current,
+              checking: false,
+              error: providerError ? sendErrorKey(providerError) : "auth.err_send_network",
+            }
+          : current
+      );
     }
   }, [signIn, cooling]);
 
   const submitCode = useCallback(
     async (otp: string) => {
       if (signIn.kind !== "code") return;
+      sendAttemptRef.current += 1;
       setSignIn({ ...signIn, checking: true, error: null });
       try {
         const { error } = await authClient.signIn.emailOtp({ email: signIn.email, otp });
@@ -554,8 +646,13 @@ export function ProfileSheet({
     identityName = user.name || user.email;
     identitySub = user.name ? user.email : null;
   } else if (signIn.kind === "code") {
-    identityName = t("auth.check_mail");
-    identitySub = t("auth.sent_to", { email: signIn.email });
+    if (signIn.delivery === "indeterminate") {
+      identityName = signIn.email;
+      identitySub = null;
+    } else {
+      identityName = t("auth.check_mail");
+      identitySub = t("auth.sent_to", { email: signIn.email });
+    }
   } else if (signIn.kind === "verified") {
     identityName = t("auth.code_accepted");
     identitySub = signIn.email;
@@ -766,7 +863,10 @@ export function ProfileSheet({
                   </button>
                   <button
                     type="button"
-                    onClick={() => setSignIn({ kind: "email", sending: false, error: null })}
+                    onClick={() => {
+                      sendAttemptRef.current += 1;
+                      setSignIn({ kind: "email", sending: false, error: null });
+                    }}
                     className="min-h-tap text-subhead text-accent active:opacity-60"
                   >
                     {t("auth.different_email")}
