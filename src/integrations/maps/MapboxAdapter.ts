@@ -2028,7 +2028,11 @@ export class MapboxAdapter implements MapProviderAdapter {
 
       const effectivePadding = {
         top: Math.max(this.padding.top || 0, 80),
-        bottom: Math.max(this.padding.bottom || 0, isMobile ? Math.round(containerHeight * 0.45) : 80),
+        // A snapped mobile sheet occupies most of the lower canvas. Reserve a
+        // larger route viewport than ordinary map movement so both endpoints
+        // and the full line are framed together above the sheet, rather than
+        // leaving the user to zoom out and pan after every selection.
+        bottom: Math.max(this.padding.bottom || 0, isMobile ? Math.round(containerHeight * 0.64) : 80),
         left: Math.max(this.padding.left || 0, isMobile ? 30 : Math.min(460, Math.round(containerWidth * 0.42))),
         right: Math.max(this.padding.right || 0, 30),
       };

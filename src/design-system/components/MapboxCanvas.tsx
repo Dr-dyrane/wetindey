@@ -34,6 +34,7 @@ import {
   useFreshDeviceLocation,
   type DeviceLocation
 } from "@/core/state/locationStore";
+import { motion, useReducedMotion } from "@/design-system/motion";
 import { MapLoading, MapFailed } from "./MapLoader";
 
 interface MapMarkerData {
@@ -470,6 +471,7 @@ export const MapboxCanvas = forwardRef<MapCameraHandle, MapboxCanvasProps>(funct
    * takes the padding directly.
    */
   const paddingSettled = useRef(false);
+  const reducedMotion = useReducedMotion();
   useEffect(() => {
     const adapter = adapterRef.current;
     if (!adapter) return;
@@ -587,16 +589,26 @@ export const MapboxCanvas = forwardRef<MapCameraHandle, MapboxCanvasProps>(funct
    * the camera reacting to geometry, not a caller driving it.
    *
    * Keyed on `route` identity, deliberately: `mapPadding` is NOT in the deps.
-   * Re-fitting every time the sheet moves would fight the user's own drag, and
-   * `setPadding` already slides the same centre into the new band. We frame
-   * once, when the line changes, and then leave the camera alone.
+   * Re-fitting every time the sheet moves would fight the user's own drag. We
+   * frame immediately, then once more after the shared sheet transition has
+   * settled so a newly opened detail sheet cannot leave either endpoint
+   * outside the final visible map band.
    */
   useEffect(() => {
     const adapter = adapterRef.current;
     if (!adapter) return;
     adapter.setRoute(route, routeTint ? { tint: routeTint } : undefined);
-    if (route && route.length >= 2) adapter.fitRoute(route);
-  }, [route, routeTint, ready]);
+    if (!route || route.length < 2) return;
+
+    adapter.fitRoute(route);
+    if (reducedMotion) return;
+
+    const settleTimer = window.setTimeout(() => {
+      if (adapterRef.current === adapter) adapter.fitRoute(route);
+    }, motion.duration.slow);
+
+    return () => window.clearTimeout(settleTimer);
+  }, [route, routeTint, ready, reducedMotion]);
 
   useImperativeHandle(
     ref,

@@ -574,6 +574,7 @@ Owner: Codex Controller, taking over the completed Antigravity handoff. Exclusiv
 - `src/app/_components/map-presentation/imports/imports.ts`
 - `src/app/_components/map-presentation/views/MapPresentationView.tsx`
 - `src/design-system/components/MapboxCanvas.tsx`
+- `src/integrations/maps/MapboxAdapter.ts`
 - `src/lib/directions.ts`
 - `LANES.md`
 

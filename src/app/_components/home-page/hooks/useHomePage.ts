@@ -952,14 +952,14 @@ export function useHomePage() {
 
   const routeTargetLat =
     activeCategory === "food"
-      ? (getItTarget?.lat ?? null)
+      ? (getItTarget?.lat ?? detailPlace?.location.lat ?? null)
       : activeCategory === "money"
         ? (selectedExchangeLocation?.lat ?? null)
         : null;
 
   const routeTargetLng =
     activeCategory === "food"
-      ? (getItTarget?.lng ?? null)
+      ? (getItTarget?.lng ?? detailPlace?.location.lng ?? null)
       : activeCategory === "money"
         ? (selectedExchangeLocation?.lng ?? null)
         : null;
@@ -973,7 +973,7 @@ export function useHomePage() {
   useEffect(() => {
     setRouteOrigin(null);
     setRoute(null);
-  }, [getItTarget?.placeId, selectedExchangeLocationId]);
+  }, [detailPlaceId, getItTarget?.placeId, selectedExchangeLocationId]);
 
   useEffect(() => {
     setRoute(null);
