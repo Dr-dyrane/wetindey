@@ -139,8 +139,8 @@ export function ExchangePanelView({
       {/* 1. HERO RATE CARD (Slender  HIG Container) */}
       <section aria-label="Reference Rate Answer" className="squircle-card bg-surface-card p-3.5 space-y-2">
         <div className="flex items-center justify-between gap-2">
-          <span className="text-caption-1 font-semibold uppercase tracking-[0.08em] text-text-tertiary">
-            {visibleRate ? providerLabel(visibleRate) : "CBN Reference"}
+          <span className="text-caption-1 font-semibold text-text-secondary">
+            {visibleRate ? providerLabel(visibleRate) : "CBN reference"}
           </span>
           {visibleRate && (
             <span className="text-caption-2 font-medium text-text-tertiary">
