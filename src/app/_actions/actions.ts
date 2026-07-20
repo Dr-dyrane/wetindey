@@ -29,7 +29,7 @@ import {
   type TrustAssessment,
   type TrustObservation,
 } from "@/lib/trust";
-import { calculateFoodPriceTrend, type RawObservationPoint } from "@/core/food-trend";
+import { calculateCohortFoodPriceTrend, type CohortObservationPoint } from "@/core/food-trend";
 
 export interface ReadTrust {
   confidenceScore: number;
@@ -835,29 +835,56 @@ export async function getPopularItems(input: {
     lastObservedAt: Date | null;
   };
 
+  interface ObsRow {
+    itemId: string;
+    variantId: string;
+    unitId: string;
+    priceAmount: number;
+    observedAt: string | Date;
+    availabilityState: string;
+    provenance: string;
+    placeId: string;
+    sourceId: string;
+  }
+
   const cardRows = rows.rows as unknown as Row[];
   const trustKeys = cardRows
     .map((row) => nullableOfferKey(row))
     .filter((key): key is OfferKey => key !== null);
   const trustByKey = await getOfferTrustBatch(trustKeys);
 
-  const itemIds = cardRows.map((r) => r.id);
-  const obsRows = itemIds.length > 0 ? await db.execute(sql`
+  const cohortTuples = cardRows
+    .filter((r) => r.trustVariantId && r.trustUnitId)
+    .map((r) => ({ itemId: r.id, variantId: r.trustVariantId, unitId: r.trustUnitId }));
+
+  const obsRows = cohortTuples.length > 0 ? await db.execute(sql`
     SELECT
-      v.item_id AS "itemId",
-      o.price_amount AS "priceAmount",
-      o.observed_at AS "observedAt",
-      o.availability_state AS "availabilityState",
-      o.provenance,
-      o.place_id AS "placeId"
+      v.item_id               AS "itemId",
+      o.item_variant_id       AS "variantId",
+      o.unit_id               AS "unitId",
+      o.price_amount          AS "priceAmount",
+      o.observed_at           AS "observedAt",
+      o.availability_state    AS "availabilityState",
+      o.provenance            AS "provenance",
+      o.place_id              AS "placeId",
+      o.source_id             AS "sourceId"
     FROM ${observations} o
     JOIN ${itemVariants} v ON v.id = o.item_variant_id
-    WHERE v.item_id IN (${sql.join(itemIds.map((id) => sql`${id}`), sql`, `)})
-      AND o.moderation_status = 'approved'
+    JOIN ${places} pl ON pl.id = o.place_id
+    WHERE o.moderation_status = 'approved'
+      AND o.availability_state = 'available'
+      AND o.observed_at > now() - interval '14 days'
+      AND ST_DWithin(pl.location, ${origin}::geography, ${radiusM})
+      AND (${sql.join(
+        cohortTuples.map((t) => sql`(o.item_variant_id = ${t.variantId} AND o.unit_id = ${t.unitId})`),
+        sql` OR `
+      )})
   `) : { rows: [] };
 
-  const obsByItem = new Map<string, RawObservationPoint[]>();
-  for (const row of obsRows.rows as any[]) {
+  const parsedObsRows = obsRows.rows as unknown as ObsRow[];
+  const obsByItem = new Map<string, CohortObservationPoint[]>();
+
+  for (const row of parsedObsRows) {
     const list = obsByItem.get(row.itemId) ?? [];
     list.push({
       priceAmount: Number(row.priceAmount),
@@ -865,6 +892,7 @@ export async function getPopularItems(input: {
       availabilityState: String(row.availabilityState),
       provenance: String(row.provenance),
       placeId: String(row.placeId),
+      sourceId: String(row.sourceId),
     });
     obsByItem.set(row.itemId, list);
   }
@@ -872,6 +900,19 @@ export async function getPopularItems(input: {
   return cardRows.map((r) => {
     const trustKey = nullableOfferKey(r);
     const itemObs = obsByItem.get(r.id) ?? [];
+
+    // Separate observed vs synthetic candidate cohorts (never merge observed and synthetic prices)
+    const observedPoints = itemObs.filter(
+      (o) => o.provenance === "device" || o.provenance === "partner"
+    );
+    const syntheticPoints = itemObs.filter((o) => o.provenance === "synthetic");
+
+    const observedTrend = calculateCohortFoodPriceTrend(observedPoints, "observed");
+    const foodTrend =
+      observedTrend.state !== "insufficient"
+        ? observedTrend
+        : calculateCohortFoodPriceTrend(syntheticPoints, "sample");
+
     return {
       id: r.id,
       slug: r.slug,
@@ -888,7 +929,7 @@ export async function getPopularItems(input: {
       priceTo: r.priceTo ?? null,
       trust: readTrustForKey(trustByKey, trustKey, r.trustAvailabilityState),
       lastObservedAt: r.lastObservedAt ? new Date(r.lastObservedAt).toISOString() : null,
-      foodTrend: calculateFoodPriceTrend(itemObs),
+      foodTrend,
     };
   });
 }

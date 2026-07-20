@@ -1,9 +1,8 @@
 /**
  * Food Price Trend Engine
  *
- * Computes authoritative 7-day food price trends by comparing median prices
- * of available-price observations in the current 7-day window vs the previous
- * 7-day window (7-14 days ago) for identical item variants and units.
+ * Computes authoritative 7-day food price trends across an already validated,
+ * homogeneous cohort (same variant, unit, geography, provenance origin).
  */
 
 export type FoodPriceTrend =
@@ -20,12 +19,13 @@ export type FoodPriceTrend =
       label: string;
     };
 
-export interface RawObservationPoint {
+export interface CohortObservationPoint {
   priceAmount: number;
   observedAt: Date | number;
   availabilityState: string;
-  provenance: string;
+  provenance: "device" | "synthetic" | "partner" | "reference" | "inferred" | string;
   placeId: string;
+  sourceId: string;
 }
 
 function computeMedian(values: number[]): number {
@@ -37,68 +37,99 @@ function computeMedian(values: number[]): number {
     : (sorted[mid - 1] + sorted[mid]) / 2;
 }
 
-export function calculateFoodPriceTrend(
-  observations: readonly RawObservationPoint[],
+interface WindowStats {
+  validCount: number;
+  placeCount: number;
+  sourceCount: number;
+  marketMedian: number;
+}
+
+function evaluateWindow(
+  observations: readonly CohortObservationPoint[],
+  minAgeMs: number,
+  maxAgeMs: number,
+  now: number
+): WindowStats | null {
+  const windowObs = observations.filter((obs) => {
+    if (obs.availabilityState !== "available" || !Number.isFinite(obs.priceAmount) || obs.priceAmount <= 0) {
+      return false;
+    }
+    const time = typeof obs.observedAt === "number" ? obs.observedAt : obs.observedAt.getTime();
+    const age = now - time;
+    return age >= minAgeMs && age <= maxAgeMs;
+  });
+
+  const places = new Set<string>();
+  const sources = new Set<string>();
+  const obsByPlace = new Map<string, number[]>();
+
+  for (const obs of windowObs) {
+    places.add(obs.placeId);
+    sources.add(obs.sourceId);
+    const list = obsByPlace.get(obs.placeId) ?? [];
+    list.push(obs.priceAmount);
+    obsByPlace.set(obs.placeId, list);
+  }
+
+  // Threshold: >= 3 valid observations, >= 2 distinct places, >= 2 independent sources
+  if (windowObs.length < 3 || places.size < 2 || sources.size < 2) {
+    return null;
+  }
+
+  // Calculate median for each place to prevent one reporter from dominating, then market median
+  const placeMedians: number[] = [];
+  for (const [, prices] of obsByPlace.entries()) {
+    placeMedians.push(computeMedian(prices));
+  }
+
+  const marketMedian = computeMedian(placeMedians);
+  if (marketMedian <= 0) return null;
+
+  return {
+    validCount: windowObs.length,
+    placeCount: places.size,
+    sourceCount: sources.size,
+    marketMedian,
+  };
+}
+
+export function calculateCohortFoodPriceTrend(
+  observations: readonly CohortObservationPoint[],
+  origin: "observed" | "sample",
   now: number = Date.now()
 ): FoodPriceTrend {
   const MS_PER_DAY = 24 * 60 * 60 * 1000;
   const SEVEN_DAYS_MS = 7 * MS_PER_DAY;
   const FOURTEEN_DAYS_MS = 14 * MS_PER_DAY;
 
-  // Filter available-price observations only
-  const available = observations.filter(
-    (o) => o.availabilityState === "available" && Number.isFinite(o.priceAmount) && o.priceAmount > 0
-  );
+  // Evaluate current (0-7d) and previous (7d-14d) windows
+  const current = evaluateWindow(observations, 0, SEVEN_DAYS_MS, now);
+  const previous = evaluateWindow(observations, SEVEN_DAYS_MS, FOURTEEN_DAYS_MS, now);
 
-  const currentWindowPrices: number[] = [];
-  const previousWindowPrices: number[] = [];
-  const currentPlaces = new Set<string>();
-  const previousPlaces = new Set<string>();
-  let hasSynthetic = false;
+  if (!current || !previous) {
+    return { state: "insufficient", label: "Not enough history" };
+  }
 
-  for (const obs of available) {
+  const rawChangePercent = ((current.marketMedian - previous.marketMedian) / previous.marketMedian) * 100;
+  const changePercent = Math.round(rawChangePercent * 10) / 10;
+
+  const totalObsCount = current.validCount + previous.validCount;
+  const allPlaces = new Set<string>();
+  for (const obs of observations) {
     const time = typeof obs.observedAt === "number" ? obs.observedAt : obs.observedAt.getTime();
     const age = now - time;
-
-    if (obs.provenance === "synthetic" || obs.provenance === "sample") {
-      hasSynthetic = true;
-    }
-
-    if (age >= 0 && age <= SEVEN_DAYS_MS) {
-      currentWindowPrices.push(obs.priceAmount);
-      currentPlaces.add(obs.placeId);
-    } else if (age > SEVEN_DAYS_MS && age <= FOURTEEN_DAYS_MS) {
-      previousWindowPrices.push(obs.priceAmount);
-      previousPlaces.add(obs.placeId);
+    if (age >= 0 && age <= FOURTEEN_DAYS_MS) {
+      allPlaces.add(obs.placeId);
     }
   }
-
-  // Require evidence in both comparison windows (current 7d and previous 7d)
-  if (currentWindowPrices.length === 0 || previousWindowPrices.length === 0) {
-    return { state: "insufficient", label: "Not enough history" };
-  }
-
-  const currentMedian = computeMedian(currentWindowPrices);
-  const previousMedian = computeMedian(previousWindowPrices);
-
-  if (previousMedian <= 0) {
-    return { state: "insufficient", label: "Not enough history" };
-  }
-
-  const rawChangePercent = ((currentMedian - previousMedian) / previousMedian) * 100;
-  const changePercent = Math.round(rawChangePercent * 10) / 10; // 1 decimal place
-
-  const allPlaces = new Set([...currentPlaces, ...previousPlaces]);
-  const totalObsCount = currentWindowPrices.length + previousWindowPrices.length;
-  const origin: "observed" | "sample" = hasSynthetic ? "sample" : "observed";
 
   let state: "up" | "down" | "stable" = "stable";
   let label = "Stable this week";
 
-  if (changePercent >= 1.0) {
+  if (changePercent >= 2.0) {
     state = "up";
     label = `Up ${Math.round(changePercent)}% this week`;
-  } else if (changePercent <= -1.0) {
+  } else if (changePercent <= -2.0) {
     state = "down";
     label = `Down ${Math.abs(Math.round(changePercent))}% this week`;
   }
@@ -107,8 +138,8 @@ export function calculateFoodPriceTrend(
     state,
     window: "7d",
     changePercent,
-    currentMedian,
-    previousMedian,
+    currentMedian: current.marketMedian,
+    previousMedian: previous.marketMedian,
     observationCount: totalObsCount,
     placeCount: allPlaces.size,
     origin,

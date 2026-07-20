@@ -387,39 +387,43 @@ const run = async () => {
 
       const premium = place.placeType === "supermarket" ? 1.08 : place.placeType === "kiosk" ? 1.04 : 0.96;
 
-      // Generate multi-window historical observations (current 7d vs previous 7d-14d)
-      // to support deterministic, realistic food price trend calculations.
-      const isRising = variant.slug.includes("rice");
-      const isFalling = variant.slug.includes("garri");
-      const priceMultiplierCurrent = isRising ? 1.05 : isFalling ? 0.94 : 1.0;
-      const priceMultiplierPrevious = isRising ? 0.98 : isFalling ? 1.02 : 1.0;
+      // Generate controlled scenario historical observations (current 7d vs previous 7d-14d)
+      // with fresh newest observations (2-12h) to support authentic food price trend calculations.
+      const isRice = variant.slug.includes("rice");
+      const isGarri = variant.slug.includes("garri");
+
+      // Controlled baseline price for this variant & place
+      const baseMid = Math.round((band.min + band.max) / 2 * premium / 50) * 50;
+
+      // Trend multipliers: Rice +6%, Garri -6%, others stable
+      const currentMultiplier = isRice ? 1.06 : isGarri ? 0.94 : 1.0;
+      const previousMultiplier = 1.0;
 
       const available = random() > 0.12;
       const observations: Array<{ at: Date; price: number; sourceId: string }> = [];
 
-      // Current 7-day window observations
-      const currentCount = 2 + Math.floor(random() * 2);
-      for (let i = 0; i < currentCount; i++) {
-        const ageH = (i + 1) * 36 + random() * 12; // 1 to 5 days ago
-        const basePrice = (band.min + random() * (band.max - band.min)) * premium;
-        const price = Math.round(basePrice * priceMultiplierCurrent / 50) * 50; // round to nearest ₦50
+      // Current 7-day window: 3 observations, newest fresh (2-12h ago)
+      const newestAgeH = 2 + random() * 10; // 2 to 12 hours ago (FRESH!)
+      for (let i = 0; i < 3; i++) {
+        const ageH = i === 0 ? newestAgeH : i * 48 + random() * 12; // 2h, 48h, 96h
+        const jitter = (random() - 0.5) * 0.008; // tiny bounded jitter (< 0.8%)
+        const price = Math.max(100, Math.round(baseMid * currentMultiplier * (1 + jitter) / 50) * 50);
         observations.push({
           at: hoursAgo(runStartedAt, ageH),
-          price: Math.max(100, price),
+          price,
           sourceId: sourcesList[i % sourcesList.length].id,
         });
       }
 
-      // Previous 7d-14d window observations
-      const previousCount = 2 + Math.floor(random() * 2);
-      for (let i = 0; i < previousCount; i++) {
-        const ageH = 168 + (i + 1) * 36 + random() * 12; // 7 to 13 days ago
-        const basePrice = (band.min + random() * (band.max - band.min)) * premium;
-        const price = Math.round(basePrice * priceMultiplierPrevious / 50) * 50;
+      // Previous 7d-14d window: 3 observations
+      for (let i = 0; i < 3; i++) {
+        const ageH = 168 + i * 48 + random() * 12; // 7 to 13 days ago
+        const jitter = (random() - 0.5) * 0.008;
+        const price = Math.max(100, Math.round(baseMid * previousMultiplier * (1 + jitter) / 50) * 50);
         observations.push({
           at: hoursAgo(runStartedAt, ageH),
-          price: Math.max(100, price),
-          sourceId: sourcesList[(currentCount + i) % sourcesList.length].id,
+          price,
+          sourceId: sourcesList[(i + 1) % sourcesList.length].id,
         });
       }
 

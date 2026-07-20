@@ -802,7 +802,7 @@ export function useHomePage() {
         movement ? `, moved ${movement}` : ""
       }.`,
       visual: "food",
-      trendTone: !trend ? "neutral" : trend.state === "up" ? "positive" : trend.state === "down" ? "negative" : "neutral",
+      trendTone: !trend ? "neutral" : trend.state === "up" ? "negative" : trend.state === "down" ? "positive" : "neutral",
     }];
   }, [activeCategory, popularItems, usdHeaderRate]);
 

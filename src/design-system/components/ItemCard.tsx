@@ -205,14 +205,13 @@ export function ItemCard({
             <span
               className={`squircle px-1.5 py-0.5 text-caption-2 font-bold tabular-nums ${
                 item.foodTrend.state === "up"
-                  ? "bg-status-confirmed-bg text-status-confirmed-fg"
+                  ? "bg-status-caution-bg text-status-caution-fg"
                   : item.foodTrend.state === "down"
-                    ? "bg-status-caution-bg text-status-caution-fg"
+                    ? "bg-status-confirmed-bg text-status-confirmed-fg"
                     : "bg-fillSecondary text-text-secondary"
               }`}
             >
               {item.foodTrend.label}
-              {item.foodTrend.origin === "sample" ? " (Sample)" : ""}
             </span>
           )}
           {item.placeCount ? (
