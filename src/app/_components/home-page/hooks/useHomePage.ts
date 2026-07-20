@@ -880,20 +880,6 @@ export function useHomePage() {
     setRoute(null);
   }, [getItTarget?.placeId, selectedExchangeLocationId]);
 
-  const activeRouteOrigin = useMemo<DisclosedRouteOrigin>(
-    () =>
-      routeOrigin ?? {
-        lat: searchOrigin.lat,
-        lng: searchOrigin.lng,
-        disclosedAt: Date.now(),
-        accuracyM: 10,
-        capturedAt: Date.now(),
-        receivedAt: Date.now(),
-        provenance: "device",
-      },
-    [routeOrigin, searchOrigin.lat, searchOrigin.lng]
-  );
-
   useEffect(() => {
     setRoute(null);
     if (
@@ -902,9 +888,20 @@ export function useHomePage() {
     )
       return;
 
+    const now = Date.now();
+    const origin: DisclosedRouteOrigin = routeOrigin ?? {
+      lat: searchOrigin.lat,
+      lng: searchOrigin.lng,
+      accuracyM: 10,
+      capturedAt: now,
+      receivedAt: now,
+      disclosedAt: now,
+      provenance: "device",
+    };
+
     const controller = new AbortController();
     void fetchRoute(
-      activeRouteOrigin,
+      origin,
       { lat: routeTargetLat, lng: routeTargetLng },
       controller.signal
     ).then((geometry) => {
@@ -913,7 +910,7 @@ export function useHomePage() {
     });
 
     return () => controller.abort();
-  }, [activeCategory, activeRouteOrigin, routeTargetLat, routeTargetLng]);
+  }, [activeCategory, routeOrigin, searchOrigin.lat, searchOrigin.lng, routeTargetLat, routeTargetLng]);
 
   return {
     theme,
