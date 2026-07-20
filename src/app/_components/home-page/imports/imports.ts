@@ -35,10 +35,6 @@ import {
   type ExchangeLocationFilter
 } from "@/app/_components/ExchangePanel";
 import {
-  EXCHANGE_SAMPLE_LOCATIONS,
-  type ExchangeSampleLocation
-} from "@/app/_data/exchange-sample-locations";
-import {
   ItemDetailSheet,
   type OfferPresentation,
   type PresentedOffer
@@ -109,7 +105,6 @@ export {
   CategorySelectorSheet,
   useLocationIdentity,
   ExchangePanel,
-  EXCHANGE_SAMPLE_LOCATIONS,
   ItemDetailSheet,
   PresentationHost,
   GetItSheet,
@@ -140,7 +135,6 @@ export type {
   ReactNode,
   ItemCardData,
   ExchangeLocationFilter,
-  ExchangeSampleLocation,
   OfferPresentation,
   PresentedOffer,
   VisitContext,

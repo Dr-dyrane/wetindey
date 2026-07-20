@@ -20,8 +20,8 @@ import { CurrencyFlag } from "@/app/_components/CurrencyFlag";
 import { CurrencyPickerSheet } from "@/app/_components/CurrencyPickerSheet";
 import type {
   ExchangeLocationKind,
-  ExchangeSampleLocation,
-} from "@/app/_data/exchange-sample-locations";
+  ExchangeLocation,
+} from "@/integrations/maps/MapboxNearbyExchangeSearch";
 import { formatDistance, getHaversineDistance } from "@/lib/geospatial";
 
 export {
@@ -48,7 +48,7 @@ export {
   CurrencyFlag,
   CurrencyPickerSheet,
   type ExchangeLocationKind,
-  type ExchangeSampleLocation,
+  type ExchangeLocation,
   formatDistance,
   getHaversineDistance,
 };

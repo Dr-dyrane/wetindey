@@ -17,9 +17,11 @@ import { type ItemCardData } from "@/design-system/components/ItemCard";
 import { useLocationIdentity } from "@/app/_hooks/useLocationIdentity";
 import type { ExchangeLocationFilter } from "@/app/_components/ExchangePanel";
 import {
-  EXCHANGE_SAMPLE_LOCATIONS,
-  type ExchangeSampleLocation
-} from "@/app/_data/exchange-sample-locations";
+  getNearbyExchangeLocations,
+  type ExchangeLocationDiscoveryResult,
+} from "@/app/_actions/exchange-location-actions";
+import { EXCHANGE_SAMPLE_LOCATIONS } from "@/app/_data/exchange-sample-locations";
+import type { ExchangeLocation } from "@/integrations/maps/MapboxNearbyExchangeSearch";
 import type { PresentedOffer, OfferPresentation } from "@/app/_components/ItemDetailSheet";
 import type { GetItTarget } from "@/app/_components/GetItSheet";
 import {
@@ -170,6 +172,9 @@ export function useHomePage() {
   const [activeCategory, setActiveCategory] = useState<CategoryPillar>("food");
   const [isCategoryOpen, setIsCategoryOpen] = useState(false);
   const [exchangeFilter, setExchangeFilter] = useState<ExchangeLocationFilter>("all");
+  const [exchangeLocations, setExchangeLocations] = useState<ExchangeLocation[]>([]);
+  const [exchangeLocationDiscoveryStatus, setExchangeLocationDiscoveryStatus] =
+    useState<ExchangeLocationDiscoveryResult["status"] | "loading" | "sample">("loading");
   const [selectedExchangeLocationId, setSelectedExchangeLocationId] = useState<string | null>(
     null
   );
@@ -679,16 +684,36 @@ export function useHomePage() {
     });
   });
 
+  useEffect(() => {
+    if (activeCategory !== "money") return;
+    let cancelled = false;
+    setExchangeLocations([]);
+    setExchangeLocationDiscoveryStatus("loading");
+    void getNearbyExchangeLocations(searchOrigin).then((result) => {
+      if (cancelled) return;
+      if (result.locations.length === 0) {
+        setExchangeLocations([...EXCHANGE_SAMPLE_LOCATIONS]);
+        setExchangeLocationDiscoveryStatus("sample");
+        return;
+      }
+      setExchangeLocations(result.locations);
+      setExchangeLocationDiscoveryStatus("ready");
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [activeCategory, searchOrigin]);
+
   const filteredExchangeLocations = useMemo(
     () =>
       exchangeFilter === "all"
-        ? EXCHANGE_SAMPLE_LOCATIONS
-        : EXCHANGE_SAMPLE_LOCATIONS.filter((location) => location.kind === exchangeFilter),
-    [exchangeFilter]
+        ? exchangeLocations
+        : exchangeLocations.filter((location) => location.kind === exchangeFilter),
+    [exchangeFilter, exchangeLocations]
   );
 
   const handleSelectExchangeLocation = useEventCallback(
-    (location: ExchangeSampleLocation) => {
+    (location: ExchangeLocation) => {
       setSelectedExchangeLocationId(location.id);
       setCameraCenter({ lat: location.lat, lng: location.lng });
       setActiveDetent("medium");
@@ -705,7 +730,7 @@ export function useHomePage() {
    */
   const handleMarkerSelection = useEventCallback((placeId: string) => {
     if (activeCategory === "money") {
-      const match = EXCHANGE_SAMPLE_LOCATIONS.find((location) => location.id === placeId);
+      const match = exchangeLocations.find((location) => location.id === placeId);
       if (match) handleSelectExchangeLocation(match);
       return;
     }
@@ -767,7 +792,9 @@ export function useHomePage() {
         placeType: location.kind === "bank" ? "bank" : "bureau_de_change",
         lat: location.lat,
         lng: location.lng,
-        address: `${location.description} · Sample`
+        address: `${location.description} · ${
+          location.provenance === "sample" ? "Sample" : "Map listing"
+        }`
       }));
     }
 
@@ -954,6 +981,7 @@ export function useHomePage() {
     handleItemOffersChange,
     handleSelectOffer,
     filteredExchangeLocations,
+    exchangeLocationDiscoveryStatus,
     handleSelectExchangeLocation,
     handleMarkerSelection,
     handleCategoryChange,

@@ -112,6 +112,25 @@ function persistedLocationCandidate(value: unknown): BrowsingLocation | null {
 }
 
 /**
+ * Versions before browsing/device separation could persist an outside-coverage
+ * physical fix as the browsing origin. New device selection writes an area slug
+ * only after coverage succeeds, so a persisted device origin without one is
+ * legacy physical evidence and must fall back to the canonical Lagos default.
+ */
+function canonicalPersistedBrowsingLocation(
+  candidate: BrowsingLocation | null
+): BrowsingLocation {
+  if (
+    !candidate ||
+    candidate.provenance === "default" ||
+    (candidate.provenance === "device" && candidate.areaSlug === null)
+  ) {
+    return DEFAULT_BROWSING_LOCATION;
+  }
+  return candidate;
+}
+
+/**
  * Versions 1–2 persisted the overloaded field as `position`. A device-derived
  * value survives only as the browsing choice it already represented; it never
  * rehydrates physical evidence into the new session-only `deviceLocation`.
@@ -122,10 +141,7 @@ export function migratePersistedLocationState(
 ): PersistedLocationState {
   const candidate = persistedLocationCandidate(persistedState);
   return {
-    browsingLocation:
-      candidate && candidate.provenance !== "default"
-        ? candidate
-        : DEFAULT_BROWSING_LOCATION,
+    browsingLocation: canonicalPersistedBrowsingLocation(candidate),
   };
 }
 
@@ -330,10 +346,7 @@ export function mergePersistedLocationState(
   const candidate = persistedLocationCandidate(persistedState);
   return {
     ...currentState,
-    browsingLocation:
-      candidate && candidate.provenance !== "default"
-        ? candidate
-        : DEFAULT_BROWSING_LOCATION,
+    browsingLocation: canonicalPersistedBrowsingLocation(candidate),
     // Persistence can never restore a personal fix.
     deviceLocation: null,
   };

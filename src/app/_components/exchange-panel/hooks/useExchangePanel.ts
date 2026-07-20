@@ -14,18 +14,23 @@ import {
 } from "@/app/_data/reference-currencies";
 import type {
   ExchangeLocationKind,
-  ExchangeSampleLocation,
-} from "@/app/_data/exchange-sample-locations";
+  ExchangeLocation,
+} from "@/integrations/maps/MapboxNearbyExchangeSearch";
+import type { ExchangeLocationDiscoveryResult } from "@/app/_actions/exchange-location-actions";
 
 export type ExchangeLocationFilter = "all" | ExchangeLocationKind;
 
 export interface ExchangePanelProps {
   origin: { lat: number; lng: number };
-  locations: readonly ExchangeSampleLocation[];
+  locations: readonly ExchangeLocation[];
+  locationDiscoveryStatus:
+    | ExchangeLocationDiscoveryResult["status"]
+    | "loading"
+    | "sample";
   filter: ExchangeLocationFilter;
   onFilterChange: (filter: ExchangeLocationFilter) => void;
   selectedLocationId: string | null;
-  onSelectLocation: (location: ExchangeSampleLocation) => void;
+  onSelectLocation: (location: ExchangeLocation) => void;
 }
 
 export interface CachedRate extends ReferenceRate {
@@ -264,56 +269,23 @@ function writeSessionAmount(field: AmountField, value: string) {
   } catch {}
 }
 
-export const REFERENCE_RATE_TO_NGN: Record<string, number> = {
-  USD: 1388.89,
-  GBP: 1892.10,
-  EUR: 1615.40,
-  CAD: 1090.25,
-  AUD: 920.00,
-  GHS: 95.50,
-  KES: 11.40,
-  ZAR: 82.60,
-  AED: 404.50,
-  CNY: 205.10,
-  INR: 17.75,
-  BRL: 268.30,
-  CHF: 1720.00,
-  JPY: 9.45,
-  SAR: 396.10,
-  NGN: 1.0,
-};
-
 export function getCrossRate(
-  topCurrency: string | null,
-  bottomCurrency: string | null,
+  topCurrency: SupportedReferenceCurrencyCode | null,
+  bottomCurrency: SupportedReferenceCurrencyCode | null,
   liveRate?: ReferenceRate | null
-): number {
-  const top = topCurrency ?? "USD";
-  const bottom = bottomCurrency ?? "NGN";
-  if (top === bottom) return 1.0;
-
-  const topNgn =
-    top === "NGN"
-      ? 1.0
-      : liveRate && liveRate.base === top
-        ? liveRate.rate
-        : (REFERENCE_RATE_TO_NGN[top] ?? 1388.89);
-
-  const bottomNgn =
-    bottom === "NGN"
-      ? 1.0
-      : liveRate && liveRate.base === bottom
-        ? liveRate.rate
-        : (REFERENCE_RATE_TO_NGN[bottom] ?? 1.0);
-
-  return topNgn / bottomNgn;
+): number | null {
+  if (!topCurrency || !bottomCurrency) return null;
+  if (topCurrency === bottomCurrency) return 1;
+  return liveRate?.base === topCurrency && liveRate.quote === bottomCurrency
+    ? liveRate.rate
+    : null;
 }
 
 export function deriveAmount(
   state: AmountState,
   rate: ReferenceRate | null,
-  topCurrency?: string | null,
-  bottomCurrency?: string | null
+  topCurrency?: SupportedReferenceCurrencyCode | null,
+  bottomCurrency?: SupportedReferenceCurrencyCode | null
 ): AmountState {
   const edited = state[state.lastEdited];
   const parsed = parseAmount(edited);
@@ -324,6 +296,9 @@ export function deriveAmount(
   }
 
   const crossRate = getCrossRate(topCurrency ?? "USD", bottomCurrency ?? "NGN", rate);
+  if (crossRate === null) {
+    return { ...state, [other]: "" };
+  }
   const converted =
     state.lastEdited === "foreign" ? parsed.value * crossRate : parsed.value / crossRate;
 
@@ -353,7 +328,8 @@ export function useExchangePanel({
   const currencyRef = useRef<SupportedReferenceCurrencyCode | null>(null);
   const amountsRef = useRef<AmountState>(EMPTY_AMOUNTS);
   const [currency, setCurrency] = useState<SupportedReferenceCurrencyCode | null>(null);
-  const [baseCurrency, setBaseCurrency] = useState<string>("NGN");
+  const [baseCurrency, setBaseCurrency] =
+    useState<SupportedReferenceCurrencyCode>("NGN");
   const [amounts, setAmounts] = useState<AmountState>(EMPTY_AMOUNTS);
   const [catalogRetry, setCatalogRetry] = useState(0);
   const [rateRetry, setRateRetry] = useState(0);
@@ -363,9 +339,6 @@ export function useExchangePanel({
   const [rateTrendState, setRateTrendState] = useState<RateTrendState>({
     kind: "loading",
   });
-  const [viewMode, setViewMode] = useState<"answer" | "nearby" | "evidence">(
-    "answer"
-  );
   const [conversionReversed, setConversionReversed] = useState(false);
 
   const commitAmounts = useCallback((next: AmountState) => {
@@ -377,7 +350,7 @@ export function useExchangePanel({
     (nextCurrency: SupportedReferenceCurrencyCode) => {
       currencyRef.current = nextCurrency;
       setCurrency(nextCurrency);
-      setRateState({ kind: "loading", cached: readCachedRate(nextCurrency, "NGN") });
+      setRateState({ kind: "idle" });
       const current = amountsRef.current;
       const other: AmountField = current.lastEdited === "foreign" ? "ngn" : "foreign";
       commitAmounts({ ...current, [other]: "" });
@@ -386,9 +359,9 @@ export function useExchangePanel({
   );
 
   const enterBaseCurrency = useCallback(
-    (nextBaseCurrency: string) => {
+    (nextBaseCurrency: SupportedReferenceCurrencyCode) => {
       if (nextBaseCurrency === currency) {
-        setCurrency(baseCurrency as SupportedReferenceCurrencyCode);
+        setCurrency(baseCurrency);
       }
       setBaseCurrency(nextBaseCurrency);
       const current = amountsRef.current;
@@ -412,6 +385,7 @@ export function useExchangePanel({
     if (saved) {
       currencyRef.current = saved.base;
       setCurrency(saved.base);
+      setBaseCurrency(saved.quote);
       setRateState({ kind: "ready", rate: saved, saved: true, refreshFailed: false });
     } else {
       setRateState({ kind: "idle" });
@@ -431,7 +405,7 @@ export function useExchangePanel({
         setCatalogState({ kind: "ready", entries });
         const current = currencyRef.current;
         const nextCurrency =
-          current && entries.some((entry) => entry.code === current)
+          current && (current === "NGN" || entries.some((entry) => entry.code === current))
             ? current
             : (entries.find((entry) => entry.code === "USD")?.code ?? entries[0]!.code);
         enterCurrency(nextCurrency);
@@ -457,12 +431,17 @@ export function useExchangePanel({
 
   useEffect(() => {
     if (!currency || catalogState.kind !== "ready") return;
+    if (currency === baseCurrency) {
+      setRateState({ kind: "idle" });
+      setRateTrendState({ kind: "unavailable" });
+      return;
+    }
     let cancelled = false;
-    const cached = readCachedRate(currency, "NGN");
+    const cached = readCachedRate(currency, baseCurrency);
     setRateState({ kind: "loading", cached });
     setRateTrendState({ kind: "loading" });
 
-    void getReferenceRate(currency)
+    void getReferenceRate(currency, baseCurrency)
       .then((rate) => {
         if (cancelled) return;
         if (!rate) {
@@ -481,7 +460,7 @@ export function useExchangePanel({
         }
         setRateState({ kind: "error" });
       });
-    void getReferenceRateTrend(currency)
+    void getReferenceRateTrend(currency, baseCurrency)
       .then((points) => {
         if (cancelled) return;
         setRateTrendState(
@@ -495,7 +474,7 @@ export function useExchangePanel({
     return () => {
       cancelled = true;
     };
-  }, [catalogState.kind, currency, rateRetry]);
+  }, [baseCurrency, catalogState.kind, currency, rateRetry]);
 
   useEffect(() => {
     const syncOnlineState = () => setOffline(!window.navigator.onLine);
@@ -520,7 +499,11 @@ export function useExchangePanel({
         ? rateState.cached
         : null;
   const visibleRate =
-    candidateVisibleRate && candidateVisibleRate.base === currency ? candidateVisibleRate : null;
+    candidateVisibleRate &&
+    candidateVisibleRate.base === currency &&
+    candidateVisibleRate.quote === baseCurrency
+      ? candidateVisibleRate
+      : null;
   const visibleRateBase = visibleRate?.base;
   const visibleRateValue = visibleRate?.rate;
 
@@ -530,7 +513,14 @@ export function useExchangePanel({
     if (next.foreign !== current.foreign || next.ngn !== current.ngn) {
       commitAmounts(next);
     }
-  }, [commitAmounts, visibleRateBase, visibleRateValue, currency, baseCurrency]);
+  }, [
+    commitAmounts,
+    visibleRate,
+    visibleRateBase,
+    visibleRateValue,
+    currency,
+    baseCurrency,
+  ]);
 
   const editAmount = (field: AmountField, value: string) => {
     const edited = amountStateFrom(field, value);
@@ -551,8 +541,10 @@ export function useExchangePanel({
     (rateState.kind === "loading" && rateState.cached !== null) ||
     (rateState.kind === "ready" && rateState.saved) ||
     (offline && visibleRate !== null);
-  const availableCurrencies =
-    catalogState.kind === "ready" ? catalogState.entries.map((entry) => entry.code) : [];
+  const availableCurrencies: SupportedReferenceCurrencyCode[] =
+    catalogState.kind === "ready"
+      ? ["NGN", ...catalogState.entries.map((entry) => entry.code)]
+      : [];
   const selectedMeta = currency ? SUPPORTED_REFERENCE_CURRENCY_META[currency] : null;
   const selectedLocation = locations.find((location) => location.id === selectedLocationId) ?? null;
 
@@ -562,20 +554,8 @@ export function useExchangePanel({
     const rawPoints = rateTrendState.kind === "ready" ? rateTrendState.points : [];
     const daysLimit = trendPeriod === "7d" ? 7 : trendPeriod === "14d" ? 14 : 30;
 
-    let basePoints = rawPoints;
-    if (!basePoints || basePoints.length < 2) {
-      const today = new Date();
-      const mockRate = (currency ? REFERENCE_RATE_TO_NGN[currency] : 1388.89) ?? 1388.89;
-      basePoints = Array.from({ length: 30 }, (_, i) => {
-        const d = new Date(today);
-        d.setDate(d.getDate() - (29 - i));
-        const variation = (Math.sin(i / 3) * 0.012 + (i / 30) * 0.015) * mockRate;
-        return {
-          date: d.toISOString().slice(0, 10),
-          rate: mockRate + variation,
-        };
-      });
-    }
+    if (rawPoints.length < 2) return null;
+    const basePoints = rawPoints;
 
     const sorted = [...basePoints]
       .filter((p) => Number.isFinite(p.rate) && Number.isFinite(Date.parse(p.date)))
@@ -610,7 +590,7 @@ export function useExchangePanel({
       percentChange,
       narrative,
     };
-  }, [rateTrendState, trendPeriod, currency, baseCurrency]);
+  }, [rateTrendState, trendPeriod, baseCurrency]);
 
   return {
     amountId,

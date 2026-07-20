@@ -119,6 +119,7 @@ export function HomePageView({
   handleItemOffersChange,
   handleSelectOffer,
   filteredExchangeLocations,
+  exchangeLocationDiscoveryStatus,
   handleSelectExchangeLocation,
   handleMarkerSelection,
   handleCategoryChange,
@@ -263,6 +264,7 @@ export function HomePageView({
           <ExchangePanel
             origin={searchOrigin}
             locations={filteredExchangeLocations}
+            locationDiscoveryStatus={exchangeLocationDiscoveryStatus}
             filter={exchangeFilter}
             onFilterChange={(filter) => {
               setExchangeFilter(filter);

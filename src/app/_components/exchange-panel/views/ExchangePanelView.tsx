@@ -4,8 +4,6 @@ import {
   Skeleton,
   SolidIcon,
   transition,
-  REFERENCE_CURRENCY_META,
-  CurrencyFlag,
   CurrencyPickerSheet,
   formatDistance,
   getHaversineDistance,
@@ -27,6 +25,7 @@ export interface ExchangePanelViewProps extends ExchangePanelProps {
 export function ExchangePanelView({
   origin,
   locations,
+  locationDiscoveryStatus,
   selectedLocationId,
   onSelectLocation,
   panel,
@@ -41,7 +40,6 @@ export function ExchangePanelView({
     enterBaseCurrency,
     amounts,
     catalogState,
-    rateState,
     trendPeriod,
     setTrendPeriod,
     trendInsight,
@@ -50,7 +48,6 @@ export function ExchangePanelView({
     foreignError,
     ngnError,
     availableCurrencies,
-    selectedMeta,
     visibleRate,
     conversionReversed,
     toggleConversionDirection,
@@ -83,6 +80,7 @@ export function ExchangePanelView({
           available={availableCurrencies}
           value={currency}
           onSelect={enterCurrency}
+          previews={catalogState.kind === "ready" ? catalogState.entries : []}
           disabled={catalogState.kind !== "ready"}
         />
       )}
@@ -96,8 +94,9 @@ export function ExchangePanelView({
       ) : (
         <CurrencyPickerSheet
           available={availableCurrencies}
-          value={baseCurrency as any}
-          onSelect={(selected) => enterBaseCurrency(selected as string)}
+          value={baseCurrency}
+          onSelect={enterBaseCurrency}
+          previews={catalogState.kind === "ready" ? catalogState.entries : []}
           disabled={catalogState.kind !== "ready"}
         />
       )}
@@ -269,13 +268,15 @@ export function ExchangePanelView({
         </section>
       )}
 
-      {/* 4. NEARBY SAMPLE EXCHANGE OUTLETS CARD GROUP */}
-      <section aria-label="Sample Exchange Points" className="space-y-2">
+      {/* 4. NEARBY MAP LISTINGS */}
+      <section aria-label="Nearby exchange points" className="space-y-2">
         <div className="px-1 flex items-center justify-between">
-          <h3 className="text-footnote font-semibold text-text-secondary">Sample Exchange Points</h3>
-          {nearestDist && (
+          <h3 className="text-footnote font-semibold text-text-secondary">Nearby exchange points</h3>
+          {locationDiscoveryStatus === "sample" ? (
+            <span className="text-caption-1 font-medium text-text-tertiary">Sample</span>
+          ) : nearestDist ? (
             <span className="text-caption-1 text-text-tertiary">Nearest {nearestDist}</span>
-          )}
+          ) : null}
         </div>
 
         <div className="squircle-card bg-surface-card divide-y divide-fillSecondary overflow-hidden">
@@ -315,15 +316,29 @@ export function ExchangePanelView({
             );
           })}
 
-          {sortedLocations.length === 0 && (
+          {locationDiscoveryStatus === "loading" && (
+            <div className="p-4 text-center text-footnote text-text-secondary" role="status">
+              Finding nearby places…
+            </div>
+          )}
+
+          {locationDiscoveryStatus === "ready" && sortedLocations.length === 0 && (
             <div className="p-4 text-center text-footnote text-text-secondary">
-              No sample exchange locations nearby.
+              No nearby map listings found.
+            </div>
+          )}
+
+          {locationDiscoveryStatus === "unavailable" && (
+            <div className="p-4 text-center text-footnote text-text-secondary">
+              Nearby places unavailable.
             </div>
           )}
         </div>
 
         <p className="px-1 text-caption-1 text-text-tertiary">
-          Prototype locations · not verified quotes or live inventory.
+          {locationDiscoveryStatus === "sample"
+            ? "Sample places · not real businesses or offered rates."
+            : "Map listings · rates, licence and opening status not verified."}
         </p>
       </section>
     </div>
@@ -338,31 +353,61 @@ function SparklineGraph({ points }: { points: ReferenceRatePoint[] }) {
   const spread = max - min || 1;
   const width = 300;
   const height = 48;
-
-  const path = values
-    .map((v, i) => {
-      const x = (i / (values.length - 1)) * width;
-      const y = height - 6 - ((v - min) / spread) * (height - 12);
-      return `${i === 0 ? "M" : "L"}${x.toFixed(1)},${y.toFixed(1)}`;
-    })
-    .join(" ");
+  const coordinates = values.map((value, index) => ({
+    x: (index / (values.length - 1)) * width,
+    y: height - 6 - ((value - min) / spread) * (height - 12),
+  }));
+  const firstPoint = coordinates[0]!;
+  const path = coordinates.slice(0, -1).reduce((result, point, index) => {
+    const previous = coordinates[index - 1] ?? point;
+    const next = coordinates[index + 1]!;
+    const afterNext = coordinates[index + 2] ?? next;
+    const controlOneX = point.x + (next.x - previous.x) / 6;
+    const controlOneY = point.y + (next.y - previous.y) / 6;
+    const controlTwoX = next.x - (afterNext.x - point.x) / 6;
+    const controlTwoY = next.y - (afterNext.y - point.y) / 6;
+    return `${result} C${controlOneX.toFixed(1)},${controlOneY.toFixed(
+      1
+    )} ${controlTwoX.toFixed(1)},${controlTwoY.toFixed(1)} ${next.x.toFixed(
+      1
+    )},${next.y.toFixed(1)}`;
+  }, `M${firstPoint.x.toFixed(1)},${firstPoint.y.toFixed(1)}`);
 
   const areaPath = `${path} L ${width},${height} L 0,${height} Z`;
+  const change = values.at(-1)! - values[0]!;
+  const threshold = Math.abs(values[0]!) * 0.0005;
+  const direction =
+    Math.abs(change) <= threshold ? "stable" : change > 0 ? "rising" : "falling";
+  const tone =
+    direction === "rising"
+      ? "text-status-confirmed-fg"
+      : direction === "falling"
+        ? "text-status-caution-fg"
+        : "text-text-secondary";
 
   return (
-    <div className="relative w-full overflow-hidden" style={{ height: `${height}px` }}>
-      <svg viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="none" className="w-full h-full">
+    <div
+      className={`relative w-full overflow-hidden ${tone}`}
+      style={{ height: `${height}px` }}
+    >
+      <svg
+        viewBox={`0 0 ${width} ${height}`}
+        preserveAspectRatio="none"
+        className="h-full w-full"
+        role="img"
+        aria-label={`Reference rate trend ${direction}`}
+      >
         <defs>
           <linearGradient id="sparkline-grad" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="var(--color-focus-ring)" stopOpacity="0.2" />
-            <stop offset="100%" stopColor="var(--color-focus-ring)" stopOpacity="0.0" />
+            <stop offset="0%" stopColor="currentColor" stopOpacity="0.2" />
+            <stop offset="100%" stopColor="currentColor" stopOpacity="0" />
           </linearGradient>
         </defs>
         <path d={areaPath} fill="url(#sparkline-grad)" />
         <path
           d={path}
           fill="none"
-          stroke="var(--color-focus-ring)"
+          stroke="currentColor"
           strokeWidth="2.5"
           strokeLinecap="round"
           strokeLinejoin="round"

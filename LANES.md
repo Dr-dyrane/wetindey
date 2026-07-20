@@ -437,6 +437,7 @@ TypeScript and exact-path lint passed.
 Owner: released. Former exclusive paths:
 
 - `src/app/_components/exchange-panel/hooks/useExchangePanel.ts`
+- `src/app/_components/exchange-panel/imports/imports.ts`
 - `src/app/_components/exchange-panel/views/ExchangePanelView.tsx`
 - `src/app/_components/exchange-panel/styles/ExchangePanel.css`
 - `LANES.md`
@@ -466,10 +467,17 @@ Exclusive paths:
 
 - `docs/adr/017-cbn-reference-rate-converter.md`
 - `src/app/_data/reference-currencies.ts`
+- `src/app/_data/exchange-sample-locations.ts`
 - `src/app/_actions/currency-actions.ts`
+- `src/app/_actions/exchange-location-actions.ts`
 - `src/app/_components/CurrencyPickerSheet.tsx`
 - `src/app/_components/exchange-panel/hooks/useExchangePanel.ts`
 - `src/app/_components/exchange-panel/views/ExchangePanelView.tsx`
+- `src/app/_components/home-page/hooks/useHomePage.ts`
+- `src/app/_components/home-page/views/HomePageView.tsx`
+- `src/app/_components/home-page/imports/imports.ts`
+- `src/integrations/maps/MapboxNearbyExchangeSearch.ts`
+- `src/core/state/locationStore.ts`
 - `LANES.md`
 
 Preserve Antigravity's accepted two-row UI while replacing its client-side placeholder
@@ -477,6 +485,29 @@ rate table with a server-validated ordered-pair result. Cross-rates must use one
 and one effective date, caches must be pair-aware, NGN must be a typed selectable
 currency, and unavailable evidence must fail closed. No amount may leave the browser.
 Trend-window expansion remains a separate follow-up.
+
+Replace the Sample exchange-point fixture with bounded live Mapbox Search Box discovery
+around the selected browsing context. Results are map listings only: they do not prove a
+current licence, opening state, exchange service, or offered rate. Do not send precise
+device location or couple discovery to Food places. When no usable provider listing is
+returned, retain the existing typed demonstration venues only as an unmistakably Sample
+fallback around the canonical Lagos browsing context. Legacy outside-Lagos device values
+must not rehydrate as browsing context; the independent session device fix remains true.
+
+##### Human Interface delivery decision tree — ACTIVE
+
+Owner: current controller.
+Exclusive paths:
+
+- `AGENTS.md`
+- `docs/DYRANE-CONSTITUTION.md`
+- `docs/design-system/UI-DELIVERY-DECISION-TREE.md`
+- `LANES.md`
+
+Record the Founder-approved visual-convergence-first workflow without weakening lane
+ownership, truth boundaries, accessibility, independent refutation, or release evidence.
+The process must distinguish visual ambiguity, behavioral defects, and consequential
+truth/privacy/provider/schema work so each starts at the correct layer.
 
 ##### ItemDetailSheet component modularization — COMPLETE / PATHS RELEASED
 

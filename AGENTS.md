@@ -14,6 +14,15 @@ effort while increasing human confidence. Apply the ten-question Dyrane Test dur
 ideation, implementation, review, refutation, and release. It guides judgment without
 overriding live code evidence, accepted ADRs, or the architecture of record.
 
+**For interface work, follow the
+[UI Delivery Decision Tree](docs/design-system/UI-DELIVERY-DECISION-TREE.md).** Do not
+make visual work wait behind speculative architecture. When the problem is visual,
+converge against live pixels first, freeze the accepted visual contract, and then wire
+truthful behavior beneath it. Behavioral defects and consequential data, privacy,
+provider, schema, migration, or security changes start at their corresponding evidence
+or governance boundary instead. Fast visual iteration never permits fake claims, dead
+code, inaccessible controls, unclaimed paths, or an unrefuted release.
+
 **Several sessions work this repo at once. Read [LANES.md](LANES.md) and run `git status`
 BEFORE your first edit.** Claim your lane; edit only the paths your lane owns. If you spawn
 subagents, put your lane's paths in their prompt and forbid them from widening it — an

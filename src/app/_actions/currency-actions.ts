@@ -13,6 +13,9 @@ export type ReferenceProvider = "CBN" | "FRANKFURTER";
 export interface ReferenceCurrencyCatalogEntry {
   code: ReferenceCurrencyCode;
   provider: ReferenceProvider;
+  rate: number;
+  effectiveDate: string;
+  trendPercent: number | null;
 }
 
 export interface ReferenceRate {
@@ -114,6 +117,29 @@ function parseNgnRateHistory(
   );
 }
 
+function parseNgnCatalogHistory(value: unknown): UpstreamRate[] {
+  if (!Array.isArray(value)) {
+    throw new Error("The reference catalog history was invalid.");
+  }
+  return value.flatMap((row) =>
+    isRecord(row) &&
+    row.base === "NGN" &&
+    typeof row.quote === "string" &&
+    isReferenceCurrencyCode(row.quote) &&
+    typeof row.rate === "number" &&
+    Number.isFinite(row.rate) &&
+    row.rate > 0 &&
+    isIsoCalendarDate(row.date)
+      ? [{
+          date: row.date,
+          base: "NGN" as const,
+          quote: row.quote,
+          rate: row.rate,
+        }]
+      : []
+  );
+}
+
 async function fetchNgnRates(provider: ReferenceProvider): Promise<UpstreamRate[]> {
   const providerQuery = provider === "CBN" ? "&providers=CBN" : "";
   const response = await fetch(
@@ -133,6 +159,26 @@ async function fetchNgnRates(provider: ReferenceProvider): Promise<UpstreamRate[
   }
 
   return parseNgnRates(await response.json());
+}
+
+async function fetchNgnCatalogHistory(
+  provider: ReferenceProvider
+): Promise<UpstreamRate[]> {
+  const end = new Date();
+  const start = new Date(end);
+  start.setUTCDate(start.getUTCDate() - 8);
+  const providerQuery = provider === "CBN" ? "&providers=CBN" : "";
+  const response = await fetch(
+    `${API_ROOT}/rates?base=NGN&quotes=${QUOTES}&from=${start
+      .toISOString()
+      .slice(0, 10)}&to=${end.toISOString().slice(0, 10)}${providerQuery}`,
+    {
+      ...REQUEST_OPTIONS,
+      signal: AbortSignal.timeout(8_000),
+    }
+  );
+  if (!response.ok) return [];
+  return parseNgnCatalogHistory(await response.json());
 }
 
 async function fetchNgnRateHistory(
@@ -161,18 +207,42 @@ async function fetchNgnRateHistory(
 }
 
 async function buildReferenceCurrencyCatalog(): Promise<ReferenceCurrencyCatalogEntry[]> {
-  const [frankfurterRates, cbnRates] = await Promise.all([
+  const [frankfurterRates, cbnRates, frankfurterHistory, cbnHistory] = await Promise.all([
     fetchNgnRates("FRANKFURTER"),
     fetchNgnRates("CBN").catch(() => []),
+    fetchNgnCatalogHistory("FRANKFURTER").catch(() => []),
+    fetchNgnCatalogHistory("CBN").catch(() => []),
   ]);
   const frankfurterCodes = new Set(frankfurterRates.map((rate) => rate.quote));
   const cbnCodes = new Set(cbnRates.map((rate) => rate.quote));
 
-  return REFERENCE_CURRENCIES.flatMap((code) =>
-    frankfurterCodes.has(code)
-      ? [{ code, provider: cbnCodes.has(code) ? ("CBN" as const) : ("FRANKFURTER" as const) }]
-      : []
-  );
+  return REFERENCE_CURRENCIES.flatMap((code) => {
+    if (!frankfurterCodes.has(code)) return [];
+    const provider = cbnCodes.has(code) ? ("CBN" as const) : ("FRANKFURTER" as const);
+    const source =
+      provider === "CBN"
+        ? cbnRates.find((candidate) => candidate.quote === code)
+        : frankfurterRates.find((candidate) => candidate.quote === code);
+    if (!source) return [];
+    const rate = 1 / source.rate;
+    const history = (provider === "CBN" ? cbnHistory : frankfurterHistory)
+      .filter((candidate) => candidate.quote === code)
+      .sort((left, right) => left.date.localeCompare(right.date));
+    const first = history[0];
+    const last = history.at(-1);
+    const firstRate = first ? 1 / first.rate : Number.NaN;
+    const lastRate = last ? 1 / last.rate : Number.NaN;
+    const trendPercent =
+      history.length >= 2 &&
+      Number.isFinite(firstRate) &&
+      Number.isFinite(lastRate) &&
+      firstRate > 0
+        ? ((lastRate - firstRate) / firstRate) * 100
+        : null;
+    return Number.isFinite(rate) && rate > 0
+      ? [{ code, provider, rate, effectiveDate: source.date, trendPercent }]
+      : [];
+  });
 }
 
 function selectPairProvider(

@@ -1,4 +1,4 @@
-# ADR-017: Provider-aware Money & Exchange reference and Sample discovery prototype
+# ADR-017: Provider-aware Money & Exchange reference and map discovery
 
 **Date:** 2026-07-18  
 **Status:** Accepted  
@@ -30,13 +30,18 @@ never leaves their browser. Availability is not assumed from a hardcoded currenc
 the server publishes a validated catalog formed by intersecting the curated WetinDey list
 with currency pairs currently available from Frankfurter.
 
-The repository has no current bank-branch or BDC-outlet dataset. The CBN announced that
+The repository has no authoritative bank-branch or BDC-outlet dataset. The CBN announced that
 82 BDC companies held final licences under the revised framework effective November 27,
 2025, but the current public material found during this decision did not provide a
 machine-readable, coordinate-level outlet directory. Older CBN address lists predate the
 revised licensing regime and cannot establish current authorization. A company licence
 also does not prove that an arbitrary street trader, branch, or franchise location is
 authorized.
+
+Mapbox Search Box can return nearby points of interest around the selected browsing
+context. Those results are useful for discovery, but they are provider listings rather
+than WetinDey observations: they do not establish a current BDC licence, opening state,
+offered exchange service, or executable rate.
 
 Without an explicit boundary, enabling the existing Money row would silently reuse Food
 search, item/unit/price queries, contribution controls, places, and map markers. It could
@@ -49,8 +54,8 @@ violate the typed claim separation proposed in ADR-010.
 Food and Money & Exchange are the only selectable category contexts.
 
 Selecting Money & Exchange replaces the Food search/results sheet with a focused
-provider-aware foreign-currency-to-NGN calculator and a Sample-only nearby-discovery
-prototype. The curated currency set is:
+provider-aware currency calculator and a bounded nearby map-listing discovery surface.
+The curated currency set is:
 
 `USD`, `GBP`, `EUR`, `CAD`, `AUD`, `GHS`, `KES`, `ZAR`, `AED`, `CNY`, `INR`, `BRL`,
 `CHF`, `JPY`, and `SAR`.
@@ -71,10 +76,10 @@ The screen:
 - states that banks and currency exchangers may offer different rates;
 - never uses `live`, `parallel`, `black market`, `buy`, or `sell` for this data;
 - hides Food search, Food contribution, Food details, Food routes, and Food map markers;
-- offers `All`, `Banks`, and `BDC outlets` prototype filters;
+- offers `All`, `Banks`, and `BDC outlets` map-listing filters;
 - keeps the location list and map marker set derived from the same filter;
-- labels every simulated record `Sample` in both the list and detail presentation;
-- and never claims that a Sample location is real, open, licensed, contactable, or
+- labels nearby results as `Map listings`;
+- and never claims that a map listing is open, licensed, contactable, or
   offering the displayed reference value.
 
 The calculator remains amount-first: amount entry and converted estimate are the primary
@@ -103,11 +108,12 @@ country, or currency artwork may be fetched remotely at runtime, and a missing s
 symbol falls back to a neutral local marker rather than an emoji or network request.
 
 The existing Mapbox instance remains mounted so switching contexts does not destroy and
-recreate WebGL state. Exchange replaces Food markers with neutral Sample markers. A
-Sample marker may open only a clearly labelled prototype detail state; it offers no
-directions, contact, opening-hours, licence, or transaction action. The global location
-and recenter controls remain valid because distance is part of the prototype, but they
-do not turn Sample coordinates into verified places.
+recreate WebGL state. Exchange replaces Food markers with provider-discovered bank and
+currency-exchange POI markers around the selected browsing context. Discovery uses the
+browsing context, not precise device location. A marker may open only a clearly labelled
+map-listing state; it offers no directions, contact, opening-hours, licence, or
+transaction action. The global location and recenter controls do not turn a provider POI
+into a WetinDey-verified place.
 
 The application accesses Frankfurter only through a dedicated Server Action. The server
 validates the curated allowlist, current upstream catalog, requested pair, provider
@@ -123,11 +129,15 @@ cross-contaminate attribution. The browser may retain the latest successfully va
 rate per currency for offline/error fallback, visibly labelled as saved data with its
 provider and effective date.
 
-The Sample dataset lives in a separate typed application file, not the Food seed, place
-table, or database. Names are generic and explicitly prefixed or described as Sample;
-coordinates are demonstration points within the pilot geography. Sample entries cannot
-be indexed as public businesses, shared as real places, routed to, contacted, reviewed,
-confirmed, or promoted into observations.
+Map discovery is fetched through a dedicated server boundary and parsed into a narrow
+typed result carrying Mapbox provenance and `map_listing` verification. Malformed
+features and missing coordinates are discarded. The result is not stored in the Food
+seed, place table, observations, or database and cannot be promoted into evidence.
+When the provider fails or returns no usable listing, the original typed demonstration
+points may appear only as a visibly labelled Sample fallback. They remain invented
+interaction fixtures rather than businesses, licences, opening-state claims, offered
+rates, or evidence. Discovery always uses canonical Lagos browsing context, never a
+session device fix merely because the physical user is outside Lagos.
 
 This prototype creates no database table, observation, offer, trust score, freshness
 rule, seller, verified exchanger, contribution path, rate history, or generic category
@@ -184,8 +194,8 @@ transition coherent instead of hiding the utility in account navigation.
   when the context changes.
 - The converter remains useful without credentials, schema work, or a new runtime
   dependency.
-- Product interaction can be tested before real outlet ingestion exists, without
-  manufacturing public businesses.
+- Nearby discovery can show current provider POIs without manufacturing businesses or
+  representing those POIs as trusted evidence.
 - It depends on Frankfurter availability, catalog accuracy, provider attribution, and rate
   semantics. A catalog or provider change may remove a pair until validation succeeds.
 - The curated 15-currency set is a maximum product set, not an availability promise.
@@ -197,12 +207,11 @@ transition coherent instead of hiding the utility in account navigation.
   analytics decision supports a measured claim.
 - Bundled licensed SVG flags add an asset provenance and maintenance obligation, but no
   remote flag request or emoji rendering dependency.
-- Sample location usefulness does not prove data supply, licensing, or operational
-  feasibility. No launch claim may be based on the prototype.
+- Map listing usefulness does not prove licence, current operation, offered exchange
+  service, or rate availability.
 - Money & Exchange is selectable for this bounded national reference utility only.
-  Local exchangers, parallel rates, map discovery, contribution, verification, and trust
-  remain unimplemented beyond the visibly simulated interaction and must not be inferred
-  from the selectable row.
+  Parallel rates, contribution, exchanger verification, and trust remain unimplemented
+  and must not be inferred from the selectable row.
 
 ## Validation and review
 
@@ -214,8 +223,8 @@ The decision is satisfied only when:
 3. the server catalog exposes only the intersection of the 15 curated codes and currently
    supported NGN pairs, and unavailable pairs cannot be selected or requested;
 4. amount values are not sent to Frankfurter or stored remotely by WetinDey;
-5. every simulated row, marker-driven detail, empty state, and filtered view remains
-   unmistakably Sample and exposes no navigation/contact/licence/rate action;
+5. every discovered row, marker-driven detail, empty state, and filtered view remains
+   unmistakably a map listing and exposes no navigation/contact/licence/rate action;
 6. filters update map and list from the same in-memory result;
 7. loading, catalog-empty, pair-unavailable, upstream error, retry, saved/offline,
    invalid-input, light, dark, keyboard, focus, reduced-motion, and screen-reader
@@ -232,7 +241,7 @@ The decision is satisfied only when:
 12. no state or copy implies wallet, recipient, send, transfer, fee, rate lock, payment,
     or exchange execution, and the WetinDey-does-not-exchange boundary stays explicit;
     and
-13. an independent reviewer tries to refute context separation, Sample containment,
+13. an independent reviewer tries to refute context separation, map-listing containment,
     provider truth, catalog admission, accessibility, and non-transaction semantics.
 
 Reconsider the provider if its terms, catalog, availability, provider coverage, or data

@@ -292,3 +292,17 @@ source of implemented behavior; accepted ADRs govern approved decisions; the arc
 of record governs verified system structure. When a proposal satisfies this Constitution
 but conflicts with those authorities, reconcile the conflict explicitly before changing
 the product.
+
+## Delivery order for interface work
+
+The Constitution governs both the answer and the order used to reach it. When an
+interface direction is unresolved, visual understanding must not wait behind speculative
+architecture. Converge on the smallest clear experience in live pixels, freeze that
+accepted visual contract, and then connect truthful data, behavior, resilience,
+accessibility, and release evidence beneath it.
+
+This is not permission to polish a lie. Safety, privacy, security, schema, migration,
+provider, and claim-semantics decisions begin at their governing boundary. Behavioral
+defects begin with reproducible evidence. The complete operating sequence and stop rules
+live in the
+[UI Delivery Decision Tree](design-system/UI-DELIVERY-DECISION-TREE.md).

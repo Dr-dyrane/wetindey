@@ -12,6 +12,7 @@ import {
   type SupportedReferenceCurrencyCode,
 } from "@/app/_data/reference-currencies";
 import { CurrencyFlag } from "@/app/_components/CurrencyFlag";
+import type { ReferenceCurrencyCatalogEntry } from "@/app/_actions/currency-actions";
 
 const RECENTS_KEY = "wetindey:reference-currency-recents:v1";
 const MAX_RECENTS = 3;
@@ -20,6 +21,7 @@ interface CurrencyPickerSheetProps {
   available: readonly SupportedReferenceCurrencyCode[];
   value: SupportedReferenceCurrencyCode | null;
   onSelect: (currency: SupportedReferenceCurrencyCode) => void;
+  previews?: readonly ReferenceCurrencyCatalogEntry[];
   disabled?: boolean;
 }
 
@@ -104,30 +106,8 @@ function searchScore(code: SupportedReferenceCurrencyCode, query: string): numbe
   return 3;
 }
 
-const REFERENCE_RATE_PREVIEWS: Record<string, { rate: string; trend: string; isPositive: boolean }> = {
-  USD: { rate: "₦1,485.50", trend: "+1.2%", isPositive: true },
-  GBP: { rate: "₦1,892.10", trend: "+0.8%", isPositive: true },
-  EUR: { rate: "₦1,615.40", trend: "-0.4%", isPositive: false },
-  CAD: { rate: "₦1,090.25", trend: "+0.5%", isPositive: true },
-  AUD: { rate: "₦978.80", trend: "-0.2%", isPositive: false },
-  GHS: { rate: "₦95.50", trend: "+0.1%", isPositive: true },
-  KES: { rate: "₦11.40", trend: "+0.3%", isPositive: true },
-  ZAR: { rate: "₦82.60", trend: "-0.6%", isPositive: false },
-  AED: { rate: "₦404.50", trend: "+0.2%", isPositive: true },
-  CNY: { rate: "₦205.10", trend: "+0.4%", isPositive: true },
-  INR: { rate: "₦17.75", trend: "+0.1%", isPositive: true },
-  BRL: { rate: "₦268.30", trend: "-0.3%", isPositive: false },
-  CHF: { rate: "₦1,720.00", trend: "+0.9%", isPositive: true },
-  JPY: { rate: "₦9.45", trend: "-0.5%", isPositive: false },
-  SAR: { rate: "₦396.10", trend: "+0.2%", isPositive: true },
-  NGN: { rate: "₦1.00", trend: "Base", isPositive: true },
-};
-
 function getMeta(code: string | null) {
   if (!code) return null;
-  if (code === "NGN") {
-    return { code: "NGN", name: "Nigerian naira", symbol: "₦", flag: "ng", searchAliases: ["Nigeria", "naira"] };
-  }
   return isSupportedReferenceCurrencyCode(code) ? SUPPORTED_REFERENCE_CURRENCY_META[code] : null;
 }
 
@@ -135,21 +115,22 @@ function CurrencyRow({
   code,
   selected,
   onSelect,
+  preview,
 }: {
   code: string;
   selected: boolean;
   onSelect: (currency: SupportedReferenceCurrencyCode) => void;
+  preview?: ReferenceCurrencyCatalogEntry;
 }) {
   const meta = getMeta(code);
   if (!meta) return null;
-  const preview = REFERENCE_RATE_PREVIEWS[code];
 
   return (
     <button
       type="button"
       aria-pressed={selected}
       onClick={() => {
-        onSelect(code as any);
+        onSelect(meta.code);
       }}
       className={`flex min-h-tap w-full items-center justify-between gap-3 px-4 py-2.5 text-left active:bg-fillTertiary ${transition.feedback}`}
     >
@@ -161,21 +142,30 @@ function CurrencyRow({
         </span>
       </div>
       <div className="flex items-center gap-2 shrink-0 text-right">
-        {preview && (
+        {(preview || code === "NGN") && (
           <div className="text-right">
             <span className="block text-footnote font-semibold text-text-primary tabular-nums">
-              {preview.rate}
+              ₦{(code === "NGN" ? 1 : preview!.rate).toLocaleString("en-NG", {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              })}
             </span>
             <span
-              className={`inline-block squircle px-1.5 py-0.5 text-caption-2 font-bold tabular-nums ${
-                preview.trend === "Base"
+              className={`inline-block squircle px-1.5 py-0.5 text-caption-2 font-bold ${
+                code === "NGN" || preview!.trendPercent === null
                   ? "bg-fillSecondary text-text-tertiary"
-                  : preview.isPositive
+                  : preview!.trendPercent >= 0
                     ? "bg-status-confirmed-bg text-status-confirmed-fg"
                     : "bg-status-caution-bg text-status-caution-fg"
               }`}
             >
-              {preview.trend === "Base" ? "Base" : `${preview.isPositive ? "▲ " : "▼ "}${preview.trend}`}
+              {code === "NGN"
+                ? "Base"
+                : preview!.trendPercent === null
+                  ? "No trend"
+                  : `${preview!.trendPercent >= 0 ? "▲ +" : "▼ -"}${Math.abs(
+                      preview!.trendPercent
+                    ).toFixed(1)}%`}
             </span>
           </div>
         )}
@@ -194,11 +184,13 @@ function CurrencyGroup({
   currencies,
   value,
   onSelect,
+  previews,
 }: {
   title: string;
   currencies: readonly SupportedReferenceCurrencyCode[];
   value: SupportedReferenceCurrencyCode | null;
   onSelect: (currency: SupportedReferenceCurrencyCode) => void;
+  previews: readonly ReferenceCurrencyCatalogEntry[];
 }) {
   if (currencies.length === 0) return null;
   return (
@@ -216,6 +208,7 @@ function CurrencyGroup({
             code={code}
             selected={code === value}
             onSelect={onSelect}
+            preview={previews.find((entry) => entry.code === code)}
           />
         ))}
       </div>
@@ -227,10 +220,12 @@ function CurrencyPickerContent({
   available,
   value,
   onSelect,
+  previews,
 }: {
   available: readonly SupportedReferenceCurrencyCode[];
   value: SupportedReferenceCurrencyCode | null;
   onSelect: (currency: SupportedReferenceCurrencyCode) => void;
+  previews: readonly ReferenceCurrencyCatalogEntry[];
 }) {
   const availableSet = useMemo(() => new Set(available), [available]);
   const [query, setQuery] = useState("");
@@ -293,6 +288,7 @@ function CurrencyPickerContent({
             currencies={searchResults}
             value={value}
             onSelect={commit}
+            previews={previews}
           />
         ) : (
           <p role="status" className="py-8 text-center text-body text-text-secondary">
@@ -306,24 +302,28 @@ function CurrencyPickerContent({
             currencies={["NGN"]}
             value={value}
             onSelect={commit}
+            previews={previews}
           />
           <CurrencyGroup
             title="Recent"
             currencies={recentCurrencies}
             value={value}
             onSelect={commit}
+            previews={previews}
           />
           <CurrencyGroup
             title="Popular"
             currencies={popularCurrencies}
             value={value}
             onSelect={commit}
+            previews={previews}
           />
           <CurrencyGroup
             title="All currencies"
             currencies={allCurrencies}
             value={value}
             onSelect={commit}
+            previews={previews}
           />
         </>
       ) : (
@@ -341,6 +341,7 @@ export function CurrencyPickerSheet({
   available,
   value,
   onSelect,
+  previews = [],
   disabled,
 }: CurrencyPickerSheetProps) {
   const navigation = useModalSheetNavigation();
@@ -370,7 +371,12 @@ export function CurrencyPickerSheet({
       title: "Choose currency",
       returnFocus: triggerRef.current,
       content: (
-        <CurrencyPickerContent available={available} value={value} onSelect={commit} />
+        <CurrencyPickerContent
+          available={available}
+          value={value}
+          onSelect={commit}
+          previews={previews}
+        />
       ),
     });
     setChildId(nextChildId);
@@ -388,7 +394,7 @@ export function CurrencyPickerSheet({
         aria-label={
           selectedMeta ? `Choose currency, ${selectedMeta.name} selected` : "Choose currency"
         }
-        className={`flex h-[36px] shrink-0 items-center gap-1.5 rounded-[14px] bg-surface-card px-2.5 text-text-primary shadow-sm disabled:opacity-40 active:scale-[0.96] transition-all`}
+        className={`flex h-[36px] shrink-0 items-center gap-1 rounded-[18px] bg-surface-card px-2 text-text-primary shadow-sm disabled:opacity-40 active:scale-[0.96] transition-all`}
       >
         {value && <CurrencyFlag code={value} />}
         <span className="text-subhead font-bold tracking-tight">{selectedMeta?.code ?? value ?? "—"}</span>
@@ -404,7 +410,12 @@ export function CurrencyPickerSheet({
           title="Choose currency"
           size="form"
         >
-          <CurrencyPickerContent available={available} value={value} onSelect={commit} />
+          <CurrencyPickerContent
+            available={available}
+            value={value}
+            onSelect={commit}
+            previews={previews}
+          />
         </ModalSheet>
       )}
     </>
