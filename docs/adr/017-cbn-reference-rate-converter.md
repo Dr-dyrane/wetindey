@@ -238,3 +238,17 @@ The decision is satisfied only when:
 Reconsider the provider if its terms, catalog, availability, provider coverage, or data
 semantics change. Reconsider the product boundary only through a separate accepted
 decision for a complete typed local Exchange capability.
+
+## Accepted amendment: ordered currency pairs
+
+The Founder subsequently accepted two independently selectable currency rows. NGN and
+each member of the validated curated catalog may be selected on either side. An ordered
+foreign-to-foreign pair is derived on the server only when both NGN legs resolve from the
+same provider and the same effective date. Mixed-provider, mixed-date, malformed,
+withdrawn, or unavailable evidence fails closed. The browser receives one typed
+ordered-pair rate, caches it under both currency codes in order, and performs amount
+arithmetic locally; entered amounts still never leave the browser.
+
+This amendment does not authorize executable quotes, fees, transfers, wallets, payments,
+or claims that a prototype bank or BDC offers the displayed reference. Client-side
+placeholder rate tables and provider/date laundering are prohibited.

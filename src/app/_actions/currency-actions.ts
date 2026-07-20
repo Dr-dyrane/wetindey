@@ -3,7 +3,9 @@
 import {
   REFERENCE_CURRENCIES,
   isReferenceCurrencyCode,
+  isSupportedReferenceCurrencyCode,
   type ReferenceCurrencyCode,
+  type SupportedReferenceCurrencyCode,
 } from "@/app/_data/reference-currencies";
 
 export type ReferenceProvider = "CBN" | "FRANKFURTER";
@@ -14,8 +16,8 @@ export interface ReferenceCurrencyCatalogEntry {
 }
 
 export interface ReferenceRate {
-  base: ReferenceCurrencyCode;
-  quote: "NGN";
+  base: SupportedReferenceCurrencyCode;
+  quote: SupportedReferenceCurrencyCode;
   rate: number;
   effectiveDate: string;
   provider: ReferenceProvider;
@@ -173,6 +175,48 @@ async function buildReferenceCurrencyCatalog(): Promise<ReferenceCurrencyCatalog
   );
 }
 
+function selectPairProvider(
+  catalog: readonly ReferenceCurrencyCatalogEntry[],
+  base: SupportedReferenceCurrencyCode,
+  quote: SupportedReferenceCurrencyCode
+): ReferenceProvider | null {
+  const foreignCodes = [base, quote].filter(
+    (code): code is ReferenceCurrencyCode => code !== "NGN"
+  );
+  const entries = foreignCodes.map((code) =>
+    catalog.find((candidate) => candidate.code === code)
+  );
+  if (entries.some((entry) => !entry)) return null;
+  return entries.every((entry) => entry?.provider === "CBN") ? "CBN" : "FRANKFURTER";
+}
+
+function pairRateFrom(
+  rows: readonly UpstreamRate[],
+  base: SupportedReferenceCurrencyCode,
+  quote: SupportedReferenceCurrencyCode
+): { rate: number; effectiveDate: string } | null {
+  const foreignCodes = [base, quote].filter(
+    (code): code is ReferenceCurrencyCode => code !== "NGN"
+  );
+  const required = foreignCodes.map((code) =>
+    rows.find((candidate) => candidate.quote === code)
+  );
+  if (required.some((row) => !row)) return null;
+  const dates = new Set(required.map((row) => row!.date));
+  if (dates.size !== 1) return null;
+
+  const ngnPer = (code: SupportedReferenceCurrencyCode) => {
+    if (code === "NGN") return 1;
+    const row = required.find((candidate) => candidate?.quote === code);
+    return row ? 1 / row.rate : Number.NaN;
+  };
+  const rate = ngnPer(base) / ngnPer(quote);
+  const effectiveDate = required[0]?.date;
+  return Number.isFinite(rate) && rate > 0 && effectiveDate
+    ? { rate, effectiveDate }
+    : null;
+}
+
 /**
  * The live product catalog is an intersection, never the curated list alone.
  * A failed CBN catalog quietly removes CBN attribution while the independently
@@ -193,47 +237,74 @@ export async function getReferenceCurrencyCatalog(): Promise<
  * upstream failure still throws so the client can distinguish unavailable from
  * a refresh error and decide whether a visibly saved rate is honest to show.
  */
-export async function getReferenceRate(currency: string): Promise<ReferenceRate | null> {
-  if (!isReferenceCurrencyCode(currency)) {
+export async function getReferenceRate(
+  base: string,
+  quote: string = "NGN"
+): Promise<ReferenceRate | null> {
+  if (
+    !isSupportedReferenceCurrencyCode(base) ||
+    !isSupportedReferenceCurrencyCode(quote)
+  ) {
     throw new Error("Unsupported reference currency.");
   }
+  if (base === quote) return null;
 
   const catalog = await buildReferenceCurrencyCatalog();
-  const entry = catalog.find((candidate) => candidate.code === currency);
-  if (!entry) return null;
-
-  const rates = await fetchNgnRates(entry.provider);
-  const upstream = rates.find((candidate) => candidate.quote === currency);
-  if (!upstream) return null;
-
-  const rate = 1 / upstream.rate;
-  if (!Number.isFinite(rate) || rate <= 0) {
-    throw new Error("The reference currency rate was invalid.");
-  }
+  const provider = selectPairProvider(catalog, base, quote);
+  if (!provider) return null;
+  const pair = pairRateFrom(await fetchNgnRates(provider), base, quote);
+  if (!pair) return null;
 
   return {
-    base: currency,
-    quote: "NGN",
-    rate,
-    effectiveDate: upstream.date,
-    provider: entry.provider,
+    base,
+    quote,
+    rate: pair.rate,
+    effectiveDate: pair.effectiveDate,
+    provider,
   };
 }
 
 export async function getReferenceRateTrend(
-  currency: string
+  base: string,
+  quote: string = "NGN"
 ): Promise<ReferenceRatePoint[]> {
-  if (!isReferenceCurrencyCode(currency)) {
+  if (
+    !isSupportedReferenceCurrencyCode(base) ||
+    !isSupportedReferenceCurrencyCode(quote)
+  ) {
     throw new Error("Unsupported reference currency.");
   }
+  if (base === quote) return [];
 
   const catalog = await buildReferenceCurrencyCatalog();
-  const entry = catalog.find((candidate) => candidate.code === currency);
-  if (!entry) return [];
+  const provider = selectPairProvider(catalog, base, quote);
+  if (!provider) return [];
+  const foreignCodes = [base, quote].filter(
+    (code): code is ReferenceCurrencyCode => code !== "NGN"
+  );
+  const histories = await Promise.all(
+    foreignCodes.map((code) => fetchNgnRateHistory(code, provider))
+  );
+  const byCurrency = new Map(
+    foreignCodes.map((code, index) => [
+      code,
+      new Map(histories[index]!.map((point) => [point.date, point])),
+    ])
+  );
+  const dates = histories[0]?.map((point) => point.date) ?? [];
 
-  const history = await fetchNgnRateHistory(currency, entry.provider);
-  return history
-    .map((point) => ({ date: point.date, rate: 1 / point.rate }))
+  return dates
+    .filter((date) =>
+      foreignCodes.every((code) => byCurrency.get(code)?.has(date))
+    )
+    .map((date) => {
+      const ngnPer = (code: SupportedReferenceCurrencyCode) => {
+        if (code === "NGN") return 1;
+        const point = byCurrency.get(code)?.get(date);
+        return point ? 1 / point.rate : Number.NaN;
+      };
+      return { date, rate: ngnPer(base) / ngnPer(quote) };
+    })
     .filter((point) => Number.isFinite(point.rate) && point.rate > 0)
     .sort((left, right) => left.date.localeCompare(right.date));
 }

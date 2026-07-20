@@ -8,9 +8,9 @@ import {
   type ReferenceRatePoint,
 } from "@/app/_actions/currency-actions";
 import {
-  REFERENCE_CURRENCY_META,
-  isReferenceCurrencyCode,
-  type ReferenceCurrencyCode,
+  SUPPORTED_REFERENCE_CURRENCY_META,
+  isSupportedReferenceCurrencyCode,
+  type SupportedReferenceCurrencyCode,
 } from "@/app/_data/reference-currencies";
 import type {
   ExchangeLocationKind,
@@ -58,8 +58,8 @@ export interface AmountState {
   lastEdited: AmountField;
 }
 
-const CACHE_PREFIX = "wetindey:reference-rate:v2:";
-const LAST_CURRENCY_KEY = "wetindey:reference-rate:last-currency:v1";
+const CACHE_PREFIX = "wetindey:reference-rate:v3:";
+const LAST_PAIR_KEY = "wetindey:reference-rate:last-pair:v1";
 const LEGACY_SESSION_AMOUNT_KEY = "wetindey:reference-amount:v1";
 const SESSION_AMOUNT_KEY = "wetindey:reference-amounts:v2";
 const MAX_SESSION_AMOUNT_CHARACTERS = 32;
@@ -94,12 +94,16 @@ export function isIsoCalendarDate(value: unknown): value is string {
   return !Number.isNaN(parsed.getTime()) && parsed.toISOString().slice(0, 10) === value;
 }
 
-export function isCachedRate(value: unknown, currency: ReferenceCurrencyCode): value is CachedRate {
+export function isCachedRate(
+  value: unknown,
+  base: SupportedReferenceCurrencyCode,
+  quote: SupportedReferenceCurrencyCode
+): value is CachedRate {
   if (typeof value !== "object" || value === null) return false;
   const candidate = value as Partial<CachedRate>;
   return (
-    candidate.base === currency &&
-    candidate.quote === "NGN" &&
+    candidate.base === base &&
+    candidate.quote === quote &&
     (candidate.provider === "CBN" || candidate.provider === "FRANKFURTER") &&
     typeof candidate.rate === "number" &&
     Number.isFinite(candidate.rate) &&
@@ -110,12 +114,22 @@ export function isCachedRate(value: unknown, currency: ReferenceCurrencyCode): v
   );
 }
 
-export function readCachedRate(currency: ReferenceCurrencyCode): CachedRate | null {
+function pairCacheKey(
+  base: SupportedReferenceCurrencyCode,
+  quote: SupportedReferenceCurrencyCode
+) {
+  return `${CACHE_PREFIX}${base}:${quote}`;
+}
+
+export function readCachedRate(
+  base: SupportedReferenceCurrencyCode,
+  quote: SupportedReferenceCurrencyCode
+): CachedRate | null {
   try {
-    const raw = window.localStorage.getItem(`${CACHE_PREFIX}${currency}`);
+    const raw = window.localStorage.getItem(pairCacheKey(base, quote));
     if (!raw) return null;
     const parsed: unknown = JSON.parse(raw);
-    return isCachedRate(parsed, currency) ? parsed : null;
+    return isCachedRate(parsed, base, quote) ? parsed : null;
   } catch {
     return null;
   }
@@ -123,8 +137,19 @@ export function readCachedRate(currency: ReferenceCurrencyCode): CachedRate | nu
 
 export function readLastCachedRate(): CachedRate | null {
   try {
-    const currency = window.localStorage.getItem(LAST_CURRENCY_KEY);
-    return currency && isReferenceCurrencyCode(currency) ? readCachedRate(currency) : null;
+    const raw = window.localStorage.getItem(LAST_PAIR_KEY);
+    if (!raw) return null;
+    const pair: unknown = JSON.parse(raw);
+    if (
+      !isRecord(pair) ||
+      typeof pair.base !== "string" ||
+      typeof pair.quote !== "string" ||
+      !isSupportedReferenceCurrencyCode(pair.base) ||
+      !isSupportedReferenceCurrencyCode(pair.quote)
+    ) {
+      return null;
+    }
+    return readCachedRate(pair.base, pair.quote);
   } catch {
     return null;
   }
@@ -133,8 +158,11 @@ export function readLastCachedRate(): CachedRate | null {
 export function saveCachedRate(rate: ReferenceRate) {
   try {
     const cached: CachedRate = { ...rate, savedAt: Date.now() };
-    window.localStorage.setItem(`${CACHE_PREFIX}${rate.base}`, JSON.stringify(cached));
-    window.localStorage.setItem(LAST_CURRENCY_KEY, rate.base);
+    window.localStorage.setItem(pairCacheKey(rate.base, rate.quote), JSON.stringify(cached));
+    window.localStorage.setItem(
+      LAST_PAIR_KEY,
+      JSON.stringify({ base: rate.base, quote: rate.quote })
+    );
   } catch {}
 }
 
@@ -314,15 +342,17 @@ export function deriveAmount(
   };
 }
 
-export function useExchangePanel(props: ExchangePanelProps) {
-  const { locations, selectedLocationId } = props;
+export function useExchangePanel({
+  locations,
+  selectedLocationId,
+}: ExchangePanelProps) {
   const amountId = useId();
   const foreignErrorId = useId();
   const ngnAmountId = useId();
   const ngnErrorId = useId();
-  const currencyRef = useRef<ReferenceCurrencyCode | null>(null);
+  const currencyRef = useRef<SupportedReferenceCurrencyCode | null>(null);
   const amountsRef = useRef<AmountState>(EMPTY_AMOUNTS);
-  const [currency, setCurrency] = useState<ReferenceCurrencyCode | null>(null);
+  const [currency, setCurrency] = useState<SupportedReferenceCurrencyCode | null>(null);
   const [baseCurrency, setBaseCurrency] = useState<string>("NGN");
   const [amounts, setAmounts] = useState<AmountState>(EMPTY_AMOUNTS);
   const [catalogRetry, setCatalogRetry] = useState(0);
@@ -344,10 +374,10 @@ export function useExchangePanel(props: ExchangePanelProps) {
   }, []);
 
   const enterCurrency = useCallback(
-    (nextCurrency: ReferenceCurrencyCode) => {
+    (nextCurrency: SupportedReferenceCurrencyCode) => {
       currencyRef.current = nextCurrency;
       setCurrency(nextCurrency);
-      setRateState({ kind: "loading", cached: readCachedRate(nextCurrency) });
+      setRateState({ kind: "loading", cached: readCachedRate(nextCurrency, "NGN") });
       const current = amountsRef.current;
       const other: AmountField = current.lastEdited === "foreign" ? "ngn" : "foreign";
       commitAmounts({ ...current, [other]: "" });
@@ -358,7 +388,7 @@ export function useExchangePanel(props: ExchangePanelProps) {
   const enterBaseCurrency = useCallback(
     (nextBaseCurrency: string) => {
       if (nextBaseCurrency === currency) {
-        setCurrency(baseCurrency as ReferenceCurrencyCode);
+        setCurrency(baseCurrency as SupportedReferenceCurrencyCode);
       }
       setBaseCurrency(nextBaseCurrency);
       const current = amountsRef.current;
@@ -428,7 +458,7 @@ export function useExchangePanel(props: ExchangePanelProps) {
   useEffect(() => {
     if (!currency || catalogState.kind !== "ready") return;
     let cancelled = false;
-    const cached = readCachedRate(currency);
+    const cached = readCachedRate(currency, "NGN");
     setRateState({ kind: "loading", cached });
     setRateTrendState({ kind: "loading" });
 
@@ -437,6 +467,7 @@ export function useExchangePanel(props: ExchangePanelProps) {
         if (cancelled) return;
         if (!rate) {
           setRateState({ kind: "unavailable" });
+          setRateTrendState({ kind: "unavailable" });
           return;
         }
         saveCachedRate(rate);
@@ -492,6 +523,7 @@ export function useExchangePanel(props: ExchangePanelProps) {
     candidateVisibleRate && candidateVisibleRate.base === currency ? candidateVisibleRate : null;
   const visibleRateBase = visibleRate?.base;
   const visibleRateValue = visibleRate?.rate;
+
   useEffect(() => {
     const current = amountsRef.current;
     const next = deriveAmount(current, visibleRate, currency, baseCurrency);
@@ -521,7 +553,7 @@ export function useExchangePanel(props: ExchangePanelProps) {
     (offline && visibleRate !== null);
   const availableCurrencies =
     catalogState.kind === "ready" ? catalogState.entries.map((entry) => entry.code) : [];
-  const selectedMeta = currency ? REFERENCE_CURRENCY_META[currency] : null;
+  const selectedMeta = currency ? SUPPORTED_REFERENCE_CURRENCY_META[currency] : null;
   const selectedLocation = locations.find((location) => location.id === selectedLocationId) ?? null;
 
   const [trendPeriod, setTrendPeriod] = useState<"7d" | "14d" | "30d">("7d");

@@ -149,7 +149,7 @@ export function ExchangePanelView({
       <section aria-label="Reference Rate Answer" className="squircle-card bg-surface-card p-3.5 space-y-2">
         <div className="flex items-center justify-between gap-2">
           <span className="text-caption-1 font-semibold text-text-secondary">
-            {visibleRate ? providerLabel(visibleRate) : "CBN reference"}
+            {visibleRate ? providerLabel(visibleRate) : "Reference rate"}
           </span>
           {visibleRate && (
             <span className="text-caption-2 font-medium text-text-tertiary">
@@ -177,16 +177,18 @@ export function ExchangePanelView({
             <div className="flex items-baseline gap-2">
               <span className="text-title-1 font-bold tracking-tight text-text-primary tabular-nums">
                 {baseCurrency === "NGN" ? "₦" : ""}
-                {activeCrossRate.toLocaleString("en-NG", {
-                  minimumFractionDigits: 2,
-                  maximumFractionDigits: 2,
-                })}
+                {activeCrossRate === null
+                  ? "—"
+                  : activeCrossRate.toLocaleString("en-NG", {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 4,
+                    })}
               </span>
               <span className="text-footnote font-semibold text-text-secondary">
                 {baseCurrency} per {currency ?? "unit"}
               </span>
             </div>
-            {trendInsight && baseCurrency === "NGN" && (
+            {trendInsight && (
               <span
                 className={`squircle px-2 py-0.5 text-caption-1 font-semibold tabular-nums ${
                   trendInsight.percentChange >= 0
@@ -207,14 +209,14 @@ export function ExchangePanelView({
         <div className="space-y-2">
           {conversionReversed ? ngnInput : foreignInput}
 
-          <div className="flex justify-center my-1">
+          <div className="flex justify-center my-0.5">
             <button
               type="button"
               onClick={toggleConversionDirection}
               className={`exchange-swap-button ${transition.press}`}
               aria-label="Swap conversion direction"
             >
-              <SolidIcon name="refresh" size={16} />
+              <CoinsExchange size={18} />
             </button>
           </div>
 
@@ -367,5 +369,28 @@ function SparklineGraph({ points }: { points: ReferenceRatePoint[] }) {
         />
       </svg>
     </div>
+  );
+}
+
+function CoinsExchange({ size = 18 }: { size?: number }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <circle cx="8" cy="8" r="4.5" />
+      <circle cx="16" cy="16" r="4.5" />
+      <path d="M15 8h2a2 2 0 0 1 2 2v1" />
+      <path d="M18 12l2-2-2-2" />
+      <path d="M9 16H7a2 2 0 0 1-2-2v-1" />
+      <path d="M6 12L4 14l2 2" />
+    </svg>
   );
 }

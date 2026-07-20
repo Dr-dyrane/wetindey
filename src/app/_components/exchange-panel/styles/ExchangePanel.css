@@ -7,16 +7,16 @@
 
 .exchange-slender-row {
   display: flex;
-  min-height: 3.25rem; /* 52px */
+  min-height: 2.75rem; /* 44px slender Apple HIG height */
   align-items: center;
   gap: 0.5rem;
-  border-radius: 1.125rem; /* rounded-[18px] */
+  border-radius: 1.125rem; /* rounded-[18px] continuous squircle */
   background: var(--color-control-fill);
-  padding-inline: 0.875rem;
+  padding-inline: 0.625rem;
 }
 
 .exchange-amount-input {
-  min-height: 3.25rem;
+  min-height: 2.75rem;
   min-width: 0;
   flex: 1;
   border: none;
@@ -25,6 +25,7 @@
   line-height: 1.1;
   font-feature-settings: "tnum" 1;
   font-variant-numeric: tabular-nums;
+  padding-left: 0.375rem;
 }
 
 .exchange-amount-input::placeholder {
@@ -37,8 +38,8 @@
 
 .exchange-swap-button {
   display: inline-flex;
-  height: 2.25rem;
-  width: 2.25rem;
+  height: 2.125rem; /* 34px compact height */
+  width: 2.125rem;
   align-items: center;
   justify-content: center;
   border-radius: 9999px;

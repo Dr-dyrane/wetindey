@@ -459,6 +459,25 @@ foreign-to-foreign cross-rates plus 7D/2W/1M/3M/6M/1Y trend windows require an A
 update, ordered pair cache keys, same-provider/same-effective-date server derivation, and
 two selectable currency rows. Do not emulate this with mixed or client-invented rates.
 
+##### Aboki FX truthful pair conversion — ACTIVE
+
+Owner: current controller.
+Exclusive paths:
+
+- `docs/adr/017-cbn-reference-rate-converter.md`
+- `src/app/_data/reference-currencies.ts`
+- `src/app/_actions/currency-actions.ts`
+- `src/app/_components/CurrencyPickerSheet.tsx`
+- `src/app/_components/exchange-panel/hooks/useExchangePanel.ts`
+- `src/app/_components/exchange-panel/views/ExchangePanelView.tsx`
+- `LANES.md`
+
+Preserve Antigravity's accepted two-row UI while replacing its client-side placeholder
+rate table with a server-validated ordered-pair result. Cross-rates must use one provider
+and one effective date, caches must be pair-aware, NGN must be a typed selectable
+currency, and unavailable evidence must fail closed. No amount may leave the browser.
+Trend-window expansion remains a separate follow-up.
+
 ##### ItemDetailSheet component modularization — COMPLETE / PATHS RELEASED
 
 Owner: released. Exclusive paths:

@@ -17,9 +17,10 @@ export const REFERENCE_CURRENCIES = [
 ] as const;
 
 export type ReferenceCurrencyCode = (typeof REFERENCE_CURRENCIES)[number];
+export type SupportedReferenceCurrencyCode = ReferenceCurrencyCode | "NGN";
 
 export interface ReferenceCurrencyMeta {
-  code: ReferenceCurrencyCode;
+  code: SupportedReferenceCurrencyCode;
   name: string;
   symbol: string;
   flag: string;
@@ -136,6 +137,26 @@ export const REFERENCE_CURRENCY_META: Record<ReferenceCurrencyCode, ReferenceCur
   },
 };
 
+export const SUPPORTED_REFERENCE_CURRENCY_META: Record<
+  SupportedReferenceCurrencyCode,
+  ReferenceCurrencyMeta
+> = {
+  NGN: {
+    code: "NGN",
+    name: "Nigerian naira",
+    symbol: "₦",
+    flag: "ng",
+    searchAliases: ["Nigeria", "naira"],
+  },
+  ...REFERENCE_CURRENCY_META,
+};
+
 export function isReferenceCurrencyCode(value: string): value is ReferenceCurrencyCode {
   return REFERENCE_CURRENCIES.some((currency) => currency === value);
+}
+
+export function isSupportedReferenceCurrencyCode(
+  value: string
+): value is SupportedReferenceCurrencyCode {
+  return value === "NGN" || isReferenceCurrencyCode(value);
 }
