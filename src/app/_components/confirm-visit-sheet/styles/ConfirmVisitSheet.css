@@ -1,0 +1,8 @@
+/* ConfirmVisitSheet.css */
+
+.confirm-visit-sheet-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  padding: 1rem;
+}
