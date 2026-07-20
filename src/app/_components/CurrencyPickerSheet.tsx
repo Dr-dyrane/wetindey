@@ -326,6 +326,14 @@ function CurrencyPickerContent({
   );
 }
 
+function getMeta(code: string | null) {
+  if (!code) return null;
+  if (code === "NGN") {
+    return { code: "NGN", name: "Nigerian naira", symbol: "₦", flag: "ng", searchAliases: ["Nigeria", "naira"] };
+  }
+  return isReferenceCurrencyCode(code) ? REFERENCE_CURRENCY_META[code] : null;
+}
+
 export function CurrencyPickerSheet({
   available,
   value,
@@ -336,7 +344,7 @@ export function CurrencyPickerSheet({
   const triggerRef = useRef<HTMLButtonElement>(null);
   const [fallbackOpen, setFallbackOpen] = useState(false);
   const [childId, setChildId] = useState<string | null>(null);
-  const selectedMeta = value ? REFERENCE_CURRENCY_META[value] : null;
+  const selectedMeta = getMeta(value);
   const isOpen = navigation ? navigation.childOpen && navigation.childId === childId : fallbackOpen;
 
   const commit = (currency: ReferenceCurrencyCode) => {
@@ -380,7 +388,7 @@ export function CurrencyPickerSheet({
         className={`squircle flex h-11 shrink-0 items-center gap-2 bg-surface-card px-3 text-text-primary disabled:opacity-40 ${transition.press}`}
       >
         {value && <CurrencyFlag code={value} />}
-        <span className="text-body font-semibold">{value ?? "—"}</span>
+        <span className="text-body font-semibold">{selectedMeta?.code ?? value ?? "—"}</span>
         <span className="text-text-tertiary">
           <SolidIcon name="chevron-down" size={16} />
         </span>
