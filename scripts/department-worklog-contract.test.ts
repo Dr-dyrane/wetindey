@@ -354,6 +354,7 @@ test("department worklogs satisfy the static handoff contract", () => {
       "d882657acea9bd378e54520c1c1f7305dfd3009ef59b477b94ad562558132106", // bootstrap with stable self-normalized test script
       "fc8555153382f2851e20be93ce4da5b6234ce6fdc00581e6f8c046471892f657", // bootstrap with updated CONTRIBUTING.md link
       "84fe81e46c6af93c17be17bf105f9471d7f0e11d8edead6804e2b28f90c4ae4c", // bootstrap with updated AGENTS.md line limits
+      "095960eb1159b0ed27f7e505268eb9aef57007d5ee38823a57b4fb93c71e07f6", // bootstrap with updated Aboki FX candidate tree
     ];
     assert.ok(allowedDigests.includes(digest(sources)), "bootstrap candidate digest must match exact 23-path bytes");
   }

@@ -31,208 +31,48 @@ export function ExchangePanelView({
   panel,
 }: ExchangePanelViewProps) {
   const {
-    currency,
-    amounts,
-    rateTrendState,
-    selectedMeta,
-    visibleRate,
-    viewMode,
-    setViewMode,
-  } = panel;
-
-  const conversionAnnouncement =
-    visibleRate && currency
-      ? amounts.lastEdited === "foreign" && amounts.ngn
-        ? `Estimated ${amounts.ngn} Nigerian naira`
-        : amounts.lastEdited === "ngn" && amounts.foreign
-          ? `Estimated ${amounts.foreign} ${REFERENCE_CURRENCY_META[currency].name}`
-          : ""
-      : "";
-  const sortedExchangeLocations = [...locations].sort(
-    (left, right) =>
-      getHaversineDistance(origin.lat, origin.lng, left.lat, left.lng) -
-      getHaversineDistance(origin.lat, origin.lng, right.lat, right.lng)
-  );
-  const nearestLocationDistance =
-    sortedExchangeLocations.length > 0
-      ? formatDistance(
-          getHaversineDistance(
-            origin.lat,
-            origin.lng,
-            sortedExchangeLocations[0]!.lat,
-            sortedExchangeLocations[0]!.lng
-          )
-        )
-      : null;
-  const trendPoints =
-    rateTrendState.kind === "ready"
-      ? normalizeTrendPoints(rateTrendState.points)
-      : [];
-
-  return (
-    <div className="space-y-4 px-3 pb-[calc(max(var(--sheet-hidden,0px),var(--safe-area-bottom))+20px)]">
-      <div className="flex min-h-tap items-center justify-between px-1">
-        <p className="text-caption-1 font-semibold uppercase tracking-[0.08em] text-text-tertiary">Aboki FX</p>
-        <button
-          type="button"
-          onClick={() => setViewMode(viewMode === "answer" ? "evidence" : "answer")}
-          className={`exchange-view-link ${transition.press}`}
-        >
-          {viewMode === "answer" ? "Trend" : "Back"}
-        </button>
-      </div>
-
-      {viewMode === "answer" ? (
-        <section className="space-y-4" aria-labelledby="exchange-answer-heading">
-          <div className="exchange-answer-summary px-1">
-            {visibleRate && selectedMeta ? (
-              <>
-                <p className="text-caption-1 font-semibold uppercase tracking-[0.08em] text-text-tertiary">
-                  {providerLabel(visibleRate)} · {selectedMeta.symbol}1
-                </p>
-                <p className="exchange-answer-rate tabular-nums text-text-primary">
-                  ₦{visibleRate.rate.toLocaleString("en-NG", {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
-                  })}
-                </p>
-                {rateTrendState.kind === "ready" && (
-                  <p className="text-footnote font-semibold text-text-secondary">
-                    {trendMeaning(rateTrendState.points)}
-                  </p>
-                )}
-              </>
-            ) : (
-              <>
-                <p className="text-caption-1 font-semibold uppercase tracking-[0.08em] text-text-tertiary">
-                  Reference rate
-                </p>
-                <p className="exchange-answer-rate text-text-primary">Checking rate</p>
-              </>
-            )}
-          </div>
-
-          <div className="exchange-decision-row">
-            <IconOrb size={32} tone="status-caution">
-              <SolidIcon name="warning" size={18} />
-            </IconOrb>
-            <div className="min-w-0">
-              <h2 id="exchange-answer-heading" className="text-body font-semibold text-text-primary">
-                Nearby exchange not confirmed
-              </h2>
-              <p className="text-footnote text-text-secondary">
-                {sortedExchangeLocations.length} samples
-                {nearestLocationDistance ? ` · nearest ${nearestLocationDistance}` : ""}
-              </p>
-            </div>
-          </div>
-
-          <ConversionRail panel={panel} />
-
-          <button
-            type="button"
-            onClick={() => setViewMode("nearby")}
-            className={`exchange-primary-action ${transition.press}`}
-          >
-            See nearby exchange points
-          </button>
-          <p className="sr-only" aria-live="polite" aria-atomic="true">{conversionAnnouncement}</p>
-        </section>
-      ) : viewMode === "evidence" ? (
-        <section className="space-y-3" aria-labelledby="exchange-evidence-heading">
-          <div className="px-1">
-            <h2 id="exchange-evidence-heading" className="text-title-3 font-semibold text-text-secondary">Recent movement</h2>
-            {trendPoints.length >= 2 && visibleRate ? (
-              <>
-                <p className="mt-1 text-title-1 font-semibold text-text-primary">{trendMeaning(trendPoints)}</p>
-                <RateTrend points={trendPoints} />
-                <p className="mt-1 text-caption-1 text-text-tertiary">
-                  {providerLabel(visibleRate)} · {formatEffectiveDate(visibleRate.effectiveDate)}
-                </p>
-              </>
-            ) : (
-              <p className="mt-1 text-body text-text-secondary">Not enough history yet</p>
-            )}
-          </div>
-        </section>
-      ) : (
-        <section className="space-y-3" aria-labelledby="sample-nearby-heading">
-          <div className="px-1">
-            <h2 id="sample-nearby-heading" className="text-title-3 font-semibold text-text-secondary">Sample exchange points</h2>
-            <p className="mt-1 text-title-1 font-semibold text-text-primary">
-              {sortedExchangeLocations[0]?.name ?? "No nearby sample"}
-            </p>
-            <p className="mt-0.5 text-footnote text-text-secondary">
-              {sortedExchangeLocations.length} prototype locations · not verified
-              {nearestLocationDistance ? ` · nearest ${nearestLocationDistance}` : ""}
-            </p>
-          </div>
-
-          <div className="space-y-1">
-            {sortedExchangeLocations.map((location) => {
-              const selected = location.id === selectedLocationId;
-              const distance = formatDistance(getHaversineDistance(origin.lat, origin.lng, location.lat, location.lng));
-              return (
-                <button
-                  key={location.id}
-                  type="button"
-                  aria-pressed={selected}
-                  onClick={() => onSelectLocation(location)}
-                  className={`exchange-location-row ${selected ? "bg-fillSecondary" : ""} ${transition.press}`}
-                >
-                  <IconOrb size={32} tone="domain-money"><SolidIcon name="money" size={18} /></IconOrb>
-                  <span className="min-w-0 flex-1">
-                    <span className="block truncate text-body font-semibold text-text-primary">{location.name}</span>
-                    <span className="block truncate text-footnote text-text-secondary">{location.description}</span>
-                  </span>
-                  <span className="shrink-0 text-caption-1 tabular-nums text-text-tertiary">{distance}</span>
-                </button>
-              );
-            })}
-          </div>
-          <button type="button" onClick={() => setViewMode("answer")} className={`exchange-primary-action ${transition.press}`}>Back to answer</button>
-        </section>
-      )}
-    </div>
-  );
-}
-
-function ConversionRail({
-  panel,
-}: {
-  panel: ReturnType<typeof useExchangePanel>;
-}) {
-  const {
     amountId,
-    ngnAmountId,
     foreignErrorId,
+    ngnAmountId,
     ngnErrorId,
     currency,
     amounts,
     catalogState,
-    availableCurrencies,
+    rateState,
+    trendPeriod,
+    setTrendPeriod,
+    trendInsight,
     enterCurrency,
     editAmount,
     foreignError,
     ngnError,
+    availableCurrencies,
+    selectedMeta,
+    visibleRate,
     conversionReversed,
     toggleConversionDirection,
   } = panel;
-  const foreignRow = (
-    <div className="exchange-amount-row">
-      <label htmlFor={amountId} className="sr-only">Foreign amount</label>
-      <input
-        id={amountId}
-        value={amounts.foreign}
-        onChange={(event) => editAmount("foreign", event.target.value)}
-        inputMode="decimal"
-        autoComplete="off"
-        placeholder="100"
-        aria-invalid={foreignError ? true : undefined}
-        aria-describedby={foreignError ? `${foreignErrorId} exchange-reference-note` : "exchange-reference-note"}
-        data-autofocus
-        className="exchange-amount-input"
-      />
+
+  const sortedLocations = [...locations].sort(
+    (a, b) =>
+      getHaversineDistance(origin.lat, origin.lng, a.lat, a.lng) -
+      getHaversineDistance(origin.lat, origin.lng, b.lat, b.lng)
+  );
+
+  const nearestDist =
+    sortedLocations.length > 0
+      ? formatDistance(
+          getHaversineDistance(
+            origin.lat,
+            origin.lng,
+            sortedLocations[0]!.lat,
+            sortedLocations[0]!.lng
+          )
+        )
+      : null;
+
+  const foreignPicker = (
+    <div className="flex items-center gap-2">
       {catalogState.kind === "loading" && !currency ? (
         <Skeleton className="h-9 w-24 rounded-[14px]" />
       ) : (
@@ -245,103 +85,267 @@ function ConversionRail({
       )}
     </div>
   );
-  const ngnRow = (
-    <div className="exchange-amount-row">
+
+  const ngnPicker = (
+    <div className="flex items-center gap-2">
+      <CurrencyPickerSheet
+        available={availableCurrencies}
+        value={currency}
+        onSelect={enterCurrency}
+        disabled={catalogState.kind !== "ready"}
+      />
+    </div>
+  );
+
+  const foreignInput = (
+    <div className="exchange-slender-row">
+      <label htmlFor={amountId} className="sr-only">Foreign amount</label>
+      <input
+        id={amountId}
+        value={amounts.foreign}
+        onChange={(e) => editAmount("foreign", e.target.value)}
+        inputMode="decimal"
+        autoComplete="off"
+        placeholder="100"
+        aria-invalid={foreignError ? true : undefined}
+        aria-describedby={foreignError ? foreignErrorId : undefined}
+        data-autofocus
+        className="exchange-amount-input text-title-2 font-bold tabular-nums"
+      />
+      {foreignPicker}
+    </div>
+  );
+
+  const ngnInput = (
+    <div className="exchange-slender-row">
       <label htmlFor={ngnAmountId} className="sr-only">Naira amount</label>
       <input
         id={ngnAmountId}
         value={amounts.ngn}
-        onChange={(event) => editAmount("ngn", event.target.value)}
+        onChange={(e) => editAmount("ngn", e.target.value)}
         inputMode="decimal"
         autoComplete="off"
         placeholder="100000"
         aria-invalid={ngnError ? true : undefined}
-        aria-describedby={ngnError ? `${ngnErrorId} exchange-reference-note` : "exchange-reference-note"}
-        className="exchange-amount-input"
+        aria-describedby={ngnError ? ngnErrorId : undefined}
+        className="exchange-amount-input text-title-2 font-bold tabular-nums"
       />
-      <span className="exchange-currency-chip"><CurrencyFlag code="NGN" />NGN</span>
+      {ngnPicker}
     </div>
   );
 
   return (
-    <>
-      <p id="exchange-reference-note" className="sr-only">
-        Reference rates are not merchant quotes.
-      </p>
-      <div className="exchange-conversion-canvas squircle bg-controlFill px-2">
-        {conversionReversed ? ngnRow : foreignRow}
-        <button
-          type="button"
-          onClick={toggleConversionDirection}
-          className="exchange-relationship"
-          aria-label="Swap conversion direction"
-        >
-          <span aria-hidden="true">⇄</span>
-        </button>
-        {conversionReversed ? foreignRow : ngnRow}
-      </div>
-      {foreignError && <p id={foreignErrorId} role="alert" className="px-1 text-footnote text-status-danger-fg">{foreignError}</p>}
-      {ngnError && <p id={ngnErrorId} role="alert" className="px-1 text-footnote text-status-danger-fg">{ngnError}</p>}
-    </>
+    <div className="space-y-3 px-3 pb-[calc(max(var(--sheet-hidden,0px),var(--safe-area-bottom))+20px)]">
+      {/* 1. HERO RATE CARD (Slender  HIG Container) */}
+      <section aria-label="Reference Rate Answer" className="squircle-card bg-surface-card p-3.5 space-y-2">
+        <div className="flex items-center justify-between gap-2">
+          <span className="text-caption-1 font-semibold uppercase tracking-[0.08em] text-text-tertiary">
+            {visibleRate ? providerLabel(visibleRate) : "CBN Reference"}
+          </span>
+          {visibleRate && (
+            <span className="text-caption-2 font-medium text-text-tertiary">
+              Effective {formatEffectiveDate(visibleRate.effectiveDate)}
+            </span>
+          )}
+        </div>
+
+        {visibleRate && selectedMeta ? (
+          <div className="flex items-baseline justify-between gap-3">
+            <div className="flex items-baseline gap-2">
+              <span className="text-title-1 font-bold tracking-tight text-text-primary tabular-nums">
+                ₦{visibleRate.rate.toLocaleString("en-NG", {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}
+              </span>
+              <span className="text-footnote font-semibold text-text-secondary">
+                per {selectedMeta.code}
+              </span>
+            </div>
+            {trendInsight && (
+              <span
+                className={`squircle px-2 py-0.5 text-caption-1 font-semibold tabular-nums ${
+                  trendInsight.percentChange >= 0
+                    ? "bg-status-confirmed-bg text-status-confirmed-fg"
+                    : "bg-status-caution-bg text-status-caution-fg"
+                }`}
+              >
+                {trendInsight.percentChange >= 0 ? "▲ +" : "▼ "}
+                {Math.abs(trendInsight.percentChange).toFixed(1)}%
+              </span>
+            )}
+          </div>
+        ) : (
+          <div className="py-2">
+            <Skeleton className="h-8 w-48 rounded-[12px]" />
+          </div>
+        )}
+      </section>
+
+      {/* 2. DUAL CONVERTER RAIL (Slender Interactive Inputs with 180° Spring Swap) */}
+      <section aria-label="Interactive Currency Converter" className="squircle-card bg-surface-card p-3.5 space-y-2.5">
+        <div className="space-y-2">
+          {conversionReversed ? ngnInput : foreignInput}
+
+          <div className="flex justify-center my-1">
+            <button
+              type="button"
+              onClick={toggleConversionDirection}
+              className={`exchange-swap-button ${transition.press}`}
+              aria-label="Swap conversion direction"
+            >
+              <SolidIcon name="refresh" size={16} />
+            </button>
+          </div>
+
+          {conversionReversed ? foreignInput : ngnInput}
+        </div>
+
+        {foreignError && <p id={foreignErrorId} role="alert" className="text-footnote text-status-danger-fg px-1">{foreignError}</p>}
+        {ngnError && <p id={ngnErrorId} role="alert" className="text-footnote text-status-danger-fg px-1">{ngnError}</p>}
+
+        <p className="text-caption-1 text-text-tertiary text-center leading-snug">
+          Reference rate estimate · WetinDey does not exchange money.
+        </p>
+      </section>
+
+      {/* 3. TIME-GATED TREND & STORY INSIGHT CARD */}
+      {trendInsight && (
+        <section aria-label="Rate Movement Trend" className="squircle-card bg-surface-card p-3.5 space-y-3">
+          <div className="flex items-center justify-between gap-2">
+            <h3 className="text-footnote font-semibold text-text-secondary">Rate Movement</h3>
+            <div className="flex gap-1 bg-fillTertiary p-0.5 squircle" role="radiogroup" aria-label="Trend Time Range">
+              {(["7d", "14d", "30d"] as const).map((period) => (
+                <button
+                  key={period}
+                  type="button"
+                  role="radio"
+                  aria-checked={trendPeriod === period}
+                  onClick={() => setTrendPeriod(period)}
+                  className={`px-2 py-0.5 text-caption-1 font-semibold uppercase squircle transition-all ${
+                    trendPeriod === period
+                      ? "bg-surface-card text-text-primary shadow-card"
+                      : "text-text-tertiary"
+                  }`}
+                >
+                  {period}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between text-caption-1 font-medium text-text-secondary">
+            <span>High: <strong className="text-text-primary tabular-nums">₦{trendInsight.high.toFixed(2)}</strong></span>
+            <span>Low: <strong className="text-text-primary tabular-nums">₦{trendInsight.low.toFixed(2)}</strong></span>
+          </div>
+
+          <SparklineGraph points={trendInsight.points} />
+
+          <p className="text-footnote font-medium text-text-secondary leading-snug">
+            {trendInsight.narrative}
+          </p>
+        </section>
+      )}
+
+      {/* 4. NEARBY SAMPLE EXCHANGE OUTLETS CARD GROUP */}
+      <section aria-label="Sample Exchange Points" className="space-y-2">
+        <div className="px-1 flex items-center justify-between">
+          <h3 className="text-footnote font-semibold text-text-secondary">Sample Exchange Points</h3>
+          {nearestDist && (
+            <span className="text-caption-1 text-text-tertiary">Nearest {nearestDist}</span>
+          )}
+        </div>
+
+        <div className="squircle-card bg-surface-card divide-y divide-fillSecondary overflow-hidden">
+          {sortedLocations.map((location) => {
+            const selected = location.id === selectedLocationId;
+            const dist = formatDistance(
+              getHaversineDistance(origin.lat, origin.lng, location.lat, location.lng)
+            );
+
+            return (
+              <button
+                key={location.id}
+                type="button"
+                aria-pressed={selected}
+                onClick={() => onSelectLocation(location)}
+                className={`flex min-h-[52px] w-full items-center justify-between gap-3 p-3 text-left transition-colors ${
+                  selected ? "bg-fillSecondary" : "active:bg-fillTertiary"
+                }`}
+              >
+                <div className="flex items-center gap-3 min-w-0 flex-1">
+                  <IconOrb size={32} tone="domain-money">
+                    <SolidIcon name={location.kind === "bank" ? "building" : "money"} size={16} />
+                  </IconOrb>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-subhead font-semibold text-text-primary">
+                      {location.name}
+                    </p>
+                    <p className="truncate text-caption-1 text-text-secondary">
+                      {location.description}
+                    </p>
+                  </div>
+                </div>
+                <span className="shrink-0 text-caption-1 tabular-nums font-medium text-text-tertiary">
+                  {dist}
+                </span>
+              </button>
+            );
+          })}
+
+          {sortedLocations.length === 0 && (
+            <div className="p-4 text-center text-footnote text-text-secondary">
+              No sample exchange locations nearby.
+            </div>
+          )}
+        </div>
+
+        <p className="px-1 text-caption-1 text-text-tertiary">
+          Prototype locations · not verified quotes or live inventory.
+        </p>
+      </section>
+    </div>
   );
 }
 
-function trendMeaning(points: ReferenceRatePoint[]): string {
-  const ordered = normalizeTrendPoints(points);
-  if (ordered.length < 2) return "Not enough history yet";
-  const first = ordered[0]!;
-  const last = ordered[ordered.length - 1]!;
-  const change = ((last.rate - first.rate) / first.rate) * 100;
-  const elapsedDays = Math.round(
-    (Date.parse(last.date) - Date.parse(first.date)) / 86_400_000
-  );
-  if (Math.abs(change) < 0.05) return "Stable across recent updates";
-  if (!Number.isFinite(elapsedDays) || elapsedDays < 1) {
-    return `Rate ${change > 0 ? "up" : "down"} ${Math.abs(change).toFixed(1)}% across recent updates`;
-  }
-  return `Rate ${change > 0 ? "up" : "down"} ${Math.abs(change).toFixed(1)}% over ${elapsedDays} ${elapsedDays === 1 ? "day" : "days"}`;
-}
+function SparklineGraph({ points }: { points: ReferenceRatePoint[] }) {
+  if (points.length < 2) return null;
+  const values = points.map((p) => p.rate);
+  const min = Math.min(...values);
+  const max = Math.max(...values);
+  const spread = max - min || 1;
+  const width = 300;
+  const height = 48;
 
-function normalizeTrendPoints(points: ReferenceRatePoint[]): ReferenceRatePoint[] {
-  return points
-    .filter(
-      (point) =>
-        Number.isFinite(point.rate) &&
-        point.rate > 0 &&
-        Number.isFinite(Date.parse(point.date))
-    )
-    .sort((left, right) => Date.parse(left.date) - Date.parse(right.date));
-}
-
-function RateTrend({ points }: { points: ReferenceRatePoint[] }) {
-  const values = points.map((point) => point.rate);
-  const first = values[0]!;
-  const last = values[values.length - 1]!;
-  const low = Math.min(...values);
-  const high = Math.max(...values);
-  const spread = high - low || 1;
-  const width = 240;
-  const height = 44;
   const path = values
-    .map((value, index) => {
-      const x = (index / Math.max(values.length - 1, 1)) * width;
-      const y = height - 4 - ((value - low) / spread) * (height - 8);
-      return `${index === 0 ? "M" : "L"}${x.toFixed(1)},${y.toFixed(1)}`;
+    .map((v, i) => {
+      const x = (i / (values.length - 1)) * width;
+      const y = height - 6 - ((v - min) / spread) * (height - 12);
+      return `${i === 0 ? "M" : "L"}${x.toFixed(1)},${y.toFixed(1)}`;
     })
     .join(" ");
-  const change = ((last - first) / first) * 100;
-  const direction = Math.abs(change) < 0.05 ? "Stable" : change > 0 ? "Up" : "Down";
+
+  const areaPath = `${path} L ${width},${height} L 0,${height} Z`;
 
   return (
-    <div className="exchange-trend" role="img" aria-label={`${direction} ${Math.abs(change).toFixed(1)} percent across recent rate updates`}>
-      <svg viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="none" aria-hidden="true">
-        <path d={path} />
+    <div className="relative w-full overflow-hidden" style={{ height: `${height}px` }}>
+      <svg viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="none" className="w-full h-full">
+        <defs>
+          <linearGradient id="sparkline-grad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="var(--color-focus-ring)" stopOpacity="0.2" />
+            <stop offset="100%" stopColor="var(--color-focus-ring)" stopOpacity="0.0" />
+          </linearGradient>
+        </defs>
+        <path d={areaPath} fill="url(#sparkline-grad)" />
+        <path
+          d={path}
+          fill="none"
+          stroke="var(--color-focus-ring)"
+          strokeWidth="2.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
       </svg>
-      <p>
-        {direction}
-        {direction === "Stable" ? "" : ` ${Math.abs(change).toFixed(1)}%`}
-        <span> · recent rate updates</span>
-      </p>
     </div>
   );
 }

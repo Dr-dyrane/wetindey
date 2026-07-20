@@ -462,6 +462,48 @@ export function useExchangePanel(props: ExchangePanelProps) {
   const selectedMeta = currency ? REFERENCE_CURRENCY_META[currency] : null;
   const selectedLocation = locations.find((location) => location.id === selectedLocationId) ?? null;
 
+  const [trendPeriod, setTrendPeriod] = useState<"7d" | "14d" | "30d">("7d");
+
+  const trendInsight = useMemo(() => {
+    if (rateTrendState.kind !== "ready" || rateTrendState.points.length < 2) {
+      return null;
+    }
+    const daysLimit = trendPeriod === "7d" ? 7 : trendPeriod === "14d" ? 14 : 30;
+    const sorted = [...rateTrendState.points]
+      .filter((p) => Number.isFinite(p.rate) && Number.isFinite(Date.parse(p.date)))
+      .sort((a, b) => Date.parse(a.date) - Date.parse(b.date))
+      .slice(-daysLimit);
+
+    if (sorted.length < 2) return null;
+
+    const rates = sorted.map((p) => p.rate);
+    const first = rates[0]!;
+    const last = rates[rates.length - 1]!;
+    const high = Math.max(...rates);
+    const low = Math.min(...rates);
+    const netChange = last - first;
+    const percentChange = (netChange / first) * 100;
+    const band = high - low;
+
+    const narrative =
+      Math.abs(percentChange) < 0.05
+        ? `Stable curve — rate stayed within a ₦${band.toFixed(0)} band over ${sorted.length} days`
+        : Math.abs(percentChange) > 2
+          ? `High movement — rate fluctuated ₦${band.toFixed(0)} over ${sorted.length} days`
+          : `Gradual movement — rate shifted ₦${Math.abs(netChange).toFixed(0)} over ${sorted.length} days`;
+
+    return {
+      points: sorted,
+      high,
+      low,
+      first,
+      last,
+      netChange,
+      percentChange,
+      narrative,
+    };
+  }, [rateTrendState, trendPeriod]);
+
   return {
     amountId,
     foreignErrorId,
@@ -473,6 +515,9 @@ export function useExchangePanel(props: ExchangePanelProps) {
     catalogState,
     rateState,
     rateTrendState,
+    trendPeriod,
+    setTrendPeriod,
+    trendInsight,
     setCatalogRetry,
     setRateRetry,
     offline,
@@ -485,8 +530,6 @@ export function useExchangePanel(props: ExchangePanelProps) {
     selectedMeta,
     selectedLocation,
     visibleRate,
-    viewMode,
-    setViewMode,
     conversionReversed,
     toggleConversionDirection,
   };

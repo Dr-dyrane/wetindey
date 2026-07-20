@@ -115,18 +115,25 @@ function CurrencyRow({
       type="button"
       aria-pressed={selected}
       onClick={() => onSelect(code)}
-      className={`flex min-h-tap w-full items-center gap-3 px-4 py-2.5 text-left active:bg-fillTertiary ${transition.feedback}`}
+      className={`flex min-h-tap w-full items-center justify-between gap-3 px-4 py-2.5 text-left active:bg-fillTertiary ${transition.feedback}`}
     >
-      <CurrencyFlag code={code} />
-      <span className="min-w-0 flex-1">
-        <span className="block truncate text-body font-medium text-text-primary">{meta.name}</span>
-        <span className="mt-0.5 block text-footnote font-semibold text-text-secondary">{code}</span>
-      </span>
-      {selected && (
-        <IconOrb tone="neutral">
-          <SolidIcon name="check" size={16} />
-        </IconOrb>
-      )}
+      <div className="flex items-center gap-3 min-w-0 flex-1">
+        <CurrencyFlag code={code} />
+        <span className="min-w-0 flex-1">
+          <span className="block truncate text-body font-medium text-text-primary">{meta.name}</span>
+          <span className="mt-0.5 block text-footnote font-semibold text-text-secondary">{code}</span>
+        </span>
+      </div>
+      <div className="flex items-center gap-2 shrink-0">
+        <span className="squircle bg-fillSecondary px-2 py-0.5 text-caption-1 font-semibold tabular-nums text-text-secondary">
+          Ref rate
+        </span>
+        {selected && (
+          <IconOrb tone="neutral">
+            <SolidIcon name="check" size={16} />
+          </IconOrb>
+        )}
+      </div>
     </button>
   );
 }
