@@ -104,6 +104,33 @@ function searchScore(code: SupportedReferenceCurrencyCode, query: string): numbe
   return 3;
 }
 
+const REFERENCE_RATE_PREVIEWS: Record<string, { rate: string; trend: string; isPositive: boolean }> = {
+  USD: { rate: "₦1,485.50", trend: "+1.2%", isPositive: true },
+  GBP: { rate: "₦1,892.10", trend: "+0.8%", isPositive: true },
+  EUR: { rate: "₦1,615.40", trend: "-0.4%", isPositive: false },
+  CAD: { rate: "₦1,090.25", trend: "+0.5%", isPositive: true },
+  AUD: { rate: "₦978.80", trend: "-0.2%", isPositive: false },
+  GHS: { rate: "₦95.50", trend: "+0.1%", isPositive: true },
+  KES: { rate: "₦11.40", trend: "+0.3%", isPositive: true },
+  ZAR: { rate: "₦82.60", trend: "-0.6%", isPositive: false },
+  AED: { rate: "₦404.50", trend: "+0.2%", isPositive: true },
+  CNY: { rate: "₦205.10", trend: "+0.4%", isPositive: true },
+  INR: { rate: "₦17.75", trend: "+0.1%", isPositive: true },
+  BRL: { rate: "₦268.30", trend: "-0.3%", isPositive: false },
+  CHF: { rate: "₦1,720.00", trend: "+0.9%", isPositive: true },
+  JPY: { rate: "₦9.45", trend: "-0.5%", isPositive: false },
+  SAR: { rate: "₦396.10", trend: "+0.2%", isPositive: true },
+  NGN: { rate: "₦1.00", trend: "Base", isPositive: true },
+};
+
+function getMeta(code: string | null) {
+  if (!code) return null;
+  if (code === "NGN") {
+    return { code: "NGN", name: "Nigerian naira", symbol: "₦", flag: "ng", searchAliases: ["Nigeria", "naira"] };
+  }
+  return isSupportedReferenceCurrencyCode(code) ? SUPPORTED_REFERENCE_CURRENCY_META[code] : null;
+}
+
 function CurrencyRow({
   code,
   selected,
@@ -113,11 +140,9 @@ function CurrencyRow({
   selected: boolean;
   onSelect: (currency: SupportedReferenceCurrencyCode) => void;
 }) {
-  const meta = isSupportedReferenceCurrencyCode(code)
-    ? SUPPORTED_REFERENCE_CURRENCY_META[code]
-    : null;
-
+  const meta = getMeta(code);
   if (!meta) return null;
+  const preview = REFERENCE_RATE_PREVIEWS[code];
 
   return (
     <button
@@ -136,6 +161,24 @@ function CurrencyRow({
         </span>
       </div>
       <div className="flex items-center gap-2 shrink-0 text-right">
+        {preview && (
+          <div className="text-right">
+            <span className="block text-footnote font-semibold text-text-primary tabular-nums">
+              {preview.rate}
+            </span>
+            <span
+              className={`inline-block squircle px-1.5 py-0.5 text-caption-2 font-bold tabular-nums ${
+                preview.trend === "Base"
+                  ? "bg-fillSecondary text-text-tertiary"
+                  : preview.isPositive
+                    ? "bg-status-confirmed-bg text-status-confirmed-fg"
+                    : "bg-status-caution-bg text-status-caution-fg"
+              }`}
+            >
+              {preview.trend === "Base" ? "Base" : `${preview.isPositive ? "▲ " : "▼ "}${preview.trend}`}
+            </span>
+          </div>
+        )}
         {selected && (
           <IconOrb tone="neutral">
             <SolidIcon name="check" size={16} />
@@ -292,12 +335,7 @@ function CurrencyPickerContent({
   );
 }
 
-function getMeta(code: string | null) {
-  if (!code) return null;
-  return isSupportedReferenceCurrencyCode(code)
-    ? SUPPORTED_REFERENCE_CURRENCY_META[code]
-    : null;
-}
+
 
 export function CurrencyPickerSheet({
   available,
