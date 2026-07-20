@@ -79,7 +79,13 @@ export function ExchangePanelView({
         <CurrencyPickerSheet
           available={availableCurrencies}
           value={currency}
-          onSelect={enterCurrency}
+          onSelect={(selected) => {
+            if (selected === ("NGN" as any)) {
+              toggleConversionDirection();
+            } else {
+              enterCurrency(selected);
+            }
+          }}
           disabled={catalogState.kind !== "ready"}
         />
       )}
@@ -88,12 +94,20 @@ export function ExchangePanelView({
 
   const ngnPicker = (
     <div className="flex items-center gap-2">
-      <CurrencyPickerSheet
-        available={availableCurrencies}
-        value={currency}
-        onSelect={enterCurrency}
-        disabled={catalogState.kind !== "ready"}
-      />
+      {catalogState.kind === "loading" && !currency ? (
+        <Skeleton className="h-9 w-24 rounded-[14px]" />
+      ) : (
+        <CurrencyPickerSheet
+          available={availableCurrencies}
+          value={"NGN" as any}
+          onSelect={(selected) => {
+            if (selected !== ("NGN" as any)) {
+              enterCurrency(selected);
+            }
+          }}
+          disabled={catalogState.kind !== "ready"}
+        />
+      )}
     </div>
   );
 
