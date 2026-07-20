@@ -50,6 +50,7 @@ export function MapPresentationView({
   onMarkerClick,
   cameraCenter,
   selfIdentity,
+  browsingAnchor,
   route,
   activeDetent,
   leadingInset,
@@ -85,6 +86,7 @@ export function MapPresentationView({
         onMarkerClick={onMarkerClick}
         center={cameraCenter}
         selfIdentity={selfIdentity}
+        browsingAnchor={browsingAnchor}
         route={route}
         /* At regular width the shell mounts no bottom sheet, so there is nothing
            below to compensate for, but the panel covers the leading edge, and

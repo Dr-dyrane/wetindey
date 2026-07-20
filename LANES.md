@@ -565,17 +565,23 @@ ADRs, architecture of record, Git evidence, and `LANES.md`. No app, schema, migr
 package, or ADR path is in scope.
 
 
-##### Aboki FX User Origin Polylines — ACTIVE CLAIM
+##### Aboki FX User Origin Polylines + Browsing Anchor — ACTIVE CLAIM
 
-Owner: Antigravity (External Approved Contractor - Product Engineering & UX Department). Exclusive paths:
+Owner: Codex Controller, taking over the completed Antigravity handoff. Exclusive paths:
 
 - `src/app/_components/home-page/hooks/useHomePage.ts`
-- `src/app/_components/exchange-panel/hooks/useExchangePanel.ts`
-- `src/app/_components/exchange-panel/views/ExchangePanelView.tsx`
-- `src/app/_components/CrossCategorySignalRail.tsx`
+- `src/app/_components/home-page/views/HomePageView.tsx`
+- `src/app/_components/map-presentation/imports/imports.ts`
+- `src/app/_components/map-presentation/views/MapPresentationView.tsx`
+- `src/design-system/components/MapboxCanvas.tsx`
+- `src/lib/directions.ts`
 - `LANES.md`
 
-Objective: Implement user origin polylines in Aboki FX (Money vertical), routing Mapbox directions from the user GPS / guest Festac allocation pin to selected BDC exchange outlets.
+Objective: Restore Food-market and Aboki FX route polylines from a fresh disclosed
+device fix or, when no fix exists, the canonical browsing anchor. Render the signed-in
+avatar or anonymous fallback at that browsing anchor with an explicit non-GPS label and
+uncertainty treatment; fresh device GPS always supersedes it. Do not publish Presence,
+claim physical precision, or widen into exchange-panel UI/data.
 
 
 ---

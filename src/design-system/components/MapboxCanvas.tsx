@@ -59,6 +59,15 @@ interface MapboxCanvasProps {
     avatarUrl: string | null;
   } | null;
   /**
+   * The area the user is exploring when no fresh device fix exists. This is
+   * rendered as identity context, never as a physical-location claim.
+   */
+  browsingAnchor: {
+    lat: number;
+    lng: number;
+    label: string;
+  };
+  /**
    * How far the bottom sheet is up. The camera compensates for it, so anything
    * we fly to lands in the strip of map the user can actually see. `null` for
    * layouts with no bottom sheet (the desktop sidebar) — pass `padding.left`
@@ -343,6 +352,7 @@ export const MapboxCanvas = forwardRef<MapCameraHandle, MapboxCanvasProps>(funct
     onMarkerClick,
     center,
     selfIdentity,
+    browsingAnchor,
     detent = null,
     padding,
     route = null,
@@ -510,15 +520,23 @@ export const MapboxCanvas = forwardRef<MapCameraHandle, MapboxCanvasProps>(funct
   }, [candidates, onMarkerClick, ready, selectedPlaceId]);
 
   /**
-   * Personal identity is earned only by a fresh browser fix. Browsing defaults,
-   * selected areas and camera centres never reach the self-marker boundary.
+   * Fresh GPS is authoritative. Without it, retain the user's identity at the
+   * browsing anchor so routes have a visible origin, while the accessible label
+   * and broad halo explicitly avoid claiming physical precision.
    */
   const deviceLocation = useFreshDeviceLocation();
   useEffect(() => {
     const adapter = adapterRef.current;
     if (!adapter) return;
     if (!deviceLocation) {
-      adapter.setUserPosition(null);
+      adapter.setUserPosition({
+        lat: browsingAnchor.lat,
+        lng: browsingAnchor.lng,
+        precision: "approximate",
+        accuracyM: 500,
+        identity: selfIdentity,
+        label: `Your browsing location near ${browsingAnchor.label}, not your current GPS location`,
+      });
       return;
     }
     const precision: UserPositionPrecision =
@@ -537,7 +555,14 @@ export const MapboxCanvas = forwardRef<MapCameraHandle, MapboxCanvasProps>(funct
           ? `Your current location, accurate to about ${roundedAccuracy} metres`
           : `Your approximate current location, accurate to about ${roundedAccuracy} metres`
     });
-  }, [deviceLocation, selfIdentity, ready]);
+  }, [
+    browsingAnchor.label,
+    browsingAnchor.lat,
+    browsingAnchor.lng,
+    deviceLocation,
+    selfIdentity,
+    ready,
+  ]);
 
   // Render other location-sharing users on the map
   useEffect(() => {

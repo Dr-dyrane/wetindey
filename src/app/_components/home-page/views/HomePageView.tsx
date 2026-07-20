@@ -146,6 +146,11 @@ export function HomePageView({
       onMarkerClick={handleMarkerSelection}
       cameraCenter={cameraCenter}
       selfIdentity={resolvedSelfIdentity}
+      browsingAnchor={{
+        lat: searchOrigin.lat,
+        lng: searchOrigin.lng,
+        label: location.label,
+      }}
       route={route}
       activeDetent={activeDetent}
       leadingInset={leadingInset}
@@ -170,7 +175,7 @@ export function HomePageView({
       <div className="flex flex-col gap-2.5 px-4 pt-0 pb-2.5">
         <div className="flex w-full items-center gap-1">
           <div className="flex shrink-0 items-center space-x-1.5">
-            <NigeriaLogo className="h-5 w-5" />
+            <NigeriaLogo className="h-7 w-7" />
             <button
               type="button"
               onClick={() => setIsCategoryOpen(true)}

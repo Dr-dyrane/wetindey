@@ -51,6 +51,7 @@ import {
   type NarrowedOffer
 } from "@/app/_actions/actions";
 import {
+  browsingRouteOrigin,
   fetchRoute,
   type DisclosedRouteOrigin
 } from "@/lib/directions";
@@ -982,16 +983,12 @@ export function useHomePage() {
     )
       return;
 
-    const now = Date.now();
-    const origin: DisclosedRouteOrigin = routeOrigin ?? {
-      lat: searchOrigin.lat,
-      lng: searchOrigin.lng,
-      accuracyM: 10,
-      capturedAt: now,
-      receivedAt: now,
-      disclosedAt: now,
-      provenance: "device",
-    };
+    const origin =
+      routeOrigin ??
+      browsingRouteOrigin({
+        lat: searchOrigin.lat,
+        lng: searchOrigin.lng,
+      });
 
     const controller = new AbortController();
     void fetchRoute(

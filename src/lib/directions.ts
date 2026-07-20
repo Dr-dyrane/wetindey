@@ -23,6 +23,29 @@ export interface DisclosedRouteOrigin extends DeviceLocation {
   disclosedAt: number;
 }
 
+/**
+ * A non-physical route origin chosen by the user or supplied by the Lagos
+ * browsing fallback. It may be sent to Directions because it is already the
+ * public search context, but it must never be described as a device fix.
+ */
+export interface BrowsingRouteOrigin extends RoutePoint {
+  provenance: "browsing";
+  requestedAt: number;
+}
+
+export type RouteOrigin = DisclosedRouteOrigin | BrowsingRouteOrigin;
+
+export function browsingRouteOrigin(
+  location: RoutePoint,
+  now: number = Date.now()
+): BrowsingRouteOrigin {
+  return {
+    ...location,
+    provenance: "browsing",
+    requestedAt: now,
+  };
+}
+
 export function disclosedRouteOrigin(
   location: DeviceLocation,
   now: number = Date.now()
@@ -42,6 +65,21 @@ export function isDisclosedRouteOriginAdmissible(
     origin.disclosedAt <= now &&
     now - origin.disclosedAt <= ROUTE_ORIGIN_FRESH_MS &&
     isDeviceLocationFresh(origin, ROUTE_ORIGIN_FRESH_MS, now)
+  );
+}
+
+function isRouteOriginAdmissible(
+  origin: RouteOrigin,
+  now: number = Date.now()
+): boolean {
+  if (origin.provenance === "device") {
+    return isDisclosedRouteOriginAdmissible(origin, now);
+  }
+
+  return (
+    Number.isFinite(origin.requestedAt) &&
+    origin.requestedAt <= now &&
+    now - origin.requestedAt <= ROUTE_ORIGIN_FRESH_MS
   );
 }
 
@@ -85,7 +123,7 @@ const PROFILES = ["driving-traffic", "driving"] as const;
  * request never falls back.
  */
 export async function fetchRoute(
-  origin: DisclosedRouteOrigin,
+  origin: RouteOrigin,
   destination: RoutePoint,
   signal?: AbortSignal
 ): Promise<RouteGeometry | null> {
@@ -94,7 +132,7 @@ export async function fetchRoute(
   // a bad endpoint become a map-rendering failure.
   if (
     !isRoutePoint(origin) ||
-    !isDisclosedRouteOriginAdmissible(origin) ||
+    !isRouteOriginAdmissible(origin) ||
     !isRoutePoint(destination)
   )
     return null;
@@ -107,7 +145,7 @@ export async function fetchRoute(
   for (const profile of PROFILES) {
     // A slow/rate-limited first profile must not authorize a second provider
     // request after the one-minute disclosure window has elapsed.
-    if (!isDisclosedRouteOriginAdmissible(origin)) return null;
+    if (!isRouteOriginAdmissible(origin)) return null;
     const geometry = await requestRoute(profile, origin, destination, token, signal);
     if (geometry) return geometry;
     if (signal?.aborted) return null;
