@@ -34,6 +34,7 @@ import {
   ExchangePanel,
   type ExchangeLocationFilter
 } from "@/app/_components/ExchangePanel";
+import { CrossCategorySignalRail } from "@/app/_components/CrossCategorySignalRail";
 import {
   ItemDetailSheet,
   type OfferPresentation,
@@ -105,6 +106,7 @@ export {
   CategorySelectorSheet,
   useLocationIdentity,
   ExchangePanel,
+  CrossCategorySignalRail,
   ItemDetailSheet,
   PresentationHost,
   GetItSheet,

@@ -6,6 +6,7 @@ import {
   Avatar,
   SearchField,
   ExchangePanel,
+  CrossCategorySignalRail,
   AsyncList,
   ItemCard,
   PhotoCredits,
@@ -120,6 +121,7 @@ export function HomePageView({
   handleSelectOffer,
   filteredExchangeLocations,
   exchangeLocationDiscoveryStatus,
+  crossCategorySignals,
   handleSelectExchangeLocation,
   handleMarkerSelection,
   handleCategoryChange,
@@ -166,8 +168,8 @@ export function HomePageView({
     <div className="home-sheet-content">
       {/* Brand & search header */}
       <div className="flex flex-col gap-2.5 px-4 pt-0 pb-2.5">
-        <div className="flex items-center justify-between w-full">
-          <div className="flex items-center space-x-2">
+        <div className="flex w-full items-center gap-1">
+          <div className="flex shrink-0 items-center space-x-2">
             <NigeriaLogo className="h-7 w-7" />
             <button
               type="button"
@@ -185,9 +187,14 @@ export function HomePageView({
             </button>
           </div>
 
+          <CrossCategorySignalRail
+            signals={crossCategorySignals}
+            onActivate={handleCategoryChange}
+          />
+
           {/* Both actions present a sheet over this one rather than replacing
               its contents, so the search context stays put underneath. */}
-          <div className="flex items-center gap-1.5">
+          <div className="flex shrink-0 items-center gap-1.5">
             {activeCategory === "food" && (
               <button
                 type="button"

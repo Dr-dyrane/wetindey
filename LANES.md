@@ -476,6 +476,8 @@ Exclusive paths:
 - `src/app/_components/home-page/hooks/useHomePage.ts`
 - `src/app/_components/home-page/views/HomePageView.tsx`
 - `src/app/_components/home-page/imports/imports.ts`
+- `src/app/_components/home-page/styles/HomePage.css`
+- `src/app/_components/CrossCategorySignalRail.tsx`
 - `src/integrations/maps/MapboxNearbyExchangeSearch.ts`
 - `src/core/state/locationStore.ts`
 - `LANES.md`
@@ -570,6 +572,7 @@ Owner: Antigravity (External Approved Contractor - Product Engineering & UX Depa
 - `src/app/_components/home-page/hooks/useHomePage.ts`
 - `src/app/_components/exchange-panel/hooks/useExchangePanel.ts`
 - `src/app/_components/exchange-panel/views/ExchangePanelView.tsx`
+- `src/app/_components/CrossCategorySignalRail.tsx`
 - `LANES.md`
 
 Objective: Implement user origin polylines in Aboki FX (Money vertical), routing Mapbox directions from the user GPS / guest Festac allocation pin to selected BDC exchange outlets.

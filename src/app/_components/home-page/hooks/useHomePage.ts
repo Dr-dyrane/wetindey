@@ -16,10 +16,15 @@ import { type CategoryPillar } from "@/app/_components/CategorySelectorSheet";
 import { type ItemCardData } from "@/design-system/components/ItemCard";
 import { useLocationIdentity } from "@/app/_hooks/useLocationIdentity";
 import type { ExchangeLocationFilter } from "@/app/_components/ExchangePanel";
+import type { CrossCategorySignal } from "@/app/_components/CrossCategorySignalRail";
 import {
   getNearbyExchangeLocations,
   type ExchangeLocationDiscoveryResult,
 } from "@/app/_actions/exchange-location-actions";
+import {
+  getReferenceCurrencyCatalog,
+  type ReferenceCurrencyCatalogEntry,
+} from "@/app/_actions/currency-actions";
 import { EXCHANGE_SAMPLE_LOCATIONS } from "@/app/_data/exchange-sample-locations";
 import type { ExchangeLocation } from "@/integrations/maps/MapboxNearbyExchangeSearch";
 import type { PresentedOffer, OfferPresentation } from "@/app/_components/ItemDetailSheet";
@@ -61,6 +66,26 @@ interface PlaceData {
     lng: number;
   };
   address: string | null;
+}
+
+const SIGNAL_NAIRA = new Intl.NumberFormat("en-NG", {
+  maximumFractionDigits: 0,
+  notation: "compact",
+});
+
+function foodSignalPrice(item: ItemCardData): string | null {
+  if (typeof item.priceFrom !== "number" || !Number.isFinite(item.priceFrom)) {
+    return null;
+  }
+  const from = `₦${SIGNAL_NAIRA.format(item.priceFrom)}`;
+  if (
+    typeof item.priceTo !== "number" ||
+    !Number.isFinite(item.priceTo) ||
+    item.priceTo <= item.priceFrom
+  ) {
+    return from;
+  }
+  return `${from}–₦${SIGNAL_NAIRA.format(item.priceTo)}`;
 }
 
 export function useHomePage() {
@@ -173,6 +198,8 @@ export function useHomePage() {
   const [isCategoryOpen, setIsCategoryOpen] = useState(false);
   const [exchangeFilter, setExchangeFilter] = useState<ExchangeLocationFilter>("all");
   const [exchangeLocations, setExchangeLocations] = useState<ExchangeLocation[]>([]);
+  const [usdHeaderRate, setUsdHeaderRate] =
+    useState<ReferenceCurrencyCatalogEntry | null>(null);
   const [exchangeLocationDiscoveryStatus, setExchangeLocationDiscoveryStatus] =
     useState<ExchangeLocationDiscoveryResult["status"] | "loading" | "sample">("loading");
   const [selectedExchangeLocationId, setSelectedExchangeLocationId] = useState<string | null>(
@@ -184,6 +211,24 @@ export function useHomePage() {
   const [getItTarget, setGetItTarget] = useState<GetItTarget | null>(null);
   /** A trip that happened. Non-null = we are asking how it went. */
   const [pendingVisit, setPendingVisit] = useState<VisitContext | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    void getReferenceCurrencyCatalog()
+      .then((entries) => {
+        if (!cancelled) {
+          setUsdHeaderRate(
+            entries.find((entry) => entry.code === "USD") ?? null
+          );
+        }
+      })
+      .catch(() => {
+        if (!cancelled) setUsdHeaderRate(null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   // General app state
   const [searchQuery, setSearchQuery] = useState("");
@@ -712,6 +757,43 @@ export function useHomePage() {
     [exchangeFilter, exchangeLocations]
   );
 
+  const crossCategorySignals = useMemo<CrossCategorySignal[]>(() => {
+    if (activeCategory === "food") {
+      if (!usdHeaderRate || !Number.isFinite(usdHeaderRate.rate)) return [];
+      const hasMovement =
+        typeof usdHeaderRate.trendPercent === "number" &&
+        Number.isFinite(usdHeaderRate.trendPercent);
+      const movement = hasMovement
+        ? `${usdHeaderRate.trendPercent! >= 0 ? "↑" : "↓"}${Math.abs(
+            usdHeaderRate.trendPercent!
+          ).toFixed(1)}%`
+        : null;
+      const rate = `₦${SIGNAL_NAIRA.format(usdHeaderRate.rate)}`;
+      return [{
+        id: `money-usd-${usdHeaderRate.effectiveDate}`,
+        category: "money",
+        shortLabel: `USD ${movement ? `${movement} · ` : ""}${rate}`,
+        compactLabel: `USD ${rate}`,
+        accessibleLabel: `Open Aboki FX. USD to naira reference rate${
+          movement ? ` moved ${movement}` : ""
+        }, ${rate}.`,
+        visual: "usd",
+      }];
+    }
+
+    const item = popularItems?.find((candidate) => foodSignalPrice(candidate));
+    const price = item ? foodSignalPrice(item) : null;
+    if (!item || !price) return [];
+    return [{
+      id: `food-${item.id}-${price}`,
+      category: "food",
+      shortLabel: `${item.name} · ${price}`,
+      compactLabel: price,
+      accessibleLabel: `Open Food. ${item.name} is listed from ${price}.`,
+      visual: "food",
+    }];
+  }, [activeCategory, popularItems, usdHeaderRate]);
+
   const handleSelectExchangeLocation = useEventCallback(
     (location: ExchangeLocation) => {
       setSelectedExchangeLocationId(location.id);
@@ -1012,6 +1094,7 @@ export function useHomePage() {
     handleSelectOffer,
     filteredExchangeLocations,
     exchangeLocationDiscoveryStatus,
+    crossCategorySignals,
     handleSelectExchangeLocation,
     handleMarkerSelection,
     handleCategoryChange,
