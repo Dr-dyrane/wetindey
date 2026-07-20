@@ -2,8 +2,10 @@ import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react"
 import {
   getReferenceCurrencyCatalog,
   getReferenceRate,
+  getReferenceRateTrend,
   type ReferenceCurrencyCatalogEntry,
   type ReferenceRate,
+  type ReferenceRatePoint,
 } from "@/app/_actions/currency-actions";
 import {
   REFERENCE_CURRENCY_META,
@@ -42,6 +44,11 @@ export type RateState =
   | { kind: "ready"; rate: ReferenceRate; saved: boolean; refreshFailed: boolean }
   | { kind: "unavailable" }
   | { kind: "error" };
+
+export type RateTrendState =
+  | { kind: "loading" }
+  | { kind: "ready"; points: ReferenceRatePoint[] }
+  | { kind: "unavailable" };
 
 export type AmountField = "foreign" | "ngn";
 
@@ -273,6 +280,10 @@ export function useExchangePanel(props: ExchangePanelProps) {
   const [offline, setOffline] = useState(false);
   const [catalogState, setCatalogState] = useState<CatalogState>({ kind: "loading" });
   const [rateState, setRateState] = useState<RateState>({ kind: "idle" });
+  const [rateTrendState, setRateTrendState] = useState<RateTrendState>({
+    kind: "loading",
+  });
+  const [viewMode, setViewMode] = useState<"rate" | "nearby">("rate");
 
   const commitAmounts = useCallback((next: AmountState) => {
     amountsRef.current = next;
@@ -353,6 +364,7 @@ export function useExchangePanel(props: ExchangePanelProps) {
     let cancelled = false;
     const cached = readCachedRate(currency);
     setRateState({ kind: "loading", cached });
+    setRateTrendState({ kind: "loading" });
 
     void getReferenceRate(currency)
       .then((rate) => {
@@ -371,6 +383,16 @@ export function useExchangePanel(props: ExchangePanelProps) {
           return;
         }
         setRateState({ kind: "error" });
+      });
+    void getReferenceRateTrend(currency)
+      .then((points) => {
+        if (cancelled) return;
+        setRateTrendState(
+          points.length >= 2 ? { kind: "ready", points } : { kind: "unavailable" }
+        );
+      })
+      .catch(() => {
+        if (!cancelled) setRateTrendState({ kind: "unavailable" });
       });
 
     return () => {
@@ -443,6 +465,7 @@ export function useExchangePanel(props: ExchangePanelProps) {
     amounts,
     catalogState,
     rateState,
+    rateTrendState,
     setCatalogRetry,
     setRateRetry,
     offline,
@@ -455,5 +478,7 @@ export function useExchangePanel(props: ExchangePanelProps) {
     selectedMeta,
     selectedLocation,
     visibleRate,
+    viewMode,
+    setViewMode,
   };
 }

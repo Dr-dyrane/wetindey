@@ -6,8 +6,10 @@ import { transition } from "@/design-system/motion";
 import {
   getReferenceCurrencyCatalog,
   getReferenceRate,
+  getReferenceRateTrend,
   type ReferenceCurrencyCatalogEntry,
   type ReferenceRate,
+  type ReferenceRatePoint,
 } from "@/app/_actions/currency-actions";
 import {
   REFERENCE_CURRENCY_META,
@@ -36,8 +38,10 @@ export {
   transition,
   getReferenceCurrencyCatalog,
   getReferenceRate,
+  getReferenceRateTrend,
   type ReferenceCurrencyCatalogEntry,
   type ReferenceRate,
+  type ReferenceRatePoint,
   REFERENCE_CURRENCY_META,
   isReferenceCurrencyCode,
   type ReferenceCurrencyCode,

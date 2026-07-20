@@ -389,13 +389,16 @@ Restored the pre-modularization Haversine distance calculation and original coor
 order after the extracted view replaced it with a hardcoded `0.5 km`. Typecheck,
 exact-path lint, diff checks, and localhost hot reload passed. Luna independently
 
-##### Aboki FX decision-first visual hierarchy — COMPLETE / PATHS RELEASED
+##### Aboki FX decision-first visual hierarchy and live trend — COMPLETE / PATHS RELEASED
 
 Owner: current controller.
 Exclusive paths:
 
 - `src/app/_components/exchange-panel/views/ExchangePanelView.tsx`
 - `src/app/_components/exchange-panel/styles/ExchangePanel.css`
+- `src/app/_components/exchange-panel/hooks/useExchangePanel.ts`
+- `src/app/_components/exchange-panel/imports/imports.ts`
+- `src/app/_actions/currency-actions.ts`
 - `LANES.md`
 
 Flatten the first Aboki FX pane into one decision-first conversion canvas with progressive
@@ -406,6 +409,28 @@ actions, schema, picker, currency catalog, or nearby-location data changes.
 Implemented as a flat two-amount relationship with progressive rate provenance, one
 primary rate action, and one secondary BDC filter/scroll action. No validation or runtime
 visual drive was performed in this bounded pass.
+
+Forward recovery: the first pushed candidate used an unsupported `SolidIcon` size token
+and failed TypeScript. Corrected to the governed 16px token before release validation.
+
+Founder-directed forward redesign then made the decision state truthful and primary:
+`Not confirmed`, actual BDC-kind sample count, and nearest BDC distance precede a compact
+two-way conversion rail. The rail and action row each render at 44px; only the best three
+BDC-kind samples remain in the first decision layer. Driven Safari evidence confirmed
+`100` immediately converted to `138888.89` NGN, CBN attribution/date disclosed on demand,
+and no bank-kind record leaked into the BDC list. TypeScript and exact-path lint passed.
+
+Founder-requested follow-up adds a bounded seven-day provider-derived trend. Missing or
+invalid history must omit the trend; no synthetic points, database writes, new provider,
+or amount egress.
+
+Final live state uses one quiet underlined `Nearby`/`Rate` switch rather than buttons or a
+tab surface. Rate is the default: current attributed rate, seven validated provider
+observations, direction sentence, sparkline, and one 44px two-way converter rail. Nearby
+replaces that content in place with `Not confirmed` plus exactly three BDC-kind samples.
+Driven Safari evidence proved a real seven-point CBN path, `Up 1.4%`, no nearby rows in
+Rate, three rows in Nearby, unchanged URL, and `100 USD` deriving `138888.89 NGN`.
+TypeScript and exact-path lint passed.
 returned NOT_REFUTED with no P1/P2/P3.
 
 ##### ItemDetailSheet component modularization — COMPLETE / PATHS RELEASED

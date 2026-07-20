@@ -21,6 +21,11 @@ export interface ReferenceRate {
   provider: ReferenceProvider;
 }
 
+export interface ReferenceRatePoint {
+  date: string;
+  rate: number;
+}
+
 interface UpstreamRate {
   date: string;
   base: "NGN";
@@ -79,6 +84,34 @@ function parseNgnRates(value: unknown): UpstreamRate[] {
   });
 }
 
+function parseNgnRateHistory(
+  value: unknown,
+  currency: ReferenceCurrencyCode
+): UpstreamRate[] {
+  if (!Array.isArray(value)) {
+    throw new Error("The reference rate history was invalid.");
+  }
+
+  return value.flatMap((row) =>
+    isRecord(row) &&
+    row.base === "NGN" &&
+    row.quote === currency &&
+    typeof row.rate === "number" &&
+    Number.isFinite(row.rate) &&
+    row.rate > 0 &&
+    isIsoCalendarDate(row.date)
+      ? [
+          {
+            date: row.date,
+            base: "NGN" as const,
+            quote: currency,
+            rate: row.rate,
+          },
+        ]
+      : []
+  );
+}
+
 async function fetchNgnRates(provider: ReferenceProvider): Promise<UpstreamRate[]> {
   const providerQuery = provider === "CBN" ? "&providers=CBN" : "";
   const response = await fetch(
@@ -98,6 +131,31 @@ async function fetchNgnRates(provider: ReferenceProvider): Promise<UpstreamRate[
   }
 
   return parseNgnRates(await response.json());
+}
+
+async function fetchNgnRateHistory(
+  currency: ReferenceCurrencyCode,
+  provider: ReferenceProvider
+): Promise<UpstreamRate[]> {
+  const end = new Date();
+  const start = new Date(end);
+  start.setUTCDate(start.getUTCDate() - 14);
+  const from = start.toISOString().slice(0, 10);
+  const to = end.toISOString().slice(0, 10);
+  const providerQuery = provider === "CBN" ? "&providers=CBN" : "";
+  const response = await fetch(
+    `${API_ROOT}/rates?base=NGN&quotes=${currency}&from=${from}&to=${to}${providerQuery}`,
+    {
+      ...REQUEST_OPTIONS,
+      signal: AbortSignal.timeout(8_000),
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error("The reference rate history is unavailable.");
+  }
+
+  return parseNgnRateHistory(await response.json(), currency);
 }
 
 async function buildReferenceCurrencyCatalog(): Promise<ReferenceCurrencyCatalogEntry[]> {
@@ -160,4 +218,23 @@ export async function getReferenceRate(currency: string): Promise<ReferenceRate 
     effectiveDate: upstream.date,
     provider: entry.provider,
   };
+}
+
+export async function getReferenceRateTrend(
+  currency: string
+): Promise<ReferenceRatePoint[]> {
+  if (!isReferenceCurrencyCode(currency)) {
+    throw new Error("Unsupported reference currency.");
+  }
+
+  const catalog = await buildReferenceCurrencyCatalog();
+  const entry = catalog.find((candidate) => candidate.code === currency);
+  if (!entry) return [];
+
+  const history = await fetchNgnRateHistory(currency, entry.provider);
+  return history
+    .map((point) => ({ date: point.date, rate: 1 / point.rate }))
+    .filter((point) => Number.isFinite(point.rate) && point.rate > 0)
+    .sort((left, right) => left.date.localeCompare(right.date))
+    .slice(-7);
 }
