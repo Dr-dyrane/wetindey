@@ -14,6 +14,7 @@ import {
 import {
   providerLabel,
   formatEffectiveDate,
+  getCrossRate,
   type ExchangePanelProps,
   type useExchangePanel,
 } from "../hooks/useExchangePanel";
@@ -140,6 +141,8 @@ export function ExchangePanelView({
     </div>
   );
 
+  const activeCrossRate = getCrossRate(currency, baseCurrency, visibleRate);
+
   return (
     <div className="space-y-3 px-3 pb-[calc(max(var(--sheet-hidden,0px),var(--safe-area-bottom))+20px)]">
       {/* 1. HERO RATE CARD (Slender  HIG Container) */}
@@ -169,20 +172,21 @@ export function ExchangePanelView({
               1:1 Same currency
             </span>
           </div>
-        ) : visibleRate && selectedMeta ? (
+        ) : (
           <div className="flex items-baseline justify-between gap-3">
             <div className="flex items-baseline gap-2">
               <span className="text-title-1 font-bold tracking-tight text-text-primary tabular-nums">
-                ₦{visibleRate.rate.toLocaleString("en-NG", {
+                {baseCurrency === "NGN" ? "₦" : ""}
+                {activeCrossRate.toLocaleString("en-NG", {
                   minimumFractionDigits: 2,
                   maximumFractionDigits: 2,
                 })}
               </span>
               <span className="text-footnote font-semibold text-text-secondary">
-                per {selectedMeta.code}
+                {baseCurrency} per {currency ?? "unit"}
               </span>
             </div>
-            {trendInsight && (
+            {trendInsight && baseCurrency === "NGN" && (
               <span
                 className={`squircle px-2 py-0.5 text-caption-1 font-semibold tabular-nums ${
                   trendInsight.percentChange >= 0
@@ -194,10 +198,6 @@ export function ExchangePanelView({
                 {Math.abs(trendInsight.percentChange).toFixed(1)}%
               </span>
             )}
-          </div>
-        ) : (
-          <div className="py-2">
-            <Skeleton className="h-8 w-48 rounded-[12px]" />
           </div>
         )}
       </section>

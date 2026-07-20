@@ -236,6 +236,51 @@ function writeSessionAmount(field: AmountField, value: string) {
   } catch {}
 }
 
+export const REFERENCE_RATE_TO_NGN: Record<string, number> = {
+  USD: 1388.89,
+  GBP: 1892.10,
+  EUR: 1615.40,
+  CAD: 1090.25,
+  AUD: 920.00,
+  GHS: 95.50,
+  KES: 11.40,
+  ZAR: 82.60,
+  AED: 404.50,
+  CNY: 205.10,
+  INR: 17.75,
+  BRL: 268.30,
+  CHF: 1720.00,
+  JPY: 9.45,
+  SAR: 396.10,
+  NGN: 1.0,
+};
+
+export function getCrossRate(
+  topCurrency: string | null,
+  bottomCurrency: string | null,
+  liveRate?: ReferenceRate | null
+): number {
+  const top = topCurrency ?? "USD";
+  const bottom = bottomCurrency ?? "NGN";
+  if (top === bottom) return 1.0;
+
+  const topNgn =
+    top === "NGN"
+      ? 1.0
+      : liveRate && liveRate.base === top
+        ? liveRate.rate
+        : (REFERENCE_RATE_TO_NGN[top] ?? 1388.89);
+
+  const bottomNgn =
+    bottom === "NGN"
+      ? 1.0
+      : liveRate && liveRate.base === bottom
+        ? liveRate.rate
+        : (REFERENCE_RATE_TO_NGN[bottom] ?? 1.0);
+
+  return topNgn / bottomNgn;
+}
+
 export function deriveAmount(
   state: AmountState,
   rate: ReferenceRate | null,
@@ -250,31 +295,18 @@ export function deriveAmount(
     return { ...state, [other]: "" };
   }
 
-  if (topCurrency && bottomCurrency && topCurrency === bottomCurrency) {
-    return {
-      ...state,
-      [other]: edited,
-    };
-  }
-
-  if (!rate || !rate.rate) {
-    return state;
-  }
-
+  const crossRate = getCrossRate(topCurrency ?? "USD", bottomCurrency ?? "NGN", rate);
   const converted =
-    state.lastEdited === "foreign" ? parsed.value * rate.rate : parsed.value / rate.rate;
+    state.lastEdited === "foreign" ? parsed.value * crossRate : parsed.value / crossRate;
+
   if (!Number.isFinite(converted) || converted <= 0 || converted > MAX_AMOUNT) {
     return { ...state, [other]: "" };
   }
 
   const formatted =
-    state.lastEdited === "foreign"
-      ? EDITABLE_NGN.format(converted)
-      : EDITABLE_FOREIGN.format(converted);
-  const formattedParsed = parseAmount(formatted);
-  if (formattedParsed.value === null || formattedParsed.error !== null) {
-    return { ...state, [other]: "" };
-  }
+    other === "foreign"
+      ? EDITABLE_FOREIGN.format(converted)
+      : EDITABLE_NGN.format(converted);
 
   return {
     ...state,
