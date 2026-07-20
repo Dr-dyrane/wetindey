@@ -123,9 +123,7 @@ function CurrencyRow({
       type="button"
       aria-pressed={selected}
       onClick={() => {
-        if (isReferenceCurrencyCode(code)) {
-          onSelect(code);
-        }
+        onSelect(code as ReferenceCurrencyCode);
       }}
       className={`flex min-h-tap w-full items-center justify-between gap-3 px-4 py-2.5 text-left active:bg-fillTertiary ${transition.feedback}`}
     >
