@@ -778,6 +778,7 @@ export function useHomePage() {
           movement ? ` moved ${movement}` : ""
         }, ${rate}.`,
         visual: "usd",
+        trendTone: !hasMovement ? "neutral" : usdHeaderRate.trendPercent! >= 0 ? "positive" : "negative",
       }];
     }
 
@@ -791,6 +792,7 @@ export function useHomePage() {
       compactLabel: price,
       accessibleLabel: `Open Food. ${item.name} is listed from ${price}.`,
       visual: "food",
+      trendTone: "positive",
     }];
   }, [activeCategory, popularItems, usdHeaderRate]);
 
