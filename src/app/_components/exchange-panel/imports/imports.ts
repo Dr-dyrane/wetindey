@@ -17,7 +17,7 @@ import {
   type ReferenceCurrencyCode,
 } from "@/app/_data/reference-currencies";
 import { CurrencyFlag } from "@/app/_components/CurrencyFlag";
-import { CurrencyPickerSheet } from "@/app/_components/CurrencyPickerSheet";
+import { CurrencyPickerSheet } from "@/app/_components/currency-picker-sheet/CurrencyPickerSheet";
 import type {
   ExchangeLocationKind,
   ExchangeLocation,

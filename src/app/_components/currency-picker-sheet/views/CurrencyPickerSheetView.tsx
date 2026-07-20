@@ -1,28 +1,112 @@
-"use client";
-
-import React, { useMemo, useRef, useState } from "react";
-import { IconOrb } from "@/design-system/components/IconOrb";
-import { ModalSheet, useModalSheetNavigation } from "@/design-system/components/ModalSheet";
-import { SolidIcon } from "@/design-system/icons/SolidIcon";
-import { transition } from "@/design-system/motion";
 import {
+  React,
+  IconOrb,
+  ModalSheet,
+  SolidIcon,
+  transition,
   POPULAR_REFERENCE_CURRENCIES,
   SUPPORTED_REFERENCE_CURRENCY_META,
-  isSupportedReferenceCurrencyCode,
+  CurrencyFlag,
   type SupportedReferenceCurrencyCode,
-} from "@/app/_data/reference-currencies";
-import { CurrencyFlag } from "@/app/_components/CurrencyFlag";
-import type { ReferenceCurrencyCatalogEntry } from "@/app/_actions/currency-actions";
+  type ReferenceCurrencyCatalogEntry,
+} from "../imports/imports";
+import {
+  getMeta,
+  searchScore,
+  type useCurrencyPickerSheet,
+} from "../hooks/useCurrencyPickerSheet";
+import { copy } from "../copy/copy";
+import "../styles/CurrencyPickerSheet.css";
 
-const RECENTS_KEY = "wetindey:reference-currency-recents:v1";
-const MAX_RECENTS = 3;
-
-interface CurrencyPickerSheetProps {
+export interface CurrencyPickerSheetViewProps {
   available: readonly SupportedReferenceCurrencyCode[];
   value: SupportedReferenceCurrencyCode | null;
   onSelect: (currency: SupportedReferenceCurrencyCode) => void;
   previews?: readonly ReferenceCurrencyCatalogEntry[];
   disabled?: boolean;
+  sheet: ReturnType<typeof useCurrencyPickerSheet>;
+}
+
+export function CurrencyPickerSheetView({
+  available,
+  value,
+  onSelect: _onSelect,
+  previews = [],
+  disabled,
+  sheet,
+}: CurrencyPickerSheetViewProps) {
+  const {
+    navigation,
+    triggerRef,
+    fallbackOpen,
+    setFallbackOpen,
+    setChildId,
+    selectedMeta,
+    isOpen,
+    commitSelect,
+  } = sheet;
+
+  const openPicker = () => {
+    if (!navigation) {
+      setFallbackOpen(true);
+      return;
+    }
+
+    const nextChildId = navigation.pushChild({
+      title: copy.title,
+      returnFocus: triggerRef.current,
+      content: (
+        <CurrencyPickerContent
+          available={available}
+          value={value}
+          onSelect={commitSelect}
+          previews={previews}
+          sheet={sheet}
+        />
+      ),
+    });
+    setChildId(nextChildId);
+  };
+
+  return (
+    <>
+      <button
+        ref={triggerRef}
+        type="button"
+        disabled={disabled || !value}
+        onClick={openPicker}
+        aria-haspopup="dialog"
+        aria-expanded={isOpen}
+        aria-label={
+          selectedMeta ? `Choose currency, ${selectedMeta.name} selected` : copy.title
+        }
+        className="flex h-[36px] shrink-0 items-center gap-1 rounded-[18px] bg-surface-card px-2 text-text-primary shadow-sm disabled:opacity-40 active:scale-[0.96] transition-all"
+      >
+        {value && <CurrencyFlag code={value} />}
+        <span className="text-subhead font-bold tracking-tight">{selectedMeta?.code ?? value ?? "—"}</span>
+        <span className="text-text-tertiary">
+          <SolidIcon name="chevron-down" size={16} />
+        </span>
+      </button>
+
+      {!navigation && (
+        <ModalSheet
+          open={fallbackOpen}
+          onClose={() => setFallbackOpen(false)}
+          title={copy.title}
+          size="form"
+        >
+          <CurrencyPickerContent
+            available={available}
+            value={value}
+            onSelect={commitSelect}
+            previews={previews}
+            sheet={sheet}
+          />
+        </ModalSheet>
+      )}
+    </>
+  );
 }
 
 function CurrencySearchField({
@@ -44,8 +128,8 @@ function CurrencySearchField({
       <input
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        placeholder="Search currencies"
-        aria-label="Search currencies"
+        placeholder={copy.searchPlaceholder}
+        aria-label={copy.searchPlaceholder}
         enterKeyHint="search"
         className="h-full w-full bg-transparent pl-9 pr-11 text-body text-text-primary placeholder:text-text-tertiary"
       />
@@ -63,52 +147,6 @@ function CurrencySearchField({
       )}
     </div>
   );
-}
-
-function readRecents(
-  available: ReadonlySet<SupportedReferenceCurrencyCode>
-): SupportedReferenceCurrencyCode[] {
-  try {
-    const parsed: unknown = JSON.parse(window.localStorage.getItem(RECENTS_KEY) ?? "[]");
-    if (!Array.isArray(parsed)) return [];
-    return parsed
-      .filter(
-        (value): value is SupportedReferenceCurrencyCode =>
-          typeof value === "string" &&
-          isSupportedReferenceCurrencyCode(value) &&
-          available.has(value)
-      )
-      .filter((value, index, values) => values.indexOf(value) === index)
-      .slice(0, MAX_RECENTS);
-  } catch {
-    return [];
-  }
-}
-
-function rememberCurrency(
-  currency: SupportedReferenceCurrencyCode,
-  previous: readonly SupportedReferenceCurrencyCode[]
-): SupportedReferenceCurrencyCode[] {
-  const next = [currency, ...previous.filter((value) => value !== currency)].slice(0, MAX_RECENTS);
-  try {
-    window.localStorage.setItem(RECENTS_KEY, JSON.stringify(next));
-  } catch {
-    // Selection still succeeds when device-local storage is unavailable.
-  }
-  return next;
-}
-
-function searchScore(code: SupportedReferenceCurrencyCode, query: string): number {
-  const meta = SUPPORTED_REFERENCE_CURRENCY_META[code];
-  if (code.toLowerCase() === query) return 0;
-  if (code.toLowerCase().startsWith(query)) return 1;
-  if (meta.name.toLowerCase().startsWith(query)) return 2;
-  return 3;
-}
-
-function getMeta(code: string | null) {
-  if (!code) return null;
-  return isSupportedReferenceCurrencyCode(code) ? SUPPORTED_REFERENCE_CURRENCY_META[code] : null;
 }
 
 function CurrencyRow({
@@ -221,17 +259,15 @@ function CurrencyPickerContent({
   value,
   onSelect,
   previews,
+  sheet,
 }: {
   available: readonly SupportedReferenceCurrencyCode[];
   value: SupportedReferenceCurrencyCode | null;
   onSelect: (currency: SupportedReferenceCurrencyCode) => void;
   previews: readonly ReferenceCurrencyCatalogEntry[];
+  sheet: ReturnType<typeof useCurrencyPickerSheet>;
 }) {
-  const availableSet = useMemo(() => new Set(available), [available]);
-  const [query, setQuery] = useState("");
-  const [recents, setRecents] = useState<SupportedReferenceCurrencyCode[]>(() =>
-    readRecents(availableSet)
-  );
+  const { availableSet, query, setQuery, recents } = sheet;
   const normalizedQuery = query.trim().toLowerCase();
 
   const recentCurrencies = recents.filter(
@@ -268,11 +304,6 @@ function CurrencyPickerContent({
       ]
     : [];
 
-  const commit = (currency: SupportedReferenceCurrencyCode) => {
-    setRecents(rememberCurrency(currency, recents));
-    onSelect(currency);
-  };
-
   return (
     <div className="space-y-4 px-4 py-2">
       <CurrencySearchField
@@ -287,137 +318,50 @@ function CurrencyPickerContent({
             title="Search results"
             currencies={searchResults}
             value={value}
-            onSelect={commit}
+            onSelect={onSelect}
             previews={previews}
           />
         ) : (
           <p role="status" className="py-8 text-center text-body text-text-secondary">
-            No currencies found
+            {copy.noResults}
           </p>
         )
       ) : available.length > 0 ? (
         <>
           <CurrencyGroup
-            title="Base currency"
+            title={copy.baseGroup}
             currencies={["NGN"]}
             value={value}
-            onSelect={commit}
+            onSelect={onSelect}
             previews={previews}
           />
           <CurrencyGroup
-            title="Recent"
+            title={copy.recentGroup}
             currencies={recentCurrencies}
             value={value}
-            onSelect={commit}
+            onSelect={onSelect}
             previews={previews}
           />
           <CurrencyGroup
-            title="Popular"
+            title={copy.popularGroup}
             currencies={popularCurrencies}
             value={value}
-            onSelect={commit}
+            onSelect={onSelect}
             previews={previews}
           />
           <CurrencyGroup
-            title="All currencies"
+            title={copy.allGroup}
             currencies={allCurrencies}
             value={value}
-            onSelect={commit}
+            onSelect={onSelect}
             previews={previews}
           />
         </>
       ) : (
         <p role="status" className="py-8 text-center text-body text-text-secondary">
-          No currencies available
+          {copy.noCurrencies}
         </p>
       )}
     </div>
-  );
-}
-
-
-
-export function CurrencyPickerSheet({
-  available,
-  value,
-  onSelect,
-  previews = [],
-  disabled,
-}: CurrencyPickerSheetProps) {
-  const navigation = useModalSheetNavigation();
-  const triggerRef = useRef<HTMLButtonElement>(null);
-  const [fallbackOpen, setFallbackOpen] = useState(false);
-  const [childId, setChildId] = useState<string | null>(null);
-  const selectedMeta = getMeta(value);
-  const isOpen = navigation ? navigation.childOpen && navigation.childId === childId : fallbackOpen;
-
-  const commit = (currency: SupportedReferenceCurrencyCode) => {
-    onSelect(currency);
-    if (navigation) {
-      setChildId(null);
-      navigation.popChild();
-    } else {
-      setFallbackOpen(false);
-    }
-  };
-
-  const openPicker = () => {
-    if (!navigation) {
-      setFallbackOpen(true);
-      return;
-    }
-
-    const nextChildId = navigation.pushChild({
-      title: "Choose currency",
-      returnFocus: triggerRef.current,
-      content: (
-        <CurrencyPickerContent
-          available={available}
-          value={value}
-          onSelect={commit}
-          previews={previews}
-        />
-      ),
-    });
-    setChildId(nextChildId);
-  };
-
-  return (
-    <>
-      <button
-        ref={triggerRef}
-        type="button"
-        disabled={disabled || !value}
-        onClick={openPicker}
-        aria-haspopup="dialog"
-        aria-expanded={isOpen}
-        aria-label={
-          selectedMeta ? `Choose currency, ${selectedMeta.name} selected` : "Choose currency"
-        }
-        className={`flex h-[36px] shrink-0 items-center gap-1 rounded-[18px] bg-surface-card px-2 text-text-primary shadow-sm disabled:opacity-40 active:scale-[0.96] transition-all`}
-      >
-        {value && <CurrencyFlag code={value} />}
-        <span className="text-subhead font-bold tracking-tight">{selectedMeta?.code ?? value ?? "—"}</span>
-        <span className="text-text-tertiary">
-          <SolidIcon name="chevron-down" size={16} />
-        </span>
-      </button>
-
-      {!navigation && (
-        <ModalSheet
-          open={fallbackOpen}
-          onClose={() => setFallbackOpen(false)}
-          title="Choose currency"
-          size="form"
-        >
-          <CurrencyPickerContent
-            available={available}
-            value={value}
-            onSelect={commit}
-            previews={previews}
-          />
-        </ModalSheet>
-      )}
-    </>
   );
 }
