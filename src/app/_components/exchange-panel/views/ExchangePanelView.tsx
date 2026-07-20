@@ -255,8 +255,8 @@ export function ExchangePanelView({
           </div>
 
           <div className="flex items-center justify-between text-caption-1 font-medium text-text-secondary">
-            <span>High: <strong className="text-text-primary tabular-nums">₦{trendInsight.high.toFixed(2)}</strong></span>
-            <span>Low: <strong className="text-text-primary tabular-nums">₦{trendInsight.low.toFixed(2)}</strong></span>
+            <span>High: <strong className="text-text-primary tabular-nums">{baseCurrency === "NGN" ? "₦" : ""}{trendInsight.high.toFixed(2)}</strong></span>
+            <span>Low: <strong className="text-text-primary tabular-nums">{baseCurrency === "NGN" ? "₦" : ""}{trendInsight.low.toFixed(2)}</strong></span>
           </div>
 
           <SparklineGraph points={trendInsight.points} />
