@@ -139,7 +139,7 @@ async function fetchNgnRateHistory(
 ): Promise<UpstreamRate[]> {
   const end = new Date();
   const start = new Date(end);
-  start.setUTCDate(start.getUTCDate() - 14);
+  start.setUTCDate(start.getUTCDate() - 35);
   const from = start.toISOString().slice(0, 10);
   const to = end.toISOString().slice(0, 10);
   const providerQuery = provider === "CBN" ? "&providers=CBN" : "";
@@ -235,6 +235,5 @@ export async function getReferenceRateTrend(
   return history
     .map((point) => ({ date: point.date, rate: 1 / point.rate }))
     .filter((point) => Number.isFinite(point.rate) && point.rate > 0)
-    .sort((left, right) => left.date.localeCompare(right.date))
-    .slice(-7);
+    .sort((left, right) => left.date.localeCompare(right.date));
 }
