@@ -772,8 +772,9 @@ export function useHomePage() {
       return [{
         id: `money-usd-${usdHeaderRate.effectiveDate}`,
         category: "money",
-        shortLabel: `USD ${movement ? `${movement} · ` : ""}${rate}`,
-        compactLabel: `USD ${rate}`,
+        code: "USD",
+        amount: rate,
+        trendText: movement,
         accessibleLabel: `Open Aboki FX. USD to naira reference rate${
           movement ? ` moved ${movement}` : ""
         }, ${rate}.`,
@@ -788,8 +789,9 @@ export function useHomePage() {
     return [{
       id: `food-${item.id}-${price}`,
       category: "food",
-      shortLabel: `${item.name} · ${price}`,
-      compactLabel: price,
+      code: item.name,
+      amount: price,
+      trendText: null,
       accessibleLabel: `Open Food. ${item.name} is listed from ${price}.`,
       visual: "food",
       trendTone: "positive",

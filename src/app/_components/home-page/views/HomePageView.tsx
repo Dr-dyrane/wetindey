@@ -170,13 +170,13 @@ export function HomePageView({
       <div className="flex flex-col gap-2.5 px-4 pt-0 pb-2.5">
         <div className="flex w-full items-center gap-1">
           <div className="flex shrink-0 items-center space-x-1.5">
-            <NigeriaLogo className="h-6 w-6" />
+            <NigeriaLogo className="h-5 w-5" />
             <button
               type="button"
               onClick={() => setIsCategoryOpen(true)}
               className="flex h-9 items-center text-text-primary active:scale-95 transition-all duration-instant text-[13px] font-bold"
             >
-              <span className="flex h-[30px] items-center gap-0.5 rounded-[12px] bg-fillSecondary px-2 shadow-sm">
+              <span className="flex h-[30px] items-center gap-0.5 rounded-[18px] bg-fillSecondary px-2.5 shadow-sm">
                 <span>
                   {activeCategory === "money"
                     ? "Aboki FX"
