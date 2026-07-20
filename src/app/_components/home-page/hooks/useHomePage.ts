@@ -846,8 +846,29 @@ export function useHomePage() {
   const [routeOrigin, setRouteOrigin] = useState<DisclosedRouteOrigin | null>(
     null
   );
-  const routeTargetLat = getItTarget?.lat ?? null;
-  const routeTargetLng = getItTarget?.lng ?? null;
+
+  const selectedExchangeLocation = useMemo(
+    () =>
+      exchangeLocations.find(
+        (location) => location.id === selectedExchangeLocationId
+      ) ?? null,
+    [exchangeLocations, selectedExchangeLocationId]
+  );
+
+  const routeTargetLat =
+    activeCategory === "food"
+      ? (getItTarget?.lat ?? null)
+      : activeCategory === "money"
+        ? (selectedExchangeLocation?.lat ?? null)
+        : null;
+
+  const routeTargetLng =
+    activeCategory === "food"
+      ? (getItTarget?.lng ?? null)
+      : activeCategory === "money"
+        ? (selectedExchangeLocation?.lng ?? null)
+        : null;
+
   const handleOriginDisclosed = useEventCallback(
     (origin: DisclosedRouteOrigin) => {
       setRouteOrigin(origin);
@@ -857,13 +878,25 @@ export function useHomePage() {
   useEffect(() => {
     setRouteOrigin(null);
     setRoute(null);
-  }, [getItTarget?.placeId]);
+  }, [getItTarget?.placeId, selectedExchangeLocationId]);
+
+  const activeRouteOrigin = useMemo<DisclosedRouteOrigin>(
+    () =>
+      routeOrigin ?? {
+        lat: searchOrigin.lat,
+        lng: searchOrigin.lng,
+        disclosedAt: Date.now(),
+        accuracyM: 10,
+        capturedAt: Date.now(),
+        receivedAt: Date.now(),
+        provenance: "device",
+      },
+    [routeOrigin, searchOrigin.lat, searchOrigin.lng]
+  );
 
   useEffect(() => {
     setRoute(null);
     if (
-      activeCategory !== "food" ||
-      routeOrigin === null ||
       routeTargetLat === null ||
       routeTargetLng === null
     )
@@ -871,7 +904,7 @@ export function useHomePage() {
 
     const controller = new AbortController();
     void fetchRoute(
-      routeOrigin,
+      activeRouteOrigin,
       { lat: routeTargetLat, lng: routeTargetLng },
       controller.signal
     ).then((geometry) => {
@@ -880,7 +913,7 @@ export function useHomePage() {
     });
 
     return () => controller.abort();
-  }, [activeCategory, routeOrigin, routeTargetLat, routeTargetLng]);
+  }, [activeCategory, activeRouteOrigin, routeTargetLat, routeTargetLng]);
 
   return {
     theme,

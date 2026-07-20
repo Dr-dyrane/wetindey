@@ -563,6 +563,18 @@ ADRs, architecture of record, Git evidence, and `LANES.md`. No app, schema, migr
 package, or ADR path is in scope.
 
 
+##### Aboki FX User Origin Polylines — ACTIVE CLAIM
+
+Owner: Antigravity (External Approved Contractor - Product Engineering & UX Department). Exclusive paths:
+
+- `src/app/_components/home-page/hooks/useHomePage.ts`
+- `src/app/_components/exchange-panel/hooks/useExchangePanel.ts`
+- `src/app/_components/exchange-panel/views/ExchangePanelView.tsx`
+- `LANES.md`
+
+Objective: Implement user origin polylines in Aboki FX (Money vertical), routing Mapbox directions from the user GPS / guest Festac allocation pin to selected BDC exchange outlets.
+
+
 ---
 
 ## 📜 Historical Released Lanes Archive
