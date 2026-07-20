@@ -15,7 +15,7 @@ import { useModalPresented } from "@/design-system/components/ModalSheet";
 import { type CategoryPillar } from "@/app/_components/CategorySelectorSheet";
 import { type ItemCardData } from "@/design-system/components/ItemCard";
 import { useLocationIdentity } from "@/app/_hooks/useLocationIdentity";
-import type { ExchangeLocationFilter } from "@/app/_components/ExchangePanel";
+import type { ExchangeLocationFilter } from "@/app/_components/exchange-panel/ExchangePanel";
 import type { CrossCategorySignal } from "@/app/_components/CrossCategorySignalRail";
 import {
   getNearbyExchangeLocations,
@@ -27,13 +27,13 @@ import {
 } from "@/app/_actions/currency-actions";
 import { EXCHANGE_SAMPLE_LOCATIONS } from "@/app/_data/exchange-sample-locations";
 import type { ExchangeLocation } from "@/integrations/maps/MapboxNearbyExchangeSearch";
-import type { PresentedOffer, OfferPresentation } from "@/app/_components/ItemDetailSheet";
-import type { GetItTarget } from "@/app/_components/GetItSheet";
+import type { PresentedOffer, OfferPresentation } from "@/app/_components/item-detail-sheet/ItemDetailSheet";
+import type { GetItTarget } from "@/app/_components/get-it-sheet/GetItSheet";
 import {
   armVisit,
   takeDueVisit,
   type VisitContext
-} from "@/app/_components/ConfirmVisitSheet";
+} from "@/app/_components/confirm-visit-sheet/ConfirmVisitSheet";
 import { useTheme } from "@/core/context/ThemeContext";
 import { usePresentation } from "@/core/navigation/usePresentation";
 import { useGlobalStore } from "@/core/state/globalStore";

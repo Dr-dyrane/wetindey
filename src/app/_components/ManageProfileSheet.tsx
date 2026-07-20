@@ -16,7 +16,7 @@ import {
   removeMyAvatar,
   type MyProfile,
 } from "@/app/_actions/actions";
-import { Avatar } from "@/app/_components/ProfileSheet";
+import { Avatar } from "@/app/_components/profile-sheet/ProfileSheet";
 import { haptics } from "@/lib/haptics";
 
 /**

@@ -27,27 +27,27 @@ import {
 } from "@/design-system/components/PlaceOfferRow";
 import { SettingsSheet } from "@/app/_components/SettingsSheet";
 import { ReportPriceSheet } from "@/app/_components/ReportPriceSheet";
-import { ProfileSheet, Avatar } from "@/app/_components/ProfileSheet";
+import { ProfileSheet, Avatar } from "@/app/_components/profile-sheet/ProfileSheet";
 import { CategorySelectorSheet, type CategoryPillar } from "@/app/_components/CategorySelectorSheet";
 import { useLocationIdentity } from "@/app/_hooks/useLocationIdentity";
 import {
   ExchangePanel,
   type ExchangeLocationFilter
-} from "@/app/_components/ExchangePanel";
+} from "@/app/_components/exchange-panel/ExchangePanel";
 import { CrossCategorySignalRail } from "@/app/_components/CrossCategorySignalRail";
 import {
   ItemDetailSheet,
   type OfferPresentation,
   type PresentedOffer
-} from "@/app/_components/ItemDetailSheet";
+} from "@/app/_components/item-detail-sheet/ItemDetailSheet";
 import { PresentationHost } from "@/app/_components/PresentationHost";
-import { GetItSheet, type GetItTarget } from "@/app/_components/GetItSheet";
+import { GetItSheet, type GetItTarget } from "@/app/_components/get-it-sheet/GetItSheet";
 import {
   ConfirmVisitSheet,
   armVisit,
   takeDueVisit,
   type VisitContext
-} from "@/app/_components/ConfirmVisitSheet";
+} from "@/app/_components/confirm-visit-sheet/ConfirmVisitSheet";
 
 import { useTheme } from "@/core/context/ThemeContext";
 import { usePresentation } from "@/core/navigation/usePresentation";
