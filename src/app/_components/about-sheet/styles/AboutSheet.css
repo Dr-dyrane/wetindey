@@ -1,0 +1,6 @@
+/* AboutSheet.css */
+
+.about-sheet-container {
+  height: 100%;
+  overflow-y: auto;
+}

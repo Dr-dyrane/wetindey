@@ -5,7 +5,7 @@ import { LocationSheet } from "@/app/_components/location-sheet/LocationSheet";
 import { MyReportsSheet } from "@/app/_components/MyReportsSheet";
 import { ManageProfileSheet } from "@/app/_components/ManageProfileSheet";
 import { ReportProblemSheet } from "@/app/_components/ReportProblemSheet";
-import { AboutSheet } from "@/app/_components/AboutSheet";
+import { AboutSheet } from "@/app/_components/about-sheet/AboutSheet";
 import type { PresentedSurface } from "@/core/navigation/usePresentation";
 
 interface PresentationHostProps {
