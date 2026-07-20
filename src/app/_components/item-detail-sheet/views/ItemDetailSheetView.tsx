@@ -156,6 +156,7 @@ export function ItemDetailSheetView({
       title={item?.name ?? copy.fallbackTitle}
       hero={hero}
       size="page"
+      passThrough
     >
       <div className="space-y-4 py-3">
         {/* The narrowing path: item → type → size. */}

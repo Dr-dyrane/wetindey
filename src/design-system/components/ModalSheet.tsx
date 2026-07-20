@@ -138,6 +138,7 @@ interface ModalSheetProps {
   hero?: React.ReactNode;
   children: React.ReactNode;
   size?: "page" | "form";
+  passThrough?: boolean;
 }
 
 const FOCUSABLE_SELECTOR = [
@@ -302,6 +303,7 @@ export function ModalSheet({
   hero,
   children,
   size = "page",
+  passThrough = false,
 }: ModalSheetProps) {
   const modalId = useId();
   const rootRef = useRef<HTMLDivElement>(null);
@@ -587,14 +589,18 @@ export function ModalSheet({
   const panel = (
     <div
       ref={rootRef}
-      className="fixed inset-0 z-50 flex flex-col justify-end md:items-center md:justify-center md:p-6"
+      className={`fixed inset-0 z-50 flex flex-col justify-end md:items-center md:justify-center md:p-6 ${
+        passThrough ? "pointer-events-none" : ""
+      }`}
     >
       <button
         type="button"
         aria-label={child ? "Back to previous step" : "Dismiss"}
         onClick={() => requestCloseRef.current()}
         data-motion-state={state}
-        className={`absolute inset-0 ${transition.reveal} motion-modal-backdrop`}
+        className={`absolute inset-0 ${transition.reveal} motion-modal-backdrop ${
+          passThrough ? "pointer-events-none" : ""
+        }`}
       />
 
       <div
@@ -610,7 +616,7 @@ export function ModalSheet({
           borderBottomLeftRadius: isRegular ? SHEET_RADIUS : 0,
           borderBottomRightRadius: isRegular ? SHEET_RADIUS : 0,
         }}
-        className={`sheet-panel material-dense-glass motion-modal-panel relative flex flex-col overflow-hidden shadow-sheet ${
+        className={`sheet-panel material-dense-glass motion-modal-panel relative flex flex-col overflow-hidden shadow-sheet pointer-events-auto ${
           visible ? transition.presentSheet : transition.dismissSheet
         } md:w-full md:max-w-[440px] md:shadow-island ${size === "page" ? "h-[94%] md:h-[min(92%,720px)]" : "max-h-[88%] md:max-h-[min(88%,640px)]"}`}
       >
