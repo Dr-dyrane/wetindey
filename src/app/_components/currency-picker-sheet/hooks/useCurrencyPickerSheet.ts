@@ -3,7 +3,6 @@ import {
   useRef,
   useState,
   useModalSheetNavigation,
-  POPULAR_REFERENCE_CURRENCIES,
   SUPPORTED_REFERENCE_CURRENCY_META,
   isSupportedReferenceCurrencyCode,
   type SupportedReferenceCurrencyCode,
