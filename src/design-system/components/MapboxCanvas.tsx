@@ -467,11 +467,12 @@ export const MapboxCanvas = forwardRef<MapCameraHandle, MapboxCanvasProps>(funct
     paddingSettled.current = true;
   }, [mapPadding, ready]);
 
-  // Update map center when global coordinate changes
+  // Update map center when global coordinate changes, except when framing an active route
   const { lat, lng } = center;
   useEffect(() => {
+    if (route && route.length >= 2) return;
     adapterRef.current?.setCenter(lat, lng);
-  }, [lat, lng, ready]);
+  }, [lat, lng, route, ready]);
 
   // The map is the base layer of the UI, so it follows the app theme.
   // `ready` is in the deps because the adapter is created asynchronously: at

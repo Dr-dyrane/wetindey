@@ -2021,13 +2021,25 @@ export class MapboxAdapter implements MapProviderAdapter {
     }
 
     try {
+      const canvas = this.mapInstance.getCanvas();
+      const containerWidth = canvas?.clientWidth || (typeof window !== "undefined" ? window.innerWidth : 800);
+      const containerHeight = canvas?.clientHeight || (typeof window !== "undefined" ? window.innerHeight : 600);
+      const isMobile = containerWidth < 768;
+
+      const effectivePadding = {
+        top: Math.max(this.padding.top || 0, 80),
+        bottom: Math.max(this.padding.bottom || 0, isMobile ? Math.round(containerHeight * 0.45) : 80),
+        left: Math.max(this.padding.left || 0, isMobile ? 30 : Math.min(460, Math.round(containerWidth * 0.42))),
+        right: Math.max(this.padding.right || 0, 30),
+      };
+
       this.mapInstance.fitBounds(
         [
           [west, south],
           [east, north],
         ],
         {
-          padding: this.padding,
+          padding: effectivePadding,
           maxZoom: options?.maxZoom ?? FIT_MAX_ZOOM,
           essential: true,
           duration: duration(FLY_DURATION_MS),
