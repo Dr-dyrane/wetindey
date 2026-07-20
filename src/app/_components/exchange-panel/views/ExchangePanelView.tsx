@@ -36,6 +36,8 @@ export function ExchangePanelView({
     ngnAmountId,
     ngnErrorId,
     currency,
+    baseCurrency,
+    enterBaseCurrency,
     amounts,
     catalogState,
     rateState,
@@ -79,13 +81,7 @@ export function ExchangePanelView({
         <CurrencyPickerSheet
           available={availableCurrencies}
           value={currency}
-          onSelect={(selected) => {
-            if (selected === ("NGN" as any)) {
-              toggleConversionDirection();
-            } else {
-              enterCurrency(selected);
-            }
-          }}
+          onSelect={enterCurrency}
           disabled={catalogState.kind !== "ready"}
         />
       )}
@@ -99,12 +95,8 @@ export function ExchangePanelView({
       ) : (
         <CurrencyPickerSheet
           available={availableCurrencies}
-          value={"NGN" as any}
-          onSelect={(selected) => {
-            if (selected !== ("NGN" as any)) {
-              enterCurrency(selected);
-            }
-          }}
+          value={baseCurrency as any}
+          onSelect={(selected) => enterBaseCurrency(selected as string)}
           disabled={catalogState.kind !== "ready"}
         />
       )}

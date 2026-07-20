@@ -274,6 +274,7 @@ export function useExchangePanel(props: ExchangePanelProps) {
   const currencyRef = useRef<ReferenceCurrencyCode | null>(null);
   const amountsRef = useRef<AmountState>(EMPTY_AMOUNTS);
   const [currency, setCurrency] = useState<ReferenceCurrencyCode | null>(null);
+  const [baseCurrency, setBaseCurrency] = useState<string>("NGN");
   const [amounts, setAmounts] = useState<AmountState>(EMPTY_AMOUNTS);
   const [catalogRetry, setCatalogRetry] = useState(0);
   const [rateRetry, setRateRetry] = useState(0);
@@ -303,6 +304,19 @@ export function useExchangePanel(props: ExchangePanelProps) {
       commitAmounts({ ...current, [other]: "" });
     },
     [commitAmounts]
+  );
+
+  const enterBaseCurrency = useCallback(
+    (nextBaseCurrency: string) => {
+      if (nextBaseCurrency === currency) {
+        setCurrency(baseCurrency as ReferenceCurrencyCode);
+      }
+      setBaseCurrency(nextBaseCurrency);
+      const current = amountsRef.current;
+      const other: AmountField = current.lastEdited === "foreign" ? "ngn" : "foreign";
+      commitAmounts({ ...current, [other]: "" });
+    },
+    [baseCurrency, currency, commitAmounts]
   );
 
   useEffect(() => {
@@ -511,6 +525,9 @@ export function useExchangePanel(props: ExchangePanelProps) {
     ngnErrorId,
     currency,
     setCurrency,
+    baseCurrency,
+    setBaseCurrency,
+    enterBaseCurrency,
     amounts,
     catalogState,
     rateState,
