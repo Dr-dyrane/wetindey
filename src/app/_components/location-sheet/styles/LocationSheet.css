@@ -1,0 +1,6 @@
+/* LocationSheet.css */
+
+.location-sheet-container {
+  height: 100%;
+  overflow-y: auto;
+}

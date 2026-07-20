@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { LocationSheet } from "@/app/_components/LocationSheet";
+import { LocationSheet } from "@/app/_components/location-sheet/LocationSheet";
 import { MyReportsSheet } from "@/app/_components/MyReportsSheet";
 import { ManageProfileSheet } from "@/app/_components/ManageProfileSheet";
 import { ReportProblemSheet } from "@/app/_components/ReportProblemSheet";
