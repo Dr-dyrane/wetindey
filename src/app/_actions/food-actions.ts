@@ -807,7 +807,7 @@ export async function getVisitContext(offerId: string) {
   };
 }
 
-export async function submitVisitConfirmation(data: {
+export async function submitVisitConfirmation(_data: {
   placeId: string;
   itemVariantId: string;
   unitId: string;

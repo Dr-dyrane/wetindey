@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import Image from "next/image";
 import { Camera } from "lucide-react";
 import { ModalSheet } from "@/design-system/components/ModalSheet";
 import { ListGroup } from "@/design-system/components/ListRow";
