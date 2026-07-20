@@ -155,7 +155,21 @@ export function ExchangePanelView({
           )}
         </div>
 
-        {visibleRate && selectedMeta ? (
+        {currency === baseCurrency ? (
+          <div className="flex items-baseline justify-between gap-3">
+            <div className="flex items-baseline gap-2">
+              <span className="text-title-1 font-bold tracking-tight text-text-primary tabular-nums">
+                1.00
+              </span>
+              <span className="text-footnote font-semibold text-text-secondary">
+                per {currency ?? "unit"}
+              </span>
+            </div>
+            <span className="squircle bg-fillSecondary px-2 py-0.5 text-caption-1 font-semibold tabular-nums text-text-secondary">
+              1:1 Same currency
+            </span>
+          </div>
+        ) : visibleRate && selectedMeta ? (
           <div className="flex items-baseline justify-between gap-3">
             <div className="flex items-baseline gap-2">
               <span className="text-title-1 font-bold tracking-tight text-text-primary tabular-nums">

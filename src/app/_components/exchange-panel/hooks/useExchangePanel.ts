@@ -236,12 +236,29 @@ function writeSessionAmount(field: AmountField, value: string) {
   } catch {}
 }
 
-export function deriveAmount(state: AmountState, rate: ReferenceRate): AmountState {
+export function deriveAmount(
+  state: AmountState,
+  rate: ReferenceRate | null,
+  topCurrency?: string | null,
+  bottomCurrency?: string | null
+): AmountState {
   const edited = state[state.lastEdited];
   const parsed = parseAmount(edited);
   const other: AmountField = state.lastEdited === "foreign" ? "ngn" : "foreign";
+
   if (parsed.value === null || parsed.error !== null) {
     return { ...state, [other]: "" };
+  }
+
+  if (topCurrency && bottomCurrency && topCurrency === bottomCurrency) {
+    return {
+      ...state,
+      [other]: edited,
+    };
+  }
+
+  if (!rate || !rate.rate) {
+    return state;
   }
 
   const converted =
@@ -444,17 +461,16 @@ export function useExchangePanel(props: ExchangePanelProps) {
   const visibleRateBase = visibleRate?.base;
   const visibleRateValue = visibleRate?.rate;
   useEffect(() => {
-    if (!visibleRate) return;
     const current = amountsRef.current;
-    const next = deriveAmount(current, visibleRate);
+    const next = deriveAmount(current, visibleRate, currency, baseCurrency);
     if (next.foreign !== current.foreign || next.ngn !== current.ngn) {
       commitAmounts(next);
     }
-  }, [commitAmounts, visibleRateBase, visibleRateValue]);
+  }, [commitAmounts, visibleRateBase, visibleRateValue, currency, baseCurrency]);
 
   const editAmount = (field: AmountField, value: string) => {
     const edited = amountStateFrom(field, value);
-    const next = visibleRate ? deriveAmount(edited, visibleRate) : edited;
+    const next = deriveAmount(edited, visibleRate, currency, baseCurrency);
     commitAmounts(next);
     writeSessionAmount(field, value);
   };
