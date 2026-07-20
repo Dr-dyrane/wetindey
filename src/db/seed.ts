@@ -387,34 +387,43 @@ const run = async () => {
 
       const premium = place.placeType === "supermarket" ? 1.08 : place.placeType === "kiosk" ? 1.04 : 0.96;
 
-      // How many Sample reports back this line. The offer's count is computed
-      // from these generated rows, not guessed alongside them.
-      const reportCount = 1 + Math.floor(random() * 3); // 1-3
+      // Generate multi-window historical observations (current 7d vs previous 7d-14d)
+      // to support deterministic, realistic food price trend calculations.
+      const isRising = variant.slug.includes("rice");
+      const isFalling = variant.slug.includes("garri");
+      const priceMultiplierCurrent = isRising ? 1.05 : isFalling ? 0.94 : 1.0;
+      const priceMultiplierPrevious = isRising ? 0.98 : isFalling ? 1.02 : 1.0;
 
-      // Newest report drives freshness. Weighted toward recent so the pilot is
-      // mostly live rather than mostly expired.
-      const newestAgeH = random() < 0.55
-        ? random() * STALE_HOURS                      // fresh: < 24h
-        : random() < 0.75
-          ? STALE_HOURS + random() * (EXPIRATION_HOURS - STALE_HOURS)  // stale: 24-72h
-          : EXPIRATION_HOURS + random() * 36;         // expired: > 72h
-
-      const available = random() > 0.12; // most Sample lines are in stock
-
+      const available = random() > 0.12;
       const observations: Array<{ at: Date; price: number; sourceId: string }> = [];
-      for (let i = 0; i < reportCount; i++) {
-        // Older reports sit behind the newest one, spread over a few days.
-        const ageH = newestAgeH + i * (6 + random() * 30);
-        const price = Math.round((band.min + random() * (band.max - band.min)) * premium);
+
+      // Current 7-day window observations
+      const currentCount = 2 + Math.floor(random() * 2);
+      for (let i = 0; i < currentCount; i++) {
+        const ageH = (i + 1) * 36 + random() * 12; // 1 to 5 days ago
+        const basePrice = (band.min + random() * (band.max - band.min)) * premium;
+        const price = Math.round(basePrice * priceMultiplierCurrent / 50) * 50; // round to nearest ₦50
         observations.push({
           at: hoursAgo(runStartedAt, ageH),
-          price,
-          // Distinct Sample sources where possible so the generated count and
-          // its supporting rows remain internally consistent.
-          sourceId: sourcesList[i % sourcesList.length].id
+          price: Math.max(100, price),
+          sourceId: sourcesList[i % sourcesList.length].id,
         });
       }
-      observations.sort((a, b) => b.at.getTime() - a.at.getTime()); // newest first
+
+      // Previous 7d-14d window observations
+      const previousCount = 2 + Math.floor(random() * 2);
+      for (let i = 0; i < previousCount; i++) {
+        const ageH = 168 + (i + 1) * 36 + random() * 12; // 7 to 13 days ago
+        const basePrice = (band.min + random() * (band.max - band.min)) * premium;
+        const price = Math.round(basePrice * priceMultiplierPrevious / 50) * 50;
+        observations.push({
+          at: hoursAgo(runStartedAt, ageH),
+          price: Math.max(100, price),
+          sourceId: sourcesList[(currentCount + i) % sourcesList.length].id,
+        });
+      }
+
+      observations.sort((a, b) => b.at.getTime() - a.at.getTime());
 
       await db.insert(schema.observations).values(
         observations.map((o, i): typeof schema.observations.$inferInsert => ({

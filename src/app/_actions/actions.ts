@@ -29,6 +29,7 @@ import {
   type TrustAssessment,
   type TrustObservation,
 } from "@/lib/trust";
+import { calculateFoodPriceTrend, type RawObservationPoint } from "@/core/food-trend";
 
 export interface ReadTrust {
   confidenceScore: number;
@@ -840,8 +841,37 @@ export async function getPopularItems(input: {
     .filter((key): key is OfferKey => key !== null);
   const trustByKey = await getOfferTrustBatch(trustKeys);
 
+  const itemIds = cardRows.map((r) => r.id);
+  const obsRows = itemIds.length > 0 ? await db.execute(sql`
+    SELECT
+      v.item_id AS "itemId",
+      o.price_amount AS "priceAmount",
+      o.observed_at AS "observedAt",
+      o.availability_state AS "availabilityState",
+      o.provenance,
+      o.place_id AS "placeId"
+    FROM ${observations} o
+    JOIN ${itemVariants} v ON v.id = o.item_variant_id
+    WHERE v.item_id IN (${sql.join(itemIds.map((id) => sql`${id}`), sql`, `)})
+      AND o.moderation_status = 'approved'
+  `) : { rows: [] };
+
+  const obsByItem = new Map<string, RawObservationPoint[]>();
+  for (const row of obsRows.rows as any[]) {
+    const list = obsByItem.get(row.itemId) ?? [];
+    list.push({
+      priceAmount: Number(row.priceAmount),
+      observedAt: new Date(row.observedAt),
+      availabilityState: String(row.availabilityState),
+      provenance: String(row.provenance),
+      placeId: String(row.placeId),
+    });
+    obsByItem.set(row.itemId, list);
+  }
+
   return cardRows.map((r) => {
     const trustKey = nullableOfferKey(r);
+    const itemObs = obsByItem.get(r.id) ?? [];
     return {
       id: r.id,
       slug: r.slug,
@@ -858,6 +888,7 @@ export async function getPopularItems(input: {
       priceTo: r.priceTo ?? null,
       trust: readTrustForKey(trustByKey, trustKey, r.trustAvailabilityState),
       lastObservedAt: r.lastObservedAt ? new Date(r.lastObservedAt).toISOString() : null,
+      foodTrend: calculateFoodPriceTrend(itemObs),
     };
   });
 }

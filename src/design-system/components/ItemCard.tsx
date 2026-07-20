@@ -7,6 +7,8 @@ import { formatNaira } from "@/lib/money";
 import { useT } from "@/core/i18n";
 import { transition } from "@/design-system/motion";
 
+import type { FoodPriceTrend } from "@/core/food-trend";
+
 export interface ItemCardData {
   id: string;
   slug: string;
@@ -26,6 +28,7 @@ export interface ItemCardData {
   } | null;
   /** The unit the price range is quoted in. A price without its unit can lie. */
   unitLabel?: string | null;
+  foodTrend?: FoodPriceTrend | null;
 }
 
 /**
@@ -196,8 +199,22 @@ export function ItemCard({
             </span>
           )}
         </p>
-        <div className="mt-1 flex items-center gap-1.5">
+        <div className="mt-1 flex items-center gap-1.5 flex-wrap">
           <StatusBadge kind={status}>{statusLabel[status]}</StatusBadge>
+          {item.foodTrend && item.foodTrend.state !== "insufficient" && (
+            <span
+              className={`squircle px-1.5 py-0.5 text-caption-2 font-bold tabular-nums ${
+                item.foodTrend.state === "up"
+                  ? "bg-status-confirmed-bg text-status-confirmed-fg"
+                  : item.foodTrend.state === "down"
+                    ? "bg-status-caution-bg text-status-caution-fg"
+                    : "bg-fillSecondary text-text-secondary"
+              }`}
+            >
+              {item.foodTrend.label}
+              {item.foodTrend.origin === "sample" ? " (Sample)" : ""}
+            </span>
+          )}
           {item.placeCount ? (
             <span className="truncate text-caption-1 text-text-secondary">
               {item.placeCount} {item.placeCount === 1 ? "place" : "places"}

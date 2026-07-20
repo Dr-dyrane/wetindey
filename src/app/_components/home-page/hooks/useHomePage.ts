@@ -786,15 +786,23 @@ export function useHomePage() {
     const item = popularItems?.find((candidate) => foodSignalPrice(candidate));
     const price = item ? foodSignalPrice(item) : null;
     if (!item || !price) return [];
+    const trend = item.foodTrend && item.foodTrend.state !== "insufficient" ? item.foodTrend : null;
+    const movement = trend
+      ? `${trend.state === "up" ? "↑" : trend.state === "down" ? "↓" : "→"}${Math.abs(
+          Math.round(trend.changePercent)
+        )}%`
+      : null;
     return [{
       id: `food-${item.id}-${price}`,
       category: "food",
       code: item.name,
       amount: price,
-      trendText: null,
-      accessibleLabel: `Open Food. ${item.name} is listed from ${price}.`,
+      trendText: movement,
+      accessibleLabel: `Open Food. ${item.name} is listed from ${price}${
+        movement ? `, moved ${movement}` : ""
+      }.`,
       visual: "food",
-      trendTone: "positive",
+      trendTone: !trend ? "neutral" : trend.state === "up" ? "positive" : trend.state === "down" ? "negative" : "neutral",
     }];
   }, [activeCategory, popularItems, usdHeaderRate]);
 
