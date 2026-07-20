@@ -105,16 +105,28 @@ function CurrencyRow({
   selected,
   onSelect,
 }: {
-  code: ReferenceCurrencyCode;
+  code: string;
   selected: boolean;
   onSelect: (currency: ReferenceCurrencyCode) => void;
 }) {
-  const meta = REFERENCE_CURRENCY_META[code];
+  const meta =
+    code === "NGN"
+      ? { code: "NGN", name: "Nigerian naira", symbol: "₦", flag: "ng", searchAliases: ["Nigeria", "naira"] }
+      : isReferenceCurrencyCode(code)
+        ? REFERENCE_CURRENCY_META[code]
+        : null;
+
+  if (!meta) return null;
+
   return (
     <button
       type="button"
       aria-pressed={selected}
-      onClick={() => onSelect(code)}
+      onClick={() => {
+        if (isReferenceCurrencyCode(code)) {
+          onSelect(code);
+        }
+      }}
       className={`flex min-h-tap w-full items-center justify-between gap-3 px-4 py-2.5 text-left active:bg-fillTertiary ${transition.feedback}`}
     >
       <div className="flex items-center gap-3 min-w-0 flex-1">
@@ -125,8 +137,8 @@ function CurrencyRow({
         </span>
       </div>
       <div className="flex items-center gap-2 shrink-0">
-        <span className="squircle bg-fillSecondary px-2 py-0.5 text-caption-1 font-semibold tabular-nums text-text-secondary">
-          Ref rate
+        <span className="squircle bg-fillSecondary px-2.5 py-0.5 text-caption-1 font-bold tabular-nums text-text-secondary">
+          {meta.symbol}
         </span>
         {selected && (
           <IconOrb tone="neutral">
@@ -145,7 +157,7 @@ function CurrencyGroup({
   onSelect,
 }: {
   title: string;
-  currencies: readonly ReferenceCurrencyCode[];
+  currencies: readonly string[];
   value: ReferenceCurrencyCode | null;
   onSelect: (currency: ReferenceCurrencyCode) => void;
 }) {
@@ -196,19 +208,27 @@ function CurrencyPickerContent({
   popularCurrencies.forEach((code) => used.add(code));
   const allCurrencies = available.filter((code) => !used.has(code));
 
+  const ngnMeta = { code: "NGN", name: "Nigerian naira", symbol: "₦", flag: "ng", searchAliases: ["Nigeria", "naira"] };
+  const matchesNgn = normalizedQuery
+    ? ["ngn", ngnMeta.name, ...ngnMeta.searchAliases].join(" ").toLowerCase().includes(normalizedQuery)
+    : false;
+
   const searchResults = normalizedQuery
-    ? [...available]
-        .filter((code) => {
-          const meta = REFERENCE_CURRENCY_META[code];
-          return [code, meta.name, ...meta.searchAliases]
-            .join(" ")
-            .toLowerCase()
-            .includes(normalizedQuery);
-        })
-        .sort(
-          (left, right) =>
-            searchScore(left, normalizedQuery) - searchScore(right, normalizedQuery)
-        )
+    ? [
+        ...(matchesNgn ? (["NGN"] as const) : []),
+        ...[...available]
+          .filter((code) => {
+            const meta = REFERENCE_CURRENCY_META[code];
+            return [code, meta.name, ...meta.searchAliases]
+              .join(" ")
+              .toLowerCase()
+              .includes(normalizedQuery);
+          })
+          .sort(
+            (left, right) =>
+              searchScore(left, normalizedQuery) - searchScore(right, normalizedQuery)
+          ),
+      ]
     : [];
 
   const commit = (currency: ReferenceCurrencyCode) => {
@@ -239,6 +259,12 @@ function CurrencyPickerContent({
         )
       ) : available.length > 0 ? (
         <>
+          <CurrencyGroup
+            title="Base currency"
+            currencies={["NGN" as ReferenceCurrencyCode]}
+            value={value}
+            onSelect={commit}
+          />
           <CurrencyGroup
             title="Recent"
             currencies={recentCurrencies}
