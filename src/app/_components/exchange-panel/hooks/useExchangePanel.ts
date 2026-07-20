@@ -283,7 +283,10 @@ export function useExchangePanel(props: ExchangePanelProps) {
   const [rateTrendState, setRateTrendState] = useState<RateTrendState>({
     kind: "loading",
   });
-  const [viewMode, setViewMode] = useState<"rate" | "nearby">("rate");
+  const [viewMode, setViewMode] = useState<"answer" | "nearby" | "evidence">(
+    "answer"
+  );
+  const [conversionReversed, setConversionReversed] = useState(false);
 
   const commitAmounts = useCallback((next: AmountState) => {
     amountsRef.current = next;
@@ -442,6 +445,10 @@ export function useExchangePanel(props: ExchangePanelProps) {
     writeSessionAmount(field, value);
   };
 
+  const toggleConversionDirection = useCallback(() => {
+    setConversionReversed((current) => !current);
+  }, []);
+
   const foreignParsed = useMemo(() => parseAmount(amounts.foreign), [amounts.foreign]);
   const ngnParsed = useMemo(() => parseAmount(amounts.ngn), [amounts.ngn]);
   const foreignError = amounts.lastEdited === "foreign" ? foreignParsed.error : null;
@@ -480,5 +487,7 @@ export function useExchangePanel(props: ExchangePanelProps) {
     visibleRate,
     viewMode,
     setViewMode,
+    conversionReversed,
+    toggleConversionDirection,
   };
 }

@@ -431,7 +431,33 @@ replaces that content in place with `Not confirmed` plus exactly three BDC-kind 
 Driven Safari evidence proved a real seven-point CBN path, `Up 1.4%`, no nearby rows in
 Rate, three rows in Nearby, unchanged URL, and `100 USD` deriving `138888.89 NGN`.
 TypeScript and exact-path lint passed.
-returned NOT_REFUTED with no P1/P2/P3.
+
+##### Aboki FX Dyrane cognitive-state correction — COMPLETE / PATHS RELEASED
+
+Owner: released. Former exclusive paths:
+
+- `src/app/_components/exchange-panel/hooks/useExchangePanel.ts`
+- `src/app/_components/exchange-panel/views/ExchangePanelView.tsx`
+- `src/app/_components/exchange-panel/styles/ExchangePanel.css`
+- `LANES.md`
+
+The default state now presents one provider-attributed reference-rate hero, one
+interpreted date-derived movement, one compact warning that nearby exchange remains
+unconfirmed, a two-row reversible converter, and one action. Trend and Nearby remain
+separately requested in-place states; Nearby exposes all six existing bank/BDC samples.
+No route change or speculative provider claim was introduced.
+
+Evidence: TypeScript passed; exact-path ESLint reported no errors and only the retained
+`visibleRate` dependency warning. A reused Safari localhost tab proved Answer hides the
+sparkline and provider rows; direct editing converts `250 USD` to `347222.22 NGN`; Trend
+reveals movement and the sparkline with zero location rows; Nearby reveals exactly six
+sample rows with no sparkline; all transitions retain `/`; both inputs, the swap control,
+the primary action, and the Trend hit region meet the 44px contract.
+
+Accepted follow-up, not implemented in this lane: pair-aware CAD↔USD and other
+foreign-to-foreign cross-rates plus 7D/2W/1M/3M/6M/1Y trend windows require an ADR-017
+update, ordered pair cache keys, same-provider/same-effective-date server derivation, and
+two selectable currency rows. Do not emulate this with mixed or client-invented rates.
 
 ##### ItemDetailSheet component modularization — COMPLETE / PATHS RELEASED
 

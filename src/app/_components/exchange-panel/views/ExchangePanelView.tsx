@@ -12,7 +12,6 @@ import {
   type ReferenceRatePoint,
 } from "../imports/imports";
 import {
-  RATE_FORMATTER,
   providerLabel,
   formatEffectiveDate,
   type ExchangePanelProps,
@@ -32,32 +31,15 @@ export function ExchangePanelView({
   panel,
 }: ExchangePanelViewProps) {
   const {
-    amountId,
-    foreignErrorId,
-    ngnAmountId,
-    ngnErrorId,
     currency,
     amounts,
-    catalogState,
-    rateState,
     rateTrendState,
-    setCatalogRetry,
-    setRateRetry,
-    offline,
-    enterCurrency,
-    editAmount,
-    foreignError,
-    ngnError,
-    usingSavedRate,
-    availableCurrencies,
     selectedMeta,
     visibleRate,
     viewMode,
     setViewMode,
   } = panel;
 
-  const retryCatalog = () => setCatalogRetry((value) => value + 1);
-  const retryRate = () => setRateRetry((value) => value + 1);
   const conversionAnnouncement =
     visibleRate && currency
       ? amounts.lastEdited === "foreign" && amounts.ngn
@@ -66,132 +48,128 @@ export function ExchangePanelView({
           ? `Estimated ${amounts.foreign} ${REFERENCE_CURRENCY_META[currency].name}`
           : ""
       : "";
-  const bdcLocations = locations.filter((location) => location.kind === "bdc");
+  const sortedExchangeLocations = [...locations].sort(
+    (left, right) =>
+      getHaversineDistance(origin.lat, origin.lng, left.lat, left.lng) -
+      getHaversineDistance(origin.lat, origin.lng, right.lat, right.lng)
+  );
   const nearestLocationDistance =
-    bdcLocations.length > 0
+    sortedExchangeLocations.length > 0
       ? formatDistance(
-          Math.min(
-            ...bdcLocations.map((location) =>
-              getHaversineDistance(origin.lat, origin.lng, location.lat, location.lng)
-            )
+          getHaversineDistance(
+            origin.lat,
+            origin.lng,
+            sortedExchangeLocations[0]!.lat,
+            sortedExchangeLocations[0]!.lng
           )
         )
       : null;
+  const trendPoints =
+    rateTrendState.kind === "ready"
+      ? normalizeTrendPoints(rateTrendState.points)
+      : [];
 
   return (
     <div className="space-y-4 px-3 pb-[calc(max(var(--sheet-hidden,0px),var(--safe-area-bottom))+20px)]">
       <div className="flex min-h-tap items-center justify-between px-1">
-        <p className="text-caption-1 font-semibold uppercase tracking-[0.08em] text-text-tertiary">
-          Aboki FX
-        </p>
+        <p className="text-caption-1 font-semibold uppercase tracking-[0.08em] text-text-tertiary">Aboki FX</p>
         <button
           type="button"
-          onClick={() => setViewMode(viewMode === "rate" ? "nearby" : "rate")}
+          onClick={() => setViewMode(viewMode === "answer" ? "evidence" : "answer")}
           className={`exchange-view-link ${transition.press}`}
         >
-          {viewMode === "rate" ? "Nearby" : "Rate"}
+          {viewMode === "answer" ? "Trend" : "Back"}
         </button>
       </div>
 
-      {viewMode === "rate" ? (
-        <section className="space-y-3" aria-labelledby="exchange-reference-heading">
-          <div className="px-1">
-            <h2 id="exchange-reference-heading" className="text-title-3 font-semibold text-text-secondary">
-              Naira reference
-            </h2>
+      {viewMode === "answer" ? (
+        <section className="space-y-4" aria-labelledby="exchange-answer-heading">
+          <div className="exchange-answer-summary px-1">
             {visibleRate && selectedMeta ? (
               <>
-                <p className="mt-1 text-large-title font-semibold tabular-nums text-text-primary">
-                  {selectedMeta.symbol}1 <span className="text-text-tertiary">=</span> ₦{RATE_FORMATTER.format(visibleRate.rate)}
+                <p className="text-caption-1 font-semibold uppercase tracking-[0.08em] text-text-tertiary">
+                  {providerLabel(visibleRate)} · {selectedMeta.symbol}1
                 </p>
-                {rateTrendState.kind === "ready" && <RateTrend points={rateTrendState.points} />}
-                <p className="mt-1 text-caption-1 text-text-tertiary">
-                  {providerLabel(visibleRate)} · {formatEffectiveDate(visibleRate.effectiveDate)}
-                  {usingSavedRate ? offline ? " · saved offline" : " · saved" : ""}
+                <p className="exchange-answer-rate tabular-nums text-text-primary">
+                  ₦{visibleRate.rate.toLocaleString("en-NG", {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  })}
                 </p>
+                {rateTrendState.kind === "ready" && (
+                  <p className="text-footnote font-semibold text-text-secondary">
+                    {trendMeaning(rateTrendState.points)}
+                  </p>
+                )}
               </>
-            ) : catalogState.kind === "loading" || rateState.kind === "loading" ? (
-              <div className="mt-2 space-y-2" aria-label="Loading reference rate">
-                <Skeleton className="h-9 w-3/4" />
-                <Skeleton className="h-3 w-40" />
-              </div>
-            ) : catalogState.kind === "empty" ? (
-              <RateFailure message="No Naira pairs" onRetry={retryCatalog} />
-            ) : rateState.kind === "unavailable" ? (
-              <p className="mt-2 text-body text-text-secondary">Pair unavailable.</p>
             ) : (
-              <RateFailure
-                message={offline ? "Rate unavailable offline" : "Couldn’t load rate"}
-                onRetry={catalogState.kind === "error" ? retryCatalog : retryRate}
-              />
+              <>
+                <p className="text-caption-1 font-semibold uppercase tracking-[0.08em] text-text-tertiary">
+                  Reference rate
+                </p>
+                <p className="exchange-answer-rate text-text-primary">Checking rate</p>
+              </>
             )}
           </div>
 
-          <div className="exchange-conversion-canvas squircle bg-controlFill px-2">
-            <div className="exchange-amount-row">
-              <label htmlFor={amountId} className="sr-only">Foreign amount</label>
-              <input
-                id={amountId}
-                value={amounts.foreign}
-                onChange={(event) => editAmount("foreign", event.target.value)}
-                inputMode="decimal"
-                autoComplete="off"
-                placeholder="100"
-                aria-invalid={foreignError ? true : undefined}
-                aria-describedby={foreignError ? `${foreignErrorId} exchange-reference-note` : "exchange-reference-note"}
-                data-autofocus
-                className="exchange-amount-input"
-              />
-              {catalogState.kind === "loading" && !currency ? (
-                <Skeleton className="h-9 w-24 rounded-[14px]" />
-              ) : (
-                <CurrencyPickerSheet
-                  available={availableCurrencies}
-                  value={currency}
-                  onSelect={enterCurrency}
-                  disabled={catalogState.kind !== "ready"}
-                />
-              )}
-            </div>
-            <div className="exchange-relationship" aria-hidden="true">
-              <SolidIcon name="chevron-down" size={16} />
-            </div>
-            <div className="exchange-amount-row">
-              <label htmlFor={ngnAmountId} className="sr-only">Naira amount</label>
-              <input
-                id={ngnAmountId}
-                value={amounts.ngn}
-                onChange={(event) => editAmount("ngn", event.target.value)}
-                inputMode="decimal"
-                autoComplete="off"
-                placeholder="100000"
-                aria-invalid={ngnError ? true : undefined}
-                aria-describedby={ngnError ? `${ngnErrorId} exchange-reference-note` : "exchange-reference-note"}
-                className="exchange-amount-input"
-              />
-              <span className="exchange-currency-chip"><CurrencyFlag code="NGN" />NGN</span>
+          <div className="exchange-decision-row">
+            <IconOrb size={32} tone="status-caution">
+              <SolidIcon name="warning" size={18} />
+            </IconOrb>
+            <div className="min-w-0">
+              <h2 id="exchange-answer-heading" className="text-body font-semibold text-text-primary">
+                Nearby exchange not confirmed
+              </h2>
+              <p className="text-footnote text-text-secondary">
+                {sortedExchangeLocations.length} samples
+                {nearestLocationDistance ? ` · nearest ${nearestLocationDistance}` : ""}
+              </p>
             </div>
           </div>
 
-          {foreignError && <p id={foreignErrorId} role="alert" className="px-1 text-footnote text-status-danger-fg">{foreignError}</p>}
-          {ngnError && <p id={ngnErrorId} role="alert" className="px-1 text-footnote text-status-danger-fg">{ngnError}</p>}
+          <ConversionRail panel={panel} />
+
+          <button
+            type="button"
+            onClick={() => setViewMode("nearby")}
+            className={`exchange-primary-action ${transition.press}`}
+          >
+            See nearby exchange points
+          </button>
           <p className="sr-only" aria-live="polite" aria-atomic="true">{conversionAnnouncement}</p>
-          <p id="exchange-reference-note" className="px-1 text-caption-1 text-text-tertiary">Reference only</p>
+        </section>
+      ) : viewMode === "evidence" ? (
+        <section className="space-y-3" aria-labelledby="exchange-evidence-heading">
+          <div className="px-1">
+            <h2 id="exchange-evidence-heading" className="text-title-3 font-semibold text-text-secondary">Recent movement</h2>
+            {trendPoints.length >= 2 && visibleRate ? (
+              <>
+                <p className="mt-1 text-title-1 font-semibold text-text-primary">{trendMeaning(trendPoints)}</p>
+                <RateTrend points={trendPoints} />
+                <p className="mt-1 text-caption-1 text-text-tertiary">
+                  {providerLabel(visibleRate)} · {formatEffectiveDate(visibleRate.effectiveDate)}
+                </p>
+              </>
+            ) : (
+              <p className="mt-1 text-body text-text-secondary">Not enough history yet</p>
+            )}
+          </div>
         </section>
       ) : (
         <section className="space-y-3" aria-labelledby="sample-nearby-heading">
           <div className="px-1">
-            <h2 id="sample-nearby-heading" className="text-title-2 font-semibold text-text-primary">Nearby exchange</h2>
-            <p className="mt-1 text-title-3 font-semibold text-text-primary">Not confirmed</p>
+            <h2 id="sample-nearby-heading" className="text-title-3 font-semibold text-text-secondary">Sample exchange points</h2>
+            <p className="mt-1 text-title-1 font-semibold text-text-primary">
+              {sortedExchangeLocations[0]?.name ?? "No nearby sample"}
+            </p>
             <p className="mt-0.5 text-footnote text-text-secondary">
-              {nearestLocationDistance
-                ? `${bdcLocations.length} sample BDC${bdcLocations.length === 1 ? "" : "s"} · nearest ${nearestLocationDistance}`
-                : "No nearby BDC sample"}
+              {sortedExchangeLocations.length} prototype locations · not verified
+              {nearestLocationDistance ? ` · nearest ${nearestLocationDistance}` : ""}
             </p>
           </div>
 
           <div className="space-y-1">
-            {bdcLocations.slice(0, 3).map((location) => {
+            {sortedExchangeLocations.map((location) => {
               const selected = location.id === selectedLocationId;
               const distance = formatDistance(getHaversineDistance(origin.lat, origin.lng, location.lat, location.lng));
               return (
@@ -212,26 +190,127 @@ export function ExchangePanelView({
               );
             })}
           </div>
-          {bdcLocations.length === 0 && <p className="px-1 py-4 text-body text-text-secondary">No BDC samples nearby.</p>}
+          <button type="button" onClick={() => setViewMode("answer")} className={`exchange-primary-action ${transition.press}`}>Back to answer</button>
         </section>
       )}
     </div>
   );
 }
 
-function RateFailure({ message, onRetry }: { message: string; onRetry: () => void }) {
-  return (
-    <div className="flex items-center justify-between gap-3">
-      <p role="alert">{message}</p>
-      <button
-        type="button"
-        onClick={onRetry}
-        className="min-h-tap shrink-0 px-2 font-semibold text-text-primary"
-      >
-        Retry
-      </button>
+function ConversionRail({
+  panel,
+}: {
+  panel: ReturnType<typeof useExchangePanel>;
+}) {
+  const {
+    amountId,
+    ngnAmountId,
+    foreignErrorId,
+    ngnErrorId,
+    currency,
+    amounts,
+    catalogState,
+    availableCurrencies,
+    enterCurrency,
+    editAmount,
+    foreignError,
+    ngnError,
+    conversionReversed,
+    toggleConversionDirection,
+  } = panel;
+  const foreignRow = (
+    <div className="exchange-amount-row">
+      <label htmlFor={amountId} className="sr-only">Foreign amount</label>
+      <input
+        id={amountId}
+        value={amounts.foreign}
+        onChange={(event) => editAmount("foreign", event.target.value)}
+        inputMode="decimal"
+        autoComplete="off"
+        placeholder="100"
+        aria-invalid={foreignError ? true : undefined}
+        aria-describedby={foreignError ? `${foreignErrorId} exchange-reference-note` : "exchange-reference-note"}
+        data-autofocus
+        className="exchange-amount-input"
+      />
+      {catalogState.kind === "loading" && !currency ? (
+        <Skeleton className="h-9 w-24 rounded-[14px]" />
+      ) : (
+        <CurrencyPickerSheet
+          available={availableCurrencies}
+          value={currency}
+          onSelect={enterCurrency}
+          disabled={catalogState.kind !== "ready"}
+        />
+      )}
     </div>
   );
+  const ngnRow = (
+    <div className="exchange-amount-row">
+      <label htmlFor={ngnAmountId} className="sr-only">Naira amount</label>
+      <input
+        id={ngnAmountId}
+        value={amounts.ngn}
+        onChange={(event) => editAmount("ngn", event.target.value)}
+        inputMode="decimal"
+        autoComplete="off"
+        placeholder="100000"
+        aria-invalid={ngnError ? true : undefined}
+        aria-describedby={ngnError ? `${ngnErrorId} exchange-reference-note` : "exchange-reference-note"}
+        className="exchange-amount-input"
+      />
+      <span className="exchange-currency-chip"><CurrencyFlag code="NGN" />NGN</span>
+    </div>
+  );
+
+  return (
+    <>
+      <p id="exchange-reference-note" className="sr-only">
+        Reference rates are not merchant quotes.
+      </p>
+      <div className="exchange-conversion-canvas squircle bg-controlFill px-2">
+        {conversionReversed ? ngnRow : foreignRow}
+        <button
+          type="button"
+          onClick={toggleConversionDirection}
+          className="exchange-relationship"
+          aria-label="Swap conversion direction"
+        >
+          <span aria-hidden="true">⇄</span>
+        </button>
+        {conversionReversed ? foreignRow : ngnRow}
+      </div>
+      {foreignError && <p id={foreignErrorId} role="alert" className="px-1 text-footnote text-status-danger-fg">{foreignError}</p>}
+      {ngnError && <p id={ngnErrorId} role="alert" className="px-1 text-footnote text-status-danger-fg">{ngnError}</p>}
+    </>
+  );
+}
+
+function trendMeaning(points: ReferenceRatePoint[]): string {
+  const ordered = normalizeTrendPoints(points);
+  if (ordered.length < 2) return "Not enough history yet";
+  const first = ordered[0]!;
+  const last = ordered[ordered.length - 1]!;
+  const change = ((last.rate - first.rate) / first.rate) * 100;
+  const elapsedDays = Math.round(
+    (Date.parse(last.date) - Date.parse(first.date)) / 86_400_000
+  );
+  if (Math.abs(change) < 0.05) return "Stable across recent updates";
+  if (!Number.isFinite(elapsedDays) || elapsedDays < 1) {
+    return `Rate ${change > 0 ? "up" : "down"} ${Math.abs(change).toFixed(1)}% across recent updates`;
+  }
+  return `Rate ${change > 0 ? "up" : "down"} ${Math.abs(change).toFixed(1)}% over ${elapsedDays} ${elapsedDays === 1 ? "day" : "days"}`;
+}
+
+function normalizeTrendPoints(points: ReferenceRatePoint[]): ReferenceRatePoint[] {
+  return points
+    .filter(
+      (point) =>
+        Number.isFinite(point.rate) &&
+        point.rate > 0 &&
+        Number.isFinite(Date.parse(point.date))
+    )
+    .sort((left, right) => Date.parse(left.date) - Date.parse(right.date));
 }
 
 function RateTrend({ points }: { points: ReferenceRatePoint[] }) {
@@ -254,14 +333,14 @@ function RateTrend({ points }: { points: ReferenceRatePoint[] }) {
   const direction = Math.abs(change) < 0.05 ? "Stable" : change > 0 ? "Up" : "Down";
 
   return (
-    <div className="exchange-trend" role="img" aria-label={`${direction} ${Math.abs(change).toFixed(1)} percent over seven observations`}>
+    <div className="exchange-trend" role="img" aria-label={`${direction} ${Math.abs(change).toFixed(1)} percent across recent rate updates`}>
       <svg viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="none" aria-hidden="true">
         <path d={path} />
       </svg>
       <p>
         {direction}
         {direction === "Stable" ? "" : ` ${Math.abs(change).toFixed(1)}%`}
-        <span> · 7 observations</span>
+        <span> · recent rate updates</span>
       </p>
     </div>
   );

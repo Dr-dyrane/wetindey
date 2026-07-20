@@ -37,6 +37,54 @@
   position: relative;
 }
 
+.exchange-primary-action {
+  display: inline-flex;
+  min-height: 2.75rem;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 1rem;
+  background: var(--color-text-primary);
+  color: var(--color-surface-card);
+  font-weight: 700;
+  line-height: 1;
+  transition:
+    transform 160ms ease,
+    opacity 160ms ease;
+}
+
+.exchange-answer-summary {
+  display: grid;
+  gap: 0.125rem;
+}
+
+.exchange-answer-rate {
+  font-size: clamp(2.25rem, 7vw, 3.25rem);
+  font-weight: 720;
+  letter-spacing: -0.045em;
+  line-height: 1;
+}
+
+.exchange-decision-row {
+  display: grid;
+  min-height: 2.75rem;
+  grid-template-columns: 2rem minmax(0, 1fr);
+  align-items: center;
+  gap: 0.75rem;
+  padding-inline: 0.25rem;
+}
+
+.exchange-primary-action:active {
+  transform: scale(0.985);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .exchange-primary-action {
+    transition: none;
+  }
+}
+
 .exchange-trend {
   margin-top: 0.5rem;
 }
@@ -83,9 +131,27 @@
 
 .exchange-conversion-canvas {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 1.5rem minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr) 2.75rem;
+  grid-template-rows: 2.75rem 2.75rem;
   align-items: center;
+  padding-block: 0.25rem;
 }
+
+.exchange-conversion-canvas .exchange-amount-row:first-child {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+.exchange-conversion-canvas .exchange-amount-row:last-child {
+  grid-column: 1;
+  grid-row: 2;
+}
+
+.exchange-conversion-canvas .exchange-relationship {
+  grid-column: 2;
+  grid-row: 1 / 3;
+}
+
 
 .exchange-amount-row {
   display: flex;
@@ -95,8 +161,10 @@
 }
 
 .exchange-amount-input {
+  min-height: 2.75rem;
   min-width: 0;
   flex: 1;
+  border-radius: 0.5rem;
   background: transparent;
   color: var(--color-text-primary);
   font-size: 1.125rem;
@@ -111,7 +179,8 @@
 }
 
 .exchange-amount-input:focus-visible {
-  outline: none;
+  outline: 2px solid var(--color-focus-ring);
+  outline-offset: -2px;
 }
 
 .exchange-currency-chip {
@@ -130,13 +199,33 @@
 
 .exchange-relationship {
   display: flex;
+  min-height: 2.75rem;
+  min-width: 2.75rem;
   align-items: center;
   justify-content: center;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
   color: var(--color-text-tertiary);
+  font-size: 1.125rem;
+  transition:
+    transform 160ms ease,
+    background-color 160ms ease;
 }
 
-.exchange-relationship > span {
-  display: none;
+.exchange-relationship:active {
+  transform: scale(0.92);
+}
+
+.exchange-relationship:focus-visible {
+  outline: 2px solid var(--color-focus-ring);
+  outline-offset: -2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .exchange-relationship {
+    transition: none;
+  }
 }
 
 .exchange-actions {
