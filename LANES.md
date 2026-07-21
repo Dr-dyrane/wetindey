@@ -9,11 +9,12 @@ anything. One owner per path, always.
 ## Quality & Release Controller checkpoint RC-139
 
 Controller owner: this orchestrator, over exactly `LANES.md` and
-`docs/architecture/RELEASE-CONTROLLER.md`. Current local `main` is clean at `5cb2c66` and
-is ten commits ahead of `origin/main` at `2907ba1`. Those commits are the current
-modularization candidate, not a proven release train; the controller is reconciling their
-history, live call paths, focused checks, runtime behavior, and independent refutation
-before a conditional push.
+`docs/architecture/RELEASE-CONTROLLER.md`. Current local `main` is at `b93014e` and is
+fourteen path-scoped commits ahead of `origin/main` at `2907ba1`. The modularization and
+action candidate through `0287ddc` has now passed history, live-call-path, focused static,
+build, reused-tab runtime, and independent source refutation. The two General Search
+documentation commits were independently refuted in their own lanes. Conditional push is
+authorized after this reconciliation commit; deployment remains separately evidence-gated.
 
 **Decision: PATH-SCOPED PUSHES AUTHORIZED; DEPLOYMENT REMAINS EVIDENCE-GATED.** Independently
 refuted, path-scoped commits may move promptly to `main`; do not accumulate a private
@@ -105,8 +106,9 @@ Owner: current controller. Exact docs-only paths:
 - `docs/product/README.md`
 - `LANES.md`
 
-The Founder-directed General Search vision is recorded as a strategic post-V1 proposal.
-ADR-027 is Proposed and authorizes no AI endpoint, model/provider call, prompt, tool
+The Founder-directed General Search vision was initially recorded as a strategic post-V1
+proposal in commit `6f59047`; the separate acceptance lane below records the later
+Founder decision. At this checkpoint ADR-027 was Proposed and authorized no AI endpoint, model/provider call, prompt, tool
 registry, schema, dependency, UI, deployment, or rollout. AI may interpret a question
 into a validated typed request; only a live WetinDey capability may answer from admitted
 evidence. Precise location, history, and preferences are not implicit model context.
@@ -324,7 +326,7 @@ Owner: Antigravity (External Approved Contractor - Product Engineering & UX Depa
 
 Organized the homepage modular files into structured subfolders under `src/app/_components/home-page/` and relocated loose server action files into `src/app/_actions/`, updating all import edges. Verification checks (`lint`, `tsc`, and full production build) completed with 0 errors. Released paths. Commit `0863c7800a1ae8f82104ee994da743ab7524776c` is pushed locally.
 
-##### Live-app modularization Slice 5 — ACTIVE
+##### Live-app modularization Slice 5 — COMPLETE / RELEASED
 
 Owner: current controller, with one delegated Core / Application Architecture worker.
 Exclusive paths:
@@ -345,8 +347,13 @@ only after every live import points at the new controller. No homepage, map, Abo
 database, schema, migration, provider, package, or shared design-system path is in scope.
 
 Implementation commit `c59c7be` completed the exact structural slice and passed focused
-type, lint, diff, and modularization-contract checks. Paths remain retained only for the
-combined reused-tab interaction/accessibility gate; do not redesign or widen the slice.
+type, lint, diff, and modularization-contract checks. The reused existing localhost tab
+then exercised the Profile -> Report a problem path, labelled dialog, required-field
+disabled submit state, reverse-Tab containment, and native Escape dismissal. The redacted
+evidence record is `docs/operations/RC-139-REPORT-PROBLEM-RUNTIME.md`; it does not claim
+durable pixel proof or a submission mutation. No Report Problem runtime error appeared.
+Release all exact paths. A separate pre-existing CSP nonce hydration warning is recorded
+below and does not widen this lane.
 
 Next modularization candidates are pathless and queued, not active: split coherent
 subviews from `about-sheet/views/AboutSheetView.tsx` and
@@ -354,7 +361,7 @@ subviews from `about-sheet/views/AboutSheetView.tsx` and
 300-line target. Do not begin either until the current candidate is released and a new
 exact non-overlapping lane is recorded.
 
-##### Modularization release-history audit — ACTIVE
+##### Modularization release-history audit — CLOSED / RELEASED
 
 Owner: current controller. Exact corrective paths:
 
@@ -362,13 +369,27 @@ Owner: current controller. Exact corrective paths:
 - `src/app/_actions/actions.ts`
 - `src/app/_actions/report-actions.ts`
 - `src/app/_actions/review-actions.ts`
+- `docs/operations/RC-139-REPORT-PROBLEM-RUNTIME.md`
 - `LANES.md`
 
-Audit the ten commits from `2907ba1..5cb2c66` as one candidate while preserving their
-commit boundaries. Correct only concrete release-hygiene defects, verify live Server
-Action exports and modularized sheet call paths, run focused type/build/runtime evidence,
-and obtain an independent default-to-refuted verdict before push. A clean diff or green
-static command alone is not release proof.
+The audit preserved commit boundaries and corrected two concrete release-hygiene defects:
+explicit Next.js-compatible Server Action exports and restoration of the real
+`submitProblemReport` writer. Focused type/build/modularization evidence passed; the live
+Report Problem call path and surface were exercised as recorded in the redacted RC-139
+runtime transcript; and independent source refutation returned PASS with no P1/P2.
+Release all corrective paths.
+
+##### CSP nonce hydration mismatch — REFUTED RUNTIME, PATHLESS
+
+Owner: Security & Privacy plus Client Reliability for diagnosis; no source path is claimed.
+The reused localhost tab reports a React hydration mismatch where request-bound nonce
+attributes are present in server markup but appear empty in client properties across raw
+layout scripts, Mapbox, JSON-LD, and the development service-worker script. This predates
+the modularization candidate and is not a Report Problem defect. Diagnose against the
+accepted ADR-020 request-boundary contract before claiming `src/middleware.ts`,
+`src/app/layout.tsx`, or `src/lib/seo.tsx`; do not remove nonce enforcement, add
+`suppressHydrationWarning` as a blanket workaround, or widen the released action/sheet
+lanes. Production impact remains unverified.
 
 ##### Workspace root documentation hygiene — RELEASED / PATHLESS
 
