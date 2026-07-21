@@ -50,8 +50,8 @@ five-path operations-documentation lane is complete and all paths are released.
 
 The semantic iconography foundation has now passed direct existing-tab light, dark, and
 grayscale visual refutation plus its focused contract. All five foundation paths are
-released. The persistent Iconography lead moves directly to the exact two-path Item
-Detail/Get-It solid-glyph adoption lane recorded below.
+released. No Item Detail/Get-It adoption lane is currently active; any future adoption
+requires a fresh exact claim and independent refutation.
 
 ### Closed: ephemeral Production database-target proof
 
@@ -75,21 +75,21 @@ to idle rather than creating a replacement task.
 | Nearby Presence Platform Engineer | Production `0012` operational PASS; exact source paths released | Ledger/fingerprint/idempotence, least-privilege scheduler, cleanup/retention, default-off containment, and independent operational refutation passed; remain persistent for a later bounded assignment |
 | Program Management & Functional Organization Lead | Idle | Reconcile portfolio proposals into CEO-reviewable lane candidates without editing product paths |
 | Contribution Integrity & Moderation Engineer `019f75a3-f50d-7180-8e92-0a7aabd8a98c` | `0013` operational activation COMPLETE / PASS, default-off; all paths released | Preview `dpl_2UC8gEPJ4V5sZvRd4M74fMoqFvBm` and Production `dpl_8fZpUNgRi3zebGqy75DGt9qAQ4Kq` passed identity, ledger/schema/RPC/grants, smoke, rollback, and independent refutation; admission/reporting/moderation remain false |
-| Human Interface Design Engineer `019f75a5-0fc6-7f40-9a0f-8097ead3b45d` | Market release REFUTED; exact two paths retained | `23b5071` deployment entered `Map no fit load` and retry failed; `www.wetindey.live` is rolled back to proven `4e3820ab` while Maps determines causality without a speculative source claim |
+| Human Interface Design Engineer `019f75a5-0fc6-7f40-9a0f-8097ead3b45d` | Market source paths released; runtime residual pathless | `14ece5b`/`4b56d95` released `src/app/page.tsx` and `src/design-system/components/PlaceOfferRow.tsx`; regular runtime and compact AX passed, while compact visible pixels remain unverified; no source reopen without fresh product evidence |
 | HI Quality & Regression Lead | Active exact two-document acceptance governance | Produce a read-only current-violation inventory and bounded disjoint implementation/refutation proposals; preserve Maps, Presence, and ADR locks |
 | Food Evidence Provenance & Source Governance Lead | Standing review authorization | Classify recurring NBS/current Food evidence; no live promotion or shared migration |
 | Development Food Evidence Fixture Engineer | Idle | Append-only development evidence fixture after exact artifact-path claim; never mutate recurring seed data |
 | Food Source Authenticity & Attribution Refuter | Idle refuter | Independently verify each staged source artifact against original evidence and terms |
 | Search & Ranking Engineer | Available, no active claim | The deployed-current-main `97b74af` disposable SQL evidence gate passed and is released; remain persistent for the next bounded Search/Ranking assignment |
 | Iconography & Visual Systems Lead | Iconography source lanes complete / released | `9b74a31`, `ed5a6cb`, `a2a7104`, `b93761b`, and `ae47513` are current-main ancestors; foundation, intent adoption, Report Price, and Confirm Visit source paths are released |
-| Maps & Location Experience | Current source correction complete / released | `dae6786` separates browsing context from self location and `d1f87d0` repairs the modular location contract; remain persistent for later bounded map/runtime assignments |
+| Maps & Location Experience | No active path claim; source corrections released; runtime evidence required before reopening | `b1901fb`/`350cb7f` and `dae6786`/`d1f87d0` are released; any new Map claim requires fresh concrete runtime evidence and an exact manifest |
 | Client Reliability & Offline Engineer `019f75d3-65d0-7033-bef7-11a83aca9723` | Bootstrap visibility complete / released with Production PASS | `d42454b` passed prompt initial shell on `dpl_Dat5W4KZz6wNYb37jcCq1DKjyKrY`; `ThemeContext.tsx` released |
 | Security & Privacy Engineering Lead | Production DB-target proof closed | Exact HMAC match is recorded; `168039f` removed every temporary proof claim. CSP collector source remains released and production CSP remains fail-open/report-only |
 | Motion & Interaction Engineer `019f71ca-8646-7452-9171-439f5d78e71a` | Idle persistent seat; no path claim | H10 is complete/released at pushed `091fe8e`; the obsolete Frameworks replacement task is not a current owner |
 | Quality & Release Controller | Idle persistent release employee | Q1 gate passed independently at pushed `569b1bb`; its script is released. Thread `019f7865-c497-71a3-89a2-4effd79b557b` remains available and must not be archived |
 | Product & Data Governance Architect `019f7599-0eaa-7423-9ebf-a1bfea8efe37` | Community Trust governance complete / released | `170de61` is on current main; remain persistent for later bounded governance or independent review assignments |
 | Developer Relations & Engineering Enablement `019f7995-5b7b-7ee1-81ef-2c3a3c57b836` | Department worklog protocol complete / released | `62880ac` and fail-closed repair `2523da1` are on current main; remain persistent for later bounded enablement assignments |
-| Catalog Stewardship `019f7999-37d0-7231-8b89-0e71c2569ce2` | Catalog workflow complete / released | `fe09dc3` separates complete server no-match from network/offline failure after independent PASS; remain persistent for later bounded stewardship assignments |
+| Catalog Stewardship `019f7999-37d0-7231-8b89-0e71c2569ce2` | Catalog workflow complete / released; employee idle | `8a072e2`/`7b42664` and `fe09dc3` resolved the safety-scope and no-match/transport corrections; no active path claim remains |
 
 ### Authoritative current active disjoint lanes — 21 July 2026 reconciliation
 
@@ -112,8 +112,9 @@ Owner: current controller. Exact docs-only paths:
 
 The Founder-directed General Search vision was initially recorded as a strategic post-V1
 proposal in commit `6f59047`; the separate acceptance lane below records the later
-Founder decision. At this checkpoint ADR-027 was Proposed and authorized no AI endpoint, model/provider call, prompt, tool
-registry, schema, dependency, UI, deployment, or rollout. AI may interpret a question
+Founder decision. At this checkpoint ADR-027 is accepted as documented direction only and
+authorizes no AI endpoint, model/provider call, prompt, tool registry, schema, dependency,
+UI, deployment, or rollout. AI may interpret a question
 into a validated typed request; only a live WetinDey capability may answer from admitted
 evidence. Precise location, history, and preferences are not implicit model context.
 ADR-010's two-complete-vertical abstraction gate remains binding, unsupported intents
