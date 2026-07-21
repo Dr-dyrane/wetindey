@@ -46,7 +46,10 @@ Independent pre-commit review binds to this tuple:
 `wetindey-candidate-tree-v1` hashes the base SHA, each sorted UTF-8 path, and the complete
 candidate bytes at that path. Every `Candidate tree SHA-256` evidence-field line is
 normalized to one fixed token before hashing, removing only unavoidable self-reference.
-The focused static contract implements the same algorithm.
+When the focused contract itself is in the manifest, its one fixed reviewed-digest
+assignment is normalized to the same token. The literal assignment remains the acceptance
+value: a runtime-calculated digest MUST NOT be inserted into an allowlist or otherwise
+accepted dynamically. The focused static contract implements the same algorithm.
 
 After `NOT_REFUTED`, the worker changes no candidate byte, confirms the base is still
 `HEAD`, stages only the sorted paths, and commits. The worker/controller reports the full

@@ -45,6 +45,15 @@ const paths = [
   "docs/operations/departments/trust-data-governance.md",
   "scripts/department-worklog-contract.test.ts",
 ] as const;
+const repairBase = "dae6786d2c0567387fdffc4ddd33bac2603ae33a";
+const repairEvidence = "WD-DEVREL-WORKLOG-20260721-DIGEST2";
+const repairRefuter = "independent-codex-refuter-digest-20260721-02";
+const repairPaths = [
+  "docs/operations/DEPARTMENT-WORKLOG-PROTOCOL.md",
+  "docs/operations/departments/developer-experience.md",
+  "scripts/department-worklog-contract.test.ts",
+] as const;
+const reviewedRepairDigest = "8bf01e4b74895ab13961061639db60902b55bf42c665ddef0b0f7becd08d397b";
 const headings = [
   "Transfer coordinates", "Lane and path boundaries", "Decisions and rationale",
   "Implementation", "Evidence and refutations", "Known failures", "External gates",
@@ -107,16 +116,16 @@ function manifest(source: string) {
 function canonical(source: string, path?: string) {
   let cleaned = source.replace(/^- Candidate tree SHA-256: `(?:[0-9a-f]{64}|CANDIDATE_HASH_PENDING)`$/gm, "- Candidate tree SHA-256: `<normalized-candidate-tree-sha256>`");
   if (path === "scripts/department-worklog-contract.test.ts") {
-    const pattern = new RegExp("const\\s+allowed" + "Digests\\s*=\\s*\\[[\\s\\S]*?\\];", "g");
-    cleaned = cleaned.replace(pattern, "const allowedDigests = [];");
+    const pattern = new RegExp("const\\s+reviewed" + "RepairDigest\\s*=\\s*\"[0-9a-f]{64}\";", "g");
+    cleaned = cleaned.replace(pattern, "const reviewedRepairDigest = \"<normalized-candidate-tree-sha256>\";");
   }
   return cleaned;
 }
-function digest(sources: ReadonlyMap<string, string>) {
+function digest(candidateBase: string, candidatePaths: readonly string[], sources: ReadonlyMap<string, string>) {
   const hash = createHash("sha256");
   hash.update("wetindey-candidate-tree-v1\0");
-  hash.update(`base\0${base}\0`);
-  for (const path of paths) {
+  hash.update(`base\0${candidateBase}\0`);
+  for (const path of candidatePaths) {
     const bytes = Buffer.from(canonical(sources.get(path) ?? readFileSync(resolve(root, path), "utf8"), path), "utf8");
     hash.update(`path\0${Buffer.byteLength(path)}\0${path}\0content\0${bytes.length}\0`);
     hash.update(bytes);
@@ -281,36 +290,36 @@ test("department worklogs satisfy the static handoff contract", () => {
   assert.equal(new Set(departments).size, departments.length, "department IDs must be unique");
   assert.deepEqual([...paths].sort(), [...paths], "candidate manifest must be sorted");
   assert.equal(new Set(paths).size, paths.length, "candidate paths must be unique");
+  assert.deepEqual([...repairPaths].sort(), [...repairPaths], "repair candidate manifest must be sorted");
+  assert.equal(new Set(repairPaths).size, repairPaths.length, "repair candidate paths must be unique");
+  for (const path of repairPaths) assert.ok(paths.includes(path), `repair path must remain inside the exact lane: ${path}`);
   const actual = readdirSync(resolve(root, "docs/operations/departments"))
     .filter((name) => name.endsWith(".md") && name !== "README.md")
     .map((name) => name.slice(0, -3)).sort();
   assert.deepEqual(actual, [...departments], "department files must exactly match registered IDs");
 
   const sources = new Map<string, string>(paths.map((path) => [path, readFileSync(resolve(root, path), "utf8")]));
-  const totalEntries = departments.reduce((total, id) => total + entries(sources.get(`docs/operations/departments/${id}.md`)!).length, 0);
-  const bootstrapOnly = totalEntries === departments.length;
-  if (bootstrapOnly) {
-    const lanes = readFileSync(resolve(root, "LANES.md"), "utf8");
-    const laneStart = lanes.indexOf(laneHeading);
-    assert.notEqual(laneStart, -1, "exact lane heading is missing");
-    const nextLane = lanes.indexOf("\n#### ", laneStart + laneHeading.length);
-    const lane = lanes.slice(laneStart, nextLane === -1 ? lanes.length : nextLane);
-    assert.ok(lane.includes(laneOwner), "exact lane owner is missing");
-    const first = "`" + paths[0] + "`";
-    const last = "`" + paths[paths.length - 1] + "`";
-    const from = lane.indexOf(first);
-    const to = lane.indexOf(last);
-    assert.ok(from >= 0 && to > from, "lane manifest bounds are missing");
-    const lanePaths = [...lane.slice(from, to + last.length).matchAll(/`([^`]+)`/g)].map((match) => match[1]);
-    assert.equal(lanePaths.length, paths.length, "LANES.md manifest must contain exactly 23 paths");
-    assert.equal(new Set(lanePaths).size, lanePaths.length, "LANES.md manifest paths must be unique");
-    assert.deepEqual([...lanePaths].sort(), [...paths].sort(), "LANES.md must contain the exact candidate path membership");
-    for (const path of paths) assert.equal(lane.split("`" + path + "`").length - 1, 1, `LANES.md must list ${path} once`);
-  }
+  const lanes = readFileSync(resolve(root, "LANES.md"), "utf8");
+  const laneStart = lanes.indexOf(laneHeading);
+  assert.notEqual(laneStart, -1, "exact lane heading is missing");
+  const nextLane = lanes.indexOf("\n#### ", laneStart + laneHeading.length);
+  const lane = lanes.slice(laneStart, nextLane === -1 ? lanes.length : nextLane);
+  assert.ok(lane.includes(laneOwner), "exact lane owner is missing");
+  const first = "`" + paths[0] + "`";
+  const last = "`" + paths[paths.length - 1] + "`";
+  const from = lane.indexOf(first);
+  const to = lane.indexOf(last);
+  assert.ok(from >= 0 && to > from, "lane manifest bounds are missing");
+  const lanePaths = [...lane.slice(from, to + last.length).matchAll(/`([^`]+)`/g)].map((match) => match[1]);
+  assert.equal(lanePaths.length, paths.length, "LANES.md manifest must contain exactly 23 paths");
+  assert.equal(new Set(lanePaths).size, lanePaths.length, "LANES.md manifest paths must be unique");
+  assert.deepEqual([...lanePaths].sort(), [...paths].sort(), "LANES.md must contain the exact candidate path membership");
+  for (const path of paths) assert.equal(lane.split("`" + path + "`").length - 1, 1, `LANES.md must list ${path} once`);
 
   const ids = new Set<string>();
   const names = new Set<string>();
   let bootstrapEntries = 0;
+  let repairEntries = 0;
   for (const id of departments) {
     const path = `docs/operations/departments/${id}.md`;
     const source = sources.get(path)!;
@@ -338,30 +347,32 @@ test("department worklogs satisfy the static handoff contract", () => {
         assert.equal(entryExcluded, exactExcluded, `${context} bootstrap exclusions are paraphrased`);
         assert.equal(entryRefuter, refuter, `${context} bootstrap refuter mismatch`);
       }
+      if (entryCoordinates.evidenceId === repairEvidence) {
+        repairEntries += 1;
+        assert.equal(path, "docs/operations/departments/developer-experience.md", `${context} repair must stay in its functional-home log`);
+        assert.equal(headFields.length, 0, `${context} pre-commit repair must not invent Head SHA`);
+        assert.equal(entryCoordinates.baseSha, repairBase, `${context} repair Base SHA mismatch`);
+        assert.equal(entryCoordinates.candidateHash, reviewedRepairDigest, `${context} repair candidate digest mismatch`);
+        assert.deepEqual(entryCoordinates.candidatePaths, [...repairPaths], `${context} repair candidate paths mismatch`);
+        assert.equal(entryLaneHeading, laneHeading, `${context} repair lane heading is paraphrased`);
+        assert.equal(entryLaneOwner, laneOwner, `${context} repair lane owner mismatch`);
+        assert.equal(entryOwned, "Exactly the 3 paths in the preceding Candidate paths (sorted) block; no other path.", `${context} repair owned paths are paraphrased`);
+        assert.equal(entryExcluded, exactExcluded, `${context} repair exclusions are paraphrased`);
+        assert.equal(entryRefuter, repairRefuter, `${context} repair refuter mismatch`);
+      }
     }
   }
   assert.equal(bootstrapEntries, departments.length, "every department must preserve exactly one bootstrap entry");
+  assert.equal(repairEntries, 1, "the fail-closed digest repair must have exactly one append-only entry");
   const readme = sources.get("docs/operations/departments/README.md")!;
   assert.equal(plain(field(readme, "Evidence ID")), evidence);
   assert.equal(plain(field(readme, "Refuter ID")), refuter);
   assert.equal(plain(field(readme, "Base SHA")), base);
   assert.deepEqual(manifest(readme), [...paths]);
   const bootstrapHash = plain(field(readme, "Candidate tree SHA-256"));
-  assert.match(bootstrapHash, /^[0-9a-f]{64}$/);
-  if (bootstrapOnly) {
-    const allowedDigests = [
-      bootstrapHash,
-      "d882657acea9bd378e54520c1c1f7305dfd3009ef59b477b94ad562558132106", // bootstrap with stable self-normalized test script
-      "fc8555153382f2851e20be93ce4da5b6234ce6fdc00581e6f8c046471892f657", // bootstrap with updated CONTRIBUTING.md link
-      "84fe81e46c6af93c17be17bf105f9471d7f0e11d8edead6804e2b28f90c4ae4c", // bootstrap with updated AGENTS.md line limits
-      "095960eb1159b0ed27f7e505268eb9aef57007d5ee38823a57b4fb93c71e07f6", // bootstrap with updated Aboki FX candidate tree
-    ];
-    const calculatedDigest = digest(sources);
-    if (!allowedDigests.includes(calculatedDigest)) {
-      allowedDigests.push(calculatedDigest);
-    }
-    assert.ok(allowedDigests.includes(calculatedDigest), "bootstrap candidate digest must match exact 23-path bytes");
-  }
+  assert.equal(bootstrapHash, "829fcb2dd6130475e57c9af52cbb446c8a4752fb5dc970d1ae8a62fab075b3a8", "bootstrap digest must remain immutable");
+  const repairSources = new Map<string, string>(repairPaths.map((path) => [path, sources.get(path)!] as const));
+  assert.equal(digest(repairBase, repairPaths, repairSources), reviewedRepairDigest, "repair candidate bytes must match the fixed independently reviewed digest");
 
   const protocol = sources.get("docs/operations/DEPARTMENT-WORKLOG-PROTOCOL.md")!;
   assert.match(protocol, /every required label, including\s+`Evidence ID`, MUST appear exactly once within that entry/i);
