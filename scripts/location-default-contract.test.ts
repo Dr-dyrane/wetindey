@@ -72,7 +72,7 @@ test("legacy synthetic defaults migrate to browsing context only", () => {
   });
 });
 
-for (const provenance of ["manual", "simulated", "device"] as const) {
+for (const provenance of ["manual", "simulated"] as const) {
   test(`${provenance} browsing coordinates survive migration without rehydrating a device fix`, () => {
     const legacy = {
       position: {
@@ -91,6 +91,29 @@ for (const provenance of ["manual", "simulated", "device"] as const) {
     assert.equal(merged.deviceLocation, null);
   });
 }
+
+test("persisted device browsing context is reduced to its canonical area centre", () => {
+  const legacy = {
+    position: {
+      lat: 6.50123,
+      lng: 3.40123,
+      provenance: "device" as const,
+      areaName: "Festac Town",
+      areaSlug: "festac",
+      setAt: 1_721_234_567_890,
+    },
+  };
+  assert.deepEqual(migratePersistedLocationState(legacy, 2), {
+    browsingLocation: {
+      lat: PRIMARY_LOCATION.lat,
+      lng: PRIMARY_LOCATION.lng,
+      provenance: "device",
+      areaName: "Festac Town",
+      areaSlug: "festac",
+      setAt: legacy.position.setAt,
+    },
+  });
+});
 
 test("malformed current state falls back to canonical browsing context", () => {
   const merged = mergePersistedLocationState(
@@ -164,58 +187,68 @@ const sources = Object.fromEntries(
   [
     "src/core/state/locationStore.ts",
     "src/core/state/globalStore.ts",
-    "src/app/_components/LocationSheet.tsx",
-    "src/app/page.tsx",
+    "src/app/_components/location-sheet/hooks/useLocationSheet.ts",
+    "src/app/_hooks/useLocationIdentity.ts",
+    "src/app/_components/home-page/hooks/useHomePage.ts",
+    "src/app/_components/home-page/views/HomePageView.tsx",
+    "src/app/_components/map-presentation/views/MapPresentationView.tsx",
     "src/design-system/components/MapboxCanvas.tsx",
     "src/integrations/maps/MapboxAdapter.ts",
-    "src/app/_components/GetItSheet.tsx",
+    "src/app/_components/get-it-sheet/hooks/useGetItSheet.ts",
+    "src/app/_components/get-it-sheet/views/GetItSheetView.tsx",
     "src/lib/directions.ts",
-    "src/app/actions.ts",
+    "src/app/_actions/actions.ts",
+    "src/app/_actions/place-actions.ts",
+    "src/app/_actions/exchange-location-actions.ts",
+    "src/integrations/maps/MapboxNearbyExchangeSearch.ts",
   ].map((path) => [path, readFileSync(join(process.cwd(), path), "utf8")])
 );
 
 test("the truthful vertical keeps concepts and persistence separate", () => {
   const store = sources["src/core/state/locationStore.ts"];
   const camera = sources["src/core/state/globalStore.ts"];
-  const page = sources["src/app/page.tsx"];
+  const home = sources["src/app/_components/home-page/hooks/useHomePage.ts"];
+  const mapView = sources["src/app/_components/map-presentation/views/MapPresentationView.tsx"];
   assert.match(store, /browsingLocation:\s*state\.browsingLocation/);
   assert.doesNotMatch(store, /deviceLocation:\s*state\.deviceLocation/);
   assert.match(store, /version:\s*3/);
   assert.match(camera, /cameraCenter:/);
   assert.doesNotMatch(camera, /\bmapCenter:/);
-  assert.match(page, /sharedUsers=\{\[\]\}/);
-  assert.match(page, /routeOrigin === null/);
-  assert.doesNotMatch(page, /<GetItSheet[\s\S]{0,300}origin=\{/);
-  assert.match(page, /setUserProfile\(null\);[\s\S]*if \(!cancelled\) setUserProfile\(profile\)/);
-  assert.match(page, /return \(\) => \{\s*cancelled = true;/);
+  assert.match(mapView, /sharedUsers=\{\[\]\}/);
+  assert.match(home, /routeOrigin && routeOrigin\.targetKey === routeTarget\?\.key/);
+  assert.doesNotMatch(
+    sources["src/app/_components/home-page/views/HomePageView.tsx"],
+    /<GetItSheet[\s\S]{0,300}origin=\{/
+  );
 });
 
 test("avatar session callbacks directly refresh map self identity avatar state", () => {
-  const page = sources["src/app/page.tsx"];
+  const home = sources["src/app/_components/home-page/hooks/useHomePage.ts"];
+  const homeView = sources["src/app/_components/home-page/views/HomePageView.tsx"];
   assert.match(
-    page,
+    home,
     /const handleSessionChange = useEventCallback\(async \(\) => \{[\s\S]{0,140}await refetchSession\(\);[\s\S]{0,140}await refreshSelfProfileAvatar\(\);[\s\S]{0,80}\}\);/
   );
-  assert.match(page, /const refreshSelfProfileAvatar = useEventCallback\(async \(\) => \{/);
+  assert.match(home, /const refreshSelfProfileAvatar = useEventCallback\(async \(\) => \{/);
   assert.match(
-    page,
+    home,
     /const nextAvatarUrl = latestProfile\?\.avatarUrl \?\? null;[\s\S]{0,120}setSelfHeaderAvatarUrl\(nextAvatarUrl\);[\s\S]{0,240}getImageProps\(\{[\s\S]{0,220}width: 64,[\s\S]{0,120}height: 64[\s\S]{0,120}\}\)\.props\.src;/
   );
-  assert.match(page, /const resolvedSelfIdentity = useMemo\(\(\) => \{/);
+  assert.match(home, /const resolvedSelfIdentity = useMemo\(\(\) => \{/);
   assert.match(
-    page,
+    home,
     /const resolvedSelfIdentity = useMemo\(\(\) => \{[\s\S]{0,120}if \(!selfMapMarkerAvatarUrl\) return selfIdentity;[\s\S]{0,120}avatarUrl: selfMapMarkerAvatarUrl/,
   );
-  assert.match(page, /const resolvedSelfAvatarUrl = selfHeaderAvatarUrl \?\? userProfile\?\.avatarUrl;/);
-  assert.match(page, /selfIdentity=\{resolvedSelfIdentity\}/);
-  assert.match(page, /url=\{resolvedSelfAvatarUrl\}/);
+  assert.match(home, /const resolvedSelfAvatarUrl = selfHeaderAvatarUrl \?\? userProfile\?\.avatarUrl;/);
+  assert.match(homeView, /selfIdentity=\{resolvedSelfIdentity\}/);
+  assert.match(homeView, /url=\{resolvedSelfAvatarUrl\}/);
   assert.doesNotMatch(
-    page,
+    home,
     /const resolvedSelfIdentity = useMemo\(\(\) => \{[\s\S]{0,200}avatarUrl: selfAvatarUrl/,
   );
-  assert.doesNotMatch(page, /selfIdentity=\{selfIdentity\}/);
+  assert.doesNotMatch(homeView, /selfIdentity=\{selfIdentity\}/);
   assert.match(
-    page,
+    home,
     /if \(!sessionUser\) \{[\s\S]{0,120}setSelfHeaderAvatarUrl\(null\);[\s\S]{0,120}setSelfMapMarkerAvatarUrl\(null\);[\s\S]{0,40}return;/
   );
 });
@@ -223,9 +256,10 @@ test("avatar session callbacks directly refresh map self identity avatar state",
 test("device identity, accuracy halo and route disclosure remain explicit", () => {
   const canvas = sources["src/design-system/components/MapboxCanvas.tsx"];
   const adapter = sources["src/integrations/maps/MapboxAdapter.ts"];
-  const locationSheet = sources["src/app/_components/LocationSheet.tsx"];
-  const page = sources["src/app/page.tsx"];
-  const sheet = sources["src/app/_components/GetItSheet.tsx"];
+  const locationSheet = sources["src/app/_components/location-sheet/hooks/useLocationSheet.ts"];
+  const identity = sources["src/app/_hooks/useLocationIdentity.ts"];
+  const sheet = sources["src/app/_components/get-it-sheet/hooks/useGetItSheet.ts"];
+  const sheetView = sources["src/app/_components/get-it-sheet/views/GetItSheetView.tsx"];
   const directions = sources["src/lib/directions.ts"];
   assert.match(canvas, /useFreshDeviceLocation\(\)/);
   assert.match(locationSheet, /const freshDeviceLocation = useFreshDeviceLocation\(\)/);
@@ -242,31 +276,60 @@ test("device identity, accuracy halo and route disclosure remain explicit", () =
     "outside-coverage fixes must be retained before coverage lookup"
   );
   assert.match(
-    page,
-    /onLocate=\{\(deviceLocation\) => \{[\s\S]*recordDeviceLocation\(deviceLocation\)[\s\S]*setCameraCenter/
+    identity,
+    /const handleRecenter = useCallback\([\s\S]{0,300}recordDeviceLocation\(deviceLocation\)[\s\S]{0,200}setCameraCenter/
   );
   assert.doesNotMatch(
-    page,
-    /onLocate=\{\(deviceLocation\) => \{[\s\S]{0,500}setDeviceBrowsingLocation/
+    identity,
+    /const handleRecenter = useCallback\([\s\S]{0,500}setDeviceBrowsingLocation/
   );
-  assert.match(sheet, /Choose what leaves WetinDey/);
+  assert.match(sheetView, /Choose what leaves WetinDey/);
   assert.match(sheet, /maximumAgeMs:\s*0/);
   assert.match(sheet, /handoff\(null\)/);
-  assert.match(sheet, /onOriginDisclosed\?\.\(origin\)/);
+  assert.match(sheet, /onOriginDisclosed\?\.\(targetPlaceId, origin\)/);
   assert.match(sheet, /origin && isDisclosedRouteOriginAdmissible\(origin\) \? origin : null/);
-  assert.match(directions, /!isDisclosedRouteOriginAdmissible\(origin\)/);
+  assert.match(directions, /!isRouteOriginAdmissible\(origin\)/);
+});
+
+test("auth transitions cannot retain or restore a stale profile avatar", () => {
+  const identity = sources["src/app/_hooks/useLocationIdentity.ts"];
+  assert.match(
+    identity,
+    /useEffect\(\(\) => \{[\s\S]{0,120}let cancelled = false;[\s\S]{0,160}setUserProfile\(null\);/
+  );
+  assert.match(
+    identity,
+    /getMyProfile\(\)[\s\S]{0,120}if \(!cancelled\) setUserProfile\(profile\)/
+  );
+  assert.match(
+    identity,
+    /return \(\) => \{[\s\S]{0,60}cancelled = true;[\s\S]{0,40}\};[\s\S]{0,60}\}, \[session, sessionUser\]\)/
+  );
 });
 
 test("coordinate failures never interpolate precise values", () => {
-  const actions = sources["src/app/actions.ts"];
-  const getIt = sources["src/app/_components/GetItSheet.tsx"];
+  const actions = sources["src/app/_actions/actions.ts"];
+  const getIt = sources["src/app/_components/get-it-sheet/hooks/useGetItSheet.ts"];
   assert.doesNotMatch(actions, /invalid search origin \$\{/);
   assert.doesNotMatch(actions, /Invalid coordinate: lat=/);
   assert.doesNotMatch(getIt, /invalid coordinate.*lat=\$\{/);
 });
 
+test("exchange discovery admits only explicit browsing context and fails partial queries closed", () => {
+  const action = sources["src/app/_actions/exchange-location-actions.ts"];
+  const discovery = sources["src/integrations/maps/MapboxNearbyExchangeSearch.ts"];
+  const home = sources["src/app/_components/home-page/hooks/useHomePage.ts"];
+  assert.match(action, /provenance:\s*"browsing"/);
+  assert.match(action, /input\.provenance !== "browsing"/);
+  assert.match(home, /getNearbyExchangeLocations\(\{[\s\S]{0,100}provenance: "browsing"/);
+  assert.match(discovery, /results\.some\(\(result\) => result\.status === "rejected"\)/);
+  assert.doesNotMatch(discovery, /results\.every\(\(result\) => result\.status === "rejected"\)/);
+  assert.match(discovery, /Number\(origin\.lat\.toFixed\(3\)\)/);
+  assert.match(discovery, /Number\(origin\.lng\.toFixed\(3\)\)/);
+});
+
 test("nearest coverage tie-breaks prefer neighbourhood then slug deterministically", () => {
-  const actions = sources["src/app/actions.ts"];
+  const actions = sources["src/app/_actions/place-actions.ts"];
   assert.match(
     actions,
     /\.orderBy\(sql`ST_Distance\(\$\{areas\.center\}, ST_GeogFromText\(\$\{point\}\)\) asc, \(\$\{areas\.type\} = 'neighborhood'\) desc, \$\{areas\.slug\} asc`\)\s*\.limit\(1\)/

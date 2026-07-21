@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 
-import { PRIMARY_LOCATION } from "@/db/lagosSouthWest";
+import { PRIMARY_LOCATION, SW_LAGOS_AREAS } from "@/db/lagosSouthWest";
 
 export const DEVICE_LOCATION_FRESH_MS = 5 * 60 * 1000;
 export const ROUTE_ORIGIN_FRESH_MS = 60 * 1000;
@@ -123,8 +123,20 @@ function canonicalPersistedBrowsingLocation(
   if (
     !candidate ||
     candidate.provenance === "default" ||
-    (candidate.provenance === "device" && candidate.areaSlug === null)
+    candidate.provenance === "device"
   ) {
+    if (candidate?.provenance === "device" && candidate.areaSlug) {
+      const area = SW_LAGOS_AREAS.find((entry) => entry.slug === candidate.areaSlug);
+      if (area) {
+        return {
+          ...area.center,
+          provenance: "device",
+          areaName: area.name,
+          areaSlug: area.slug,
+          setAt: candidate.setAt,
+        };
+      }
+    }
     return DEFAULT_BROWSING_LOCATION;
   }
   return candidate;
@@ -370,17 +382,22 @@ export const useLocationStore = create<LocationState>()(
           },
         }),
 
-      setDeviceBrowsingLocation: (location, area) =>
+      setDeviceBrowsingLocation: (_location, area) => {
+        const canonicalArea = SW_LAGOS_AREAS.find(
+          (entry) => entry.slug === area.areaSlug
+        );
         set({
-          browsingLocation: {
-            lat: location.lat,
-            lng: location.lng,
-            provenance: "device",
-            areaName: area.areaName,
-            areaSlug: area.areaSlug,
-            setAt: Date.now(),
-          },
-        }),
+          browsingLocation: canonicalArea
+            ? {
+                ...canonicalArea.center,
+                provenance: "device",
+                areaName: canonicalArea.name,
+                areaSlug: canonicalArea.slug,
+                setAt: Date.now(),
+              }
+            : DEFAULT_BROWSING_LOCATION,
+        });
+      },
 
       recordDeviceLocation: (location) => {
         let accepted = false;

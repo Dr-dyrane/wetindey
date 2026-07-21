@@ -735,7 +735,10 @@ export function useHomePage() {
     let cancelled = false;
     setExchangeLocations([]);
     setExchangeLocationDiscoveryStatus("loading");
-    void getNearbyExchangeLocations(searchOrigin).then((result) => {
+    void getNearbyExchangeLocations({
+      ...searchOrigin,
+      provenance: "browsing",
+    }).then((result) => {
       if (cancelled) return;
       if (result.locations.length === 0) {
         setExchangeLocations([...EXCHANGE_SAMPLE_LOCATIONS]);

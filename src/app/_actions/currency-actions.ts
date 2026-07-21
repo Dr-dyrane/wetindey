@@ -75,6 +75,9 @@ function parseNgnRates(value: unknown): UpstreamRate[] {
       continue;
     }
 
+    if (byCurrency.has(row.quote)) {
+      throw new Error("The reference currency catalog contained duplicate rates.");
+    }
     byCurrency.set(row.quote, {
       date: row.date,
       base: "NGN",
@@ -97,53 +100,64 @@ function parseNgnRateHistory(
     throw new Error("The reference rate history was invalid.");
   }
 
-  return value.flatMap((row) =>
-    isRecord(row) &&
-    row.base === "NGN" &&
-    row.quote === currency &&
-    typeof row.rate === "number" &&
-    Number.isFinite(row.rate) &&
-    row.rate > 0 &&
-    isIsoCalendarDate(row.date)
-      ? [
-          {
-            date: row.date,
-            base: "NGN" as const,
-            quote: currency,
-            rate: row.rate,
-          },
-        ]
-      : []
-  );
+  const seenDates = new Set<string>();
+  return value.flatMap((row) => {
+    if (
+      !isRecord(row) ||
+      row.base !== "NGN" ||
+      row.quote !== currency ||
+      typeof row.rate !== "number" ||
+      !Number.isFinite(row.rate) ||
+      row.rate <= 0 ||
+      !isIsoCalendarDate(row.date)
+    ) {
+      return [];
+    }
+    if (seenDates.has(row.date)) {
+      throw new Error("The reference rate history contained duplicate dates.");
+    }
+    seenDates.add(row.date);
+    return [{ date: row.date, base: "NGN" as const, quote: currency, rate: row.rate }];
+  });
 }
 
 function parseNgnCatalogHistory(value: unknown): UpstreamRate[] {
   if (!Array.isArray(value)) {
     throw new Error("The reference catalog history was invalid.");
   }
-  return value.flatMap((row) =>
-    isRecord(row) &&
-    row.base === "NGN" &&
-    typeof row.quote === "string" &&
-    isReferenceCurrencyCode(row.quote) &&
-    typeof row.rate === "number" &&
-    Number.isFinite(row.rate) &&
-    row.rate > 0 &&
-    isIsoCalendarDate(row.date)
-      ? [{
-          date: row.date,
-          base: "NGN" as const,
-          quote: row.quote,
-          rate: row.rate,
-        }]
-      : []
-  );
+  const seen = new Set<string>();
+  return value.flatMap((row) => {
+    if (
+      !isRecord(row) ||
+      row.base !== "NGN" ||
+      typeof row.quote !== "string" ||
+      !isReferenceCurrencyCode(row.quote) ||
+      typeof row.rate !== "number" ||
+      !Number.isFinite(row.rate) ||
+      row.rate <= 0 ||
+      !isIsoCalendarDate(row.date)
+    ) {
+      return [];
+    }
+    const key = `${row.quote}:${row.date}`;
+    if (seen.has(key)) {
+      throw new Error("The reference catalog history contained duplicate rates.");
+    }
+    seen.add(key);
+    return [{ date: row.date, base: "NGN" as const, quote: row.quote, rate: row.rate }];
+  });
 }
 
-async function fetchNgnRates(provider: ReferenceProvider): Promise<UpstreamRate[]> {
+async function fetchNgnRates(
+  provider: ReferenceProvider,
+  quotes: readonly ReferenceCurrencyCode[] = REFERENCE_CURRENCIES
+): Promise<UpstreamRate[]> {
+  if (quotes.length === 0 || new Set(quotes).size !== quotes.length) {
+    throw new Error("The reference currency request was invalid.");
+  }
   const providerQuery = provider === "CBN" ? "&providers=CBN" : "";
   const response = await fetch(
-    `${API_ROOT}/rates?base=NGN&quotes=${QUOTES}${providerQuery}`,
+    `${API_ROOT}/rates?base=NGN&quotes=${quotes.join(",")}${providerQuery}`,
     {
       ...REQUEST_OPTIONS,
       signal: AbortSignal.timeout(8_000),
@@ -322,7 +336,14 @@ export async function getReferenceRate(
   const catalog = await buildReferenceCurrencyCatalog();
   const provider = selectPairProvider(catalog, base, quote);
   if (!provider) return null;
-  const pair = pairRateFrom(await fetchNgnRates(provider), base, quote);
+  const orderedForeignCodes = [base, quote].filter(
+    (code): code is ReferenceCurrencyCode => code !== "NGN"
+  );
+  const pair = pairRateFrom(
+    await fetchNgnRates(provider, orderedForeignCodes),
+    base,
+    quote
+  );
   if (!pair) return null;
 
   return {

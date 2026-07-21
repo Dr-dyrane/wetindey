@@ -586,7 +586,7 @@ foreign-to-foreign cross-rates plus 7D/2W/1M/3M/6M/1Y trend windows require an A
 update, ordered pair cache keys, same-provider/same-effective-date server derivation, and
 two selectable currency rows. Do not emulate this with mixed or client-invented rates.
 
-##### Aboki FX truthful pair conversion — ACTIVE
+##### Aboki FX truthful pair conversion — CLOSED / PATHS RELEASED
 
 Owner: current controller.
 Exclusive paths:
@@ -596,7 +596,7 @@ Exclusive paths:
 - `src/app/_data/exchange-sample-locations.ts`
 - `src/app/_actions/currency-actions.ts`
 - `src/app/_actions/exchange-location-actions.ts`
-- `src/app/_components/CurrencyPickerSheet.tsx`
+- `src/app/_components/currency-picker-sheet/`
 - `src/app/_components/exchange-panel/hooks/useExchangePanel.ts`
 - `src/app/_components/exchange-panel/views/ExchangePanelView.tsx`
 - `src/app/_components/home-page/hooks/useHomePage.ts`
@@ -606,6 +606,7 @@ Exclusive paths:
 - `src/app/_components/CrossCategorySignalRail.tsx`
 - `src/integrations/maps/MapboxNearbyExchangeSearch.ts`
 - `src/core/state/locationStore.ts`
+- `scripts/location-default-contract.test.ts`
 - `LANES.md`
 
 Preserve Antigravity's accepted two-row UI while replacing its client-side placeholder
@@ -621,6 +622,14 @@ device location or couple discovery to Food places. When no usable provider list
 returned, retain the existing typed demonstration venues only as an unmistakably Sample
 fallback around the canonical Lagos browsing context. Legacy outside-Lagos device values
 must not rehydrate as browsing context; the independent session device fix remains true.
+
+Completed 21 July 2026. Ordered-pair/provider/date derivation, duplicate rejection,
+amount privacy, browsing-only discovery provenance, coordinate coarsening, fail-closed
+Mapbox partial failure, canonical persisted browsing context, and restored modular
+location assertions passed focused contracts, exact-path ESLint, TypeScript, production
+build, localhost HTML smoke, and independent default-to-REFUTED review. No shared DB,
+provider configuration, migration, or deployment was performed. All paths above are
+released after the path-scoped commit.
 
 ##### Human Interface delivery decision tree — ACTIVE
 
