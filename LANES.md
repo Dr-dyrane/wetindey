@@ -28,10 +28,12 @@ shared seeds, guessed target identity, and migration workarounds remain prohibit
 
 ### Current-main evidence checkpoint
 
-Deployed current main `97b74af` passed the Search/provenance disposable SQL gate, including
+Historical deployed checkpoint `97b74af` passed the Search/provenance disposable SQL gate, including
 strengthened unavailable and contradictory cases plus exact cleanup. That pathless
 execution gate is closed and released; the persistent Search & Ranking employee remains
-available for later bounded assignments and owns no path.
+available for later bounded assignments and owns no path. Repository `main` has advanced
+beyond that deployed checkpoint; this statement does not claim that repository head is
+deployed.
 
 The Founder-provided Dyrane Constitution v1.0 is now durable at
 `docs/DYRANE-CONSTITUTION.md`, indexed by `docs/README.md`, and mandatory through
@@ -72,7 +74,7 @@ to idle rather than creating a replacement task.
 |---|---|---|
 | Nearby Presence Platform Engineer | Production `0012` operational PASS; exact source paths released | Ledger/fingerprint/idempotence, least-privilege scheduler, cleanup/retention, default-off containment, and independent operational refutation passed; remain persistent for a later bounded assignment |
 | Program Management & Functional Organization Lead | Idle | Reconcile portfolio proposals into CEO-reviewable lane candidates without editing product paths |
-| Contribution Integrity & Moderation Engineer `019f75a3-f50d-7180-8e92-0a7aabd8a98c` | Active pathless `0013` operational activation gate; all source paths released | Run Preview then Production evidence in order: exact identity/fingerprint, migration/ledger/schema/RPC/grant proof, runtime flags/role, guarded smoke, disable/rollback, and independent refutation |
+| Contribution Integrity & Moderation Engineer `019f75a3-f50d-7180-8e92-0a7aabd8a98c` | `0013` operational activation COMPLETE / PASS, default-off; all paths released | Preview `dpl_2UC8gEPJ4V5sZvRd4M74fMoqFvBm` and Production `dpl_8fZpUNgRi3zebGqy75DGt9qAQ4Kq` passed identity, ledger/schema/RPC/grants, smoke, rollback, and independent refutation; admission/reporting/moderation remain false |
 | Human Interface Design Engineer `019f75a5-0fc6-7f40-9a0f-8097ead3b45d` | Market release REFUTED; exact two paths retained | `23b5071` deployment entered `Map no fit load` and retry failed; `www.wetindey.live` is rolled back to proven `4e3820ab` while Maps determines causality without a speculative source claim |
 | HI Quality & Regression Lead | Active exact two-document acceptance governance | Produce a read-only current-violation inventory and bounded disjoint implementation/refutation proposals; preserve Maps, Presence, and ADR locks |
 | Food Evidence Provenance & Source Governance Lead | Standing review authorization | Classify recurring NBS/current Food evidence; no live promotion or shared migration |
@@ -80,16 +82,16 @@ to idle rather than creating a replacement task.
 | Food Source Authenticity & Attribution Refuter | Idle refuter | Independently verify each staged source artifact against original evidence and terms |
 | Search & Ranking Engineer | Available, no active claim | The deployed-current-main `97b74af` disposable SQL evidence gate passed and is released; remain persistent for the next bounded Search/Ranking assignment |
 | Iconography & Visual Systems Lead | Iconography source lanes complete / released | `9b74a31`, `ed5a6cb`, `a2a7104`, `b93761b`, and `ae47513` are current-main ancestors; foundation, intent adoption, Report Price, and Confirm Visit source paths are released |
-| Maps & Location Experience | Self-avatar refresh active over `page.tsx` + `scripts/location-default-contract.test.ts`; frame-evidence source correction released | `b1901fb` closed the WebGL1/WebGL2 source boundary; exact-deployment visual smoke remains pathless while the current bounded avatar-refresh slice proceeds |
+| Maps & Location Experience | Current source correction complete / released | `dae6786` separates browsing context from self location and `d1f87d0` repairs the modular location contract; remain persistent for later bounded map/runtime assignments |
 | Client Reliability & Offline Engineer `019f75d3-65d0-7033-bef7-11a83aca9723` | Bootstrap visibility complete / released with Production PASS | `d42454b` passed prompt initial shell on `dpl_Dat5W4KZz6wNYb37jcCq1DKjyKrY`; `ThemeContext.tsx` released |
 | Security & Privacy Engineering Lead | Production DB-target proof closed | Exact HMAC match is recorded; `168039f` removed every temporary proof claim. CSP collector source remains released and production CSP remains fail-open/report-only |
 | Motion & Interaction Engineer `019f71ca-8646-7452-9171-439f5d78e71a` | Idle persistent seat; no path claim | H10 is complete/released at pushed `091fe8e`; the obsolete Frameworks replacement task is not a current owner |
 | Quality & Release Controller | Idle persistent release employee | Q1 gate passed independently at pushed `569b1bb`; its script is released. Thread `019f7865-c497-71a3-89a2-4effd79b557b` remains available and must not be archived |
-| Product & Data Governance Architect `019f7599-0eaa-7423-9ebf-a1bfea8efe37` | Active exact one-file Community Trust & Contribution Loop governance | Own only new `docs/product/COMMUNITY-TRUST-AND-CONTRIBUTION-LOOP.md`; all ADRs, product code, and current lanes are read-only evidence |
-| Developer Relations & Engineering Enablement `019f7995-5b7b-7ee1-81ef-2c3a3c57b836` | Active exact documentation/process worklog protocol | Own only the recorded docs/process paths and new departmental logs; no app, ADR, package, schema, or migration authority |
-| Catalog Stewardship `019f7999-37d0-7231-8b89-0e71c2569ce2` | Active exact one-file catalog-workflow governance | Own only new `docs/product/CATALOG-STEWARDSHIP-WORKFLOW.md`; no code, schema, migration, ADR, or LANES authority |
+| Product & Data Governance Architect `019f7599-0eaa-7423-9ebf-a1bfea8efe37` | Community Trust governance complete / released | `170de61` is on current main; remain persistent for later bounded governance or independent review assignments |
+| Developer Relations & Engineering Enablement `019f7995-5b7b-7ee1-81ef-2c3a3c57b836` | Department worklog protocol complete / released | `62880ac` and fail-closed repair `2523da1` are on current main; remain persistent for later bounded enablement assignments |
+| Catalog Stewardship `019f7999-37d0-7231-8b89-0e71c2569ce2` | Catalog workflow complete / released | `fe09dc3` separates complete server no-match from network/offline failure after independent PASS; remain persistent for later bounded stewardship assignments |
 
-### Authoritative current active disjoint lanes — `d5daae3` reconciliation
+### Authoritative current active disjoint lanes — 21 July 2026 reconciliation
 
 This section is the current ownership authority. Historical rows below remain evidence of
 their time and do not override these exact claims.
@@ -191,15 +193,27 @@ claims. Scheduler paths are released. Never source Presence from browsing
 `mapCenter`, `locationStore`, or a saved area—only fresh server-authorized foreground GPS
 may supply it.
 
+##### Presence `0014` shared-target operational gate — ACTIVE / PATHLESS
+
+Owner: Nearby Presence Platform Engineer `019f759f-3521-7ee1-90a3-5af3539d757e`.
+Commits `246ba75` and `d7652b7` make the `0014` capability migration source-complete and
+disposable-tested on current main; they do not prove shared-target application. Before any
+Presence UI or private pilot, execute Preview then Production in order under the recorded
+Founder migration authorization, proving exact target identity, current 14-entry parent
+ledger, migration hash/snapshot/schema/RPC/RLS/grants, empty allowlist, both runtime kill
+switches false, idempotence, cleanup/retention compatibility, backup/rollback, and an
+independent default-to-REFUTED operational verdict. This lane owns no repository path and
+authorizes no UI, peer visibility, flag enablement, or public rollout.
+
 ##### Private-pilot manifest convergence — QUEUED, NOT ACTIVE
 
-Readiness is now **EVIDENCE-REFUTED**, not merely queued. Frozen `0012` exposes stable
+Readiness remains **EVIDENCE-REFUTED**. Frozen `0012` exposes stable
 `subject_account_id`, `subject_lease_id`, and `wave_id`, but no opaque capability table;
 activation/report lack idempotency; the block-versus-Wave safety race is unproved; a stable
-profile avatar URL is unsuitable; and app/account-deletion wiring is absent. No Presence
-UI or code claim may activate before a forward `0014` correction after Contribution `0013`.
-Presence Platform is preparing exact paths; `0014` remains pathless until its manifest is
-returned.
+profile avatar URL is unsuitable; and app/account-deletion wiring is absent. The `0014`
+source correction exists on current main and Contribution `0013` is operational PASS, but
+no Presence UI or code claim may activate before the pathless shared-target `0014` gate
+above passes independently in Preview and Production.
 
 The four new files are not independently activatable: without a live caller they would
 violate the repository's no-dead-service/component rule. The Platform manifest must choose
@@ -631,7 +645,7 @@ build, localhost HTML smoke, and independent default-to-REFUTED review. No share
 provider configuration, migration, or deployment was performed. All paths above are
 released after the path-scoped commit.
 
-##### Human Interface delivery decision tree — ACTIVE
+##### Human Interface delivery decision tree — COMPLETE / PATHS RELEASED
 
 Owner: current controller.
 Exclusive paths:
@@ -645,6 +659,9 @@ Record the Founder-approved visual-convergence-first workflow without weakening 
 ownership, truth boundaries, accessibility, independent refutation, or release evidence.
 The process must distinguish visual ambiguity, behavioral defects, and consequential
 truth/privacy/provider/schema work so each starts at the correct layer.
+
+Completed in `31358b3`. The decision tree is wired from `AGENTS.md`, preserves the Dyrane
+Constitution and evidence boundaries, and all four paths are released.
 
 ##### ItemDetailSheet component modularization — COMPLETE / PATHS RELEASED
 
@@ -665,7 +682,7 @@ gates passed. Direct visual pixels remain technically unverified because the reu
 Safari capture returned a known off-screen black frame; no application error was
 observed.
 
-#### Developer Relations & Engineering Enablement: department worklog protocol — active exact claim
+#### Developer Relations & Engineering Enablement: department worklog protocol — COMPLETE / PATHS RELEASED
 
 Owner: Developer Relations & Engineering Enablement worker
 `019f7995-5b7b-7ee1-81ef-2c3a3c57b836`. Exclusive paths:
@@ -699,6 +716,9 @@ packet and protocol, without creating a shared hot log. Preserve the precedence 
 ADRs, architecture of record, Git evidence, and `LANES.md`. No app, schema, migration,
 package, or ADR path is in scope.
 
+Completed in `62880ac`; the fail-open digest defect was repaired forward in independently
+reviewed `2523da1`. All paths are released and the persistent employee returns to idle.
+
 
 ##### Aboki FX User Origin Polylines + Browsing Anchor — COMPLETE / PATHS RELEASED
 
@@ -728,8 +748,8 @@ is keyed by target, destination, and exact browse/disclosed origin so stale geom
 synchronously. FX listings no longer create routes. Scoped ESLint, TypeScript, and diff
 checks passed. Independent default-to-REFUTED review returned PASS after three forward
 corrections. Reused-tab runtime confirmed Food map render without the false browsing-avatar
-marker and clean FX selection without a route. The stale location contract remains a
-separate harness defect because it references deleted `LocationSheet.tsx`.
+marker and clean FX selection without a route. The stale modular location-contract
+references were repaired and independently reviewed in `d1f87d0`.
 
 
 ---
