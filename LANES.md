@@ -287,6 +287,17 @@ distance origin, offer loading/error/empty states, Visit shop/market action, cal
 copy, and data semantics remain unchanged. Independent static refutation passed with no
 P1/P2/P3; runtime/type/build evidence was not requested. Both source paths are released.
 
+Released Slice 9 paths:
+
+- `src/app/_components/home-page/views/HomePageView.tsx`
+- new `src/app/_components/home-page/views/HomeSheetHeaderView.tsx`
+
+Slice 9 extracted only the live sheet brand/category/signal/action/search header into a
+dedicated presentational subview. Category switching, cross-category signals, Food-only
+report/search controls, profile identity, labels, hit regions, comments, and callbacks
+remain unchanged. Independent static refutation passed with no P1/P2/P3; runtime/type/build
+evidence was not requested. Both source paths are released.
+
 Released Slice 7 paths:
 
 - `src/app/_components/currency-picker-sheet/views/CurrencyPickerSheetView.tsx`
