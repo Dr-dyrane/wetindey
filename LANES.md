@@ -242,7 +242,7 @@ fail-closed evidence manifest is a required gate, not runtime proof. These are p
 paths only; no Presence source claim is active until the three remaining manifests and the
 Maps Adapter release are recorded.
 
-##### Trusted People / Remote Presence governance — ACTIVE, DOCS-ONLY
+##### Trusted People / Remote Presence governance — COMPLETE / RELEASED
 
 Owner: Product & Data Governance Architect `019f7599-0eaa-7423-9ebf-a1bfea8efe37`.
 Exclusive documentation-only paths:
@@ -258,9 +258,25 @@ separation between truthful physical presence and a selected browsing area. This
 no schema, migration, server, provider, or UI authorization and does not supersede the
 active pathless `0014` shared-target operational gate.
 
-##### Live-app modularization manifest — COMPLETE THROUGH SLICE 6 / RELEASED
+Completed and independently accepted in `51de20a`; all four documentation paths are
+released.
+
+##### Live-app modularization manifest — ACTIVE SLICE 7
 
 Owner: persistent Modularization Engineer `019f7b10-8c5a-70e2-8fc9-2fb0b2b328dc`.
+
+Exclusive Slice 7 paths:
+
+- `src/app/_components/currency-picker-sheet/views/CurrencyPickerSheetView.tsx`
+- `src/app/_components/currency-picker-sheet/views/CurrencyPickerSheetContent.tsx` (new)
+
+Extract only the existing search field, currency row/group, and picker-content renderers
+from the 367-line view into one live content subview. Preserve every prop, branch, copy
+string, key, preview/trend calculation, fallback `ModalSheet`, navigation behavior, and
+public controller edge. Do not widen into the hook, copy, imports, styles, controller,
+currency actions/data, flags, design, browser state, or product behavior. Both files must
+remain at or below 300 lines and require exact-path lint, TypeScript, diff checks, and
+independent default-to-REFUTED review before one path-scoped commit.
 
 Released Slice 6 paths:
 
@@ -386,10 +402,9 @@ durable pixel proof or a submission mutation. No Report Problem runtime error ap
 Release all exact paths. A separate pre-existing CSP nonce hydration warning is recorded
 below and does not widen this lane.
 
-The next modularization candidate remains pathless and queued: split coherent subviews
-from `currency-picker-sheet/views/CurrencyPickerSheetView.tsx`, which currently exceeds
-the 300-line target. Do not begin it until Slice 6 is committed, independently accepted,
-released, and a new exact non-overlapping lane is recorded.
+No further modularization candidate is active. Audit and record a new exact,
+non-overlapping lane only after Slice 7 is committed, independently accepted, and
+released.
 
 ##### Modularization release-history audit — CLOSED / RELEASED
 
