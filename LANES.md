@@ -258,10 +258,22 @@ separation between truthful physical presence and a selected browsing area. This
 no schema, migration, server, provider, or UI authorization and does not supersede the
 active pathless `0014` shared-target operational gate.
 
-##### Live-app modularization manifest — QUEUED, PATHLESS
+##### Live-app modularization manifest — ACTIVE SLICE 6
 
-This is a sequential queue, not an active claim, while map/page hot paths remain locked.
-Allocate one slice at a time and wire its live caller in the same commit:
+Owner: persistent Modularization Engineer `019f7b10-8c5a-70e2-8fc9-2fb0b2b328dc`.
+
+Exclusive Slice 6 paths:
+
+- `src/app/_components/about-sheet/views/AboutSheetView.tsx`
+- `src/app/_components/about-sheet/views/AboutSheetDetail.tsx` (new)
+
+Extract the existing detail-page renderers from the 330-line host view into one live
+detail subview. Preserve every export, prop, branch, copy string, interaction, and
+navigation behavior; do not widen into the About hook, copy, imports, styles, parent
+host, browser state, or product design. The implementation requires focused structure,
+TypeScript, exact-path lint, and independent default-to-REFUTED review before one
+path-scoped commit. This is a sequential queue: allocate one slice at a time and wire its
+live caller in the same commit:
 
 1. new `src/app/_hooks/useLocationIdentity.ts` plus `src/app/page.tsx`;
 2. new `src/app/_components/MapPresentation.tsx` plus `src/app/page.tsx`, without
@@ -375,11 +387,10 @@ durable pixel proof or a submission mutation. No Report Problem runtime error ap
 Release all exact paths. A separate pre-existing CSP nonce hydration warning is recorded
 below and does not widen this lane.
 
-Next modularization candidates are pathless and queued, not active: split coherent
-subviews from `about-sheet/views/AboutSheetView.tsx` and
-`currency-picker-sheet/views/CurrencyPickerSheetView.tsx`, which currently exceed the
-300-line target. Do not begin either until the current candidate is released and a new
-exact non-overlapping lane is recorded.
+The next modularization candidate remains pathless and queued: split coherent subviews
+from `currency-picker-sheet/views/CurrencyPickerSheetView.tsx`, which currently exceeds
+the 300-line target. Do not begin it until Slice 6 is committed, independently accepted,
+released, and a new exact non-overlapping lane is recorded.
 
 ##### Modularization release-history audit — CLOSED / RELEASED
 
