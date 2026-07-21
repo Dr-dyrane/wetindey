@@ -258,22 +258,21 @@ separation between truthful physical presence and a selected browsing area. This
 no schema, migration, server, provider, or UI authorization and does not supersede the
 active pathless `0014` shared-target operational gate.
 
-##### Live-app modularization manifest — ACTIVE SLICE 6
+##### Live-app modularization manifest — COMPLETE THROUGH SLICE 6 / RELEASED
 
 Owner: persistent Modularization Engineer `019f7b10-8c5a-70e2-8fc9-2fb0b2b328dc`.
 
-Exclusive Slice 6 paths:
+Released Slice 6 paths:
 
 - `src/app/_components/about-sheet/views/AboutSheetView.tsx`
 - `src/app/_components/about-sheet/views/AboutSheetDetail.tsx` (new)
 
-Extract the existing detail-page renderers from the 330-line host view into one live
-detail subview. Preserve every export, prop, branch, copy string, interaction, and
-navigation behavior; do not widen into the About hook, copy, imports, styles, parent
-host, browser state, or product design. The implementation requires focused structure,
-TypeScript, exact-path lint, and independent default-to-REFUTED review before one
-path-scoped commit. This is a sequential queue: allocate one slice at a time and wire its
-live caller in the same commit:
+Slice 6 completed in `6040aac`: the existing detail-page renderers moved from the
+330-line host into one live 223-line detail subview, leaving the host at 118 lines. Every
+export, prop, branch, copy string, interaction, and navigation behavior was preserved;
+focused structure, TypeScript, exact-path lint, diff checks, and independent refutation
+passed. Both paths are released. This remains a sequential queue: allocate one slice at a
+time and wire its live caller in the same commit:
 
 1. new `src/app/_hooks/useLocationIdentity.ts` plus `src/app/page.tsx`;
 2. new `src/app/_components/MapPresentation.tsx` plus `src/app/page.tsx`, without
