@@ -1,6 +1,6 @@
 # Apple Maps and Human Interface benchmark
 
-**Retrieved:** 2026-07-18  
+**Retrieved:** 2026-07-21
 **Scope:** WetinDey map, sheet, marker, control, and place-detail acceptance criteria.
 
 WetinDey adopts Apple interaction principles where they improve clarity, reachability, and
@@ -49,39 +49,44 @@ semantics:
 | Imagery can carry hierarchy. | Let licensed imagery bleed/blend to the edge of its containing surface when pixels support it; a fixed frame is not by itself a defect. | Narrow and regular offer/place pixels must directly prove edge alignment, blending, readable attribution, and no image collision or overflow. |
 | Icons communicate intent beyond color. | Use solid, optically balanced glyphs in named semantic orbs, with labels or another non-color distinction. | AX names plus light/dark/grayscale/forced-colors screenshots distinguish states without hue alone. |
 
-## Read-only current-code violation inventory (2026-07-18)
+## Read-only current-code reconciliation (2026-07-21)
 
-This is an evidence inventory, not an active implementation claim. Findings are based on
-current source inspection and the paired reused-tab runtime; future ownership is sequenced
-below and remains unallocated until PM records exact locks. Component symbols are used
-instead of drifting line-number citations; runtime screenshots remain the acceptance proof.
-The current `min-h-11` source guard is not itself a runtime acceptance result.
+This is a source-and-evidence inventory, not implementation authority. The live tree is
+modular: `src/app/page.tsx` is only the `HomePage` wrapper. Source-complete means the
+current code expresses the intended boundary; it does not make pixels, AX, or every state
+accepted. Runtime-unverified items stay unverified. The path proposals below are
+sequenced future claims; PM must allocate fresh exact locks before any proposal is called
+disjoint or implementation-ready.
 
-| Finding | Current evidence | Smallest future lane and acceptance evidence |
+| Acceptance area | Source-complete evidence | Remaining violation or runtime residual |
 |---|---|---|
-| Compact/regular surface behavior is split across a page-local tree and shared shell geometry. | `src/app/page.tsx` `sheetNode` owns the sheet header and level-0 scroller; `src/design-system/components/BottomSheet.tsx` owns transformed detents and floating/docked presentation; `src/design-system/components/RegularShell.tsx` owns the regular island. | **Sheet hierarchy evidence gate:** no implementation path is claimed. `src/app/page.tsx`, `src/design-system/components/BottomSheet.tsx`, `src/design-system/components/RegularShell.tsx`, `src/design-system/components/CompactShell.tsx`, and `src/design-system/components/AdaptiveShell.tsx` remain read-only evidence while their retained Maps/Frameworks/Market Details ownership locks are active; prove peek/half map context, edge-to-edge large docking, no duplicate surfaces, and AX/pixel order only after an explicit handoff. |
-| Outer targets are 44px while visible chrome is 32px; press feedback is utility-class based and not independently evidenced for every control. | `src/app/page.tsx` category/Add/Profile controls and `src/design-system/components/MapboxCanvas.tsx` `MapRecenterControl` expose the relevant outer/visible geometry and active states. | **Interaction evidence gate:** no implementation path is claimed. Prove edge hits, keyboard focus, visible press/release, and reduced-motion behavior against the single Sheet hierarchy lane without creating a second owner for `src/app/page.tsx`. |
-| The BottomSheet detent handle had a concrete below-target defect in the audited baseline; current source now carries the 44 CSS px guard. | The audited baseline used `pt-2.5 pb-1.5` around a `h-[5px]` bar with no minimum height (about 21 CSS px). Current `src/design-system/components/BottomSheet.tsx` `handleRef` button includes `min-h-11` (44 CSS px). | **Sequenced future Sheet owner:** retain the defect as a regression guard; the retained Frameworks owner must receive an exact PM handoff before implementation. Runtime acceptance must measure a ≥44×44 CSS px drag/keyboard target while the visible bar remains slim. |
-| Unnecessary nested containment may remain in offer/list surfaces; semantically distinct status badges are not blanket rewrite targets, and imagery edge bleed/blending is runtime-unverified. | `src/design-system/components/PlaceOfferRow.tsx` `ItemArtwork` uses a fixed `w-[88px]` frame; `PlaceOfferRow` nests the article/artwork/status surfaces; `StatusBadge` emits a semantically distinct pill; `imageCredit` renders attribution. The fixed frame alone does not prove an edge-bleed defect. | **Sequenced future Offer hierarchy + imagery owner:** one combined owner for `src/design-system/components/PlaceOfferRow.tsx` and `src/design-system/components/StatusBadge.tsx` only after PM handoff. Prove which containment is unnecessary while preserving ADR-018 status meaning; directly verify edge bleed/blending, readable attribution, source-link focusability, and no narrow collision. No blanket `StatusBadge` rewrite. |
-| Avatar semantics distinguish image, initials, and anonymous silhouette in source, but the uploaded image is hidden from AX. | `src/app/page.tsx` mounts the 44px Profile target and `Avatar`; `src/app/_components/ProfileSheet.tsx` `Avatar` falls from image to initials to silhouette, while its visual wrapper is `aria-hidden`. | **Identity evidence gate:** no implementation path is claimed. `src/app/_components/ProfileSheet.tsx`, its `src/app/page.tsx` callsite, and the retained Maps self-marker are read-only evidence while current Profile/Maps ownership and wiring locks remain active. Prove signed-in uploaded avatar, missing/failed-image initials, guest fallback, separate precision/halo, truthful AX names, and no peer publication after an explicit handoff. |
-| Recenter placement consumes the live shell inset in source, but full drag/detent proof remains a paired Maps+HI gate. | `src/app/page.tsx` positions `MapRecenterControl` from `--shell-bottom-inset`; `src/design-system/components/AdaptiveShell.tsx` publishes shell geometry; `src/design-system/components/MapboxCanvas.tsx` retains camera-padding behavior. | **Maps runtime evidence gate:** no new implementation path is claimed here. `src/app/page.tsx` remains retained Maps ownership and `src/design-system/components/MapboxCanvas.tsx`/`src/integrations/maps/MapboxAdapter.ts` remain the separate dark-style recovery claim in `LANES.md`; prove visibility/reachability through drag, peek, half, and large detents, marker selection, safe area, and AX names before any fresh path claim. |
-| The regular-panel blank is a separate settled Safari/material diagnosis, not a transition-frame assumption. | In the paired reused-tab run, immediate and settled JPEGs were byte-identical about 10 seconds apart: DOM markers/chrome remained present while Mapbox pixels and the regular panel were black. | **Regular-panel diagnosis lane:** pathless HI/Frameworks evidence only, as reserved in `LANES.md`. Classify this as a settled Safari render/compositor failure rather than a transient capture; do not edit Maps dark-style paths or claim a UI fix from this artifact alone. |
-| Reduced-motion and forced-colors hooks exist, but this run did not exercise those modes. | `src/app/globals.css` and `src/design-system/motion.ts` define reduced-motion/transparency and forced-colors behavior. | **Accessibility evidence lane:** no implementation path is implied. Capture direct reduced-motion, grayscale, and forced-colors evidence when tooling supports it; otherwise record each as unverified. |
+| Compact/expanded density and layering | `BottomSheet.tsx` has floating context/expanded material states; `CompactShell.tsx`, `RegularShell.tsx`, and `AdaptiveShell.tsx` share one NavigationStack. Large uses the named expanded glass surface and context detents use the island material. | Direct compact peek/half and expanded edge-to-edge pixels, no dead strip, AX order, light/dark/grayscale and settled Safari compositor behavior remain runtime gates. |
+| Hit region versus visible control | `BottomSheet.tsx` keeps the handle target at `SHEET_HANDLE_TARGET_PX` with `minHeight` and `min-h-11`; the grabber is only `h-[5px] w-9`. Profile and close/recenter use tap-sized targets. | `HomePageView.tsx` Add/category chrome and `MapPresentationView.tsx` theme control render `h-9`/`h-9 w-9` controls without an explicit `min-h-tap`; these are concrete sub-44 CSS px outer-target risks even though the visible icon is intentionally smaller. Edge hits, keyboard focus, press/release, and reduced-motion behavior must be measured, not inferred. The handle’s source guard is not runtime proof. |
+| Map context and CTA occlusion | `AdaptiveShell.tsx` publishes live leading/bottom insets; `MapPresentationView.tsx` positions recenter from the shell inset. `HomePageView.tsx` renders one `Visit market`/`Visit shop` CTA adjacent to the Prices scroller. | Reused-tab pixels must prove selected marker/map context and recenter reachability at every detent, and that the CTA remains available without covering first/last rows or attribution. The regular panel’s settled Safari black render remains a separate compositor residual. |
+| Liquid/translucent material | `BottomSheet.tsx` cross-fades two elevation layers and uses named, borderless materials; `RegularShell.tsx` uses the thick island material and the shared shell publishes geometry. | Direct light/dark/grayscale pixels, safe-area rails, and transition-settled visibility remain unverified. No source claim proves a compositor issue is fixed. |
+| Status non-color semantics | `StatusBadge.tsx` provides confirmed/caution/unavailable/info icon-text families; `PlaceOfferRow.tsx` carries explicit unknown and Sample/provenance signals, while adopted semantic-orb paths supply named contextual glyphs. | Direct grayscale/forced-colors evidence for each state and truthful AX names is incomplete; `StatusBadge` remains semantically distinct under ADR-018 and is not a blanket flattening target. |
+| Market two-column/card hierarchy | `HomePageView.tsx` uses `AsyncList` `grid-cols-2` only for regular and leaves compact as one media-led column; the CTA is a single action and attribution remains in `PlaceOfferRow.tsx`. | Narrow-regular fallback, compact spacing/image edge blend, concise identity→price/unit→availability scan line, final row/full attribution, CTA persistence, and no horizontal overflow require direct pixels/AX. |
+| Self/location marker acceptance | `useLocationIdentity.ts` separates uploaded-avatar/initials/guest identity from device-derived browsing; `MapPresentationView.tsx` passes `sharedUsers={[]}` and `MapboxCanvas` keeps the self marker/accuracy treatment separate. | Uploaded avatar versus initials, guest fallback, precise versus approximate halo, non-color selected marker, recenter reachability at every detent, marker interaction, and truthful AX names remain runtime-unverified. |
+| Regular-panel diagnosis | DOM markers/chrome were present while immediate and settled JPEGs were byte-identical ~10 seconds apart with black Mapbox/panel pixels. | This is classified as a settled Safari render/compositor failure, not a transition-frame artifact; it is pathless evidence and not permission to edit Maps/Adapter paths. |
+| Reduced motion / forced colors | `globals.css` and `motion.ts` expose hooks. | Modes were not exercised in this docs lane; record as unverified until direct evidence exists. |
 
-The claims below are sequenced future proposals, not active implementation claims. PM must
-allocate exact locks before any proposal is called disjoint or implementation-ready; each
-path has one proposed owner in that sequence. The pathless regular-panel diagnosis cannot
-be used to bypass active Presence, Contribution, migration, Frameworks, Market Details, or
-retained Maps ownership locks. The sequence table itself uses fully qualified paths.
+### Sequenced future claims (not current edits)
 
-| Sequence | One proposed owner | Exact future paths | Release condition |
+Each row has one proposed owner and non-overlapping exact paths. These are not active
+claims, and none is disjoint until PM records a fresh lock after current locks release.
+
+| Sequence | One proposed owner | Exact future paths | Bounded acceptance |
 |---|---|---|---|
-| 1 | Frameworks / Sheet hierarchy | `src/design-system/components/BottomSheet.tsx`, `src/design-system/components/RegularShell.tsx`, `src/design-system/components/CompactShell.tsx`, `src/design-system/components/AdaptiveShell.tsx` | PM records a fresh exact lock; current and committed LANES ownership remains authoritative until then. |
-| 2 | Market Details / Offer hierarchy + imagery | `src/design-system/components/PlaceOfferRow.tsx`, `src/design-system/components/StatusBadge.tsx` | One atomic handoff after the retained Market Details claim releases; no split imagery/status claim. |
-| 3 | Identity | `src/app/_components/ProfileSheet.tsx` | PM allocates an exact identity handoff after current profile wiring locks clear. |
-| 4 | Maps retained owner | `src/app/page.tsx` | No HI claim; Maps/Market Details retains this path until an explicit controller release. |
-| 5 | Maps dark-style recovery | `src/design-system/components/MapboxCanvas.tsx`, `src/integrations/maps/MapboxAdapter.ts` | Existing LANES dark-style claim remains separate; no HI edits. |
-| 6 | HI/Frameworks diagnosis | *(pathless)* | Direct reused-tab evidence only; no source ownership. |
+| 1 | Frameworks / sheet hierarchy | `src/design-system/components/BottomSheet.tsx`, `src/design-system/components/CompactShell.tsx`, `src/design-system/components/RegularShell.tsx`, `src/design-system/components/AdaptiveShell.tsx` | Compact peek/half map context, expanded docked edge-to-edge, ≥44×44 CSS px handle with slim visual, press/release/reduced-motion, no nested surface/dead tail, AX/pixel proof. Requires PM lock. |
+| 2 | Market Details / offer hierarchy | `src/design-system/components/PlaceOfferRow.tsx`, `src/design-system/components/StatusBadge.tsx` | Regular two-column only when supported, compact one column, edge-blended imagery, concise scan line, non-color status, attribution/focusability, final-row/CTA proof. One atomic owner; no blanket badge rewrite. Requires PM lock. |
+| 3 | Profile identity presentation | `src/app/_components/profile-sheet/ProfileSheetView.tsx` | Uploaded image/initials/guest semantics and truthful AX without changing presence/privacy wiring. Requires PM lock. |
+| 4 | Pathless Maps/HI evidence | *(no source path)* | Compact/regular detents, selected marker, recenter inset, map occlusion, grayscale/forced-colors/reduced-motion and settled Safari evidence only; no source claim. |
+
+Current `LANES.md` release rows remain authoritative: released Market, Maps, iconography,
+Presence, and Frameworks paths are not silently reopened by this document. Any future
+implementation proposal requires a fresh PM lock after the relevant released or active
+path is explicitly reclaimed. In particular, `src/app/page.tsx`, `MapboxCanvas.tsx`, and
+`MapboxAdapter.ts` are evidence references, not HI implementation claims here.
 
 ## Required runtime evidence
 
