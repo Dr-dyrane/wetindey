@@ -193,7 +193,17 @@ claims. Scheduler paths are released. Never source Presence from browsing
 `mapCenter`, `locationStore`, or a saved area—only fresh server-authorized foreground GPS
 may supply it.
 
-##### Presence `0014` shared-target operational gate — ACTIVE / PATHLESS
+##### Presence `0014` shared-target operational gate — BLOCKED / PATHLESS
+
+Exact Preview blocker (21 July 2026): a clean-room Vercel CLI injection against linked
+project `drdyranes-projects/wetindey`, target `preview`, proved that none of
+`DATABASE_URL_UNPOOLED`, `DATABASE_URL`, `POSTGRES_URL_NON_POOLING`, `POSTGRES_URL`, or
+`NEON_DATABASE_URL` exists in that environment. The repository-root probe was rejected
+because `vercel env run` loaded `.env.local`, which cannot prove Preview identity. No
+database connection or migration occurred; Production was not probed or changed. Resume
+only after the platform owner binds an exact Preview Neon target in Vercel and the same
+clean-room preflight proves its identity, parent ledger, role/options, backup/rollback,
+and default-off state. Do not substitute the local or Production DSN.
 
 Owner: Nearby Presence Platform Engineer `019f759f-3521-7ee1-90a3-5af3539d757e`.
 Commits `246ba75` and `d7652b7` make the `0014` capability migration source-complete and
