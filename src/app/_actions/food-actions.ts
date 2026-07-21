@@ -272,7 +272,7 @@ export async function searchItems(
       SELECT DISTINCT i.id
       FROM ${items} i
       LEFT JOIN ${itemAliases} ia ON ia.item_id = i.id
-      WHERE i.active = true 
+      WHERE i.active = true
         AND i.category = ${category}
         AND (
           i.canonical_name ILIKE ${q} OR

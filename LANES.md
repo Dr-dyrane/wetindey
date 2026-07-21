@@ -4,14 +4,16 @@
 claim on a set of paths. Claim your lane before you edit; check this file before you touch
 anything. One owner per path, always.
 
-**Last updated:** 2026-07-18
+**Last updated:** 2026-07-21
 
 ## Quality & Release Controller checkpoint RC-139
 
 Controller owner: this orchestrator, over exactly `LANES.md` and
-`docs/architecture/RELEASE-CONTROLLER.md`. Current `main` and `origin/main` are aligned at
-`708845b41d83836e4905fcbc23b8b11a63e5337c`; the only uncommitted paths are explicitly
-claimed implementation work.
+`docs/architecture/RELEASE-CONTROLLER.md`. Current local `main` is clean at `5cb2c66` and
+is ten commits ahead of `origin/main` at `2907ba1`. Those commits are the current
+modularization candidate, not a proven release train; the controller is reconciling their
+history, live call paths, focused checks, runtime behavior, and independent refutation
+before a conditional push.
 
 **Decision: PATH-SCOPED PUSHES AUTHORIZED; DEPLOYMENT REMAINS EVIDENCE-GATED.** Independently
 refuted, path-scoped commits may move promptly to `main`; do not accumulate a private
@@ -281,6 +283,52 @@ Owner: Antigravity (External Approved Contractor - Product Engineering & UX Depa
 - `src/app/_components/ReportProblemSheet.tsx`
 
 Organized the homepage modular files into structured subfolders under `src/app/_components/home-page/` and relocated loose server action files into `src/app/_actions/`, updating all import edges. Verification checks (`lint`, `tsc`, and full production build) completed with 0 errors. Released paths. Commit `0863c7800a1ae8f82104ee994da743ab7524776c` is pushed locally.
+
+##### Live-app modularization Slice 5 — ACTIVE
+
+Owner: current controller, with one delegated Core / Application Architecture worker.
+Exclusive paths:
+
+- `src/app/_components/ReportProblemSheet.tsx`
+- `src/app/_components/PresentationHost.tsx`
+- new `src/app/_components/report-problem-sheet/ReportProblemSheet.tsx`
+- new `src/app/_components/report-problem-sheet/hooks/useReportProblemSheet.ts`
+- new `src/app/_components/report-problem-sheet/views/ReportProblemSheetView.tsx`
+- new `src/app/_components/report-problem-sheet/styles/ReportProblemSheet.css`
+- new `src/app/_components/report-problem-sheet/copy/copy.ts`
+- new `src/app/_components/report-problem-sheet/imports/imports.ts`
+
+Continue the established six-file MVC strangulation pattern without redesigning the
+surface or changing submission semantics, copy meaning, accessibility, focus behavior,
+Server Actions, error handling, or external boundaries. Remove the obsolete root wrapper
+only after every live import points at the new controller. No homepage, map, Aboki FX,
+database, schema, migration, provider, package, or shared design-system path is in scope.
+
+Implementation commit `c59c7be` completed the exact structural slice and passed focused
+type, lint, diff, and modularization-contract checks. Paths remain retained only for the
+combined reused-tab interaction/accessibility gate; do not redesign or widen the slice.
+
+Next modularization candidates are pathless and queued, not active: split coherent
+subviews from `about-sheet/views/AboutSheetView.tsx` and
+`currency-picker-sheet/views/CurrencyPickerSheetView.tsx`, which currently exceed the
+300-line target. Do not begin either until the current candidate is released and a new
+exact non-overlapping lane is recorded.
+
+##### Modularization release-history audit — ACTIVE
+
+Owner: current controller. Exact corrective paths:
+
+- `src/app/_actions/food-actions.ts`
+- `src/app/_actions/actions.ts`
+- `src/app/_actions/report-actions.ts`
+- `src/app/_actions/review-actions.ts`
+- `LANES.md`
+
+Audit the ten commits from `2907ba1..5cb2c66` as one candidate while preserving their
+commit boundaries. Correct only concrete release-hygiene defects, verify live Server
+Action exports and modularized sheet call paths, run focused type/build/runtime evidence,
+and obtain an independent default-to-refuted verdict before push. A clean diff or green
+static command alone is not release proof.
 
 ##### Workspace root documentation hygiene — RELEASED / PATHLESS
 

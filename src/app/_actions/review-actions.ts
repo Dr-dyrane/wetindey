@@ -35,7 +35,7 @@ export async function getReviewsForEntity(
     body: string | null;
     created_at: string;
   }>(sql`
-    SELECT 
+    SELECT
       r.id,
       r.user_id,
       u.name as reviewer_name,

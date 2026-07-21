@@ -47,15 +47,6 @@ export async function getInitialSubmissionData() {
   };
 }
 
-export async function submitProblemReport(_data: {
-  problemType: string;
-  details?: string | null;
-  placeId?: string | null;
-  itemVariantId?: string | null;
-}): Promise<void> {
-  return;
-}
-
 export async function getMyReports(): Promise<MyReport[]> {
   const { data: session } = await auth.getSession();
   const userId = session?.user?.id;

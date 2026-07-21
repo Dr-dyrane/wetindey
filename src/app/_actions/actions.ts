@@ -32,9 +32,10 @@ import {
 import {
   submitObservation,
   getInitialSubmissionData,
-  submitProblemReport,
   getMyReports,
 } from "./report-actions";
+
+import { submitProblemReport } from "./problem-report-actions";
 
 import {
   getReviewsForEntity,
