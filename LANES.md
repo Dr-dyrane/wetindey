@@ -242,17 +242,21 @@ fail-closed evidence manifest is a required gate, not runtime proof. These are p
 paths only; no Presence source claim is active until the three remaining manifests and the
 Maps Adapter release are recorded.
 
-##### Trusted People / Remote Presence governance — PROPOSED, PATHLESS
+##### Trusted People / Remote Presence governance — ACTIVE, DOCS-ONLY
 
-Owner: Product & Data Governance. Proposed documentation-only paths, if free:
+Owner: Product & Data Governance Architect `019f7599-0eaa-7423-9ebf-a1bfea8efe37`.
+Exclusive documentation-only paths:
 
 - new `docs/adr/025-trusted-people-remote-presence.md`
 - `DECISIONS.md`
 - `WETINDEY_BIBLE.md`
 - `docs/architecture/SERVICE-ARCHITECTURE.md`
 
-This proposal has no schema, migration, server, or UI authorization and does not supersede
-the `0014` technical correction gate.
+Define invite/accept/revoke Trusted People, remote-view consent, audience and expiry,
+block/report priority, non-discoverability, no follower/popularity semantics, and the
+separation between truthful physical presence and a selected browsing area. This lane has
+no schema, migration, server, provider, or UI authorization and does not supersede the
+active pathless `0014` shared-target operational gate.
 
 ##### Live-app modularization manifest — QUEUED, PATHLESS
 
