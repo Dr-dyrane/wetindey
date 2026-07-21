@@ -146,11 +146,6 @@ export function HomePageView({
       onMarkerClick={handleMarkerSelection}
       cameraCenter={cameraCenter}
       selfIdentity={resolvedSelfIdentity}
-      browsingAnchor={{
-        lat: searchOrigin.lat,
-        lng: searchOrigin.lng,
-        label: location.label,
-      }}
       route={route}
       activeDetent={activeDetent}
       leadingInset={leadingInset}

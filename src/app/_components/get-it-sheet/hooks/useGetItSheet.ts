@@ -47,7 +47,7 @@ export interface GetItSheetProps {
   open: boolean;
   onClose: () => void;
   target: GetItTarget | null;
-  onOriginDisclosed?: (origin: DisclosedRouteOrigin) => void;
+  onOriginDisclosed?: (targetPlaceId: string, origin: DisclosedRouteOrigin) => void;
   onGoThere?: () => void;
 }
 
@@ -341,6 +341,8 @@ export function useGetItSheet(props: GetItSheetProps) {
 
   const handleUseCurrentLocation = useCallback(() => {
     if (originState.kind === "locating") return;
+    const targetPlaceId = target?.placeId;
+    if (!targetPlaceId) return;
     const generation = ++originGeneration.current;
     setOriginState({ kind: "locating" });
     void acquireDeviceLocation({
@@ -378,13 +380,14 @@ export function useGetItSheet(props: GetItSheetProps) {
         });
         return;
       }
-      onOriginDisclosed?.(origin);
+      onOriginDisclosed?.(targetPlaceId, origin);
       setOriginState({ kind: "ready", origin });
     });
   }, [
     onOriginDisclosed,
     originState.kind,
     recordDeviceLocation,
+    target?.placeId,
   ]);
 
   const handleOpenWithLocation = useCallback(() => {

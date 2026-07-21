@@ -35,11 +35,6 @@ export interface MapPresentationProps {
   onMarkerClick: (placeId: string) => void;
   cameraCenter: { lat: number; lng: number };
   selfIdentity: { name: string; avatarUrl: string | null } | null;
-  browsingAnchor: {
-    lat: number;
-    lng: number;
-    label: string;
-  };
   route: RouteGeometry | null;
   activeDetent: Detent;
   leadingInset: number;

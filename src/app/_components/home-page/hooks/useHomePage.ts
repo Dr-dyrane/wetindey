@@ -937,54 +937,74 @@ export function useHomePage() {
    * `[lng, lat]`, GeoJSON order, the opposite of every other map call here. See
    * RouteGeometry.
    */
-  const [route, setRoute] = useState<RouteGeometry | null>(null);
-  const [routeOrigin, setRouteOrigin] = useState<DisclosedRouteOrigin | null>(
-    null
-  );
+  const [routeResult, setRouteResult] = useState<{
+    geometry: RouteGeometry;
+    requestKey: string;
+  } | null>(null);
+  const [routeOrigin, setRouteOrigin] = useState<{
+    origin: DisclosedRouteOrigin;
+    targetKey: string;
+  } | null>(null);
 
-  const selectedExchangeLocation = useMemo(
+  const routeTarget = useMemo(
     () =>
-      exchangeLocations.find(
-        (location) => location.id === selectedExchangeLocationId
-      ) ?? null,
-    [exchangeLocations, selectedExchangeLocationId]
+      activeCategory !== "food"
+        ? null
+        : getItTarget
+          ? {
+              key: `get-it:${getItTarget.placeId}`,
+              lat: getItTarget.lat,
+              lng: getItTarget.lng,
+            }
+          : detailPlace && detailPlaceId
+            ? {
+                key: `detail:${detailPlaceId}`,
+                lat: detailPlace.location.lat,
+                lng: detailPlace.location.lng,
+              }
+            : null,
+    [activeCategory, detailPlace, detailPlaceId, getItTarget]
   );
-
-  const routeTargetLat =
-    activeCategory === "food"
-      ? (getItTarget?.lat ?? detailPlace?.location.lat ?? null)
-      : activeCategory === "money"
-        ? (selectedExchangeLocation?.lat ?? null)
-        : null;
-
-  const routeTargetLng =
-    activeCategory === "food"
-      ? (getItTarget?.lng ?? detailPlace?.location.lng ?? null)
-      : activeCategory === "money"
-        ? (selectedExchangeLocation?.lng ?? null)
-        : null;
+  const admittedDisclosedRouteOrigin =
+    routeOrigin && routeOrigin.targetKey === routeTarget?.key
+      ? routeOrigin.origin
+      : null;
+  const routeRequestKey = routeTarget
+    ? [
+        routeTarget.key,
+        routeTarget.lat,
+        routeTarget.lng,
+        admittedDisclosedRouteOrigin
+          ? `device:${admittedDisclosedRouteOrigin.lat}:${admittedDisclosedRouteOrigin.lng}:${admittedDisclosedRouteOrigin.capturedAt}:${admittedDisclosedRouteOrigin.disclosedAt}`
+          : `browse:${searchOrigin.lat}:${searchOrigin.lng}`,
+      ].join("|")
+    : null;
+  const route =
+    routeResult && routeResult.requestKey === routeRequestKey
+      ? routeResult.geometry
+      : null;
 
   const handleOriginDisclosed = useEventCallback(
-    (origin: DisclosedRouteOrigin) => {
-      setRouteOrigin(origin);
+    (targetPlaceId: string, origin: DisclosedRouteOrigin) => {
+      if (getItTarget?.placeId !== targetPlaceId) return;
+      setRouteOrigin({
+        origin,
+        targetKey: `get-it:${targetPlaceId}`,
+      });
     }
   );
 
   useEffect(() => {
     setRouteOrigin(null);
-    setRoute(null);
-  }, [detailPlaceId, getItTarget?.placeId, selectedExchangeLocationId]);
+    setRouteResult(null);
+  }, [routeTarget?.key]);
 
   useEffect(() => {
-    setRoute(null);
-    if (
-      routeTargetLat === null ||
-      routeTargetLng === null
-    )
-      return;
+    setRouteResult(null);
+    if (!routeTarget || !routeRequestKey) return;
 
     const origin =
-      routeOrigin ??
+      admittedDisclosedRouteOrigin ??
       browsingRouteOrigin({
         lat: searchOrigin.lat,
         lng: searchOrigin.lng,
@@ -993,15 +1013,17 @@ export function useHomePage() {
     const controller = new AbortController();
     void fetchRoute(
       origin,
-      { lat: routeTargetLat, lng: routeTargetLng },
+      { lat: routeTarget.lat, lng: routeTarget.lng },
       controller.signal
     ).then((geometry) => {
       if (controller.signal.aborted) return;
-      setRoute(geometry);
+      if (geometry) {
+        setRouteResult({ geometry, requestKey: routeRequestKey });
+      }
     });
 
     return () => controller.abort();
-  }, [activeCategory, routeOrigin, searchOrigin.lat, searchOrigin.lng, routeTargetLat, routeTargetLng]);
+  }, [admittedDisclosedRouteOrigin, routeRequestKey, routeTarget, searchOrigin.lat, searchOrigin.lng]);
 
   return {
     theme,

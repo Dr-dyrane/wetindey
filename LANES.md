@@ -691,12 +691,13 @@ ADRs, architecture of record, Git evidence, and `LANES.md`. No app, schema, migr
 package, or ADR path is in scope.
 
 
-##### Aboki FX User Origin Polylines + Browsing Anchor — ACTIVE CLAIM
+##### Aboki FX User Origin Polylines + Browsing Anchor — COMPLETE / PATHS RELEASED
 
 Owner: Codex Controller, taking over the completed Antigravity handoff. Exclusive paths:
 
 - `src/app/_components/home-page/hooks/useHomePage.ts`
 - `src/app/_components/home-page/views/HomePageView.tsx`
+- `src/app/_components/get-it-sheet/hooks/useGetItSheet.ts`
 - `src/app/_components/map-presentation/imports/imports.ts`
 - `src/app/_components/map-presentation/views/MapPresentationView.tsx`
 - `src/design-system/components/MapboxCanvas.tsx`
@@ -704,11 +705,22 @@ Owner: Codex Controller, taking over the completed Antigravity handoff. Exclusiv
 - `src/lib/directions.ts`
 - `LANES.md`
 
-Objective: Restore Food-market and Aboki FX route polylines from a fresh disclosed
-device fix or, when no fix exists, the canonical browsing anchor. Render the signed-in
-avatar or anonymous fallback at that browsing anchor with an explicit non-GPS label and
-uncertainty treatment; fresh device GPS always supersedes it. Do not publish Presence,
-claim physical precision, or widen into exchange-panel UI/data.
+Objective: Preserve Food-market route polylines from either the canonical browsing origin
+or a fresh device origin explicitly disclosed for that exact Food target. FX discovery
+pins are map listings only and must not produce navigation routes. Personal identity and
+avatar markers render only for a fresh device fix; browsing context remains represented
+by location chrome and never masquerades as Me. Do not publish Presence, claim physical
+precision, or widen into exchange-panel UI/data.
+
+Controller completion on 21 July 2026: non-device browsing context no longer renders a
+personal marker; fresh device identity remains authoritative. Disclosed device origin is
+captured with its immutable Food target and rejected after a target switch. Route geometry
+is keyed by target, destination, and exact browse/disclosed origin so stale geometry hides
+synchronously. FX listings no longer create routes. Scoped ESLint, TypeScript, and diff
+checks passed. Independent default-to-REFUTED review returned PASS after three forward
+corrections. Reused-tab runtime confirmed Food map render without the false browsing-avatar
+marker and clean FX selection without a route. The stale location contract remains a
+separate harness defect because it references deleted `LocationSheet.tsx`.
 
 
 ---
