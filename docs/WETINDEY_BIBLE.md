@@ -224,6 +224,20 @@ Alternative supporting lines may be used in campaigns:
 
 The core interface should use clear language rather than forcing a slogan into every screen.
 
+### Proposed strategic direction: General Search
+
+[ADR-027](docs/adr/027-ai-routed-general-search.md) proposes a post-V1 path from
+category-first discovery to a natural-language local decision engine:
+
+> **Ask naturally. Decide confidently. Move with certainty.**
+
+AI would interpret intent and typed constraints; it would not answer from model knowledge.
+Only a complete WetinDey capability could answer from admitted observations, authoritative
+sources, freshness, provenance, and server-derived confidence. Category remains an
+explicit internal type and a user-visible fallback until General Search is independently
+proved faster, clearer, private, accessible, and reliable. The proposal authorizes no AI
+endpoint, provider, registry, schema, UI, deployment, or rollout.
+
 ## 3.4 Brand promise
 
 WetinDey promises to be:
@@ -4701,6 +4715,10 @@ The team should consider pivoting the mechanism or problem when:
   Founder decision and fresh public-scale safety, legal, and adversarial evidence.
     Production remains UNKNOWN until directly queried. This records no ledger-repair,
     schema-equivalence, migration, or deployment authorization.
+- [ADR-027](docs/adr/027-ai-routed-general-search.md): proposed AI-routed General Search
+  over complete typed capabilities. AI interprets a validated request; only admitted
+  WetinDey evidence answers. It authorizes no endpoint, provider, registry, schema, UI,
+  deployment, or rollout, and leaves ADR-010's abstraction gate binding.
 - [ADR-010](docs/adr/010-typed-live-local-information-platform.md): detailed ontology for
   the owner-directed correction that WetinDey is a live local information platform rather
   than a universal price app. The proposal separates pillars, selectable capabilities,

@@ -94,6 +94,29 @@ their time and do not override these exact claims.
 Every active lane must return either its path-scoped commit or an exact, evidence-backed
 blocker; it may not retain paths through a silent or non-specific status update.
 
+#### General Search vision and AI-routing governance — CLOSED / RELEASED
+
+Owner: current controller. Exact docs-only paths:
+
+- new `docs/adr/027-ai-routed-general-search.md`
+- new `docs/product/GENERAL-SEARCH-AND-DECISION-ENGINE.md`
+- `docs/DECISIONS.md`
+- `docs/WETINDEY_BIBLE.md`
+- `docs/product/README.md`
+- `LANES.md`
+
+The Founder-directed General Search vision is recorded as a strategic post-V1 proposal.
+ADR-027 is Proposed and authorizes no AI endpoint, model/provider call, prompt, tool
+registry, schema, dependency, UI, deployment, or rollout. AI may interpret a question
+into a validated typed request; only a live WetinDey capability may answer from admitted
+evidence. Precise location, history, and preferences are not implicit model context.
+ADR-010's two-complete-vertical abstraction gate remains binding, unsupported intents
+fail closed, and category controls remain available until General Search is proved more
+comprehensible and reliable. Initial independent review REFUTED a relative link,
+premature release wording, nondeterministic rendering language, and underspecified
+evidence-reference privacy. The corrected candidate received follow-up independent PASS
+with no P1/P2/P3. All six paths are released by the path-scoped documentation commit.
+
 #### Nearby Presence retention scheduler — closed / released
 
 Owner: Nearby Presence Platform Engineer. Exact paths:
