@@ -1108,7 +1108,7 @@ interaction reference, not a copying licence.
 
 | Screen | Primary action | Applicable states |
 |---|---|---|
-| Food search no-match | `Can't find it? Request item` | Search loading, complete no-match, ambiguous matches, network error, offline cached-only |
+| Food search no-match | `Can't find it? Request item` | Search loading; complete server no-match (request CTA eligible); ambiguous matches; network error (separate retry-only error, never enters no-match or shows the request CTA); offline cached-only (separate stale state, never establishes no-match or shows the request CTA) |
 | Request Item sheet | Review and submit typed request | Editing, validation error, duplicate suggestions, offline local draft, sending, idempotent replay, received |
 | Request receipt/status | Follow status or respond | Pending, needs info, approved-for-publication, published, resolved existing, rejected, withdrawn, superseded, expired |
 | Seller place proposals | Search or propose for one controlled place | Place scope loading, no proved control, denied, empty, draft, pending, needs info, closed |
