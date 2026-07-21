@@ -285,11 +285,32 @@ assert.match(
 );
 assert.match(layoutSource, /if \(!nonce \|\| !isCspNonce\(nonce\)\)/);
 assert.equal(layoutSource.match(/nonce=\{nonce\}/g)?.length, 4);
+assert.equal(
+  layoutSource.match(
+    /<script\s+nonce=\{nonce\}\s+suppressHydrationWarning/g,
+  )?.length,
+  4,
+);
 assert.equal(layoutSource.match(/dangerouslySetInnerHTML=/g)?.length, 3);
 assert.match(
   layoutSource,
-  /<script\s+nonce=\{nonce\}\s+src="https:\/\/api\.mapbox\.com\/mapbox-gl-js\/v3\.1\.2\/mapbox-gl\.js"\s+defer\s+\/>/,
+  /<script\s+nonce=\{nonce\}\s+suppressHydrationWarning\s+src="https:\/\/api\.mapbox\.com\/mapbox-gl-js\/v3\.1\.2\/mapbox-gl\.js"\s+defer\s+\/>/,
 );
+assert.equal(
+  layoutSource.match(
+    /<(?:html|head|body|script)[^>]*\bsuppressHydrationWarning\b/g,
+  )?.length,
+  5,
+);
+assert.equal(
+  layoutSource.match(
+    /<html lang="en" className="h-full" suppressHydrationWarning>/g,
+  )?.length,
+  1,
+  "retain only the pre-existing root exception for the pre-paint theme mutation",
+);
+assert.doesNotMatch(layoutSource, /<head\s+suppressHydrationWarning/);
+assert.doesNotMatch(layoutSource, /<body[^>]*suppressHydrationWarning/);
 assert.match(seoSource, /export async function JsonLd/);
 assert.match(
   seoSource,
@@ -297,6 +318,10 @@ assert.match(
 );
 assert.match(seoSource, /if \(!nonce \|\| !isCspNonce\(nonce\)\)/);
 assert.equal(seoSource.match(/nonce=\{nonce\}/g)?.length, 1);
+assert.match(
+  seoSource,
+  /<script\s+nonce=\{nonce\}\s+suppressHydrationWarning\s+type="application\/ld\+json"/,
+);
 assert.equal(
   seoSource.includes('JSON.stringify(data).replace(/</g, "\\\\u003c")'),
   true,

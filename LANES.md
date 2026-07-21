@@ -9,12 +9,14 @@ anything. One owner per path, always.
 ## Quality & Release Controller checkpoint RC-139
 
 Controller owner: this orchestrator, over exactly `LANES.md` and
-`docs/architecture/RELEASE-CONTROLLER.md`. Current local `main` is at `b93014e` and is
-fourteen path-scoped commits ahead of `origin/main` at `2907ba1`. The modularization and
-action candidate through `0287ddc` has now passed history, live-call-path, focused static,
-build, reused-tab runtime, and independent source refutation. The two General Search
-documentation commits were independently refuted in their own lanes. Conditional push is
-authorized after this reconciliation commit; deployment remains separately evidence-gated.
+`docs/architecture/RELEASE-CONTROLLER.md`. RC-139 reconciled from local base `b93014e`,
+which was fourteen path-scoped commits ahead of `origin/main` at `2907ba1`; the resulting
+checkpoint was independently refuted and published as `5057680`. The modularization and
+action candidate through `0287ddc` passed history, live-call-path, focused static, build,
+reused-tab runtime, and independent source refutation. The two General Search documentation
+commits were independently refuted in their own lanes. Later path-scoped, independently
+refuted commits may continue under the release policy below; deployment remains separately
+evidence-gated.
 
 **Decision: PATH-SCOPED PUSHES AUTHORIZED; DEPLOYMENT REMAINS EVIDENCE-GATED.** Independently
 refuted, path-scoped commits may move promptly to `main`; do not accumulate a private
@@ -379,17 +381,32 @@ Report Problem call path and surface were exercised as recorded in the redacted 
 runtime transcript; and independent source refutation returned PASS with no P1/P2.
 Release all corrective paths.
 
-##### CSP nonce hydration mismatch — REFUTED RUNTIME, PATHLESS
+##### CSP nonce hydration mismatch — COMPLETE / RELEASED
 
-Owner: Security & Privacy plus Client Reliability for diagnosis; no source path is claimed.
+Owner: released after current-controller implementation and independent Security & Privacy
+refutation. Former exclusive paths:
+
+- `src/app/layout.tsx`
+- `src/lib/seo.tsx`
+- `scripts/csp-policy-contracts.test.ts`
+- `LANES.md`
+
 The reused localhost tab reports a React hydration mismatch where request-bound nonce
 attributes are present in server markup but appear empty in client properties across raw
 layout scripts, Mapbox, JSON-LD, and the development service-worker script. This predates
-the modularization candidate and is not a Report Problem defect. Diagnose against the
-accepted ADR-020 request-boundary contract before claiming `src/middleware.ts`,
-`src/app/layout.tsx`, or `src/lib/seo.tsx`; do not remove nonce enforcement, add
-`suppressHydrationWarning` as a blanket workaround, or widen the released action/sheet
-lanes. Production impact remains unverified.
+the modularization candidate and is not a Report Problem defect. Browser nonce hiding is
+an unavoidable single-attribute hydration difference: retain every nonce and ADR-020
+request-boundary invariant, add suppression only to the five exact nonce-bearing script
+elements, and strengthen the focused contract to forbid new broad/root suppression while
+pinning the one pre-existing `<html>` exception for pre-paint theme mutation. Do not
+change `src/middleware.ts`, remove nonce enforcement, add blanket suppression, or widen
+the released action/sheet lanes. Production impact remains unverified until independent
+runtime refutation. Focused CSP contracts and exact-path lint passed. The existing localhost
+tab reloaded and rendered the complete app; Next Dev Tools exposed no issue item after the
+reload. Independent review initially REFUTED the contract's root-suppression ambiguity;
+the forward correction pins the sole pre-existing `<html>` theme exception, requires all
+five nonce-bearing scripts to use element-scoped suppression, and forbids head/body
+suppression. Follow-up independent verdict: PASS, no P1/P2/P3. Release all four paths.
 
 ##### Workspace root documentation hygiene — RELEASED / PATHLESS
 

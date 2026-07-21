@@ -168,6 +168,7 @@ export default async function RootLayout({
         */}
         <script
           nonce={nonce}
+          suppressHydrationWarning
           dangerouslySetInnerHTML={{
             __html: `(function(){try{
               var t=localStorage.getItem('theme');
@@ -235,6 +236,7 @@ export default async function RootLayout({
         */}
         <script
           nonce={nonce}
+          suppressHydrationWarning
           dangerouslySetInnerHTML={{
             __html: `(function(){try{
               var c=window.crypto;
@@ -254,6 +256,7 @@ export default async function RootLayout({
         <link href="https://api.mapbox.com/mapbox-gl-js/v3.1.2/mapbox-gl.css" rel="stylesheet" />
         <script
           nonce={nonce}
+          suppressHydrationWarning
           src="https://api.mapbox.com/mapbox-gl-js/v3.1.2/mapbox-gl.js"
           defer
         />
@@ -300,6 +303,7 @@ export default async function RootLayout({
         */}
         <script
           nonce={nonce}
+          suppressHydrationWarning
           dangerouslySetInnerHTML={{
             __html:
               process.env.NODE_ENV === "production"
