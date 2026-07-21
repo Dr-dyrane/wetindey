@@ -298,6 +298,17 @@ report/search controls, profile identity, labels, hit regions, comments, and cal
 remain unchanged. Independent static refutation passed with no P1/P2/P3; runtime/type/build
 evidence was not requested. Both source paths are released.
 
+Released Slice 10 paths:
+
+- `src/app/_components/home-page/views/HomePageView.tsx`
+- new `src/app/_components/home-page/views/HomeSheetResultsView.tsx`
+
+Slice 10 extracted only the live Food/Money results body into a dedicated presentational
+subview. Exchange selection/filtering, Food popular/search branches, subject keys, retry,
+loading/error/empty states, photo credits, scroll containment, and safe-area reservation
+remain unchanged. Independent static refutation passed with no P1/P2/P3; runtime/type/build
+evidence was not requested. Both source paths are released.
+
 Released Slice 7 paths:
 
 - `src/app/_components/currency-picker-sheet/views/CurrencyPickerSheetView.tsx`
