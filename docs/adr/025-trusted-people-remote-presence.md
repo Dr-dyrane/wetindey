@@ -16,7 +16,9 @@ Nearby Presence answers a narrow question: a signed-in account deliberately shar
 approximate area recently, to another reciprocal active sharer. That is not a safe way to
 let a person outside Lagos find one particular Festac contact. A remote relationship must
 therefore be a separate capability with a smaller audience, a relationship-specific grant,
-and no weakening of the Nearby Presence lease, coarsening, or safety rules.
+and no weakening of the Nearby Presence lease, coarsening, or safety rules. The selected
+browsing area is a discovery context only: it is never physical-presence evidence, a
+`Me` marker, or proof that either party is in Festac.
 
 The intended outcome is bounded: a user physically outside Lagos may browse Festac and see
 a specific Festac person only after both people complete an invite/accept lifecycle and the
@@ -38,11 +40,15 @@ people directory, contact graph, follower system, trust score, or messaging prod
    clients never enumerate accounts, search contacts, sync an address book, or infer
    relationships from proximity.
 2. The target explicitly accepts the invitation. A relationship is not active until both
-   sides are authenticated and the server records the mutual invite/accept state.
-3. Remote viewing is directional. The Festac subject must separately grant this exact
-   relationship permission; the viewer cannot grant it on the subject's behalf. The grant
-   is revocable, relationship-scoped, and does not imply profile, contact, or messaging
-   consent.
+   sides are authenticated and the server records the mutual invite/accept state. Either
+   person may revoke the relationship; revocation is immediate and does not require the
+   other person's cooperation.
+3. Remote viewing is reciprocal at the consent boundary but independently directional:
+   each person separately grants or withholds per-person remote-view consent for the other.
+   A person is visible in that direction only when that person's own grant is active. Mutual
+   invite/accept never implies either grant, and a one-way grant never creates reverse
+   visibility. Each grant is relationship-scoped, explicitly expiring, revocable, and does
+   not imply profile, contact, or messaging consent.
 4. The viewer need not disclose a location or hold an ADR-016 viewer lease. This is an
    explicitly separate, relationship-scoped audience for this proposal, not a read of the
    Nearby Presence reciprocal snapshot; it does not alter ADR-016's requirement that both
@@ -62,8 +68,10 @@ people directory, contact graph, follower system, trust score, or messaging prod
    relationship-scoped ADR-025 profile-display consent and this remote-view grant are
    active, plus `Wave`, `Block`, `Report`, and `Close`. ADR-016 presence-profile consent
    remains independent for Nearby's reciprocal audience and is never silently reused or
-   broadened. `Wave` is ephemeral, in-app, and rate-limited; it is not chat, a contact
-   exchange, a follow, or a delivery/order action.
+   broadened. `Wave` is the first and only positive/social interaction in this capability:
+   ephemeral, in-app, rate-limited, and never chat, a contact exchange, a follow, or a
+   delivery/order action. Block, Report, and Close remain mandatory safety/navigation
+   controls; any other social interaction requires a separately accepted ADR.
 
 No public directory, global people search, contact sync, follower count, popularity sort,
 trust/reputation effect, automatic enrolment, background tracking, exact-coordinate
@@ -73,6 +81,10 @@ moderation, retention, and Presence separation evidence.
 
 ### State, revocation, and safety semantics
 
+Safety and revocation are evaluated before discovery, consent, marker, card, or Wave. A
+block wins immediately and bidirectionally over every grant and relationship state. A
+private report may place a safety hold that suppresses visibility and interaction while it
+is reviewed; reporting never reveals the reporter or creates a discoverable relationship.
 The server must fail closed when an invitation is expired, already consumed, revoked,
 unaccepted, consent is absent/expired, the subject lease is absent/expired, either account
 is blocked, a report safety hold applies, the kill switch is on, or any relationship
@@ -95,8 +107,10 @@ number and are not current code, schema, API, or UI.
 
 ### Schema and database ownership
 
-If a later lane is approved, it may propose a new Trusted People pillar after the corrected
-Presence `0012` and contribution `0013+` ordering gates:
+If a later lane is approved, it may propose a new Trusted People pillar only under
+ADR-014, after corrected Presence `0012`, contribution `0013+`, and the active pathless
+`0014` shared-target operational gate are separately passed. Trusted People reserves no
+migration number and cannot repair or consume `0014`:
 
 - `src/db/schema/trustedPeople.ts`
 - `src/db/pillars/52-trusted-people.sql`
@@ -183,8 +197,9 @@ expiry/revocation/error copy.
 - **P0 — governance and containment:** accept this ADR separately if desired; keep the
   feature flag and database kill switch off; approve safety responder, retention, rate,
   privacy, legal, provider, deletion, and refutation packets. No user traffic.
-- **P1 — relationship lifecycle:** implement invite, resolve, accept, revoke, block, report,
-  and deletion state without any location marker or profile discovery. Prove non-enumeration,
+- **P1 — relationship lifecycle:** implement invite, resolve, accept, reciprocal
+  per-person consent, revoke, block, report, and deletion state without any location marker
+  or profile discovery. Prove non-enumeration, consent/grant expiry, block/report priority,
   idempotence, RLS, and generic errors.
 - **P2 — remote coarse projection:** after ADR-016 has direct lease evidence, expose one
   relationship-scoped 500 m centroid with its short expiry and the card actions. Prove no
@@ -202,27 +217,31 @@ Acceptance requires direct evidence, not a green build or documentation presence
 1. A viewer browsing Festac while outside Lagos cannot become `Me`, a Festac peer marker,
    an ADR-016 sharer, or a route origin merely from browsing context.
 2. No person is visible without opaque invite/handle resolution, mutual invite/accept,
-   active directional subject consent, and an active ADR-016 foreground lease on the
-   subject. The viewer's lack of an ADR-016 lease is an explicit remote-audience boundary,
-   not a change to Nearby's reciprocal active-sharer rule.
+   that person's active per-person remote-view consent, and an active ADR-016 foreground
+   lease on the subject. The viewer's lack of an ADR-016 lease is an explicit remote-
+   audience boundary, not a change to Nearby's reciprocal active-sharer rule; reverse
+   visibility requires the reverse person's separate grant.
 3. The chosen display name/avatar is shown only when the separate relationship-scoped
    ADR-025 profile-display consent and remote-view grant are both active; ADR-016's
    reciprocal presence-profile consent remains unchanged.
 4. Viewer location is optional; any disclosed broad location is truthful, separate,
    relationship-scoped, expiring, revocable, and never a fabricated Festac marker.
-5. Expiry, revoke, block, report hold, deletion, kill switch, logout, and network/error
-   paths remove markers/cards and invalidate capabilities; no cache or background renewal
+5. Invite/grant expiry, revoke, block, report hold, deletion, kill switch, logout, and
+   network/error paths remove markers/cards and invalidate capabilities; block is immediate
+   and bidirectional, report holds suppress visibility, and no cache or background renewal
    revives them.
 6. Fixed 500 m centroid, maximum 15-minute nonrenewing foreground lease, no exact point,
    no enumeration, no movement history, no precise per-user timestamp or client-visible
    absolute expiry, and bounded reads are proven against ADR-016.
-7. RLS, capability audience/purpose, per-account/device/network budgets, audit redaction,
-   retention purge, and account-deletion cleanup are exercised on the exact target by
-   independent security/privacy refutation.
+7. RLS, capability audience/purpose, reciprocal per-person grants, per-account/device/
+   network budgets, audit redaction, retention purge, account-deletion cleanup, and the
+   corrected Presence `0012` → contribution `0013+` → operational `0014` ordering are
+   exercised or proved on the exact target by independent security/privacy refutation.
 8. Accessibility and copy tests show Wave/Block/Report/Close, identity limits, expiry,
    and failure states without implying chat, contact, popularity, trust, verification,
    or commerce.
 
-Until every item has an exact implementation claim, environment evidence, independent
-refutation, and separate Founder/counsel/provider authorization, ADR-025 remains Proposed
-and ADR-016/ADR-023 remain the controlling accepted architecture.
+Until every item has an exact implementation claim, the corrected Presence `0012`,
+contribution `0013+`, and operational `0014` gates have direct evidence, and independent
+Founder/counsel/provider authorization exists, ADR-025 remains Proposed and
+ADR-016/ADR-023 remain the controlling accepted architecture.

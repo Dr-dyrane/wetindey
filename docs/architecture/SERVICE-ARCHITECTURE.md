@@ -64,11 +64,15 @@ is a separate relationship audience, not a Nearby snapshot or
 public people directory. A remote viewer need not hold an ADR-016 lease or disclose a
 location; the subject still requires the active 500 m, no-more-than-15-minute foreground
 lease, and the remote adapter may not weaken Nearby's reciprocal audience, exact-location,
-background, or retention rules. Mutual invite/accept, directional remote-view consent,
-relationship-scoped profile-display consent, and the subject's active ADR-016 lease are all
-required. ADR-016's reciprocal presence-profile consent remains independent and is not
-broadened. No schema, migration, server, UI, provider, messaging, pilot, or rollout work
-is authorized.
+background, or retention rules. Opaque invite/accept, independently expiring reciprocal
+per-person remote-view grants, relationship-scoped profile-display consent, and the
+subject's active ADR-016 lease are all required. Selected browsing context is never
+physical-presence evidence. Block wins bidirectionally, report holds suppress visibility,
+and ephemeral Wave is the first positive/social interaction; Block, Report, and Close
+remain mandatory safety/navigation controls. ADR-016's reciprocal presence-profile
+consent remains independent and is not broadened. Under ADR-014, the corrected `0012` →
+contribution `0013+` → operational `0014` gates remain binding. No schema, migration, server, UI,
+provider, messaging, pilot, or rollout work is authorized.
 
 ---
 
@@ -1373,9 +1377,9 @@ browsing point into a person marker. The future sequence is:
 1. **P0 governance:** keep the feature flag and database kill switch off; approve safety,
    privacy, legal, retention, rate, deletion, provider, and independent-refutation gates.
 2. **P1 relationship lifecycle:** prove opaque invite/QR/exact-handle resolution with
-   expiry/rotation/rate budgets, mutual accept, directional remote-view and separate
-   relationship-scoped profile-display consent, revoke/block/report, deletion, idempotence,
-   RLS, and non-enumeration without any marker.
+   expiry/rotation/rate budgets, mutual accept, independently expiring reciprocal
+   per-person remote-view grants, separate relationship-scoped profile-display consent,
+   revoke/block/report, deletion, idempotence, RLS, and non-enumeration without any marker.
 3. **P2 remote projection:** after direct ADR-016 lease evidence, use only a
    Presence-owned adapter to expose one relationship-scoped 500 m centroid and card
    actions. The viewer need not hold a Nearby lease; the subject must. Only a boolean or
@@ -1384,7 +1388,8 @@ browsing point into a person marker. The future sequence is:
    never a fabricated Festac peer marker. Messaging or external action requires a later ADR.
 
 No phase authorizes schema, migration, server, UI, provider, pilot traffic, deployment, or
-rollout. Markers and cards must not feed `locationStore`, `Me`, route origin, device
+rollout. Corrected Presence `0012`, contribution `0013+`, and operational `0014` remain
+separate gates. Markers and cards must not feed `locationStore`, `Me`, route origin, device
 evidence, camera/browsing context, trust, contact, follower, or popularity surfaces.
 
 ### Phase 3 — Make the field data trustworthy (1–2 weeks)
