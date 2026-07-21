@@ -1,6 +1,6 @@
 # WetinDey General Search and Decision Engine
 
-**Status:** Vision proposal  
+**Status:** Accepted strategic direction; implementation separately sequenced  
 **Priority:** Strategic, after the V1 truth foundation  
 **Owner:** Dyrane Technologies  
 **Governing proposal:** [ADR-027](../adr/027-ai-routed-general-search.md)

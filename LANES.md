@@ -117,6 +117,23 @@ premature release wording, nondeterministic rendering language, and underspecifi
 evidence-reference privacy. The corrected candidate received follow-up independent PASS
 with no P1/P2/P3. All six paths are released by the path-scoped documentation commit.
 
+#### General Search Founder acceptance — CLOSED / RELEASED
+
+Owner: current controller. Exact paths:
+
+- `docs/adr/027-ai-routed-general-search.md`
+- `docs/product/GENERAL-SEARCH-AND-DECISION-ENGINE.md`
+- `docs/DECISIONS.md`
+- `docs/WETINDEY_BIBLE.md`
+- `LANES.md`
+
+The Founder explicitly accepted ADR-027 on 2026-07-21. It is recorded as **Accepted —
+architecture only; implementation separately claimed**. Acceptance authorizes the
+strategic direction and phased implementation planning, not an AI endpoint, provider,
+prompt, tool registry, schema, dependency, UI, deployment, or rollout. Independent docs
+review returned PASS with no P1/P2/P3. Release all five paths through the path-scoped
+acceptance commit.
+
 #### Nearby Presence retention scheduler — closed / released
 
 Owner: Nearby Presence Platform Engineer. Exact paths:

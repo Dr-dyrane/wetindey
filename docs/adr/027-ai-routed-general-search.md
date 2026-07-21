@@ -1,10 +1,10 @@
 # ADR-027: AI-routed General Search over typed truth capabilities
 
 **Date:** 2026-07-21  
-**Status:** Proposed  
+**Status:** Accepted — architecture only; implementation separately claimed  
 **Owners:** Dyrane Technologies
 
-> This proposal records product direction. It authorizes no AI endpoint, provider call,
+> This decision records accepted product direction. It authorizes no AI endpoint, provider call,
 > model, prompt, tool registry, schema, dependency, UI, deployment, or rollout.
 
 ## Context
