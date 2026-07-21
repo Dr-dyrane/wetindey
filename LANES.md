@@ -247,9 +247,9 @@ Maps Adapter release are recorded.
 Owner: Product & Data Governance Architect `019f7599-0eaa-7423-9ebf-a1bfea8efe37`.
 Exclusive documentation-only paths:
 
-- new `docs/adr/025-trusted-people-remote-presence.md`
-- `DECISIONS.md`
-- `WETINDEY_BIBLE.md`
+- `docs/adr/025-trusted-people-remote-presence.md`
+- `docs/DECISIONS.md`
+- `docs/WETINDEY_BIBLE.md`
 - `docs/architecture/SERVICE-ARCHITECTURE.md`
 
 Define invite/accept/revoke Trusted People, remote-view consent, audience and expiry,
