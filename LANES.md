@@ -261,22 +261,21 @@ active pathless `0014` shared-target operational gate.
 Completed and independently accepted in `51de20a`; all four documentation paths are
 released.
 
-##### Live-app modularization manifest — ACTIVE SLICE 7
+##### Live-app modularization manifest — COMPLETE THROUGH SLICE 7 / RELEASED
 
 Owner: persistent Modularization Engineer `019f7b10-8c5a-70e2-8fc9-2fb0b2b328dc`.
 
-Exclusive Slice 7 paths:
+Released Slice 7 paths:
 
 - `src/app/_components/currency-picker-sheet/views/CurrencyPickerSheetView.tsx`
 - `src/app/_components/currency-picker-sheet/views/CurrencyPickerSheetContent.tsx` (new)
 
-Extract only the existing search field, currency row/group, and picker-content renderers
-from the 367-line view into one live content subview. Preserve every prop, branch, copy
-string, key, preview/trend calculation, fallback `ModalSheet`, navigation behavior, and
-public controller edge. Do not widen into the hook, copy, imports, styles, controller,
-currency actions/data, flags, design, browser state, or product behavior. Both files must
-remain at or below 300 lines and require exact-path lint, TypeScript, diff checks, and
-independent default-to-REFUTED review before one path-scoped commit.
+Slice 7 completed in `00e9340`: the existing search field, currency row/group, and
+picker-content renderers moved from the 367-line view into one live 272-line content
+subview, leaving the host at 103 lines. Every prop, branch, copy string, key,
+preview/trend/NGN calculation, fallback `ModalSheet`, navigation behavior, and public
+controller edge was preserved. Exact-path lint, TypeScript, diff checks, and independent
+refutation passed. Both paths are released.
 
 Released Slice 6 paths:
 
