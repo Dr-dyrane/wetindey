@@ -276,6 +276,17 @@ released.
 
 Owner: persistent Modularization Engineer `019f7b10-8c5a-70e2-8fc9-2fb0b2b328dc`.
 
+Released Slice 8 paths:
+
+- `src/app/_components/home-page/views/HomePageView.tsx`
+- new `src/app/_components/home-page/views/HomePlaceDetailView.tsx`
+
+Slice 8 extracted only the live Market/Place detail renderer from `HomePageView` into the
+dedicated presentational subview. The existing navigation level, compact/regular layout,
+distance origin, offer loading/error/empty states, Visit shop/market action, callbacks,
+copy, and data semantics remain unchanged. Independent static refutation passed with no
+P1/P2/P3; runtime/type/build evidence was not requested. Both source paths are released.
+
 Released Slice 7 paths:
 
 - `src/app/_components/currency-picker-sheet/views/CurrencyPickerSheetView.tsx`
