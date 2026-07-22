@@ -42,7 +42,7 @@ to idle rather than creating a replacement task.
 | Developer Relations & Engineering Enablement `019f7995-5b7b-7ee1-81ef-2c3a3c57b836` | Department worklog protocol complete / released | `62880ac` and fail-closed repair `2523da1` are on current main; remain persistent for later bounded enablement assignments |
 | Catalog Stewardship `019f7999-37d0-7231-8b89-0e71c2569ce2` | Catalog workflow complete / released; employee idle | `8a072e2`/`7b42664` and `fe09dc3` resolved the safety-scope and no-match/transport corrections; no active path claim remains |
 | Private Contractor, Full-Stack Delivery `ef98946c-a55e-4700-aa6e-c1a840e42eef` | Seated by Founder instruction 2026-07-21; first lane (account deletion) RELEASED, blocked by ADR-021, request to controller recorded in Active locks; now discovering the next ADR-clear lane | Method: multi-agent orchestration ending in default-to-REFUTED independent refutation, and ADR-clearance proven before any claim (the deletion lane taught this). Not building on stale memory: a discovery workflow reads the ADRs, this registry, and the gate states to find genuinely open, ADR-clear, unclaimed, high-value work, then executes only on affirmative clearance |
-| Private Contractor, Maps Delivery `c9c17443-ef5e-4a7b-9b6e-c8f5381da30c` | Theme-transition continuity COMPLETE / RELEASED at `370cf07`; seat idle | Both refutation passes NOT_REFUTED; paths released; record `2026-07-maps-experience-01`; remain available for the next bounded Maps assignment (hardware-GPU three-scope evidence named in the maps-location worklog is the queued next action) |
+| Private Contractor, Maps Delivery `c9c17443-ef5e-4a7b-9b6e-c8f5381da30c` | Second bounded lane ACTIVE below: Maps platform consolidation | Prior lane complete/released at `370cf07` (record `2026-07-maps-experience-01`); three-scope evidence gathered and staged, its worklog entry queued behind the decluttering lane's hold on `maps-location.md` |
 
 
 
@@ -169,6 +169,18 @@ Completion: exact paths only; `food-actions.ts` is materially reduced; a fresh i
 default-to-REFUTED review proves trust/query/export equivalence; one path-scoped commit then
 releases both action paths. No UI, schema, migration, provider, database, browser, or
 deployment work is authorized.
+
+#### Maps platform consolidation — ACTIVE
+
+Owner: Private Contractor, Maps Delivery `c9c17443-ef5e-4a7b-9b6e-c8f5381da30c`. Exact writable paths:
+
+- new `src/integrations/maps/cartography.ts`
+- new `src/integrations/maps/theme-transition.ts`
+- `src/integrations/maps/MapboxAdapter.ts`
+
+Purpose: shrink the 3,000-line adapter along its two natural seams with behavior identical. (1) Cartography: the POI hierarchy, market emphasis, and dark-palette constants plus applyCartography move to `cartography.ts`, exporting exactly one function; the adapter keeps a thin `private applyCartography()` wrapper because `scripts/location-default-contract.test.ts` asserts that literal call text. (2) Theme transition: photographFrame and captureThemeSnapshot move as pure functions plus a small overlay holder; setTheme, pendingThemeSwap, and the FakeMap guard stay in the adapter. (3) ADR-016 containment: delete ONLY the dormant contact popup card construction inside setSharedUserMarkers (WhatsApp/tel/sms buttons ADR-016 explicitly prohibits); marker rendering, `activeUserPopup`, the `MapboxPopup` interface, and the renderer-recovery re-add block all remain because the contract test exercises them. Exclusions: `scripts/**`, `src/app/**` including the home-page spine and `useMapPresentation` (live callers exist as of this claim), `MapboxNearbyExchangeSearch.ts`, `docs/operations/departments/maps-location.md` (held by the Root UI Component Decluttering lane; this lane's worklog entry and the completed three-scope evidence entry queue behind that release), schema, migrations, deployment. No push; local path-scoped commits only.
+
+Completion: extraction proves behavior identity by a driven browser check (theme toggle bridged both directions, markets emphasized in both themes, route below labels) plus `location-default-contract` 20/20, tsc, eslint, and knip posture unchanged; an independent default-to-REFUTED refuter passes the exact candidate; a path-scoped commit releases these paths.
 
 No other source path is currently claimed by this registry. A persistent employee seat is not a path claim.
 
