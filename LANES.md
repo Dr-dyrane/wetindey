@@ -48,6 +48,16 @@ to idle rather than creating a replacement task.
 
 ## Active exact path locks
 
+#### Maps renderer-failure evidence entry — ACTIVE
+
+Owner: Private Contractor, Maps Delivery `c9c17443-ef5e-4a7b-9b6e-c8f5381da30c`. Exact writable path:
+
+- `docs/operations/departments/maps-location.md`
+
+Purpose: append the evidence entry resolving the renderer-failure half of the Unknown scope left by `WD-MAPS-THEMEFADE-20260721-2`: a forced WEBGL_lose_context during a bridged theme swap dropped the overlay within 200ms, returned the honest skeleton (continuity false), and recovered to ready with visible frames and no residual overlay. The Safari and iOS half was attempted and is blocked on host tooling absent from this machine (no iOS Simulator runtime installed; safaridriver not enabled), which only the owner can install; the entry records that blocker. Documentation-only. Exclusions: every other path.
+
+Completion: an independent default-to-REFUTED refuter reproduces the context-loss drive and verifies the tuple; a path-scoped commit releases this path.
+
 #### Contractor playbook amendment: handed incidents — RELEASED / PATHLESS
 
 Complete at `aa29b91`: the eight incidents Full-Stack Delivery handed at `4a8db00` are incorporated into `docs/operations/CONTRACTOR-PLAYBOOK.md` with credit, every commit-referenced incident verified against its citation, independently refuted to NOT REFUTED after one blocking and four precision repairs. The contributor input itself had already been swept out of this registry by the playbook lane's own release burst `fbd3995`, unseen, when its heading-to-heading replacement swallowed the section 4a8db00 had appended; it was recovered from git history this cycle, which is why release bursts must diff their replacement span before committing. Path released.
