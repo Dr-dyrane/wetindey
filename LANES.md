@@ -137,7 +137,13 @@ Each is a controller-directed Terra draft + Luna default-to-refuted, editing ONL
 
 Batch-3 status 2026-07-22: ADR-030 + coverage-honesty DELIVERED `80d1839`; ADR-029 + native-readiness + second-vertical + WD-I-003 + WD-I-004 DELIVERED `330c8a8`; H40 search price band DELIVERED `20965e0`; blocker #22 was already fixed at `2bc8a3c`. The two REFUTED verdicts (ADR-029, native-readiness) were only an over-strict tree-isolation check tripping on sibling-arm files, content passed and was committed path-scoped.
 
-### Batch 2 feature builds (heaviest lanes, scout-gated, ACTIVE)
+### Founder full-release program: BUILT, activation gated on one credential (2026-07-22)
+
+Every documented proposal and blocker the Founder released is now built to ready and on main, each independently refuted and path-scoped: #22 crypto LAN crash (already fixed `2bc8a3c`), H40 search price band (`20965e0`), #24 App Store native-readiness (`330c8a8`), #25 image evidence-media (`250fee8`, default-off), #16 account deletion saga P1 (`4d7038c`) + P2 (`f775459`), #26 contextual community ADR-030 (`80d1839`), #20 seller-contact ADR-029 (`330c8a8`), WD-I-001 one-tap audit (`cf9deb5`), WD-I-002 coverage packet (`7833a11`), WD-I-003/004 discoveries (`330c8a8`), WD-I-005 coverage honesty (`80d1839`), WD-P-001 second-vertical architecture (`330c8a8`), ADR-028 accepted (`9c40753`). The deletion P1 contract was made forward-compatible for 0019 (`3967f57`). Migrations 0018 and 0019 are candidate_unapplied with all authorization flags false; no shared database was contacted.
+
+THE ONE REMAINING GATE (not a decision, a missing physical key): live activation of contribution reporting (0013), image evidence-media (0019), and account deletion (0018), plus one-tap reactivation and the 0017 Preview repair, all require the shared-database migration-owner credential to apply the migrations to Preview then Production and flip the fail-closed flags. The controller has prepared everything up to that key. When the owner provides the credential or names the executor, the P3/activation lanes run under the usual disposable-then-Preview-then-Production proof with independent refutation.
+
+### Batch 2 feature builds (DELIVERED: image #25 250fee8, deletion P2 f775459)
 
 Controller-directed, scout confirms exact paths and STOPS to the controller before any widening; migrations generated-not-applied; features default-off and fail-closed; independent Luna default-to-refuted before commit. Two disjoint lanes:
 
