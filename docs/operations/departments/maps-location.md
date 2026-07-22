@@ -322,3 +322,71 @@ Documentation-only; reverting this entry removes evidence, not behavior.
 - Action: Run the Safari or iOS theme-toggle capture drive named in Unknown resolution action, once an iOS Simulator runtime is installed or safaridriver is enabled.
 - Target: `data-map-theme-snapshot` diagnostic evidence and snapshot-overlay lifecycle evidence during theme swaps in Safari or the iOS Simulator.
 - Completion: The next lane-owned Maps entry records the scope with direct evidence and closes this entry's Unknown scope.
+
+### 2026-07-22 - WebKit capture evidence
+
+#### Transfer coordinates
+
+- Evidence ID: `WD-MAPS-THEMEFADE-20260722-4`
+- Base SHA: `224dead1314a412d3f8ca157d325ac3dc00c6b57`
+- Candidate tree SHA-256: `a65cab3d6bbcb55fff9ab3e90fc5f86ccd8a0a218068ea26e862cecdfe393721`
+- Candidate hash algorithm: `wetindey-candidate-tree-v1`
+- Candidate paths (sorted):
+
+```text
+docs/operations/departments/maps-location.md
+```
+
+- Final commit SHA: Reported by the worker/controller after commit; not embedded in these bytes.
+
+#### Lane and path boundaries
+
+- Lane heading: `#### Maps WebKit capture evidence entry - ACTIVE`
+- Lane owner: Private Contractor, Maps Delivery `c9c17443-ef5e-4a7b-9b6e-c8f5381da30c`
+- Owned paths: Exactly the 1 paths in the preceding Candidate paths (sorted) block; no other path.
+- Excluded paths: Every repository path not listed in Candidate paths (sorted), including the map source paths this entry cites but does not touch (`src/integrations/maps/MapboxAdapter.ts`, `src/integrations/maps/cartography.ts`, `src/integrations/maps/theme-transition.ts`) and `LANES.md`.
+- Concurrent dependencies: Contribution moderation lanes run concurrently over disjoint paths.
+
+#### Decisions and rationale
+
+The Founder directed that the owner-tooling blocker on the Safari and iOS capture scope be fixed by another workflow rather than waiting on host switches. Playwright's official WebKit build answers the engine question directly: the scope's substance was always whether the capture machinery behaves on the WebKit engine, not whether the Safari application opens.
+
+#### Implementation
+
+Documentation-only. The cited behavior ships at `370cf07`, `03adfad`, and `266a294`; the drive tooling is Playwright WebKit 18.2 (build v2104), installed to the machine's Playwright cache.
+
+#### Evidence and refutations
+
+- Refuter ID: `independent-claude-refuter-evidence-20260722-04`
+- Review binding: Full Base SHA, canonical Candidate tree SHA-256, and sorted Candidate paths.
+- Verdict location: External read-only refuter output keyed by Evidence ID and Refuter ID; not embedded because changing reviewed bytes invalidates it.
+- Runtime and external evidence: WebKit capture behavior CLOSED at engine level. Playwright WebKit against the local dev server, both color schemes: fresh loads reached lifecycle ready with frame evidence visible (the probe reads pixels natively on WebKit, no read-error class) and the glow diagnostic at repainted:47. Dark to light toggle: data-map-theme-snapshot captured, overlay bridged 1.06 seconds and collected, post-toggle glow layer-added:47. Light to dark toggle: captured, overlay bridged 0.46 seconds and collected, same replay. Forced WEBGL_lose_context during a bridged swap recovered to ready with no failure reason, no residual overlay, and the glow replayed. Screenshots wk-dark-fresh, wk-dark-toggled, wk-light-fresh, wk-light-toggled, wk-ctxloss-final in the session scratchpad.
+- Checks not run: the Safari application shell itself and physical iOS device GPUs; Playwright WebKit is the WebKit engine without the Safari UI process.
+
+#### Known failures
+
+`UNKNOWN` remains only for Safari shell and iOS device behavior, the thin residue past the engine: the Safari application's own UI process and a physical iOS device GPU were not driven, and `UNKNOWN` stands for them until either host tooling arrives or a device drive happens.
+
+- Unknown scope: `Safari shell and iOS device behavior`
+- Unknown owner: Maps/Location chief and the Founder for host tooling
+- Unknown resolution action: Capture direct evidence for `Safari shell and iOS device behavior` with one theme-toggle drive in the Safari application or on an iOS device or Simulator, recording `data-map-theme-snapshot` and overlay state in the next lane-owned Maps entry, whenever the owner enables either host tool.
+
+#### External gates
+
+- External gate owner: Maps/Location chief and Quality/Release
+- Gate state: No gate is inferred closed by this entry.
+
+#### Integration order
+
+Append after concurrent LANES.md bursts; release with a span-checked burst immediately after this entry's path-scoped commit.
+
+#### Rollback or disable
+
+Documentation-only; reverting removes evidence, not behavior.
+
+#### Exact next action
+
+- Actor: Maps and Location chief
+- Action: Record the Safari shell or iOS device evidence named in Unknown resolution action when host tooling arrives.
+- Target: `data-map-theme-snapshot` diagnostic and snapshot-overlay lifecycle evidence during theme swaps in the Safari application or on an iOS device.
+- Completion: The next lane-owned Maps entry records the scope with direct evidence and closes this entry's Unknown scope.
