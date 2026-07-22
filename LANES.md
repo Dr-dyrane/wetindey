@@ -44,7 +44,7 @@ to idle rather than creating a replacement task.
 | Developer Relations & Engineering Enablement `019f7995-5b7b-7ee1-81ef-2c3a3c57b836` | Department worklog protocol complete / released | `62880ac` and fail-closed repair `2523da1` are on current main; remain persistent for later bounded enablement assignments |
 | Catalog Stewardship `019f7999-37d0-7231-8b89-0e71c2569ce2` | Catalog workflow complete / released; employee idle | `8a072e2`/`7b42664` and `fe09dc3` resolved the safety-scope and no-match/transport corrections; no active path claim remains |
 | Private Contractor, Full-Stack Delivery `ef98946c-a55e-4700-aa6e-c1a840e42eef` | Seated by Founder instruction 2026-07-21; first lane (account deletion) RELEASED, blocked by ADR-021, request to controller recorded in Active locks; now discovering the next ADR-clear lane | Method: multi-agent orchestration ending in default-to-REFUTED independent refutation, and ADR-clearance proven before any claim (the deletion lane taught this). Not building on stale memory: a discovery workflow reads the ADRs, this registry, and the gate states to find genuinely open, ADR-clear, unclaimed, high-value work, then executes only on affirmative clearance |
-| Private Contractor, Maps Delivery `c9c17443-ef5e-4a7b-9b6e-c8f5381da30c` | Eight lanes complete / released; seat idle on the self-paced check-in loop | Worklog contract 5/5 closed at `2508af0`; queued: Safari or iOS capture drive (owner tooling) and Presence Maps-side serialization when routed |
+| Private Contractor, Maps Delivery `c9c17443-ef5e-4a7b-9b6e-c8f5381da30c` | Nine lanes complete / released; Lane B of the richness pass pending an owner semantics call | `f307cef` light ground warmth shipped; queued: routeTint spine slice and commercial-district wash (Lane B), Safari or iOS capture drive (owner tooling), Presence Maps-side serialization when routed |
 
 
 
@@ -137,15 +137,9 @@ Each is a controller-directed Terra draft + Luna default-to-refuted, editing ONL
 
 ## Active exact path locks
 
-#### Maps light cartography warmth - ACTIVE
+#### Maps light cartography warmth - RELEASED / PATHLESS
 
-Owner: Private Contractor, Maps Delivery `c9c17443-ef5e-4a7b-9b6e-c8f5381da30c`. Exact writable path:
-
-- `src/integrations/maps/cartography.ts`
-
-Purpose: Founder-directed visual richness pass, Lane A of two. The light theme currently receives only the POI hierarchy; the ground keeps streets-v12 stock values, which the recorded audit found emotionally flat next to the reworked dark theme. This lane warms the light ground inside the one cartography module: land background, water and waterway identity, and park presence, all subtle and token-consistent, dark untouched, POI hierarchy untouched. The commercial-district area wash is explicitly OUT of scope (it needs a current-paint read the module's type seam does not expose; recorded as the follow-up candidate for Lane B consideration). Baseline capture taken before the claim. Exclusions: every other path, including the adapter, canvas, spine, and all dark constants.
-
-Completion: before and after captures at the default camera in both themes prove the light ground warmed and dark unchanged; an independent default-to-REFUTED refuter reviews the diff and the captures; tsc, eslint, audit:tokens, and the location contract stay green; a path-scoped commit releases this path, pushed under the `0bbdb11` proven-reversible-checkpoint class after refutation.
+Complete at `f307cef`, pushed under the `0bbdb11` proven-reversible class after a NOT REFUTED verdict on all five claims: light land warmed to the sand family, water settled, park opacity ramp lifted, dark proven pixel-identical (0.00% diff), stock citations verified against the live style. The commercial-district area wash and the routeTint spine slice remain the Lane B candidates, pending an owner call on tint semantics. Path released.
 
 #### Maps worklog action-noun conformance - RELEASED / PATHLESS
 
