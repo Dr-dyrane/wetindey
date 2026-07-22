@@ -48,6 +48,16 @@ to idle rather than creating a replacement task.
 
 ## Active exact path locks
 
+#### Contractor playbook amendment: handed incidents — ACTIVE
+
+Owner: Private Contractor, Maps Delivery `c9c17443-ef5e-4a7b-9b6e-c8f5381da30c`. Exact writable path:
+
+- `docs/operations/CONTRACTOR-PLAYBOOK.md`
+
+Purpose: incorporate the eight commit-referenced incidents Full-Stack Delivery `ef98946c` handed to the playbook lane at `4a8db00`, which arrived while the first draft was mid-refutation and were missed before `9c1db98` shipped. Each citation verified against its commit (`82d1a7d`, `8b1d7ca`, `6663c75`, `d3de9dc`); credit recorded to the contributing seat. The release burst also removes the now-consumed contributor-input section from this file so the registry stays claims-only. Exclusions: every other path.
+
+Completion: an independent default-to-REFUTED refuter confirms every incorporated incident matches its cited record and no governing document is contradicted; a path-scoped commit releases this path.
+
 #### Contractor workflow playbook — RELEASED / PATHLESS
 
 Complete at `9c1db98`: `docs/operations/CONTRACTOR-PLAYBOOK.md` preserves the recorded multi-session loop as method-only memory, granting no authority. Independent refutation passed after two bounded repair rounds (six findings repaired, then two, then NOT REFUTED). Path released.
