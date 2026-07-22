@@ -96,11 +96,18 @@ interface MapboxCanvasProps {
 export interface MapCanvasStyleState {
   status: MapStyleLifecycleState["status"];
   generation: number;
+  /**
+   * True only while a "loading" style swap is bridged by the adapter's
+   * theme-snapshot overlay (the outgoing frame held over the canvas). The
+   * initial load is never continuous: there is no previous frame to hold.
+   */
+  continuity: boolean;
 }
 
 export const INITIAL_MAP_CANVAS_STYLE_STATE: MapCanvasStyleState = {
   status: "loading",
   generation: 0,
+  continuity: false,
 };
 
 export interface MapCanvasRuntimeState {
@@ -145,7 +152,11 @@ export function reduceMapCanvasStyleState(
   ) {
     return current;
   }
-  return { status: event.status, generation: event.generation };
+  return {
+    status: event.status,
+    generation: event.generation,
+    continuity: event.status === "loading" && event.continuity === true,
+  };
 }
 
 /**
@@ -215,7 +226,14 @@ export function mapCanvasOverlay(
   style: MapCanvasStyleState
 ): "loading" | "failed" | null {
   if (libraryFailed || style.status === "failed") return "failed";
-  if (!adapterReady || style.status === "loading") return "loading";
+  if (!adapterReady) return "loading";
+  if (style.status === "loading") {
+    // A theme swap bridged by the adapter's last-frame overlay must stay
+    // uncovered: the opaque skeleton would hide the very continuity the
+    // adapter is providing, then flash the old theme after ready. Failure
+    // still covers (above), and non-bridged loads keep the skeleton.
+    return style.continuity ? null : "loading";
+  }
   return null;
 }
 

@@ -113,3 +113,74 @@ separately owned and authorized change.
 - Action: Resolve the current map incident into one evidence-backed lane proposal.
 - Target: Exact adapter, canvas, location, provider, browser, and worklog paths required by proven cause.
 - Completion: Program Management records confirmed non-overlapping paths and a separate browser refuter.
+
+### 2026-07-21 - Theme-transition continuity
+
+#### Transfer coordinates
+
+- Evidence ID: `WD-MAPS-THEMEFADE-20260721-1`
+- Base SHA: `82d1a7d6db5546fc5e44420d9d2ffccf41062c06`
+- Candidate tree SHA-256: `fec015d88b526521c7e94fec93912d41e47884dc509f5f6002fc9848bb81dfab`
+- Candidate hash algorithm: `wetindey-candidate-tree-v1`
+- Candidate paths (sorted):
+
+```text
+docs/operations/departments/maps-location.md
+src/design-system/components/MapboxCanvas.tsx
+src/integrations/maps/MapboxAdapter.ts
+```
+
+- Final commit SHA: Reported by the worker/controller after commit; not embedded in these bytes.
+
+#### Lane and path boundaries
+
+- Lane heading: `#### Maps theme-transition continuity — ACTIVE`
+- Lane owner: Private Contractor, Maps Delivery `c9c17443-ef5e-4a7b-9b6e-c8f5381da30c`
+- Owned paths: Exactly the 3 paths in the preceding Candidate paths (sorted) block; no other path.
+- Excluded paths: Every repository path not listed in Candidate paths (sorted), including the queued Presence path set, every sharedUsers seam, POI hierarchy values, route semantics, `src/app/page.tsx`, `src/app/_components/`, schema, migrations, providers, and deployment state.
+- Concurrent dependencies: Account deletion vertical (Private Contractor, Full-Stack Delivery) runs concurrently over disjoint paths; the lane owning `scripts/location-default-contract.test.ts` contributed the `FakeMap` guard inside `canPhotographCurrentFrame` and that contribution is disclosed below.
+
+#### Decisions and rationale
+
+Theme switching between `streets-v12` and `dark-v11` cannot style-diff: Mapbox logs "Unable to perform style diff: Unimplemented: setSprite.. Rebuilding the style from scratch" and `setStyle` tears down every source while the canvas shows bare background paint for 3-4 seconds in both toggle directions (2026-07-21 runtime evidence, localhost drive). Decision: photograph the outgoing frame during a `render` event using `gl.readPixels` (the same buffer authority `inspectFrameEvidence` uses, because canvas-level `toDataURL` reads an already-presented cleared buffer on ANGLE/SwiftShader and returns black), reject near-black photographs (max channel below 8 over an 8x8 grid), hold the photograph as a DOM overlay inside Mapbox's canvas container below the DOM markers, and remove it on the lifecycle seam: faded 300ms on ready or first idle, instantly on failed so the failure surface is never masked, unconditionally at an 8-second ceiling, and on destroy. Hidden documents skip capture entirely (no animation frames arrive, and nobody is watching). The loading lifecycle event gained an optional `continuity` flag so `MapboxCanvas` suppresses its opaque loading skeleton only for adapter-bridged swaps; first loads, retries without a photograph, context loss, and failures keep the skeleton or failure card. Rejected alternative: a shared sprite or single-style paint theming (the two styles differ by far more than the sprite); rejected `preserveDrawingBuffer` (permanent performance cost for a per-toggle need).
+
+#### Implementation
+
+`src/integrations/maps/MapboxAdapter.ts` reaches its live call site through the existing `setTheme` path (MapboxCanvas theme effect). `src/design-system/components/MapboxCanvas.tsx` changes `mapCanvasOverlay` and the style-state reducer, both already live. Documentation change is this entry. Nothing new is exported without a caller. The `FakeMap` guard in `canPhotographCurrentFrame` was contributed by the lane owning `scripts/location-default-contract.test.ts` to keep its committed suite on the direct-swap path; it is disclosed here rather than silently absorbed.
+
+#### Evidence and refutations
+
+- Refuter ID: `independent-claude-refuter-mapdrive-20260721-01`
+- Review binding: Full Base SHA, canonical Candidate tree SHA-256, and sorted Candidate paths.
+- Verdict location: External read-only refuter output keyed by Evidence ID and Refuter ID; not embedded because changing reviewed bytes invalidates it.
+- Runtime evidence: Playwright chromium (SwiftShader WebGL) against the local dev server. Both toggle directions: `data-map-theme-snapshot="captured"`, overlay present through the loading window, loading skeleton suppressed only while bridged (`loading|captured|ov=true|skel=false`), fade observed mid-transition (computed opacity 0.425), overlay collected, lifecycle ends ready, zero snapshot overlays remain. `npx tsx scripts/location-default-contract.test.ts` passes 20 of 20 against the candidate; `npx tsc --noEmit` and eslint on both source paths are clean.
+- Checks not run: real-device capture behavior on hardware GPUs and Safari or iOS; hidden-document skip runtime behavior (code-read only, the embedded pane could not initialize the map while hidden); failed-swap runtime behavior (a genuine style failure could not be forced because the pre-existing read-error policy still reaches ready with provider hosts blocked).
+- Delta refutation nuances, accepted as bounded: a bridged swap whose style load outlives the 8-second overlay ceiling shows bare rebuild paint (the old defect, never a masked failure) for at most 2 seconds until ready or the exhausted-attempts failure card; a context restore during a bridged swap keeps the skeleton suppressed while the physically present overlay still bridges, which matches the continuity predicate.
+
+#### Known failures
+
+The candidate is proven in one rendering environment only. `UNKNOWN` remains for real-device capture behavior on hardware GPUs and Safari or iOS. `UNKNOWN` remains for hidden-document skip runtime behavior because the skip branch was verified by reading, not driven. `UNKNOWN` remains for failed-swap runtime behavior because no genuine style failure could be forced during a bridged swap. Also disclosed: `scripts/department-worklog-contract.test.ts` fails on committed main before this candidate (its hard-wired lane heading was archived out of root `LANES.md` by the governance split); that gate failure is owned outside this lane and was flagged to the controller.
+
+- Unknown scope: `real-device capture behavior; hidden-document skip runtime behavior; failed-swap runtime behavior`
+- Unknown owner: Maps/Location chief and Quality/Release
+- Unknown resolution action: Drive one hardware-GPU browser session (Safari or iOS included) capturing real-device capture behavior, one backgrounded-tab toggle capturing hidden-document skip runtime behavior, and one forced provider outage capturing failed-swap runtime behavior, recording `data-map-theme-snapshot` and overlay state for each in the next lane-owned Maps entry.
+
+#### External gates
+
+- External gate owner: Maps/Location chief and Quality/Release
+- Gate state: No gate is inferred closed by this entry. Push, deployment, and release-controller authority remain separate; a local commit is not promotion.
+
+#### Integration order
+
+Commit the two source paths and this worklog entry as one path-scoped candidate after the delta refutation verdict; release the `LANES.md` claim in an immediately following path-scoped commit once the file is not mid-edit by another lane; the release-critical Maps Adapter closure unblocks the queued Presence integration serialization.
+
+#### Rollback or disable
+
+Reverting the two source paths restores the prior direct-swap behavior with the opaque skeleton; no data, schema, provider, or deployment state is touched, so a local revert is complete containment. Forward-repair owner: Maps/Location chief.
+
+#### Exact next action
+
+- Actor: Maps and Location chief
+- Action: Capture the three-scope runtime evidence named in Unknown resolution action on a hardware-GPU device.
+- Target: `data-map-theme-snapshot` diagnostic and snapshot-overlay lifecycle on `src/integrations/maps/MapboxAdapter.ts` and `src/design-system/components/MapboxCanvas.tsx` during theme swaps.
+- Completion: The next lane-owned Maps entry records the three scopes with direct evidence and closes or narrows this entry's Unknown scope.

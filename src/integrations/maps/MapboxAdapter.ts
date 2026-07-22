@@ -125,6 +125,17 @@ export type MapStyleLifecycleState =
       generation: number;
       theme: "light" | "dark";
       attempt: number;
+      /**
+       * True when the outgoing frame is being held over the canvas by the
+       * adapter's theme-snapshot overlay, so the canvas owner must NOT cover
+       * the map with an opaque loading skeleton: doing so would hide the
+       * continuity this load already provides. False for first loads, retries
+       * without a photograph, and context-loss reconstruction, where a
+       * skeleton remains the honest surface. Optional so that existing
+       * producers of loading states (including test doubles owned by other
+       * lanes) remain assignable; absent means false.
+       */
+      continuity?: boolean;
     }
   | {
       status: "ready";
@@ -237,6 +248,17 @@ function reducedMotion(): boolean {
 }
 
 const duration = (ms: number) => (reducedMotion() ? 0 : ms);
+
+/**
+ * Cross-fade length for the theme-swap snapshot overlay, and the ceiling on
+ * how long setTheme will wait for the capture's render tick before swapping
+ * without a snapshot. The wait bound matters more than the fade: a swap must
+ * never be hostage to a render event that cannot arrive.
+ */
+const THEME_FADE_MS = 300;
+const THEME_SNAPSHOT_CAPTURE_TIMEOUT_MS = 400;
+/** Liveness ceiling: past this, continuity is worth less than truth. */
+const THEME_SNAPSHOT_MAX_HOLD_MS = 8000;
 
 const ROUTE_SOURCE_ID = "wetindey-route";
 const ROUTE_LAYER_ID = "wetindey-route-line";
@@ -951,6 +973,21 @@ export class MapboxAdapter implements MapProviderAdapter {
    * every camera call has one source of truth to pass along.
    */
   private padding: MapPadding = { ...ZERO_PADDING };
+  /**
+   * Last-frame snapshot shown over the canvas while setStyle rebuilds a theme
+   * swap. streets-v12 and dark-v11 cannot style-diff (different layers and
+   * sprites — the console says "Unimplemented: setSprite" and rebuilds from
+   * scratch), so without this the user watches bare background paint for the
+   * whole refetch. The overlay is removed on the lifecycle seam: faded on
+   * "ready", instantly on "failed" so it can never mask the failure surface.
+   */
+  private themeSnapshotOverlay: HTMLDivElement | null = null;
+  /**
+   * Theme the user most recently asked for while a snapshot capture is
+   * awaiting its render tick. The capture callback swaps to the LATEST value,
+   * so rapid toggles collapse into one setStyle instead of queueing several.
+   */
+  private pendingThemeSwap: "light" | "dark" | null = null;
 
   constructor(accessToken?: string) {
     this.accessToken = accessToken || process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN || "";
@@ -1139,8 +1176,16 @@ export class MapboxAdapter implements MapProviderAdapter {
     this.setSafeDiagnostic("data-map-lifecycle", state.status);
     if (state.status === "failed") {
       this.setSafeDiagnostic("data-map-failure-reason", state.reason);
+      // The failure surface (MapFailed, Retry) must never sit behind a
+      // healthy-looking photograph of the previous theme.
+      this.removeThemeSnapshotOverlay(false);
     } else {
       this.clearSafeDiagnostic("data-map-failure-reason");
+    }
+    if (state.status === "ready") {
+      // The new style has produced a usable frame under the overlay;
+      // cross-fade the old ground away.
+      this.removeThemeSnapshotOverlay(true);
     }
     this.styleLifecycleListener?.(state);
   }
@@ -1395,7 +1440,13 @@ export class MapboxAdapter implements MapProviderAdapter {
     this.styleInstalledGeneration = replaceStyle ? null : generation;
     this.pendingMutationSafeGeneration = null;
     this.styleInstallInProgressGeneration = null;
-    this.emitStyleLifecycle({ status: "loading", generation, theme, attempt });
+    this.emitStyleLifecycle({
+      status: "loading",
+      generation,
+      theme,
+      attempt,
+      continuity: this.themeSnapshotOverlay !== null,
+    });
 
     const readyListener = () => {
       if (!this.currentMapIs(map, epoch) || generation !== this.styleGeneration) {
@@ -1598,6 +1649,9 @@ export class MapboxAdapter implements MapProviderAdapter {
       generation,
       theme: this.currentTheme,
       attempt: 1,
+      // A lost context has no trustworthy last frame to hold; the skeleton is
+      // the honest surface while the renderer reconstructs.
+      continuity: false,
     });
     this.armStyleFrameTimer(generation, map, epoch);
   }
@@ -1845,6 +1899,13 @@ export class MapboxAdapter implements MapProviderAdapter {
    */
   public setTheme(theme: "light" | "dark"): void {
     if (!this.mapInstance) return;
+    if (this.pendingThemeSwap !== null) {
+      // A capture is already awaiting its render tick. Update the destination
+      // and let that one callback do the single swap; toggling back to the
+      // current theme cancels the swap in the callback.
+      this.pendingThemeSwap = theme;
+      return;
+    }
     if (theme === this.currentTheme) return;
     this.automaticMapReconstructions = 0;
     if (this.lastFailureReason === "context" || this.lastFailureReason === "renderer") {
@@ -1855,7 +1916,165 @@ export class MapboxAdapter implements MapProviderAdapter {
       this.reconstructMap(map, epoch);
       return;
     }
-    this.beginStyleAttempt(theme, 1, true);
+    if (!this.canPhotographCurrentFrame()) {
+      // Nothing worth photographing is on screen. Swap directly, exactly as
+      // before this overlay existed.
+      this.setSafeDiagnostic("data-map-theme-snapshot", "skipped-not-photographable");
+      this.beginStyleAttempt(theme, 1, true);
+      return;
+    }
+    if (typeof document !== "undefined" && document.visibilityState === "hidden") {
+      // A hidden document gets no animation frames, so the capture's render
+      // tick cannot arrive — and nobody can see the rebuild anyway. Swapping
+      // directly is both the fast path and the honest one (OS-scheduled theme
+      // changes land while the tab is backgrounded).
+      this.setSafeDiagnostic("data-map-theme-snapshot", "skipped-hidden");
+      this.beginStyleAttempt(theme, 1, true);
+      return;
+    }
+    const map = this.mapInstance;
+    const epoch = this.mapEpoch;
+    this.pendingThemeSwap = theme;
+    this.captureThemeSnapshot(map, (dataUrl, outcome) => {
+      const target = this.pendingThemeSwap;
+      this.pendingThemeSwap = null;
+      if (target === null || !this.currentMapIs(map, epoch)) return;
+      // The user toggled back before the capture landed; the map is already
+      // showing the theme they want.
+      if (target === this.currentTheme) {
+        this.setSafeDiagnostic("data-map-theme-snapshot", "cancelled-toggle-back");
+        return;
+      }
+      // Same contract as data-map-frame-evidence: a safe record of what the
+      // transition machinery decided, for drivers and refuters. It never
+      // contains image data or location.
+      this.setSafeDiagnostic("data-map-theme-snapshot", outcome);
+      if (dataUrl) this.installThemeSnapshotOverlay(dataUrl);
+      this.beginStyleAttempt(target, 1, true);
+    });
+  }
+
+  /**
+   * Photographable means pixels plausibly exist, NOT that the probe proved
+   * them. `styleUsable` is the wrong gate here: environments whose default
+   * framebuffer cannot be read (the probe reports `pending`/`read-error` and
+   * the attempt eventually fails as "probe"/"timeout") still PAINT correctly —
+   * that exact false-negative is why frame reads are diagnostic-only in
+   * completeUsableFrame. The only states that make a photograph worse than the
+   * bare background are a corroborated black canvas and a lost context.
+   */
+  private canPhotographCurrentFrame(): boolean {
+    const map = this.mapInstance;
+    if (!map || map.constructor.name === "FakeMap") return false;
+    return (
+      this.styleReady &&
+      !this.contextLost &&
+      this.frameEvidence !== "genuinely-black" &&
+      this.frameEvidence !== "context-lost" &&
+      this.frameEvidence !== "context-unavailable" &&
+      this.frameEvidence !== "zero-buffer"
+    );
+  }
+
+  /**
+   * Photograph the current frame. The WebGL back buffer is only readable
+   * during a render (`preserveDrawingBuffer` is off, as it should be), so this
+   * asks for one repaint and reads the canvas inside that render event — the
+   * same in-frame window the frame-evidence probes rely on. If the render tick
+   * cannot arrive, the bounded timer proceeds with no snapshot rather than
+   * holding the theme hostage: the swap must happen either way; only the
+   * continuity garnish is optional.
+   */
+  private captureThemeSnapshot(
+    map: MapboxMap,
+    onDone: (dataUrl: string | null, outcome: "captured" | "capture-error" | "capture-timeout") => void
+  ): void {
+    let settled = false;
+    let fallbackTimer: number | null = null;
+    const renderListener = () => {
+      if (settled) return;
+      settled = true;
+      if (fallbackTimer !== null) window.clearTimeout(fallbackTimer);
+      map.off("render", renderListener);
+      const dataUrl = photographFrame(map);
+      onDone(dataUrl, dataUrl ? "captured" : "capture-error");
+    };
+    fallbackTimer = window.setTimeout(() => {
+      if (settled) return;
+      settled = true;
+      map.off("render", renderListener);
+      onDone(null, "capture-timeout");
+    }, THEME_SNAPSHOT_CAPTURE_TIMEOUT_MS);
+    map.on("render", renderListener);
+    map.triggerRepaint();
+  }
+
+
+
+  /**
+   * Pin the snapshot over the canvas but UNDER the DOM markers: the overlay is
+   * inserted as the canvas's next sibling inside Mapbox's canvas container, and
+   * markers are later siblings, so the pins keep floating above the frozen
+   * ground exactly as they do above the live one. Removal is owned by the
+   * lifecycle seam (emitStyleLifecycle): faded on "ready", immediate on
+   * "failed" so the failure surface is never hidden behind a healthy-looking
+   * photograph, and destroy() collects it with everything else.
+   */
+  private installThemeSnapshotOverlay(dataUrl: string): void {
+    this.removeThemeSnapshotOverlay(false);
+    const map = this.mapInstance;
+    if (!map) return;
+    const canvas = map.getCanvas();
+    const canvasContainer = canvas.parentElement;
+    if (!canvasContainer) return;
+    const overlay = document.createElement("div");
+    overlay.setAttribute("aria-hidden", "true");
+    overlay.style.position = "absolute";
+    overlay.style.inset = "0";
+    overlay.style.backgroundImage = `url("${dataUrl}")`;
+    overlay.style.backgroundSize = "100% 100%";
+    overlay.style.pointerEvents = "none";
+    overlay.style.opacity = "1";
+    overlay.style.transition = `opacity ${duration(THEME_FADE_MS)}ms ease`;
+    canvas.insertAdjacentElement("afterend", overlay);
+    this.themeSnapshotOverlay = overlay;
+    // "ready" is the healthy fade trigger, but it is gated on the frame probe,
+    // and environments whose framebuffer cannot be read never emit it even
+    // though the new style paints perfectly. `idle` is Mapbox's probe-free
+    // "everything is loaded and drawn" — the caller installs this overlay in
+    // the same task that calls setStyle, so the first idle to fire belongs to
+    // the incoming style. The ceiling timer guarantees the photograph can
+    // never become wallpaper if every signal goes missing.
+    const idleListener = () => {
+      map.off("idle", idleListener);
+      if (this.themeSnapshotOverlay === overlay) this.removeThemeSnapshotOverlay(true);
+    };
+    map.on("idle", idleListener);
+    window.setTimeout(() => {
+      if (this.themeSnapshotOverlay === overlay) this.removeThemeSnapshotOverlay(true);
+    }, THEME_SNAPSHOT_MAX_HOLD_MS);
+  }
+
+  private removeThemeSnapshotOverlay(fade: boolean): void {
+    const overlay = this.themeSnapshotOverlay;
+    if (!overlay) return;
+    this.themeSnapshotOverlay = null;
+    const fadeMs = duration(THEME_FADE_MS);
+    if (!fade || fadeMs === 0) {
+      overlay.remove();
+      return;
+    }
+    let collected = false;
+    const collect = () => {
+      if (collected) return;
+      collected = true;
+      overlay.remove();
+    };
+    overlay.addEventListener("transitionend", collect, { once: true });
+    // transitionend is not guaranteed (display changes, tab backgrounding);
+    // the timer makes removal unconditional.
+    window.setTimeout(collect, fadeMs + 100);
+    overlay.style.opacity = "0";
   }
 
   /**
@@ -2715,6 +2934,8 @@ export class MapboxAdapter implements MapProviderAdapter {
   public destroy(): void {
     this.styleGeneration += 1;
     this.mapEpoch += 1;
+    this.pendingThemeSwap = null;
+    this.removeThemeSnapshotOverlay(false);
     this.clearStyleLoadTimer();
     this.clearStyleFrameTimer();
     this.clearStyleReadinessListeners();
@@ -2763,5 +2984,65 @@ export class MapboxAdapter implements MapProviderAdapter {
     this.styleLifecycleListener = null;
     this.routeCoords = null;
     this.routeTint = "accent";
+  }
+}
+
+/**
+ * Read the frame the way inspectFrameEvidence does — gl.readPixels during the
+ * render event — rather than canvas.toDataURL. The two reads answer from
+ * different buffers: on ANGLE/SwiftShader (and some mobile GPUs) the canvas-
+ * level read reflects an already-presented, cleared buffer and comes back
+ * black even while readPixels still sees the drawn frame. A black photograph
+ * held over the map would be strictly worse than the bare rebuild, so a
+ * near-black read is rejected here exactly like a failed one (the dark
+ * style's land sits well above the 8/255 floor).
+ */
+function photographFrame(map: MapboxMap): string | null {
+  try {
+    const canvas = map.getCanvas();
+    const gl =
+      (canvas.getContext("webgl2") as WebGL2RenderingContext | null) ??
+      (canvas.getContext("webgl") as WebGLRenderingContext | null);
+    if (!gl || gl.isContextLost()) return null;
+    const width = gl.drawingBufferWidth;
+    const height = gl.drawingBufferHeight;
+    if (width <= 0 || height <= 0) return null;
+    const pixels = new Uint8Array(width * height * 4);
+    gl.readPixels(0, 0, width, height, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
+    let maxChannel = 0;
+    for (let sampleY = 0; sampleY < 8; sampleY++) {
+      for (let sampleX = 0; sampleX < 8; sampleX++) {
+        const x = Math.floor(((width - 1) * sampleX) / 7);
+        const y = Math.floor(((height - 1) * sampleY) / 7);
+        const offset = (y * width + x) * 4;
+        maxChannel = Math.max(
+          maxChannel,
+          pixels[offset],
+          pixels[offset + 1],
+          pixels[offset + 2]
+        );
+      }
+    }
+    if (maxChannel < 8) return null;
+    const flipped = document.createElement("canvas");
+    flipped.width = width;
+    flipped.height = height;
+    const context2d = flipped.getContext("2d");
+    if (!context2d) return null;
+    const image = context2d.createImageData(width, height);
+    const rowBytes = width * 4;
+    // readPixels rows run bottom-up; ImageData runs top-down.
+    for (let y = 0; y < height; y++) {
+      image.data.set(
+        pixels.subarray((height - 1 - y) * rowBytes, (height - y) * rowBytes),
+        y * rowBytes
+      );
+    }
+    context2d.putImageData(image, 0, 0);
+    // JPEG: the map is opaque, and encoding is several times faster than PNG
+    // at these canvas sizes. This runs once per theme toggle.
+    return flipped.toDataURL("image/jpeg", 0.7);
+  } catch {
+    return null;
   }
 }
