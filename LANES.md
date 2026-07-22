@@ -70,6 +70,15 @@ delta refuter returned **PASS** with no scoped P1/P2/P3. All six source/test/wor
 are released. Runtime target activation remains blocked on the separately claimed review
 operations vertical below; this source commit must not deploy alone as a false affordance.
 
+#### Contribution control Neon endpoint guard — ACTIVE
+
+- **Owner:** Executive controller; independent Security/Quality refuter required before apply.
+- **Exclusive paths:** `scripts/contributions/contribution-moderator-control.ts` and
+  `scripts/contributions/contribution-moderator-control-contract.test.ts` only.
+- **Contract:** replace the unusable Neon proxy-IP equality with exact endpoint-id, project, branch,
+  database, configured-host, and allowlist agreement. Keep every control command dry-run by default;
+  do not assign a moderator or change reporting/moderation controls until the correction is refuted.
+
 #### Contribution moderation service `0015` / ACL repair `0016` — PREVIEW APPLIED / SOURCE + RUNTIME PASS / ACTIVE
 
 Preview applied immutable `0015`, then direct ACL evidence proved its post-`RESET ROLE`
