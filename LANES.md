@@ -152,6 +152,17 @@ Controller-directed, scout confirms exact paths and STOPS to the controller befo
 
 ## Active exact path locks
 
+#### Farm inputs pillar decision record - ACTIVE
+
+Owner: Private Contractor, Maps Delivery `c9c17443-ef5e-4a7b-9b6e-c8f5381da30c`, acting for Product & Portfolio framing only. Exact writable paths:
+
+- new `docs/adr/031-farm-inputs-pillar.md`
+- `docs/operations/PORTFOLIO-AND-IDEA-REGISTER.md`
+
+Purpose: the Founder directed the agriculture lane this session and chose its shape directly: a farm inputs pillar beside Food and Money (seeds, fertilizer, agrochemicals, feed; the user is a farmer buying inputs; the places are agro-dealers; the same truth engine carries it). This lane records that decision: a register entry and a drafted ADR-031 submitted Proposed for the Founder's explicit acceptance. Documentation only; it authorizes no schema, pillar flag, catalog, UI, or launch promise, and the Food Truth phase firewall stands untouched. Implementation candidates are enumerated inside the ADR as queued, separately claimable lanes.
+
+Completion: an independent default-to-REFUTED refuter confirms the ADR contradicts no accepted ADR or the operating system's phase firewall and that every implementation-shaped statement is marked queued and non-authorizing; path-scoped commit pushed under the `0bbdb11` class; span-checked release; the acceptance decision is the Founder's, requested in-session.
+
 #### Maps own-markets glow layer - RELEASED / PATHLESS
 
 Complete at `266a294`, pushed under the `0bbdb11` class. WetinDey's own market places now glow softly beneath the data layer in both themes, market family only, measured subordinate. The lane also shipped a critical same-file repair the acceptance bar surfaced: mutation-safe style completion is now gated on the intended style, fixing a pre-existing defect where every theme toggle replayed cartography and route into the dying style and left the real style bare with lifecycle falsely ready. The refuter reproduced the defect at HEAD and its absence with the candidate. Residual recorded: context-loss glow replay is contract-test covered, not real-browser driven; a future custom style must update styleNameFor beside styleFor (documented at the pairing). Path released.
