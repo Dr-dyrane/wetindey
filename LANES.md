@@ -100,6 +100,17 @@ Owner: controller-directed Terra under Human-Interface and Executive-Product. Ex
 
 Owner: controller-directed Terra under Executive-Product. Exact writable path: new `docs/operations/decisions/app-store-distribution-packet.md` only. Contract: a Founder decision packet for issue #24 (WetinDey is a PWA; Apple cannot ingest a PWA). Lay out the real options (stay PWA, TWA/Play, a native wrapper such as Capacitor, or a thin native shell), each option's cost, review-guideline exposure (including Apple 5.1.1(v) in-app account deletion, which the ADR-021 saga is the groundwork for), maintenance, and pilot-phase fit, ending in a clear recommendation and the exact decision the Founder must make. Authorizes nothing; opens no lane.
 
+## Wave 3 execution (prepare all features, remove all blockers)
+
+Controller-directed Terra + Luna arms, each scout-confirms its exact paths and STOPS to the controller before crossing into another arm's area (no silent widening). Non-overlapping by construction.
+
+- Blocker #22, dev LAN boot crash: `crypto.randomUUID` throws in a non-secure LAN context so the PWA cannot open on a phone. Arm area: the exact source that calls `crypto.randomUUID` at boot plus a safe fallback; no unrelated file.
+- Blocker H40, search shows no price: the search read path in `src/app/actions.ts` returns results without a price. Arm area: that search action only.
+- App Store native-readiness (decided: stay PWA, build native-incorporation-ready): a readiness assessment plus inert non-breaking scaffolding so a later Capacitor wrap is a small step. Arm area: new `docs/operations/decisions/native-readiness.md` and a new inert `capacitor.config.ts` only; no dependency install, no `next.config` change, the live PWA build must stay green.
+- Feature #25 contribution evidence-media (ADR-028 Accepted): a full buildable lane, migration generated-not-applied, fail-closed behind moderation, default-off. Launches after H40 lands to avoid an actions collision; scout confirms the exact schema/adapter/server-action/UI/contract path set.
+
+External key (not a decision): activating the prepared contribution, image, and deletion features needs the shared-database migration-owner credential (0017 Preview, 0018, 0019). The controller prepares everything up to it.
+
 ## Active exact path locks
 
 #### Maps worklog action-noun conformance - RELEASED / PATHLESS
