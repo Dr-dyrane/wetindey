@@ -87,7 +87,6 @@ Owner: Private Contractor, Full-Stack Delivery `ef98946c-a55e-4700-aa6e-c1a840e4
 - `src/app/_components/exchange-panel/imports/imports.ts`
 - `docs/operations/departments/human-interface.md`
 - `docs/operations/departments/maps-location.md`
-- `scripts/department-worklog-contract.test.ts`
 - `scripts/iconography-contracts.test.ts`
 - `scripts/liquid-glass-contract.test.ts`
 - `scripts/live-sheet-inset-contract.test.ts`
@@ -302,9 +301,7 @@ Owner: Developer Relations & Engineering Enablement worker
 - `docs/operations/departments/contribution-integrity.md`
 - `docs/operations/departments/developer-experience.md`
 - `docs/operations/departments/executive-product.md`
-- `docs/operations/departments/human-interface.md`
 - `docs/operations/departments/legal-policy.md`
-- `docs/operations/departments/maps-location.md`
 - `docs/operations/departments/operations-field-data.md`
 - `docs/operations/departments/presence-safety.md`
 - `docs/operations/departments/program-release.md`
