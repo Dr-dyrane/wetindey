@@ -40,7 +40,9 @@ Any changed base, candidate byte, or path requires a new tuple and review.
 
 ## 3. Authority and lane
 
-- Exact `LANES.md` heading: [including punctuation and status]
+- Exact current `LANES.md` human coordination heading: [including punctuation and status; advisory rather than technically enforced]
+- Historical lane record locator: [archive path and record ID, or NOT APPLICABLE for active work]
+- Archive snapshot commit and record SHA-256: [exact values, or NOT APPLICABLE for active work]
 - Lane owner: [identity]
 - Owned paths (sorted): [must equal candidate paths]
 - Excluded paths: [every unowned path; high-risk exclusions explicit]
@@ -82,7 +84,7 @@ Any changed base, candidate byte, or path requires a new tuple and review.
 
 - Object/base/head/ancestry: PASS | REFUTED
 - Candidate hash and full diff paths: MATCH | REFUTED
-- Receiver worktree and current lane: MATCH | REFUTED
+- Receiver worktree, current root lane, and archived record locator where applicable: MATCH | REFUTED
 - Migration/provider/deployment state: MATCH | UNKNOWN | REFUTED
 - Independent verdict tuple: MATCH | REFUTED
 - ADR/architecture drift and other conflicts: [exact]

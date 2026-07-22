@@ -1,6 +1,6 @@
 # Operations & Coordination System
 
-This directory documents team operational standards, worklog protocols, branch handoff procedures, department worklog indices, and work lane archives.
+This directory documents team operational standards, worklog protocols, branch handoff procedures, department worklog indices, and work lane archives. Root `LANES.md` is the required active human coordination claim/index for current edits; it is advisory rather than a technical lock. Archives preserve completed evidence without granting current claims.
 
 ## Key Files & Subdirectories
 
@@ -8,5 +8,5 @@ This directory documents team operational standards, worklog protocols, branch h
 * **[BRANCH-HANDOFF-TEMPLATE.md](BRANCH-HANDOFF-TEMPLATE.md)**: Standard template for transferring state between branches and agents.
 * **[WETINDEY-OPERATING-SYSTEM.md](WETINDEY-OPERATING-SYSTEM.md)**: Coordination principles for multi-agent parallel execution.
 * **[auth-email/README.md](auth-email/README.md)**: Authentication-email ownership, diagnosis, recovery, rollback, and redacted Production evidence.
-* **[lanes/README.md](lanes/README.md)**: Work lane archives and historical released lane records.
+* **[lanes/README.md](lanes/README.md)**: Active-lock reading rules and historical released lane records.
 * **[departments/README.md](departments/README.md)**: Functional department index linking all 16 append-only department worklogs.

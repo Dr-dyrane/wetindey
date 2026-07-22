@@ -11,7 +11,7 @@ Get set up first: [`../README.md`](../README.md).
 
 ## Before you write anything: read the map
 
-**[`APP-MAP.md`](./APP-MAP.md) is the map of what is real.** Eight subsystem
+**[`SERVICE-ARCHITECTURE.md`](./architecture/SERVICE-ARCHITECTURE.md) is the architecture of record for what is currently implemented.** Eight subsystem
 surveys, six flow traces, 143 claims — 112 survived adversarial refutation and
 31 were killed. Every surviving claim carries a `file:line`.
 
@@ -27,8 +27,7 @@ that runs.
 
 So: **prefer wiring what exists over writing a third copy.** When you need a
 behaviour, grep for it before you build it — the odds are genuinely good that
-the considered version is already here and simply unimported. `APP-MAP.md` §7 is
-the full dead-code inventory; §6 is the confirmed defects with citations.
+the considered version is already here and simply unimported. `SERVICE-ARCHITECTURE.md` records the current implementation boundaries, discrepancy findings, and cited confirmed defects; verify the live tree before relying on any historical inventory.
 
 The corollary is that a claim without evidence is worthless here. Cite
 `file:line` in PR descriptions and in review. "I think X handles that" has been
@@ -191,7 +190,7 @@ Each of these cost real debugging. Please don't "fix" them.
 
 ## Durable work memory and branch handoffs
 
-Current ownership still comes only from [`../LANES.md`](../LANES.md). For bounded work
+Current edit coordination requires root [`../LANES.md`](../LANES.md): agents must consult and claim it before editing. It is the required authoritative human coordination index, advisory to Git, filesystem, runtime, and platform enforcement rather than a technical lock. Completed lane evidence is discoverable through [`operations/lanes/history/README.md`](./operations/lanes/history/README.md) but grants no current claim. For bounded work
 that must survive the originating task or branch, follow the
 [department worklog protocol](./operations/DEPARTMENT-WORKLOG-PROTOCOL.md) and use the
 [branch handoff template](./operations/BRANCH-HANDOFF-TEMPLATE.md).
@@ -235,15 +234,14 @@ release delta from the exact current parent state.
 
 The current boundary is precise:
 
-- `0000` through `0008` are preserved applied lineage.
-- `0009` passed independent disposable validation but has not been rolled out to
-  a shared database.
-- final ingestion migration `0010` has not been applied.
+- `0000` through `0013` are recorded applied shared-environment lineage.
+- Their migration bytes and ledger evidence are immutable.
+- `0014` is the current unapplied Preview-only migration gate.
 
-If review finds a defect in unapplied `0010`, regenerate and replace `0010` SQL,
-snapshot, and journal metadata together under its exclusive lane. Do not create
-`0011` or `0012` to compensate for a migration no shared database has executed.
-After any shared application, never rewrite the migration; repair forward.
+Do not regenerate or rewrite applied `0000` through `0013`. Repair defects forward under
+an exact schema lane. `0014` may proceed only through its separately recorded Preview
+preflight and independent refutation; no Production consideration follows without a new
+exact-target gate.
 
 Generation is not rollout. Do not access Neon, run a migration or destructive
 seed, or alter `drizzle.__drizzle_migrations` without separate exact-target
@@ -253,4 +251,4 @@ tables and is disposable-only.
 
 Real code only. No TODOs, no stubs. If something can't be done properly, say so
 plainly in the PR rather than leaving a placeholder that reads as finished — the
-dead-code inventory in `APP-MAP.md` §7 is what happens when that goes unsaid.
+documented dead-code and implementation-gap findings in `SERVICE-ARCHITECTURE.md` are what happen when that goes unsaid.

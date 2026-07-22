@@ -24,10 +24,12 @@ or governance boundary instead. Fast visual iteration never permits fake claims,
 code, inaccessible controls, unclaimed paths, or an unrefuted release.
 
 **Several sessions work this repo at once. Read [LANES.md](LANES.md) and run `git status`
-BEFORE your first edit.** Claim your lane; edit only the paths your lane owns. If you spawn
+BEFORE your first edit.** Root `LANES.md` is the required authoritative human coordination claim/index for current edits; it is advisory to Git, filesystem, runtime, and platform enforcement rather than a technically enforced lock. Completed lane
+evidence lives under [docs/operations/lanes/history/](docs/operations/lanes/history/README.md)
+and grants no current claim. Claim your lane; edit only the paths your lane owns. If you spawn
 subagents, put your lane's paths in their prompt and forbid them from widening it — an
-agent that edits outside its lane is a bug in the prompt. A lane is a lock, not a licence:
-scope still comes from the ADRs.
+agent that edits outside its lane is a bug in the prompt. A lane is a coordination lock, not
+a licence: scope still comes from the ADRs.
 
 **Department worklogs preserve memory; they do not grant authority.** Follow
 [the department worklog protocol](docs/operations/DEPARTMENT-WORKLOG-PROTOCOL.md) when a
@@ -44,19 +46,15 @@ follow-up record under its own exact log lane after receipt; it never unlocks ed
 Two corrections, verified against the code on 16 July 2026. Both exist because agents
 have already been misled by this document.
 
-**The modular architecture in Section 2 is aspirational, not actual.** `src/core/module-contract.ts`
-defines `WetinDeyModule`. The number of live capabilities implementing it is **zero**.
-`src/modules/food/application/FoodModule.ts` is orphaned — imported by nothing, referenced
-only inside comments. `src/db/queries/`, where the data layer is documented to live,
-contains a single `.gitkeep`. The real application is `src/app/page.tsx` and
-`src/app/actions.ts` doing everything directly.
+**The modular architecture in Section 2 is aspirational, not actual.** The historical module-contract / `WetinDeyModule` architecture has been removed or is missing
+from the live tree; no live equivalent exists. Historical references to `FoodModule`,
+`src/modules/`, and `src/db/queries/` are not evidence of a wired module layer. The real
+application is the live `src/app/` call graph.
 
-Do **not** write code into `src/modules/` or against `WetinDeyModule` and consider it
-wired. This repo has already produced two generations of dead code that way: `FoodModule`,
-and then `src/lib/trust.ts`, written to rescue it and orphaned identically — its
-`getOfferTrust` / `getOfferTrustBatch` actions have no callers to this day. **If you write
-it, wire it to a live call site in the same change, or do not write it.** Own the vertical
-slice through to the UI, or leave it alone.
+Do **not** recreate `src/modules/` or invent a `WetinDeyModule` contract and consider it
+wired. A prior `FoodModule` and rescue trust layer became dead code because they lacked live
+callers. **If you write it, wire it to a live call site in the same change, or do not write
+it.** Own the vertical slice through to the UI, or leave it alone.
 
 **Fulfilment is out of scope.** See [ADR-001](docs/adr/001-fulfilment-is-out-of-scope.md).
 No delivery, dispatch, courier, tracking, cart, checkout, or payments. Buyer and seller
@@ -84,15 +82,12 @@ read-side trust blockers come first.
 **Database evolution is governed by
 [ADR-014](docs/adr/014-pillar-baselines-and-release-migrations.md).** Drizzle schema
 declarations and reviewed SQL are organised as canonical desired-state pillars; numbered
-migrations are release deltas, not the permanent desired-state authoring model. Preserve
-the exact applied `0000`-`0008` lineage. `0009` is independently validated but has not
-been applied to a shared database; final ingestion migration `0010` is also unapplied.
-Before `0010` is first applied to a shared database, defects in it MUST be folded back
-into regenerated `0010` SQL, snapshot, and journal metadata under one exclusive schema
-lane; do not create `0011` or `0012` to repair an unapplied migration. Once a migration
-has been applied to any shared environment, its bytes and ledger evidence are immutable:
-repair forward. Never run a baseline against an existing database, edit a remote ledger
-to imitate deployment, or access a database without exact-target authorization. Start at
+migrations are release deltas, not the permanent desired-state authoring model. The
+recorded shared-environment lineage `0000` through `0013` is applied and immutable: preserve
+its exact bytes and ledger evidence and repair every defect forward. Migration `0014` is the
+current unapplied Preview gate; it is not regenerable against the applied lineage. Never run
+a baseline against an existing database, edit a remote ledger to imitate deployment, or
+access a database without exact-target authorization. Start at
 [docs/database/README.md](docs/database/README.md).
 
 For the verified state of the system, read the architecture of record,
@@ -102,7 +97,7 @@ ratified by [ADR-002](docs/adr/002-service-architecture-of-record.md). Start wit
 
 **Precedence when documents disagree:** an ADR beats every other document; the architecture
 of record beats the Bible and `docs/`; **the code beats all of them**. Several documents —
-including `docs/APP-MAP.md` and `docs/USER-FLOW.md` — describe behaviour that does not
+including `docs/architecture/APP-MAP.md` and `docs/product/USER-FLOW.md` — describe behaviour that does not
 exist. If the code contradicts a document, the document is the bug: fix it, or say so.
 
 **Correctness before boundaries (ADR-002).** Do not reorganise code into modules yet.
@@ -129,8 +124,8 @@ to default to "refuted" when evidence is thin. This is standing practice, not a 
 ## 1. Core Founding Documents
 
 Before writing code, reference the project constitution and decision log:
-1. **[WETINDEY_BIBLE.md](file:///Users/dyrane/Claude/Projects/wetindey/WETINDEY_BIBLE.md)**: The definitive product and engineering constitution.
-2. **[DECISIONS.md](file:///Users/dyrane/Claude/Projects/wetindey/DECISIONS.md)**: Guidelines for Architectural Decision Records.
+1. **[WETINDEY_BIBLE.md](docs/WETINDEY_BIBLE.md)**: The definitive product and engineering constitution.
+2. **[DECISIONS.md](docs/DECISIONS.md)**: Guidelines for Architectural Decision Records.
 
 You must not invent domain terms or override policies documented in these files without an approved ADR.
 
@@ -142,11 +137,11 @@ You must not invent domain terms or override policies documented in these files 
 > It describes where the code should go, not where it is. Do not cite this section as
 > evidence that a module layer exists.
 
-WetinDey is built as a **Modular Monolith** (see [Section 25](file:///Users/dyrane/Claude/Projects/wetindey/WETINDEY_BIBLE.md#L2803) and [Section 26](file:///Users/dyrane/Claude/Projects/wetindey/WETINDEY_BIBLE.md#L2902)).
+WetinDey targets a modular monolith over time; see [the architecture sections in the Bible](docs/WETINDEY_BIBLE.md). The historical `WetinDeyModule` contract has no live equivalent and must not be recreated speculatively.
 
-- **Decoupled UI**: The presentation layer (`src/app/`) must never define domain database logic, calculate freshness windows, or invent confidence scores directly. 
-- **Module Contracts**: Every application capability must be organized as a vertical module implementing the `WetinDeyModule` contract in [src/core/module-contract.ts](file:///Users/dyrane/Claude/Projects/wetindey/src/core/module-contract.ts).
-- **Module Folders**: Keep code inside its respective vertical module folder under `src/modules/<module-name>/`. Avoid giant generic folders or building utility dumping grounds (do not create `utils.ts` files).
+- **Decoupled UI**: The presentation layer (`src/app/`) must never define domain database logic, calculate freshness windows, or invent confidence scores directly.
+- **Live wiring**: Extract a bounded vertical slice only when it is wired to a live call site in the same change.
+- **No speculative module scaffold**: Do not create `src/modules/`, a generic module contract, or utility dumping grounds merely to satisfy an aspirational structure.
 
 ---
 
@@ -159,7 +154,7 @@ For any change that modifies:
 - External APIs, map adapters, or databases;
 - Privacy and security posture;
 
-You **MUST** write an Architectural Decision Record (ADR) in [docs/adr/](file:///Users/dyrane/Claude/Projects/wetindey/docs/adr/) following the template in Section 40.3 of the Bible, and record it in Section 40.1 / 40.2 of [WETINDEY_BIBLE.md](file:///Users/dyrane/Claude/Projects/wetindey/WETINDEY_BIBLE.md#L4363).
+You **MUST** write an Architectural Decision Record (ADR) in [docs/adr/](file:///Users/dyrane/Claude/Projects/wetindey/docs/adr/) following the template in Section 40.3 of the Bible, and record it in the decision index of [WETINDEY_BIBLE.md](docs/WETINDEY_BIBLE.md).
 
 ---
 

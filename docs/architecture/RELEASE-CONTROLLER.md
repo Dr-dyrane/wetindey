@@ -105,9 +105,10 @@ the current `HEAD`.
 
 ## Migration compatibility gate
 
-ADR-014 governs database evolution. The controller preserves the exact applied
-`0000`-`0008` lineage, treats `0009` and `0010` as unapplied until exact shared-target
-evidence says otherwise, and never uses a new migration to repair an unapplied `0010`.
+ADR-014 governs database evolution. The controller preserves the exact applied `0000`-`0013`
+lineage and immutable ledger evidence, repairing defects forward only. `0014` is the sole
+current unapplied migration gate and is Preview-only until its exact-target preflight and
+independent refutation pass; Production is not considered by that fact alone.
 
 Before any migration-sensitive push, record and prove:
 
@@ -124,14 +125,10 @@ Before any migration-sensitive push, record and prove:
 Disposable proof establishes source behavior only. It never authorizes shared migration or
 proves compatibility with a shared target.
 
-At bootstrap, migration `0010` is independently `NOT_REFUTED` at clean `c6f304b`. The
-manifest is `/tmp/wetindey-refute-0010-c6f304b-9bb58f7891d7.evidence.json`, SHA-256
-`7b1038bb15516425ad2164c21edfcd73e331bef5775cad1ae9773821110b930c`.
-It records passing exact blank and `0009`-upgrade paths, idempotence, policy and foreign-key
-probes, cleanup, final schema/ledger equivalence, and exclusion of `0011`. Because nearby
-presence later introduced `0011`, exact shared-target compatibility and ordering across
-`0009`, `0010`, and `0011` remain unverified. The bootstrap decision is therefore
-`NO PUSH`.
+Historical bootstrap note only: migration `0010` was independently `NOT_REFUTED` at clean
+`c6f304b`; its volatile disposable manifest and pre-`0011` scope are not current shared-target
+evidence. Current posture is recorded in root `LANES.md`: `0000` through `0013` are applied
+and immutable, while `0014` remains the separately gated Preview-only migration.
 
 ## Path-scoped documentation commits
 
@@ -878,3 +875,8 @@ and may not receive release-controller assignments or create controller clones.
   compatibility is proven, the integrated gate passes at one exact clean candidate, all
   applicable P0/P1/P2 findings and whitespace defects are closed, and required evidence is
   durable rather than `/tmp`-only.
+
+
+## Active-lane registry and archive reconciliation
+
+Before promoting a candidate, the controller reads root `LANES.md` as the required authoritative human coordination claim/index for current edits and gates. It remains advisory to Git, filesystem, runtime, and platform enforcement rather than a technically enforced lock. When a candidate or handoff refers to completed work, the controller also verifies the cited current-cycle archive record locator, source snapshot commit, and extracted SHA-256. An archive record is historical evidence only; it cannot retain, release, or create a current human claim. A mismatch between root, archive, candidate tuple, or external-state evidence is `REFUTED`.

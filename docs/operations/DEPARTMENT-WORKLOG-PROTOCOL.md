@@ -18,7 +18,8 @@ next exact action. They are memory, not a second control plane.
 | 2 | Accepted ADRs | Durable decision authority | An ADR does not implement itself or claim paths |
 | 3 | Architecture of record | Current-system explanation beneath code and ADRs | Correct it when code disproves it |
 | 4 | Git | Immutable identity, ancestry, and deltas | Git does not prove behavior or external state |
-| 5 | `LANES.md` | Current path locks and gates | A lane does not change policy or imply release |
+| 5 | Root `LANES.md` | Required authoritative human coordination claims and gates for current edits | Advisory to Git, filesystem, runtime, and platform enforcement; it is not a technical lock |
+| 5a | Lane history archive | Historical lane evidence and source-snapshot receipts | It never grants a current human claim or approval |
 | 6 | Department worklog | Durable functional memory and uncertainty | A log is never a lock or approval |
 | 7 | Branch handoff packet | Exact evidence tuple and transfer state | It expires when relevant state changes |
 
@@ -163,7 +164,7 @@ git status --short --branch
 ```
 
 Prove object identity, direct parent/base and ancestry; recompute candidate-tree SHA-256;
-match every sorted diff path; reconcile current `LANES.md`, ADR/architecture drift,
+match every sorted diff path; reconcile current root `LANES.md`, the archived lane-record locator when the received work is released, ADR/architecture drift,
 receiver worktree conflicts, and other handoffs. Record exact migration target/ledger/
 schema/RPC/RLS/grant state and provider/deployment/configuration/flag/scheduler state, or
 `UNKNOWN` plus the authorized owner. Repository equivalence never proves external state.
