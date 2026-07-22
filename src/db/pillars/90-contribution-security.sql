@@ -153,7 +153,7 @@ GRANT EXECUTE ON FUNCTION public.contribution_pending_queue(uuid, integer)
 GRANT EXECUTE ON FUNCTION public.contribution_audit_for_observation(uuid, uuid, integer)
   TO wetindey_contribution_moderator;
 GRANT EXECUTE ON FUNCTION public.contribution_review_detail(uuid, uuid)
-  TO wetindey_contribution_moderator;
+  TO wetindey_contribution_owner, wetindey_contribution_moderator;
 GRANT EXECUTE ON FUNCTION public.contribution_set_moderator_assignment(
   uuid, uuid, public.contribution_assignment_status, timestamptz, timestamptz,
   uuid, uuid

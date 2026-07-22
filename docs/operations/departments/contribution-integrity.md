@@ -258,3 +258,41 @@ and fails closed unless all four independently equal the separately configured a
 Focused source-only contracts cover the new review fields, rejected-read settling, and missing/mismatched
 Neon identity. This remains application/CLI proof only: no Neon connection, migration lifecycle, assigned
 role, Preview/Production target, or moderation traffic was exercised.
+
+### 2026-07-22 - Forward `0016` review-detail ACL repair candidate
+
+#### Transfer coordinates
+
+- Base SHA: `b700acb5cc7c4180ee01c2e0eeb7b40fff144445`
+- Candidate paths: `src/db/pillars/90-contribution-security.sql`,
+  `src/db/migrations/0016_contribution_review_acl_repair.sql`,
+  `src/db/migrations/meta/0016_snapshot.json`,
+  `src/db/migrations/meta/0016_release_manifest.json`,
+  `src/db/migrations/meta/_journal.json`,
+  `scripts/contributions/contribution-moderation-acl-repair-contract.test.ts`, and this worklog only.
+- Immutable read-only predecessor: all `0000`-`0015` SQL and metadata, especially the Preview-applied
+  `0015` service and its release envelope.
+
+#### Problem and forward decision
+
+Preview evidence showed that `0015` reset `wetindey_contribution_owner` before revoking `PUBLIC`
+execution and granting the moderator role. PostgreSQL therefore retained the default `PUBLIC EXECUTE`
+ACL and omitted the intended moderator grant. `0016` does not replace the redacted RPC or change its
+return contract. It re-enters the dedicated owner role inside the migration transaction, converges only
+that function ACL to owner plus `wetindey_contribution_moderator`, then removes the transient SET and
+schema-CREATE capabilities.
+
+#### Source evidence and limits
+
+- `contribution-moderation-acl-repair-contract.test.ts` freezes the applied `0015` bytes, checks the
+  `0016` snapshot/journal/manifest chain, requires owner-active ACL ordering, rejects a service/schema
+  rewrite, and checks explicit cleanup plus fail-closed ACL assertions.
+- This is source-only evidence. It does not execute PostgreSQL 17, prove Drizzle transaction rollback,
+  apply Preview, assign any moderator, enable reporting, or authorize Production.
+
+#### Exact next action
+
+- Actor: independent database/security refuter, then authorized Preview migration operator.
+- Action: refute static scope first; after a PASS, prove blank/upgrade/idempotence/injected-rollback and
+  exact owner/moderator/public ACLs on isolated PostgreSQL 17 before separately authorized Preview
+  application and revalidation.

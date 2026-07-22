@@ -113,6 +113,13 @@
       "when": 1784653200000,
       "tag": "0015_contribution_moderation_operations",
       "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1784739600000,
+      "tag": "0016_contribution_review_acl_repair",
+      "breakpoints": true
     }
   ]
 }
