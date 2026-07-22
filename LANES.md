@@ -44,7 +44,7 @@ to idle rather than creating a replacement task.
 | Developer Relations & Engineering Enablement `019f7995-5b7b-7ee1-81ef-2c3a3c57b836` | Department worklog protocol complete / released | `62880ac` and fail-closed repair `2523da1` are on current main; remain persistent for later bounded enablement assignments |
 | Catalog Stewardship `019f7999-37d0-7231-8b89-0e71c2569ce2` | Catalog workflow complete / released; employee idle | `8a072e2`/`7b42664` and `fe09dc3` resolved the safety-scope and no-match/transport corrections; no active path claim remains |
 | Private Contractor, Full-Stack Delivery `ef98946c-a55e-4700-aa6e-c1a840e42eef` | Seated by Founder instruction 2026-07-21; first lane (account deletion) RELEASED, blocked by ADR-021, request to controller recorded in Active locks; now discovering the next ADR-clear lane | Method: multi-agent orchestration ending in default-to-REFUTED independent refutation, and ADR-clearance proven before any claim (the deletion lane taught this). Not building on stale memory: a discovery workflow reads the ADRs, this registry, and the gate states to find genuinely open, ADR-clear, unclaimed, high-value work, then executes only on affirmative clearance |
-| Private Contractor, Maps Delivery `c9c17443-ef5e-4a7b-9b6e-c8f5381da30c` | Ten lanes complete / released; Lane C (dark road hierarchy) in refutation | Richness pass: light warmth `f307cef` and freshness tint `a55eb9a` shipped; dark roads at claim `d4c091f` pending verdict; queued: commercial wash spec (data-bound, recorded), Safari or iOS capture drive (owner tooling), Presence serialization when routed |
+| Private Contractor, Maps Delivery `c9c17443-ef5e-4a7b-9b6e-c8f5381da30c` | Eleven lanes complete / released; richness pass shipped whole (`f307cef`, `a55eb9a`, `c66dcd3`); seat idle on the check-in loop | Queued: Safari or iOS capture drive (owner tooling), Presence Maps-side serialization when routed; commercial-district richness remains data-bound, not paint-bound, per the wash audit |
 
 
 
@@ -146,15 +146,9 @@ Controller-directed, scout confirms exact paths and STOPS to the controller befo
 
 ## Active exact path locks
 
-#### Maps dark road hierarchy and wash strength - ACTIVE
+#### Maps dark road hierarchy and wash strength - RELEASED / PATHLESS
 
-Owner: Private Contractor, Maps Delivery `c9c17443-ef5e-4a7b-9b6e-c8f5381da30c`. Exact writable path:
-
-- `src/integrations/maps/cartography.ts`
-
-Purpose: Lane C of the Founder-directed richness pass; the Founder observed this session that dark is still not colored. Root cause cited from the live style: dark-v11 collapses every road class into one `road-simple` line layer at flat `hsl(0,0%,24%)`, so the network that gives light half its life (the orange expressway, the primary grid) has no hierarchy to color. This lane reintroduces hierarchy data-driven on `road-simple` via a match on the road class (motorway and trunk warm and unmistakable, primary a warmer step, secondary and tertiary a lightness step, everything else stock), and audits the commercial wash strength which currently resolves near-invisible over the land. Dark only; the controller ruling's subordination guardrails apply (ground stays under the data layer, no marker competition); light must stay pixel-identical at the 0.00 percent bar Lane A set for dark. Exclusions: every other path.
-
-Completion: before and after dark captures show the expressway warm and the road hierarchy legible with labels and markers untouched; light proven pixel-identical; stock citations verified; independent default-to-REFUTED refutation; gates green; path-scoped commit pushed under the `0bbdb11` class; span-checked release.
+Complete at `c66dcd3`, pushed under the `0bbdb11` proven-reversible class. The dark network's hierarchy is restored data-driven across the road-simple/bridge-simple/tunnel-simple trio; the refuter refuted the first draft's single-layer citation and bridge gap, and the repair is credited in the source. Light held pixel-identical at 0.00 percent through both drafts. The commercial wash was audited and deliberately left honest: applied and opaque, bounded by Festac's sparse commercial_area polygon data. The Founder-directed richness pass (Lanes A, B, C) is complete. Path released.
 
 #### Maps route freshness tint - RELEASED / PATHLESS
 
