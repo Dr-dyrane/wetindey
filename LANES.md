@@ -41,6 +41,7 @@ to idle rather than creating a replacement task.
 | Product & Data Governance Architect `019f7599-0eaa-7423-9ebf-a1bfea8efe37` | Community Trust governance complete / released | `170de61` is on current main; remain persistent for later bounded governance or independent review assignments |
 | Developer Relations & Engineering Enablement `019f7995-5b7b-7ee1-81ef-2c3a3c57b836` | Department worklog protocol complete / released | `62880ac` and fail-closed repair `2523da1` are on current main; remain persistent for later bounded enablement assignments |
 | Catalog Stewardship `019f7999-37d0-7231-8b89-0e71c2569ce2` | Catalog workflow complete / released; employee idle | `8a072e2`/`7b42664` and `fe09dc3` resolved the safety-scope and no-match/transport corrections; no active path claim remains |
+| Private Contractor, Full-Stack Delivery `ef98946c-a55e-4700-aa6e-c1a840e42eef` | Seated by Founder instruction 2026-07-21; first bounded lane claimed below | Account deletion vertical (App Store 5.1.1(v); named absent at this file's Presence readiness audit). Method: multi-agent orchestration ending in default-to-REFUTED independent refutation before any path-scoped commit. Deletion design previously proven on the live database: anonymise `sources.user_id`, tighten the anonymous-source lookup in the same change, erase the `neon_auth` user through its proven `ON DELETE CASCADE` FKs (Neon's own `deleteUser` endpoint returns 404, server-gated), delete the `user_profiles` row and Blob avatar, then sign out. Verification uses a throwaway account only, never the Founder's |
 
 
 
@@ -49,6 +50,17 @@ to idle rather than creating a replacement task.
 #### Governance modularization — RELEASED / PATHLESS
 
 The active serialized governance claim completed as one atomic path-scoped candidate. Independent final refutation returned **PASS**; its exact documentation and archive-split paths are released upon the atomic path-scoped commit. Root `LANES.md` remains the required human coordination index for future current claims, while the current-cycle archive preserves completed evidence without granting authority.
+
+#### Account deletion vertical — ACTIVE
+
+Owner: Private Contractor, Full-Stack Delivery `ef98946c-a55e-4700-aa6e-c1a840e42eef`. Exact writable paths:
+
+- new `src/app/_actions/account-actions.ts`
+- `src/app/_components/manage-profile-sheet/**`
+
+Purpose: in-app account deletion (App Store 5.1.1(v)), the wiring this file's Presence readiness audit records as absent. Contributions are anonymised, never deleted: prices remain the commons; identity is erased. The action resolves the session server-side only, takes no client id, and its copy states truthfully that reports stay on the map anonymously. Runtime app writes only; no schema change, no migration, no shared-database target. Exclusions: `src/app/page.tsx`, `src/core/i18n/strings.ts` (copy lives in the slice's own `copy/`), every Presence queued path, every ADR-locked path, providers, deployment.
+
+Completion: an independent default-to-REFUTED refutation must pass on identity safety (session-only, no cross-user deletion), truthfulness of copy, and a driven browser round-trip on a throwaway account; then a path-scoped commit releases these paths and returns the seat to idle.
 
 No other source path is currently claimed by this registry. A persistent employee seat is not a path claim.
 
