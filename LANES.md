@@ -44,7 +44,7 @@ to idle rather than creating a replacement task.
 | Developer Relations & Engineering Enablement `019f7995-5b7b-7ee1-81ef-2c3a3c57b836` | Department worklog protocol complete / released | `62880ac` and fail-closed repair `2523da1` are on current main; remain persistent for later bounded enablement assignments |
 | Catalog Stewardship `019f7999-37d0-7231-8b89-0e71c2569ce2` | Catalog workflow complete / released; employee idle | `8a072e2`/`7b42664` and `fe09dc3` resolved the safety-scope and no-match/transport corrections; no active path claim remains |
 | Private Contractor, Full-Stack Delivery `ef98946c-a55e-4700-aa6e-c1a840e42eef` | Seated by Founder instruction 2026-07-21; first lane (account deletion) RELEASED, blocked by ADR-021, request to controller recorded in Active locks; now discovering the next ADR-clear lane | Method: multi-agent orchestration ending in default-to-REFUTED independent refutation, and ADR-clearance proven before any claim (the deletion lane taught this). Not building on stale memory: a discovery workflow reads the ADRs, this registry, and the gate states to find genuinely open, ADR-clear, unclaimed, high-value work, then executes only on affirmative clearance |
-| Private Contractor, Maps Delivery `c9c17443-ef5e-4a7b-9b6e-c8f5381da30c` | Twelve lanes complete / released; seat idle on the check-in loop | Richness pass complete plus own-markets glow and the toggle style-gate repair (`f307cef`, `a55eb9a`, `c66dcd3`, `266a294`); queued: Safari or iOS capture drive (owner tooling), Presence serialization when routed |
+| Private Contractor, Maps Delivery `c9c17443-ef5e-4a7b-9b6e-c8f5381da30c` | Fourteen lanes complete / released; seat idle on the check-in loop | Map machinery now engine-proven on Chromium (Metal and SwiftShader) and WebKit; residual Maps scope only Safari shell and iOS device; ADR-031 awaits Founder acceptance; Presence serialization when routed |
 
 
 
@@ -160,15 +160,9 @@ Controller-directed, scout confirms exact paths and STOPS to the controller befo
 
 ## Active exact path locks
 
-#### Maps WebKit capture evidence entry - ACTIVE
+#### Maps WebKit capture evidence entry - RELEASED / PATHLESS
 
-Owner: Private Contractor, Maps Delivery `c9c17443-ef5e-4a7b-9b6e-c8f5381da30c`. Exact writable path:
-
-- `docs/operations/departments/maps-location.md`
-
-Purpose: the Founder directed this session that the owner-tooling blocker be fixed by another workflow. Playwright's official WebKit build (18.2, build v2104) closes the engine question without Safari settings or an iOS runtime: on real WebKit, both theme-toggle directions produced captured photographs with the overlay bridging and collecting, the frame probe read visible pixels natively, the glow replayed into each new style, and a forced WEBGL_lose_context mid-swap recovered to ready with no stuck overlay. This lane appends the evidence entry narrowing the remaining Unknown to Safari-shell and iOS-device specifics only. Documentation only. Exclusions: every other path.
-
-Completion: tuple stamped and structure green; independent default-to-REFUTED refuter reproduces the WebKit drive; path-scoped commit pushed under the `0bbdb11` class; span-checked release.
+Complete at the WD-MAPS-THEMEFADE-20260722-4 commit, pushed under the `0bbdb11` class after independent end-to-end reproduction on Playwright WebKit 18.2 (both toggle directions captured and bridged, native probe reads, glow replay, context-loss recovery). The owner-tooling blocker is dissolved at engine level; the residual Unknown is exactly Safari shell and iOS device behavior. Path released.
 
 #### Farm inputs pillar decision record - RELEASED / PATHLESS
 
