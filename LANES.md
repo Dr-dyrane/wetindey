@@ -137,6 +137,25 @@ branches. `GetItSheetView.tsx` is 219 lines and `GetItReviewsView.tsx` is 136; n
 data, moderation, copy, visual, accessibility, contact, share, directions, write,
 database, or deployment behavior changed.
 
+#### Currency upstream provider extraction — ACTIVE
+
+Owner: current orchestrator with Currency topology worker `019f87ff-a49a-7c31-b8ff-02b173912277`.
+Exact writable paths:
+
+- `LANES.md`
+- `src/app/_actions/currency-actions.ts`
+- new `src/app/_actions/currency-provider.ts`
+
+Purpose: move only Frankfurter/CBN transport, response validation, parsing, and upstream
+fetch helpers into one directly imported server-side provider boundary. Public action and
+type exports, cache/fallback orchestration, provider attribution, query windows, timeout,
+errors, browser cache, UI callers, and all rates remain unchanged.
+
+Completion: `currency-actions.ts` remains the sole public action boundary and falls below
+300 lines; the provider has exactly one live server caller; a fresh independent
+default-to-REFUTED review proves URL/query/cache/timeout/parser/error/export equivalence;
+then one exact-path commit releases both action paths.
+
 No other source path is currently claimed by this registry. A persistent employee seat is not a path claim.
 
 ## Pathless blockers and external gates
