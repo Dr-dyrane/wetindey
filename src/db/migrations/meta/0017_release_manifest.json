@@ -1,0 +1,49 @@
+{
+  "kind": "release_manifest",
+  "release": "0017_contribution_pending_queue_shape_repair",
+  "status": "candidate_unapplied",
+  "shared_database_applied": false,
+  "first_shared_application_frozen": false,
+  "parent_release": "0016_contribution_review_acl_repair",
+  "parent_snapshot_id": "c85fd31e-0793-5ded-8c66-9fbcf12d1f4c",
+  "result_snapshot_id": "6f49b946-260e-5ed7-b740-189bad171017",
+  "artifacts": {
+    "migration": {
+      "path": "src/db/migrations/0017_contribution_pending_queue_shape_repair.sql",
+      "sha256": "a864a63b8fa782e0af1be9a01329857a303e874d57799d7b74517cc70909f34a"
+    },
+    "snapshot": {
+      "path": "src/db/migrations/meta/0017_snapshot.json",
+      "sha256": "00a543208a84ee32ded749dd8ee7d77c97afa67363a43e4dc7e1285dcbc0aa32"
+    },
+    "journal": {
+      "path": "src/db/migrations/meta/_journal.json",
+      "sha256": "e1db38fc7c7d3f9e971e4d4a3669aa271d499aaa59600e731544a100f534c7b9",
+      "entry_index": 17,
+      "entry_when": "1784743200000"
+    }
+  },
+  "source_sha256": {
+    "src/db/pillars/80-contribution-services.sql": "1395c8361fc43612685b9c13325674e73f797d3de2aa278d9aad0809683bf50f",
+    "scripts/contributions/contribution-pending-queue-shape-repair-contract.test.ts": "bad4968bd69a7681b960f9c5e5b4d78fe590af68f73dc8a5976e2a8316db4fa3"
+  },
+  "generator": {
+    "drizzle_kit": "0.31.10",
+    "drizzle_orm": "0.45.2",
+    "journal_version": "7"
+  },
+  "scope": {
+    "adds": [],
+    "table_or_type_changes": false,
+    "rls_or_policy_changes": false,
+    "direct_table_grants": false,
+    "function_or_acl_changes": [
+      "public.contribution_pending_queue(uuid, integer) result expressions only"
+    ]
+  },
+  "authorization": {
+    "shared_migration_execution": false,
+    "preview_activation": false,
+    "production_activation": false
+  }
+}

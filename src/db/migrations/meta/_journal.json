@@ -120,6 +120,13 @@
       "when": 1784739600000,
       "tag": "0016_contribution_review_acl_repair",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1784743200000,
+      "tag": "0017_contribution_pending_queue_shape_repair",
+      "breakpoints": true
     }
   ]
 }

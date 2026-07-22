@@ -668,10 +668,10 @@ BEGIN
     observation.item_variant_id,
     observation.unit_id,
     observation.place_id,
-    observation.availability_state,
+    observation.availability_state::text,
     observation.price_amount,
     observation.observed_at,
-    observation.collection_method,
+    observation.collection_method::text,
     observation.corrects_observation_id,
     source.user_id IS NOT NULL,
     observation.submitted_at

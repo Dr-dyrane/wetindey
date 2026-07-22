@@ -326,3 +326,108 @@ moderation remain disabled, Production remains unchanged, and no moderator was a
 operation is to provision separately scoped moderator/control principals and Preview-only environment
 configuration, then drive the signed-in moderation and Food-report lifecycle before any Production
 migration or public enablement.
+
+### 2026-07-22 - Baseline-preserving `0017` pending-queue result-shape repair candidate
+
+#### Transfer coordinates
+
+- Evidence ID: `WD-CONTRIB-0017-SHAPE-20260722-TERRA5`
+- Base SHA: `4b937260b21ddd7ad94663454626b33441de1976`
+- Candidate tree SHA-256: `12c63f5e98382bd29470bb2f09339c37b5ed8d0f2ab46e5b952218b06e9f0fda`
+- Candidate hash algorithm: `wetindey-candidate-tree-v1`
+- Candidate paths (sorted):
+```text
+docs/operations/departments/contribution-integrity.md
+scripts/contributions/contribution-pending-queue-shape-repair-contract.test.ts
+src/db/migrations/0017_contribution_pending_queue_shape_repair.sql
+src/db/migrations/meta/0017_release_manifest.json
+src/db/migrations/meta/0017_snapshot.json
+src/db/migrations/meta/_journal.json
+src/db/pillars/80-contribution-services.sql
+```
+- Final commit SHA: `Reported by the worker/controller after commit; not embedded in these bytes.`
+
+#### Lane and path boundaries
+
+- Lane heading: `#### Contribution pending-queue row-shape repair \`0017\` — ACTIVE`
+- Lane owner: `database service worker`
+- Owned paths: `Exactly the 7 paths in the preceding Candidate paths (sorted) block; no other path.`
+- Excluded paths: `Every repository path not listed in Candidate paths (sorted), including LANES.md, all 0000-0016 release bytes, application paths, and deployment configuration.`
+
+#### Decisions and rationale
+
+The live Preview queue RPC fails because its declared `text` result columns receive persisted varchar
+expressions without explicit coercion. This forward repair changes only
+`observation.availability_state::text` and `observation.collection_method::text`; it preserves the
+signature, moderator assignment check, limit validation, admission and effective-decision predicates,
+ordering, owner, and moderator-only execute ACL.
+
+#### Implementation
+
+The focused contract derives the immutable predecessor queue definition directly from `0013`, performs
+exactly the two required bare-expression substitutions, and requires both the desired-state pillar and
+forward migration to equal that result. It also freezes every ordered `0000`-`0016` SQL hash, journal tag,
+snapshot ID, and snapshot predecessor link; deep-compares the normalized `0017` snapshot with immutable
+`0016`; and freezes every pillar byte outside the queue function against base
+`4b937260b21ddd7ad94663454626b33441de1976`. The migration temporarily activates the existing dedicated
+definer role solely to replace that function, then proves the existing owner and execute ACL. Before the
+first GRANT, the migration captures exact direct membership rows including grantor and all option bits, plus
+MEMBER, USAGE, SET, and owner schema-CREATE states. It fails closed unless baseline USAGE, SET, and CREATE
+are false. After cleanup, symmetric set comparison and state equality must restore that baseline exactly,
+preserving the required cloud-admin ADMIN grant without permitting `0017` to add a direct or transitive
+usable path. The detached snapshot advances metadata only; no table, type, RLS, policy, direct table grant,
+or application call site changes.
+
+#### Evidence and refutations
+
+- Source refuter ID: `019f8938-09e3-7042-a805-c29cbeb13c37`; verdict **PASS**, no P1/P2/P3.
+- Runtime bundle: `/var/folders/n9/d2z6ybln5vb34xvzpqrwj4wr0000gn/T/wetindey-0017-runtime-1784717772800-508629ffd3`.
+- Bundle SHA-256: migration `a864a63b8fa782e0af1be9a01329857a303e874d57799d7b74517cc70909f34a`;
+  events `1e253182713a059ae228575c5e09b8580457c42a1cf059eef33f96d4782bc1f0`; result
+  `cdda80501b0fa34c88bd92cc3407b7eb742ab2dc1f9724622b5069f505285394`; harness
+  `11df3be832110712d3a0d93544c2049e84f9f0d9bbb7198d60dce4e38ce7e0e5`.
+- Runtime result: exact Neon project `wild-rain-23091788`, branch `br-flat-band-aui9waf5`, endpoint
+  `ep-jolly-band-auyq1uv1`, base database `neondb`, PostgreSQL `170010`, non-superuser
+  `neondb_owner` with CREATEDB/CREATEROLE. Blank and upgraded ledgers contain the ordered 18 migration
+  rows ending in the exact `0017` hash. The staged 17-row predecessor reproduces SQLSTATE `42804` and
+  the varchar-to-text mismatch; the repaired queue returns successfully. Injected SQLSTATE `P0001`
+  rolls back to byte-equal function/ACL/membership/capability evidence. Second Drizzle and manual
+  idempotence are unchanged. Exact disposable names are absent after cleanup.
+- Runtime refuter ID: `019f8938-09e3-7042-a805-c29cbeb13c37`; initial summary-only bundle was
+  **REFUTED** with three P2 evidence gaps. The strengthened four-artifact bundle resolves all three;
+  follow-up verdict **PASS**, with no required artifact or field missing.
+
+#### Known failures
+
+Earlier PostgreSQL 17 attempts exposed the required cloud-admin ADMIN-only baseline and two proof-harness
+defects; every attempt retained zero disposable residue. The corrected candidate now has successful
+blank/upgrade/idempotence/injected-failure evidence and independent runtime PASS. Preview and Production
+application remain unexamined; this bundle does not claim either shared target was migrated.
+
+- Unknown scope: `Preview application; Production application; contribution report activation`
+- Unknown owner: `authorized migration operator and independent shared-target refuter`
+- Unknown resolution action: `Apply and verify exact 0017 bytes on Preview, re-run the moderator queue, then complete the two-account Preview lifecycle before any Production application or report activation.`
+
+#### External gates
+
+- External gate owner: `authorized migration operator`
+- Gate state: `Standing Founder/controller authorization permits guarded exact-target Preview application. The candidate itself grants no Production migration, report activation, or deployment authority; those remain sequenced after Preview proof.`
+
+#### Integration order
+
+Independent source and strengthened runtime refutation both pass. Commit and push the exact candidate,
+then hand those immutable bytes to the guarded Preview operator. Production and report activation remain
+later independent gates after Preview queue and two-account lifecycle proof.
+
+#### Rollback or disable
+
+If the candidate is rejected before a shared apply, drop the unapplied `0017` candidate and regenerate its
+detached metadata. After any shared application, preserve these bytes and issue a separate forward repair;
+never rewrite `0000`-`0017` history.
+
+#### Exact next action
+
+- Actor: `authorized Preview migration operator`
+- Action: `Commit and push the exact candidate, apply only 0017 to the exact Preview branch, verify ledger/hash/owner/ACL/baseline cleanup, and call the moderator queue while reporting remains disabled.`
+- Target: `Preview branch br-steep-dust-auhcmjk8 after exact endpoint/database guard; immutable 0017 hash a864a63b8fa782e0af1be9a01329857a303e874d57799d7b74517cc70909f34a.`
+- Completion: `Preview ledger records exact 0017 bytes, queue RPC succeeds for the assigned moderator, controls remain fail-closed, and an independent shared-target verdict passes.`

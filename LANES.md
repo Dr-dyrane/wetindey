@@ -70,7 +70,7 @@ delta refuter returned **PASS** with no scoped P1/P2/P3. All six source/test/wor
 are released. Runtime target activation remains blocked on the separately claimed review
 operations vertical below; this source commit must not deploy alone as a false affordance.
 
-#### Contribution control Neon endpoint guard — ACTIVE
+#### Contribution control Neon endpoint guard — COMPLETE / RELEASED
 
 - **Owner:** Executive controller; independent Security/Quality refuter required before apply.
 - **Exclusive paths:** `scripts/contributions/contribution-moderator-control.ts` and
@@ -79,7 +79,39 @@ operations vertical below; this source commit must not deploy alone as a false a
   database, configured-host, and allowlist agreement. Keep every control command dry-run by default;
   do not assign a moderator or change reporting/moderation controls until the correction is refuted.
 
-#### Contribution moderation service `0015` / ACL repair `0016` — PREVIEW APPLIED / SOURCE + RUNTIME PASS / ACTIVE
+Complete at `4b93726`: exact target and immutable Neon identity settings, target-bound hashed actor
+approvals, recursive no-`SET ROLE` membership closure, and one serializable pre-probe/mutation/post-probe
+transaction passed focused contracts, exact-path lint, live Preview read-only proof, and independent
+refutation. Paths released.
+
+#### Contribution pending-queue row-shape repair `0017` — ACTIVE
+
+- **Owner:** database service worker; independent Database/Quality refuter required before any apply.
+- **Exclusive paths:** `src/db/pillars/80-contribution-services.sql`, new
+  `src/db/migrations/0017_contribution_pending_queue_shape_repair.sql`, new
+  `src/db/migrations/meta/0017_snapshot.json`, new
+  `src/db/migrations/meta/0017_release_manifest.json`,
+  `src/db/migrations/meta/_journal.json`, new
+  `scripts/contributions/contribution-pending-queue-shape-repair-contract.test.ts`, and
+  `docs/operations/departments/contribution-integrity.md` only.
+- **Contract:** preserve immutable applied `0000`-`0016`. Repair only
+  `public.contribution_pending_queue(uuid, integer)` so its two declared `text` columns explicitly
+  return `availability_state::text` and `collection_method::text`; preserve signature, assignment
+  enforcement, ordering, limits, admission/effective-decision predicates, ownership, ACLs, and all
+  other service behavior. Prove blank/upgrade/idempotence/injected-failure rollback on PostgreSQL 17,
+  then independently refute before exact-target Preview application. Production and report activation
+  remain separately gated.
+
+The exact seven-path candidate passes its five focused contracts, scoped diff hygiene, and independent
+source refutation with no P1/P2/P3. The strengthened PostgreSQL 17 evidence bundle at
+`/var/folders/n9/d2z6ybln5vb34xvzpqrwj4wr0000gn/T/wetindey-0017-runtime-1784717772800-508629ffd3`
+passes blank `0000`-`0017`, staged `0000`-`0016` predecessor reproduction, real `0017` upgrade,
+injected rollback, second Drizzle migration, manual idempotence, exact owner/ACL/baseline restoration,
+and zero disposable-database residue; Luna's follow-up verdict is **PASS**. The lane stays claimed only
+through commit and guarded exact-target Preview application. Production migration and report activation
+remain separate later gates.
+
+#### Contribution moderation service `0015` / ACL repair `0016` — PREVIEW APPLIED / SOURCE + RUNTIME PASS / RELEASED
 
 Preview applied immutable `0015`, then direct ACL evidence proved its post-`RESET ROLE`
 `REVOKE`/`GRANT` statements were no-ops: `PUBLIC` retained `EXECUTE` and the intended
