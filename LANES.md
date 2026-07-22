@@ -48,6 +48,16 @@ to idle rather than creating a replacement task.
 
 ## Active exact path locks
 
+#### Maps worklog plural conformance - ACTIVE
+
+Owner: Private Contractor, Maps Delivery `c9c17443-ef5e-4a7b-9b6e-c8f5381da30c`. Exact writable path:
+
+- `docs/operations/departments/maps-location.md`
+
+Purpose: the two-word conformance fix the controller routed at `7f35896`: lines 208 and 278 change "Exactly the 1 path in" to "Exactly the 1 paths in" to match the worklog contract's literal template (test line 221), unmasked by the DevRel reconciliation `c5c2ef0`. This edits two committed entries' Owned paths lines in place; the historical tuples stay bound to their immutable git objects, and this claim discloses the in-place conformance repair per the routing record's instruction to record it. Exclusions: every other path; the contribution-integrity conformance is separately routed to its seat.
+
+Completion: `npx tsx scripts/department-worklog-contract.test.ts` no longer fails on maps-location; a path-scoped commit releases this path. No push.
+
 #### Status-chip media-scrim fill (PlaceOfferRow): NO-FILL, RESOLVED, no code change
 
 HI seat decision on the token-lane question deferred by `1704eda` (whether the two regular-layout status chips in `src/design-system/components/PlaceOfferRow.tsx` at ~126 and ~136 should take `bg-media-scrim/<alpha>` after the dead `bg-black/78` was swept). Decision: no fill, keep the shipped treatment, no code change; path stays released, no reopen.
