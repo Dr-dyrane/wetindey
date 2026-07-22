@@ -45,15 +45,20 @@ const paths = [
   "docs/operations/departments/trust-data-governance.md",
   "scripts/department-worklog-contract.test.ts",
 ] as const;
-const repairBase = "dae6786d2c0567387fdffc4ddd33bac2603ae33a";
-const repairEvidence = "WD-DEVREL-WORKLOG-20260721-DIGEST2";
-const repairRefuter = "independent-codex-refuter-digest-20260721-02";
+const activeLanePaths = paths.filter((path) => path !== "docs/operations/departments/human-interface.md" && path !== "docs/operations/departments/maps-location.md");
+const supersededRepairBase = "dae6786d2c0567387fdffc4ddd33bac2603ae33a";
+const supersededRepairEvidence = "WD-DEVREL-WORKLOG-20260721-DIGEST2";
+const supersededRepairRefuter = "independent-codex-refuter-digest-20260721-02";
+const supersededRepairDigest = "393b153a810093b0876f5c0e12f074fce15ff71477fe812fe98a767c116dd311";
+const repairBase = "d3de9dc5a6f89481b0454fe0abe98e90d5c939be";
+const repairEvidence = "WD-DEVREL-WORKLOG-20260721-DIGEST3";
+const repairRefuter = "independent-codex-refuter-digest-20260721-03";
 const repairPaths = [
   "docs/operations/DEPARTMENT-WORKLOG-PROTOCOL.md",
   "docs/operations/departments/developer-experience.md",
   "scripts/department-worklog-contract.test.ts",
 ] as const;
-const reviewedRepairDigest = "8bf01e4b74895ab13961061639db60902b55bf42c665ddef0b0f7becd08d397b";
+const reviewedRepairDigest = "759e9cd3263030be967fcce995935253b54dd4eb09c9f8402eca3c0d63b00597";
 const headings = [
   "Transfer coordinates", "Lane and path boundaries", "Decisions and rationale",
   "Implementation", "Evidence and refutations", "Known failures", "External gates",
@@ -311,14 +316,15 @@ test("department worklogs satisfy the static handoff contract", () => {
   const to = lane.indexOf(last);
   assert.ok(from >= 0 && to > from, "lane manifest bounds are missing");
   const lanePaths = [...lane.slice(from, to + last.length).matchAll(/`([^`]+)`/g)].map((match) => match[1]);
-  assert.equal(lanePaths.length, paths.length, "LANES.md manifest must contain exactly 23 paths");
+  assert.equal(lanePaths.length, activeLanePaths.length, "LANES.md manifest must contain exactly 21 active paths");
   assert.equal(new Set(lanePaths).size, lanePaths.length, "LANES.md manifest paths must be unique");
-  assert.deepEqual([...lanePaths].sort(), [...paths].sort(), "LANES.md must contain the exact candidate path membership");
-  for (const path of paths) assert.equal(lane.split("`" + path + "`").length - 1, 1, `LANES.md must list ${path} once`);
+  assert.deepEqual([...lanePaths].sort(), [...activeLanePaths].sort(), "LANES.md must contain the exact active-lane path membership");
+  for (const path of activeLanePaths) assert.equal(lane.split("`" + path + "`").length - 1, 1, `LANES.md must list ${path} once`);
 
   const ids = new Set<string>();
   const names = new Set<string>();
   let bootstrapEntries = 0;
+  let supersededRepairEntries = 0;
   let repairEntries = 0;
   for (const id of departments) {
     const path = `docs/operations/departments/${id}.md`;
@@ -347,6 +353,19 @@ test("department worklogs satisfy the static handoff contract", () => {
         assert.equal(entryExcluded, exactExcluded, `${context} bootstrap exclusions are paraphrased`);
         assert.equal(entryRefuter, refuter, `${context} bootstrap refuter mismatch`);
       }
+      if (entryCoordinates.evidenceId === supersededRepairEvidence) {
+        supersededRepairEntries += 1;
+        assert.equal(path, "docs/operations/departments/developer-experience.md", `${context} superseded repair must stay in its functional-home log`);
+        assert.equal(headFields.length, 0, `${context} superseded repair must not invent Head SHA`);
+        assert.equal(entryCoordinates.baseSha, supersededRepairBase, `${context} superseded repair Base SHA mismatch`);
+        assert.equal(entryCoordinates.candidateHash, supersededRepairDigest, `${context} superseded repair candidate digest mismatch`);
+        assert.deepEqual(entryCoordinates.candidatePaths, [...repairPaths], `${context} superseded repair candidate paths mismatch`);
+        assert.equal(entryLaneHeading, laneHeading, `${context} superseded repair lane heading is paraphrased`);
+        assert.equal(entryLaneOwner, laneOwner, `${context} superseded repair lane owner mismatch`);
+        assert.equal(entryOwned, "Exactly the 3 paths in the preceding Candidate paths (sorted) block; no other path.", `${context} superseded repair owned paths are paraphrased`);
+        assert.equal(entryExcluded, exactExcluded, `${context} superseded repair exclusions are paraphrased`);
+        assert.equal(entryRefuter, supersededRepairRefuter, `${context} superseded repair refuter mismatch`);
+      }
       if (entryCoordinates.evidenceId === repairEvidence) {
         repairEntries += 1;
         assert.equal(path, "docs/operations/departments/developer-experience.md", `${context} repair must stay in its functional-home log`);
@@ -363,7 +382,8 @@ test("department worklogs satisfy the static handoff contract", () => {
     }
   }
   assert.equal(bootstrapEntries, departments.length, "every department must preserve exactly one bootstrap entry");
-  assert.equal(repairEntries, 1, "the fail-closed digest repair must have exactly one append-only entry");
+  assert.equal(supersededRepairEntries, 1, "the superseded fail-closed digest repair must remain exactly one append-only entry");
+  assert.equal(repairEntries, 1, "the current fail-closed digest repair must have exactly one append-only entry");
   const readme = sources.get("docs/operations/departments/README.md")!;
   assert.equal(plain(field(readme, "Evidence ID")), evidence);
   assert.equal(plain(field(readme, "Refuter ID")), refuter);

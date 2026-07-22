@@ -122,7 +122,7 @@ forward documentation correction that preserves the original rationale and verdi
 #### Transfer coordinates
 
 - Base SHA: `dae6786d2c0567387fdffc4ddd33bac2603ae33a`
-- Candidate tree SHA-256: `8bf01e4b74895ab13961061639db60902b55bf42c665ddef0b0f7becd08d397b`
+- Candidate tree SHA-256: `393b153a810093b0876f5c0e12f074fce15ff71477fe812fe98a767c116dd311`
 - Candidate hash algorithm: `wetindey-candidate-tree-v1`
 - Candidate paths (sorted):
 
@@ -195,3 +195,74 @@ forward correction; the original bootstrap entry and immutable Git evidence rema
 - Action: Refute the fixed candidate digest and exact three-path manifest using the focused contract command `npx tsx --test scripts/department-worklog-contract.test.ts`.
 - Target: Evidence WD-DEVREL-WORKLOG-20260721-DIGEST2 with base SHA dae6786d2c0567387fdffc4ddd33bac2603ae33a and its exact path manifest.
 - Completion: A NOT_REFUTED verdict records the fixed candidate digest and exact path manifest before commit.
+
+### 2026-07-21 - Active-lane manifest and base re-freeze
+
+#### Transfer coordinates
+
+- Base SHA: `d3de9dc5a6f89481b0454fe0abe98e90d5c939be`
+- Candidate tree SHA-256: `759e9cd3263030be967fcce995935253b54dd4eb09c9f8402eca3c0d63b00597`
+- Candidate hash algorithm: `wetindey-candidate-tree-v1`
+- Candidate paths (sorted):
+
+```text
+docs/operations/DEPARTMENT-WORKLOG-PROTOCOL.md
+docs/operations/departments/developer-experience.md
+scripts/department-worklog-contract.test.ts
+```
+
+- Final commit SHA: Reported by the worker/controller after commit; not embedded in these bytes.
+
+#### Lane and path boundaries
+
+- Lane heading: `#### Developer Relations & Engineering Enablement: department worklog protocol — active exact claim`
+- Lane owner: `019f7995-5b7b-7ee1-81ef-2c3a3c57b836`
+- Current lane manifest: Exactly 21 active paths in the focused static contract; `docs/operations/departments/human-interface.md` and `docs/operations/departments/maps-location.md` are Root UI paths and are excluded from DevRel ownership.
+- Owned paths: Exactly the 3 paths in the preceding Candidate paths (sorted) block; no other path.
+- Excluded paths: Every repository path not listed in Candidate paths (sorted), including LANES.md and all app, schema, migration, package, and ADR paths.
+
+#### Decisions and rationale
+
+The bootstrap and DIGEST2 records remain immutable historical evidence. This forward correction re-freezes the three-path repair on the current base and makes the active 21-path lane snapshot authoritative without re-claiming the two Root UI worklogs. Normalization removes only the candidate-hash self-reference.
+
+#### Implementation
+
+The protocol now distinguishes an immutable historical manifest from the current lane manifest. The focused contract keeps the historical 23-path bootstrap intact, compares the current active 21-path lane exactly, and accepts the repair only when its canonical three-path bytes equal one fixed reviewed literal digest.
+
+#### Evidence and refutations
+
+- Evidence ID: `WD-DEVREL-WORKLOG-20260721-DIGEST3`
+- Refuter ID: `independent-codex-refuter-digest-20260721-03`
+- Review binding: Full Base SHA, canonical Candidate tree SHA-256, current active-lane manifest, and sorted Candidate paths.
+- Verdict location: External read-only refuter output keyed by Evidence ID and Refuter ID; not embedded because changing reviewed bytes invalidates it.
+- Runtime and external evidence: The focused static command proves only the documented structure and fixed-digest comparison; no runtime or external state is claimed.
+
+#### Known failures
+
+Runtime behavior, external provider state, and deployment state remain outside this static candidate evidence and are not examined by this documentation/process repair.
+
+- Unknown scope: `runtime behavior; external provider state; deployment state`
+- Unknown owner: Program Management and Quality/Release
+- Unknown resolution action: Reconcile runtime behavior evidence, external provider state evidence, and deployment state evidence into exact branch handoff records before any transfer that claims those states.
+
+#### External gates
+
+- External gate owner: Program Management and Quality/Release
+- Gate state: Independent NOT_REFUTED evidence for WD-DEVREL-WORKLOG-20260721-DIGEST3 and an unchanged fixed digest are required before the local commit.
+
+No push, deployment, database, browser, package, app, schema, migration, ADR, or concurrent path operation is authorized by this entry.
+
+#### Integration order
+
+Freeze the exact three-path candidate on the recorded base, run the focused contract, obtain independent read-only refutation, and commit only those unchanged paths.
+
+#### Rollback or disable
+
+This repair changes no runtime behavior. A defect requires an authorized append-only forward correction; the bootstrap and DIGEST2 entries and immutable Git evidence remain intact.
+
+#### Exact next action
+
+- Actor: Independent refuter
+- Action: Refute the fixed digest, 21-path active lane manifest, and exact three-path candidate using the focused contract command `npx tsx --test scripts/department-worklog-contract.test.ts`.
+- Target: Evidence WD-DEVREL-WORKLOG-20260721-DIGEST3 with base SHA d3de9dc5a6f89481b0454fe0abe98e90d5c939be, the current 21-path lane manifest, and its exact three-path candidate manifest.
+- Completion: A NOT_REFUTED verdict records the fixed candidate digest and exact path manifests before commit.

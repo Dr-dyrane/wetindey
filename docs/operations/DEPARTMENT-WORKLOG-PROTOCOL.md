@@ -187,6 +187,11 @@ records receipt; it grants no path or promotion authority.
 A changed base, head, hash, path list, lane, governing decision, external state, verdict,
 or conflict posture invalidates the packet. Append a superseding record.
 
+When current `LANES.md` ownership legitimately narrows after an earlier entry, preserve the
+historical entry and its manifest unchanged. A later correction records its own candidate
+paths while the focused contract compares the current active-lane manifest separately; it
+must not revive paths that a different current lane owns.
+
 [`scripts/department-worklog-contract.test.ts`](../../scripts/department-worklog-contract.test.ts)
 checks structure, exact lane/path/exclusion text, canonical hash, IDs, placeholders, and
 next actions. It cannot validate runtime truth, Git history, live lane state, external
