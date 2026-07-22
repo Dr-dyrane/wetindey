@@ -50,7 +50,7 @@ to idle rather than creating a replacement task.
 
 #### Contractor playbook amendment: handed incidents — RELEASED / PATHLESS
 
-Complete at `aa29b91`: the eight incidents Full-Stack Delivery handed at `4a8db00` are incorporated into `docs/operations/CONTRACTOR-PLAYBOOK.md` with credit, every commit-referenced incident verified against its citation, independently refuted to NOT REFUTED after one blocking and four precision repairs. The contributor-input section below this registry's locks is consumed by that document and removed in this same commit. Path released.
+Complete at `aa29b91`: the eight incidents Full-Stack Delivery handed at `4a8db00` are incorporated into `docs/operations/CONTRACTOR-PLAYBOOK.md` with credit, every commit-referenced incident verified against its citation, independently refuted to NOT REFUTED after one blocking and four precision repairs. The contributor input itself had already been swept out of this registry by the playbook lane's own release burst `fbd3995`, unseen, when its heading-to-heading replacement swallowed the section 4a8db00 had appended; it was recovered from git history this cycle, which is why release bursts must diff their replacement span before committing. Path released.
 
 #### Contractor workflow playbook — RELEASED / PATHLESS
 
