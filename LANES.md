@@ -421,6 +421,10 @@ Maps Adapter release are recorded.
 
 ## Queued, non-authorizing candidate lanes
 
+### Developer Relations worklog-contract staleness reconciliation — QUEUED / PATHLESS
+
+Controller-recorded 2026-07-22 for the Developer Relations & Engineering Enablement seat `019f7995-5b7b-7ee1-81ef-2c3a3c57b836` (its domain; do not fold into any other lane). `npx tsx scripts/department-worklog-contract.test.ts` fails 1/5: it asserts an ACTIVE lane heading, `#### Developer Relations & Engineering Enablement: department worklog protocol` plus its 21-path active manifest, is present in `LANES.md` (test lines 308-322), but that lane was correctly released and its heading removed, so the assertion fails at the correct end state. This is NOT an 0017 defect and the released active lane must NOT be manufactured back into `LANES.md` to satisfy a stale precondition. The correct reconciliation is a bounded documentation-contract claim: teach the contract to accept the released state (or verify the worklog against its release record rather than a transient active heading), which because the test file's own bytes feed the self-referential `reviewedRepairDigest` chain (test line 395) requires, in the same append-only change, a new dated `developer-experience.md` worklog entry with a recomputed candidate digest and an independent default-to-REFUTED refutation. Exact candidate paths when claimed: `scripts/department-worklog-contract.test.ts`, `docs/operations/departments/developer-experience.md`, and `docs/operations/DEPARTMENT-WORKLOG-PROTOCOL.md` only. No app, schema, migration, or other departmental worklog path.
+
 ### Incremental live-app modularization — QUEUED / PATHLESS
 
 No future source path is pre-reserved. The released Slice 1 through Slice 10 evidence is archived in [application modularization history](docs/operations/lanes/history/2026-07-application-modularization.md). Any later extraction must first map the current live topology, identify one connected call path, claim exact non-overlapping paths, preserve behavior, and obtain independent refutation. Do not revive orphan module patterns or use a historical candidate list as a current claim.
