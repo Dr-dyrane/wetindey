@@ -113,6 +113,16 @@ External key (not a decision): activating the prepared contribution, image, and 
 
 ## Active exact path locks
 
+#### Maps light cartography warmth - ACTIVE
+
+Owner: Private Contractor, Maps Delivery `c9c17443-ef5e-4a7b-9b6e-c8f5381da30c`. Exact writable path:
+
+- `src/integrations/maps/cartography.ts`
+
+Purpose: Founder-directed visual richness pass, Lane A of two. The light theme currently receives only the POI hierarchy; the ground keeps streets-v12 stock values, which the recorded audit found emotionally flat next to the reworked dark theme. This lane warms the light ground inside the one cartography module: land background, water and waterway identity, and park presence, all subtle and token-consistent, dark untouched, POI hierarchy untouched. The commercial-district area wash is explicitly OUT of scope (it needs a current-paint read the module's type seam does not expose; recorded as the follow-up candidate for Lane B consideration). Baseline capture taken before the claim. Exclusions: every other path, including the adapter, canvas, spine, and all dark constants.
+
+Completion: before and after captures at the default camera in both themes prove the light ground warmed and dark unchanged; an independent default-to-REFUTED refuter reviews the diff and the captures; tsc, eslint, audit:tokens, and the location contract stay green; a path-scoped commit releases this path, pushed under the `0bbdb11` proven-reversible-checkpoint class after refutation.
+
 #### Maps worklog action-noun conformance - RELEASED / PATHLESS
 
 Complete at `2508af0`, pushed under the authorization of record `0bbdb11`: the routed Action-noun fix cascaded into four sibling asserts in entries 3 and 4 (Targets, resolution-action order, Action verb), all repaired in the same conformance class. The department worklog contract passes 5 of 5 for the first time. Path released.
