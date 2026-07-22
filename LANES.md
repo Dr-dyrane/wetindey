@@ -44,21 +44,15 @@ to idle rather than creating a replacement task.
 | Developer Relations & Engineering Enablement `019f7995-5b7b-7ee1-81ef-2c3a3c57b836` | Department worklog protocol complete / released | `62880ac` and fail-closed repair `2523da1` are on current main; remain persistent for later bounded enablement assignments |
 | Catalog Stewardship `019f7999-37d0-7231-8b89-0e71c2569ce2` | Catalog workflow complete / released; employee idle | `8a072e2`/`7b42664` and `fe09dc3` resolved the safety-scope and no-match/transport corrections; no active path claim remains |
 | Private Contractor, Full-Stack Delivery `ef98946c-a55e-4700-aa6e-c1a840e42eef` | Seated by Founder instruction 2026-07-21; first lane (account deletion) RELEASED, blocked by ADR-021, request to controller recorded in Active locks; now discovering the next ADR-clear lane | Method: multi-agent orchestration ending in default-to-REFUTED independent refutation, and ADR-clearance proven before any claim (the deletion lane taught this). Not building on stale memory: a discovery workflow reads the ADRs, this registry, and the gate states to find genuinely open, ADR-clear, unclaimed, high-value work, then executes only on affirmative clearance |
-| Private Contractor, Maps Delivery `c9c17443-ef5e-4a7b-9b6e-c8f5381da30c` | Seven lanes complete / released; seat idle on the self-paced check-in loop | `370cf07`, `03adfad`, `8fb9b02`, `9c1db98`, `aa29b91`, `23b1aef`, plus the controller-routed plural conformance; queued: Safari or iOS capture drive (owner tooling) and Presence Maps-side serialization when routed |
+| Private Contractor, Maps Delivery `c9c17443-ef5e-4a7b-9b6e-c8f5381da30c` | Eight lanes complete / released; seat idle on the self-paced check-in loop | Worklog contract 5/5 closed at `2508af0`; queued: Safari or iOS capture drive (owner tooling) and Presence Maps-side serialization when routed |
 
 
 
 ## Active exact path locks
 
-#### Maps worklog action-noun conformance - ACTIVE
+#### Maps worklog action-noun conformance - RELEASED / PATHLESS
 
-Owner: Private Contractor, Maps Delivery `c9c17443-ef5e-4a7b-9b6e-c8f5381da30c`. Exact writable path:
-
-- `docs/operations/departments/maps-location.md`
-
-Purpose: the controller-routed final worklog-contract blocker: entry 3's Action line gains the noun "evidence" twice ("the Safari or iOS Simulator drive evidence and the forced context-loss drive evidence") to satisfy the contract's concrete-noun rule (test line ~197), the same fix contribution-integrity entry 7 took at `d3ab340`. In-place conformance repair of a committed entry, disclosed; historical tuples stay bound to immutable git objects; the file is not in the test's repairPaths so no digest recompute. Exclusions: every other path.
-
-Completion: `npx tsx scripts/department-worklog-contract.test.ts` reaches 5 of 5; a path-scoped commit releases this path; push per the authorization of record `0bbdb11`, which names this seat's conformance class.
+Complete at `2508af0`, pushed under the authorization of record `0bbdb11`: the routed Action-noun fix cascaded into four sibling asserts in entries 3 and 4 (Targets, resolution-action order, Action verb), all repaired in the same conformance class. The department worklog contract passes 5 of 5 for the first time. Path released.
 
 #### Maps worklog plural conformance - RELEASED / PATHLESS
 
