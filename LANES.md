@@ -12,6 +12,8 @@ Controller owner: current orchestrator, over exactly `LANES.md` and `docs/archit
 
 The currently recorded controller evidence is indexed in [2026-07 release and governance history](docs/operations/lanes/history/2026-07-release-and-governance.md).
 
+**Push authorization of record (controller, 2026-07-22, from the Founder's own words).** The Founder's standing instruction ("handle git, check for good checkpoints and push"), the active controller brief ("Commit those exact paths... Push main immediately"; operating rule "Commit and push proven checkpoints promptly"), and the corrected governance rule ("an explicit owner instruction to push authorises pushing; push the checkpoints is not push the irreversible") together authorize pushing PROVEN, PATH-SCOPED, REVERSIBLE checkpoints to main, including routed documentation and conformance fixes that change no runtime behavior. This authorization does NOT cover the irreversible: shared-database migrations or writes, activation or control-flag flips, account or data deletion, Preview or Production mutation, or anything a revert cannot undo; those remain separately and explicitly gated. Seats holding refuted local checkpoints under this class (for example the Maps worklog plural conformance at `c0e729d`) may push per this record.
+
 ## Persistent employee roster
 
 ### Pinned persistent employee roster
