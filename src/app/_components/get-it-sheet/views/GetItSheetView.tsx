@@ -1,7 +1,5 @@
 import React from "react";
 import {
-  Star,
-  IconOrb,
   ModalSheet,
   ListRow,
   ListGroup,
@@ -18,6 +16,7 @@ import {
   type useGetItSheet,
 } from "../hooks/useGetItSheet";
 import type { StatusKind } from "@/design-system/components/StatusBadge";
+import { GetItReviewAggregateView, GetItReviewsView } from "./GetItReviewsView";
 import "../styles/GetItSheet.css";
 
 export interface GetItSheetViewProps extends GetItSheetProps {
@@ -105,25 +104,7 @@ export function GetItSheetView({
 
           {detailsOpen && (
             <div id="get-it-secondary" className="space-y-6">
-              {aggregate && aggregate.ratingCount > 0 && (
-                <div className="mx-4 flex items-center gap-1.5">
-                  <div className="flex items-center text-rating">
-                    {Array.from({ length: 5 }).map((_, i) => (
-                      <Star
-                        key={i}
-                        className={`h-3.5 w-3.5 ${
-                          i < Math.round(aggregate.ratingAverage)
-                            ? "fill-current"
-                            : "text-rating-muted"
-                        }`}
-                      />
-                    ))}
-                  </div>
-                  <span className="text-caption-1 font-semibold text-text-secondary">
-                    {aggregate.ratingAverage.toFixed(1)} ({aggregate.ratingCount} {aggregate.ratingCount === 1 ? "review" : "reviews"})
-                  </span>
-                </div>
-              )}
+              <GetItReviewAggregateView aggregate={aggregate} />
 
               <ListGroup>
                 <ListRow
@@ -225,93 +206,10 @@ export function GetItSheetView({
                 />
               </ListGroup>
 
-              <div className="px-4 pt-5 space-y-4">
-                <div>
-                  <h3 className="text-headline text-text-primary font-bold">Reviews</h3>
-                  <p className="mt-1 text-footnote text-text-secondary">
-                    New reviews are unavailable while we prepare safety and moderation safeguards.
-                  </p>
-                </div>
-
-                {loadingReviews ? (
-                  <p className="text-footnote text-text-secondary py-2">Loading reviews...</p>
-                ) : reviewsList.length === 0 ? (
-                  <div className="rounded-[20px] bg-fillSecondary px-4 py-8 text-center">
-                    <div className="mb-2 flex justify-center">
-                      <IconOrb tone="rating">
-                        <SolidIcon name="star" size={16} />
-                      </IconOrb>
-                    </div>
-                    <p className="text-subhead font-semibold text-text-secondary">Reviews unavailable</p>
-                    <p className="text-caption-1 text-text-tertiary mt-1 max-w-[240px] mx-auto leading-relaxed">
-                      We are preparing this feature with safety and moderation in mind.
-                    </p>
-                  </div>
-                ) : (
-                  <div className="space-y-4 pb-4">
-                    {reviewsList.map((review) => {
-                      const initials = review.reviewerName
-                        .split(" ")
-                        .map((n) => n[0])
-                        .join("")
-                        .substring(0, 2)
-                        .toUpperCase() || "?";
-                      
-                      return (
-                        <div key={review.id} className="rounded-[20px] bg-fillSecondary p-3.5 space-y-2">
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2.5">
-                              <div className="relative flex h-9 w-9 items-center justify-center overflow-hidden rounded-full bg-fillPrimary text-footnote font-bold text-text-primary">
-                                {review.reviewerAvatarUrl ? (
-                                  <img
-                                    src={review.reviewerAvatarUrl}
-                                    alt=""
-                                    className="w-full h-full rounded-full object-cover"
-                                  />
-                                ) : (
-                                  initials
-                                )}
-                              </div>
-                              <div>
-                                <p className="text-footnote font-semibold text-text-primary leading-tight">
-                                  {review.reviewerName}
-                                </p>
-                                <div className="mt-0.5 flex items-center text-rating">
-                                  {Array.from({ length: 5 }).map((_, idx) => (
-                                    <Star
-                                      key={idx}
-                                      className={`h-3 w-3 ${idx < review.rating ? "fill-current" : "text-rating-muted"}`}
-                                    />
-                                  ))}
-                                </div>
-                              </div>
-                            </div>
-                            <span className="text-caption-1 text-text-tertiary">
-                              {new Date(review.createdAt).toLocaleDateString("en-NG", {
-                                day: "numeric",
-                                month: "short",
-                                year: "numeric",
-                              })}
-                            </span>
-                          </div>
-
-                          {review.title && (
-                            <p className="text-footnote font-semibold text-text-primary">
-                              {review.title}
-                            </p>
-                          )}
-
-                          {review.body && (
-                            <p className="text-footnote text-text-secondary whitespace-pre-wrap leading-relaxed">
-                              {review.body}
-                            </p>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
+              <GetItReviewsView
+                loading={loadingReviews}
+                reviews={reviewsList}
+              />
             </div>
           )}
         </>

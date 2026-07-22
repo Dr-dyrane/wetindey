@@ -127,6 +127,23 @@ equivalence checks. `ProfileSheetView.tsx` is 209 lines and `ProfileSignInView.t
 no Auth provider, state, effect, signed-in flow, UI design, database, or deployment behavior
 changed.
 
+#### Get-It reviews view extraction — ACTIVE
+
+Owner: current orchestrator. Exact writable paths:
+
+- `LANES.md`
+- `src/app/_components/get-it-sheet/views/GetItSheetView.tsx`
+- new `src/app/_components/get-it-sheet/views/GetItReviewsView.tsx`
+
+Purpose: move the existing read-only reviews presentation into one live subview so the
+Get-It MVC view respects the 300-line boundary. Review loading, data, moderation status,
+copy, visuals, accessibility, contact, sharing, directions, and fail-closed writes remain
+unchanged.
+
+Completion: both views remain within 300 lines, the same reviews branch is rendered with
+the same props and markup, and a fresh independent default-to-REFUTED equivalence review
+passes before one exact-path commit releases both application paths.
+
 No other source path is currently claimed by this registry. A persistent employee seat is not a path claim.
 
 ## Pathless blockers and external gates
