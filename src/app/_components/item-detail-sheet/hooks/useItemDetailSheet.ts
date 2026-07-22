@@ -88,6 +88,13 @@ export interface ItemDetailSheetProps {
   t?: Record<string, string>;
 }
 const ANY = "__any";
+/**
+ * Shown in the Type/Size controls when the options request failed. A neutral
+ * pending mark, not "Nothing nearby": it does not claim the taxonomy is empty,
+ * only that it is unresolved. Kept local (punctuation, not translatable prose)
+ * because the copy layer sits outside this hook.
+ */
+const OPTIONS_PLACEHOLDER = "…";
 export function useItemDetailSheet({
   open,
   item,
@@ -117,6 +124,16 @@ export function useItemDetailSheet({
   const [offers, setOffers] = useState<NarrowedOffer[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  /**
+   * The narrowing-options request fails independently of the offers request, so
+   * the offers list below can render fine while this one rejects. Clearing
+   * variants/units to [] on that rejection makes the Type/Size controls read
+   * "Nothing nearby" (NarrowStep's empty-options fallback), which claims we
+   * looked and found nothing when we could not reach the data at all. Track the
+   * failure so the options memos can show a neutral placeholder instead of a
+   * false empty state.
+   */
+  const [optionsError, setOptionsError] = useState(false);
   /** Null is not the only empty path — the CDN 404s and 429s at request time. */
   const [imageBroken, setImageBroken] = useState(false);
   /**
@@ -149,6 +166,7 @@ export function useItemDetailSheet({
     setDetailsOpen(false);
     setOffers([]);
     setError(null);
+    setOptionsError(false);
     setImageBroken(false);
   }, [itemId]);
 
@@ -158,6 +176,7 @@ export function useItemDetailSheet({
     if (!open || !itemId) return;
 
     const req = ++optionsReq.current;
+    setOptionsError(false);
 
     void getItemNarrowingOptions({ itemId, center: origin, radiusKm })
       .then((result) => {
@@ -168,8 +187,12 @@ export function useItemDetailSheet({
       .catch((err) => {
         if (req !== optionsReq.current) return;
         console.error("Failed to load narrowing options:", err);
+        // Clear the sets so a previous item's taxonomy cannot linger, but flag
+        // the failure: the memos read this to show a neutral placeholder rather
+        // than let the empty sets read as an honest "Nothing nearby".
         setVariants([]);
         setUnits([]);
+        setOptionsError(true);
       });
   }, [open, itemId, origin, radiusKm]);
 
@@ -219,9 +242,16 @@ export function useItemDetailSheet({
       disabled: variant.placeCount === 0,
     }));
 
+    // The request failed rather than returned nothing: show a neutral pending
+    // mark, not the empty-set "Nothing nearby". A genuine empty result (no
+    // error) still falls through to the honest empty state below.
+    if (options.length === 0 && optionsError) {
+      return [{ id: ANY, label: OPTIONS_PLACEHOLDER }];
+    }
+
     // "Any type" only earns its row when there is more than one type to span.
     return options.length > 1 ? [{ id: ANY, label: copy.anyType }, ...options] : options;
-  }, [variants]);
+  }, [variants, optionsError]);
 
   const unitOptions = useMemo(() => {
     const scoped = variantId === ANY ? units : units.filter((unit) => unit.variantId === variantId);
@@ -254,8 +284,13 @@ export function useItemDetailSheet({
       detail: `${unit.offerCount} ${unit.offerCount === 1 ? "price" : "prices"}`,
     }));
 
+    // Mirror the variant control: a failed request is unresolved, not empty.
+    if (options.length === 0 && optionsError) {
+      return [{ id: ANY, label: OPTIONS_PLACEHOLDER }];
+    }
+
     return options.length > 1 ? [{ id: ANY, label: copy.anySize }, ...options] : options;
-  }, [units, variantId]);
+  }, [units, variantId, optionsError]);
 
   // A unit chosen under one variant may not exist under the next. Rather than
   // silently returning nothing, drop back to "any size".
@@ -268,9 +303,17 @@ export function useItemDetailSheet({
 
   // Publish the narrowed set with the presentation kind already used by its
   // row. The map consumes this answer without rebuilding trust or status copy.
+  //
+  // Guarded on teardown. Tapping a row nulls the item and closes the sheet,
+  // which empties `offers` (and so `rows`); publishing that empty set would
+  // revert the map behind from the narrowed pins to every place, contradicting
+  // handleSelectOffer, which centres on the pick. Only the open sheet owns the
+  // map's narrowed set, so skip while closing or item-less. A genuine empty
+  // narrowing (open, item set, zero matches) still publishes [].
   useEffect(() => {
+    if (!open || !itemId) return;
     onOffersChange?.(rows.map(({ offer, signal }) => ({ offer, kind: signal.kind })));
-  }, [rows, onOffersChange]);
+  }, [open, itemId, rows, onOffersChange]);
 
   const visiblePlaceCount = new Set(offers.map((offer) => offer.placeId)).size;
   const countLabel = `${visiblePlaceCount} ${
