@@ -396,7 +396,7 @@ test("stable RPC outcomes expose no publication promise", async () => {
 
 test("source wiring keeps the live boundary RPC-only and promise-free", async () => {
   const actions = await readFile(
-    new URL("src/app/actions.ts", repoRoot),
+    new URL("src/app/_actions/report-actions.ts", repoRoot),
     "utf8"
   );
   const runtime = await readFile(
