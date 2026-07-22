@@ -254,3 +254,71 @@ Documentation-only; reverting this entry removes evidence, not behavior.
 - Action: Capture the Safari or iOS Simulator drive and the forced context-loss drive named in Unknown resolution action.
 - Target: `data-map-theme-snapshot` diagnostic and snapshot-overlay lifecycle during theme swaps in Safari or the iOS Simulator and under a forced WebGL context loss.
 - Completion: The next lane-owned Maps entry records both scopes with direct evidence and closes or narrows this entry's Unknown scope.
+
+### 2026-07-22 - Renderer-failure bridging evidence
+
+#### Transfer coordinates
+
+- Evidence ID: `WD-MAPS-THEMEFADE-20260722-3`
+- Base SHA: `b0f78cd25c35c74732d20eb89a7566bcc7193fef`
+- Candidate tree SHA-256: `02f1ca61a685585263b192936b9fff2b9b2c1a283b9b2542aa4bc8769e26ef67`
+- Candidate hash algorithm: `wetindey-candidate-tree-v1`
+- Candidate paths (sorted):
+
+```text
+docs/operations/departments/maps-location.md
+```
+
+- Final commit SHA: Reported by the worker/controller after commit; not embedded in these bytes.
+
+#### Lane and path boundaries
+
+- Lane heading: `#### Maps renderer-failure evidence entry — ACTIVE`
+- Lane owner: Private Contractor, Maps Delivery `c9c17443-ef5e-4a7b-9b6e-c8f5381da30c`
+- Owned paths: Exactly the 1 path in the preceding Candidate paths (sorted) block; no other path.
+- Excluded paths: Every repository path not listed in Candidate paths (sorted), including both map source paths this entry cites but does not touch.
+- Concurrent dependencies: Contribution moderation service and ACL repair lanes run concurrently over disjoint paths.
+
+#### Decisions and rationale
+
+Evidence only; no decision changes. This entry resolves the renderer-failure half of the Unknown scope left by `WD-MAPS-THEMEFADE-20260721-2` using the diagnostics installed at `370cf07` and the forced-loss extension WEBGL_lose_context, the sanctioned browser mechanism for inducing a genuine context loss.
+
+#### Implementation
+
+Documentation-only. No source path changed; the cited behavior ships at `370cf07` and `03adfad`.
+
+#### Evidence and refutations
+
+- Refuter ID: `independent-claude-refuter-evidence-20260722-03`
+- Review binding: Full Base SHA, canonical Candidate tree SHA-256, and sorted Candidate paths.
+- Verdict location: External read-only refuter output keyed by Evidence ID and Refuter ID; not embedded because changing reviewed bytes invalidates it.
+- Runtime and external evidence: renderer-failure bridging behavior CLOSED. Playwright chromium on ANGLE Metal against the local dev server: a bridged theme swap was started (overlay installed, frame evidence context-lost after the yank at swap+150ms), then WEBGL_lose_context.loseContext() forced a genuine loss. Observed sequence: t+1ms loading with overlay still present; t+201ms overlay REMOVED and the loading skeleton returned (the context-loss lifecycle emit carries continuity false, so the canvas owner honestly covers); t+5244ms ready with frame evidence visible, no overlay, no skeleton; final state after restoreContext remained ready and clean. The photograph can not become wallpaper under a genuine renderer loss.
+- Checks not run: Safari and iOS capture behavior. Attempted this cycle and blocked on host tooling: `xcrun simctl list devices available` returns zero iPhone or iPad devices (no iOS Simulator runtime installed on this machine) and `safaridriver` is not enabled; installing the iOS platform or enabling safaridriver requires owner action.
+
+#### Known failures
+
+`UNKNOWN` remains for Safari and iOS capture behavior; the drive is blocked on host tooling only the owner can install, as recorded above.
+
+- Unknown scope: `Safari and iOS capture behavior`
+- Unknown owner: Maps/Location chief and the Founder for host tooling
+- Unknown resolution action: After the owner installs an iOS Simulator runtime or enables safaridriver on this machine, capture direct evidence for `Safari and iOS capture behavior` with one Safari or iOS Simulator theme-toggle drive recording `data-map-theme-snapshot` and overlay state in the next lane-owned Maps entry.
+
+#### External gates
+
+- External gate owner: Maps/Location chief and Quality/Release
+- Gate state: No gate is inferred closed by this entry. Host tooling installation is an owner decision, not a lane action.
+
+#### Integration order
+
+Append after concurrent LANES.md bursts; release the lane in the immediately following LANES.md commit; diff the replacement span before committing the release burst.
+
+#### Rollback or disable
+
+Documentation-only; reverting this entry removes evidence, not behavior.
+
+#### Exact next action
+
+- Actor: Founder, then Maps and Location chief
+- Action: Install an iOS Simulator runtime or enable safaridriver, then run the Safari or iOS theme-toggle capture drive named in Unknown resolution action.
+- Target: `data-map-theme-snapshot` diagnostic and snapshot-overlay lifecycle during theme swaps in Safari or the iOS Simulator.
+- Completion: The next lane-owned Maps entry records the scope with direct evidence and closes this entry's Unknown scope.
