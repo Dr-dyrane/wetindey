@@ -104,6 +104,8 @@ REVOKE ALL ON FUNCTION public.contribution_pending_queue(uuid, integer)
   FROM PUBLIC;
 REVOKE ALL ON FUNCTION public.contribution_audit_for_observation(uuid, uuid, integer)
   FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.contribution_review_detail(uuid, uuid)
+  FROM PUBLIC;
 REVOKE ALL ON FUNCTION public.contribution_public_projections(uuid, uuid)
   FROM PUBLIC;
 REVOKE ALL ON FUNCTION public.contribution_set_moderator_assignment(
@@ -149,6 +151,8 @@ GRANT EXECUTE ON FUNCTION public.contribution_moderate(
 GRANT EXECUTE ON FUNCTION public.contribution_pending_queue(uuid, integer)
   TO wetindey_contribution_moderator;
 GRANT EXECUTE ON FUNCTION public.contribution_audit_for_observation(uuid, uuid, integer)
+  TO wetindey_contribution_moderator;
+GRANT EXECUTE ON FUNCTION public.contribution_review_detail(uuid, uuid)
   TO wetindey_contribution_moderator;
 GRANT EXECUTE ON FUNCTION public.contribution_set_moderator_assignment(
   uuid, uuid, public.contribution_assignment_status, timestamptz, timestamptz,
@@ -201,6 +205,8 @@ ALTER FUNCTION public.contribution_moderate(
 ALTER FUNCTION public.contribution_pending_queue(uuid, integer)
   OWNER TO wetindey_contribution_owner;
 ALTER FUNCTION public.contribution_audit_for_observation(uuid, uuid, integer)
+  OWNER TO wetindey_contribution_owner;
+ALTER FUNCTION public.contribution_review_detail(uuid, uuid)
   OWNER TO wetindey_contribution_owner;
 ALTER FUNCTION public.contribution_public_projections(uuid, uuid)
   OWNER TO wetindey_contribution_owner;
