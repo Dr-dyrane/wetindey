@@ -44,7 +44,7 @@ to idle rather than creating a replacement task.
 | Developer Relations & Engineering Enablement `019f7995-5b7b-7ee1-81ef-2c3a3c57b836` | Department worklog protocol complete / released | `62880ac` and fail-closed repair `2523da1` are on current main; remain persistent for later bounded enablement assignments |
 | Catalog Stewardship `019f7999-37d0-7231-8b89-0e71c2569ce2` | Catalog workflow complete / released; employee idle | `8a072e2`/`7b42664` and `fe09dc3` resolved the safety-scope and no-match/transport corrections; no active path claim remains |
 | Private Contractor, Full-Stack Delivery `ef98946c-a55e-4700-aa6e-c1a840e42eef` | Seated by Founder instruction 2026-07-21; first lane (account deletion) RELEASED, blocked by ADR-021, request to controller recorded in Active locks; now discovering the next ADR-clear lane | Method: multi-agent orchestration ending in default-to-REFUTED independent refutation, and ADR-clearance proven before any claim (the deletion lane taught this). Not building on stale memory: a discovery workflow reads the ADRs, this registry, and the gate states to find genuinely open, ADR-clear, unclaimed, high-value work, then executes only on affirmative clearance |
-| Private Contractor, Maps Delivery `c9c17443-ef5e-4a7b-9b6e-c8f5381da30c` | Eleven lanes complete / released; richness pass shipped whole (`f307cef`, `a55eb9a`, `c66dcd3`); seat idle on the check-in loop | Queued: Safari or iOS capture drive (owner tooling), Presence Maps-side serialization when routed; commercial-district richness remains data-bound, not paint-bound, per the wash audit |
+| Private Contractor, Maps Delivery `c9c17443-ef5e-4a7b-9b6e-c8f5381da30c` | Twelve lanes complete / released; seat idle on the check-in loop | Richness pass complete plus own-markets glow and the toggle style-gate repair (`f307cef`, `a55eb9a`, `c66dcd3`, `266a294`); queued: Safari or iOS capture drive (owner tooling), Presence serialization when routed |
 
 
 
@@ -152,15 +152,9 @@ Controller-directed, scout confirms exact paths and STOPS to the controller befo
 
 ## Active exact path locks
 
-#### Maps own-markets glow layer - ACTIVE
+#### Maps own-markets glow layer - RELEASED / PATHLESS
 
-Owner: Private Contractor, Maps Delivery `c9c17443-ef5e-4a7b-9b6e-c8f5381da30c`. Exact writable path:
-
-- `src/integrations/maps/MapboxAdapter.ts`
-
-Purpose: Lane D, Founder-directed this session: the commercial-district richness the tiles cannot provide comes from WetinDey's own admitted places instead. The adapter already receives every candidate with placeType and coordinates through the existing addMarker/clearMarkers cycle; this lane maintains a wetindey-places GeoJSON source from that cycle and renders one soft warm glow circle layer for the market family only (open_market, supermarket), slotted beneath the route and first label layer by the existing route precedent, replayed on style settle beside cartography and route, theme-aware and deliberately faint. Subordination guardrails apply in full: the glow is ground under the data layer, ranks nothing, and must never read as an availability or category signal beyond "a WetinDey market lives here". No spine, canvas, cartography, schema, or copy change. Exclusions: every other path.
-
-Completion: driven captures in both themes show the glow present, subtle, and beneath every label, pin, and route; markers and labels unmoved; an independent default-to-REFUTED refuter reproduces the drive and checks source/layer teardown safety across theme swaps and context loss; gates green; path-scoped commit pushed under the `0bbdb11` class; span-checked release.
+Complete at `266a294`, pushed under the `0bbdb11` class. WetinDey's own market places now glow softly beneath the data layer in both themes, market family only, measured subordinate. The lane also shipped a critical same-file repair the acceptance bar surfaced: mutation-safe style completion is now gated on the intended style, fixing a pre-existing defect where every theme toggle replayed cartography and route into the dying style and left the real style bare with lifecycle falsely ready. The refuter reproduced the defect at HEAD and its absence with the candidate. Residual recorded: context-loss glow replay is contract-test covered, not real-browser driven; a future custom style must update styleNameFor beside styleFor (documented at the pairing). Path released.
 
 #### Maps dark road hierarchy and wash strength - RELEASED / PATHLESS
 
