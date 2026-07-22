@@ -113,3 +113,69 @@ fail-closed flag, forward repair, and data consequences.
 - Action: Complete the authorized exact-environment activation evidence.
 - Target: The current pathless operational gate recorded in LANES.md.
 - Completion: Preview then Production evidence has an independent verdict without claiming a source path.
+
+### 2026-07-21 - Pending-review Food report sheet candidate
+
+#### Transfer coordinates
+
+- Base SHA: `0ff3cea`
+- Candidate paths: `src/app/_components/report-price-sheet/ReportPriceSheet.tsx`,
+  `src/app/_components/report-price-sheet/hooks/useReportPriceSheet.ts`,
+  `src/app/_components/report-price-sheet/views/ReportPriceSheetView.tsx`,
+  `src/core/i18n/strings.ts`, `scripts/contributions/report-price-sheet-contract.test.ts`,
+  and this worklog only.
+- Excluded paths: contribution runtime, actions, schema, migrations, environment, deployment,
+  Visit Confirmation, and all map work.
+
+#### Decisions and rationale
+
+The sheet sends only the existing ADR-019 `report_price` admission payload. A browser UUID is
+reused for the same normalized intent so a timeout retries safely; changing any report input
+invalidates that key. Unavailable reports omit price entirely. A received result means only
+pending review, never public, approved, or projected.
+
+#### Implementation
+
+The previously paused fields become usable when the existing runtime admits them. The UI keeps
+one in-flight submit, client-side required-ID and ₦5..₦5,000,000 checks, error recovery, rate
+interval feedback, and a concise received-for-review state with Done/New report actions.
+
+#### Evidence and refutations
+
+- Focused executable evidence: `scripts/contributions/report-price-sheet-contract.test.ts`.
+- Required independent review: default-to-REFUTED review of the exact six candidate paths.
+- Runtime evidence: not claimed. Preview and Production remain separately gated by exact target,
+  valid runtime secrets, enabled admission configuration, moderation operations, and deployment.
+
+#### Exact next action
+
+- Actor: independent Contribution Integrity reviewer.
+- Action: refute the browser payload, retry identity, result-copy honesty, and locked-state logic.
+- Completion: a scoped verdict before any Preview runtime activation.
+
+### 2026-07-21 - Forward correction after independent refutation
+
+#### Refutation received
+
+The first candidate was refuted before activation. Its in-flight close/reset path could clear
+the local lock and retry identity before the original request resolved; its displayed amount
+and fingerprint did not share one explicit kobo-normalization boundary; it used unavailable
+error styling for operational outcomes; and its source-only test did not execute ownership
+transitions. The first entry also overstated callback invalidation: place and unit were only
+compared at submission, not wrapped.
+
+#### Forward correction
+
+`useReportPriceSheet.ts` now exports a small pure coordinator used by the hook. It owns one
+flight at a time, blocks close/reset/new-report/input invalidation while unresolved, preserves
+the same UUID after transport uncertainty, makes a fresh key for a changed intent or conflict,
+and uses the same rounded-to-kobo amount for submitted payload and fingerprint. The hook now
+wraps place, item, variant, unit, price, and availability changes. Error notices use caution;
+actual item availability remains independently status-coloured.
+
+#### Evidence and remaining gate
+
+The focused contract executes payload construction, result mapping, retry identity, in-flight
+blocking, and the `0ff3cea` Visit Confirmation containment comparison. This source correction
+still does not activate Preview or Production, prove the runtime secret/configuration, run a
+browser/server-action round trip, or provide a moderation operation.

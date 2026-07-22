@@ -43,48 +43,113 @@ export interface ReportPriceSheetViewProps extends ReportPriceSheetProps {
   sheet: ReturnType<typeof useReportPriceSheet>;
 }
 
-function Banner({ kind, icon, children }: { kind: "confirmed" | "caution" | "unavailable"; icon: React.ReactNode; children: React.ReactNode }) {
+function Banner({ kind, icon, children }: { kind: "confirmed" | "caution" | "neutral"; icon: React.ReactNode; children: React.ReactNode }) {
   const map = {
     confirmed: "bg-status-confirmed-bg text-status-confirmed-fg",
     caution: "bg-status-caution-bg text-status-caution-fg",
-    unavailable: "bg-status-unavailable-bg text-status-unavailable-fg",
+    neutral: "bg-fillSecondary text-text-primary",
   } as const;
   return (
-    <div role="status" className={`mx-4 flex items-center gap-2.5 squircle-card px-4 py-3 text-[13px] font-medium ${map[kind]} animate-in fade-in slide-in-from-top-1 duration-standard`}>
+    <div role="status" aria-live="polite" className={`flex items-center gap-2.5 squircle-card px-4 py-3 text-[13px] font-medium ${map[kind]} animate-in fade-in slide-in-from-top-1 duration-standard`}>
       <span className="shrink-0">{icon}</span>
       <span>{children}</span>
     </div>
   );
 }
 
+function errorCopy(
+  state: Extract<ReturnType<typeof useReportPriceSheet>["submission"], { phase: "error" }>,
+  t: Record<string, string>
+): string {
+  switch (state.code) {
+    case "client_required":
+      return t["contribution.required"];
+    case "client_price":
+      return t["contribution.price_required"];
+    case "maintenance":
+      return t["contribution.maintenance"];
+    case "invalid_input":
+      return t["contribution.invalid_input"];
+    case "reporting_disabled":
+      return t["contribution.reporting_disabled"];
+    case "rate_limited":
+      return t["contribution.rate_limited"].replace(
+        "{duration}",
+        `${Math.max(1, Math.ceil((state.retryAfterSeconds ?? 60) / 60))} min`
+      );
+    case "idempotency_conflict":
+      return t["contribution.idempotency_conflict"];
+    case "transport":
+      return t["contribution.transport"];
+  }
+}
+
 export function ReportPriceSheetView(p: ReportPriceSheetViewProps) {
-  const { variantsForItem } = p.sheet;
+  const { variantsForItem, submission } = p.sheet;
+  const locked = submission.phase === "submitting" || submission.phase === "success";
+  const status =
+    submission.phase === "success"
+      ? {
+          kind: "confirmed" as const,
+          title: p.t["contribution.received_title"],
+          body: p.t[
+            submission.replayed
+              ? "contribution.replayed_body"
+              : "contribution.received_body"
+          ],
+          icon: "check" as const,
+        }
+      : submission.phase === "error"
+        ? {
+            kind: "caution" as const,
+            title: p.t["contribution.try_again_title"],
+            body: errorCopy(submission, p.t),
+            icon: "warning" as const,
+          }
+        : null;
+
   return (
     <ModalSheet open={p.open} onClose={p.onClose} title={p.t.report_price} size="page">
-      <form onSubmit={(event) => event.preventDefault()} className="space-y-5 py-4">
-        <Banner
-          kind="caution"
-          icon={
-            <IconOrb size={32} tone="status-caution">
-              <SolidIcon name="warning" size={18} />
-            </IconOrb>
-          }
-        >
-          <span>
-            <span className="block font-semibold">{p.t["contribution.paused_title"]}</span>
-            <span className="mt-0.5 block font-normal">{p.t["contribution.paused_body"]}</span>
-          </span>
-        </Banner>
+      <form
+        onSubmit={(event) => {
+          event.preventDefault();
+          void p.sheet.submit({
+            placeId: p.placeId,
+            itemId: p.itemId,
+            variantId: p.variantId,
+            unitId: p.unitId,
+            price: p.price,
+            available: p.available,
+          });
+        }}
+        className="space-y-4 px-4 py-4"
+      >
+        {status && (
+          <Banner
+            kind={status.kind}
+            icon={
+              <IconOrb size={32} tone={status.kind === "confirmed" ? "status-confirmed" : "status-caution"}>
+                <SolidIcon name={status.icon} size={18} />
+              </IconOrb>
+            }
+          >
+            <span>
+              <span className="block font-semibold">{status.title}</span>
+              <span className="mt-0.5 block font-normal">{status.body}</span>
+            </span>
+          </Banner>
+        )}
 
-        <div className="mx-4 space-y-4">
+        {submission.phase !== "success" ? (
+          <>
           <SheetPicker
             title={p.t.market}
             label={p.t.market}
             options={p.places.map((x) => ({ id: x.id, label: x.name }))}
             value={p.placeId}
             onSelect={p.onPlaceId}
-            placeholder="Choose market"
-            disabled
+            placeholder={p.t["report.choose_market"]}
+            disabled={locked}
           />
 
           <SheetPicker
@@ -93,8 +158,8 @@ export function ReportPriceSheetView(p: ReportPriceSheetViewProps) {
             options={p.items.map((x) => ({ id: x.id, label: x.name }))}
             value={p.itemId}
             onSelect={p.onItemId}
-            placeholder="Choose item"
-            disabled
+            placeholder={p.t["report.choose_item"]}
+            disabled={locked}
           />
 
           <SheetPicker
@@ -103,8 +168,8 @@ export function ReportPriceSheetView(p: ReportPriceSheetViewProps) {
             options={variantsForItem.map((v) => ({ id: v.id, label: v.displayName }))}
             value={p.variantId}
             onSelect={p.onVariantId}
-            placeholder={variantsForItem.length ? "Choose quality" : "Pick an item first"}
-            disabled
+            placeholder={variantsForItem.length ? p.t["report.choose_quality"] : p.t["report.pick_item_first"]}
+            disabled={locked || !p.itemId || !variantsForItem.length}
           />
 
           <SheetPicker
@@ -113,8 +178,8 @@ export function ReportPriceSheetView(p: ReportPriceSheetViewProps) {
             options={p.units.map((u) => ({ id: u.id, label: u.displayName }))}
             value={p.unitId}
             onSelect={p.onUnitId}
-            placeholder="Choose unit"
-            disabled
+            placeholder={p.t["report.choose_unit"]}
+            disabled={locked}
           />
 
           <div className="space-y-1.5">
@@ -127,9 +192,9 @@ export function ReportPriceSheetView(p: ReportPriceSheetViewProps) {
               inputMode="decimal"
               value={p.price}
               onChange={(e) => p.onPrice(e.target.value)}
-              placeholder="₦ e.g. 3500"
+              placeholder={p.t["report.price_placeholder"]}
               className="px-4"
-              disabled
+              disabled={locked || p.available === "unavailable"}
             />
           </div>
 
@@ -148,10 +213,9 @@ export function ReportPriceSheetView(p: ReportPriceSheetViewProps) {
                     key={o.id}
                     type="button"
                     aria-pressed={active}
-                    aria-disabled="true"
-                    disabled
+                    disabled={locked}
                     onClick={() => p.onAvailable(o.id)}
-                    className={`flex items-center justify-center gap-1.5 squircle py-2 text-[13px] font-medium transition duration-micro
+                    className={`flex min-h-tap items-center justify-center gap-1.5 squircle py-2 text-[13px] font-medium transition duration-micro
                       ${active ? "bg-surface shadow-card" : "text-text-secondary"}`}
                   >
                     <span
@@ -166,10 +230,20 @@ export function ReportPriceSheetView(p: ReportPriceSheetViewProps) {
             </div>
           </div>
 
-          <Button type="submit" variant="primary" size="md" className="w-full" disabled>
-            {p.t["contribution.paused_action"]}
+          <Button type="submit" variant="primary" size="md" className="w-full" disabled={locked} isLoading={submission.phase === "submitting"}>
+            {submission.phase === "submitting" ? p.t["report.submitting"] : p.t.submit}
           </Button>
-        </div>
+          </>
+        ) : (
+          <div className="grid grid-cols-2 gap-2">
+            <Button type="button" variant="secondary" size="md" onClick={p.sheet.reset}>
+              {p.t["contribution.new_report"]}
+            </Button>
+            <Button type="button" variant="primary" size="md" onClick={p.onClose}>
+              {p.t.done}
+            </Button>
+          </div>
+        )}
       </form>
     </ModalSheet>
   );
