@@ -342,6 +342,43 @@ const DARK_LANDUSE_COLOR: Expression = [
 ];
 
 /**
+ * The dark road hierarchy, rebuilt from one grey.
+ *
+ * dark-v11 does not have road layers the way streets-v12 does — it carries
+ * the whole network as a surface/bridge/tunnel trio (`road-simple`,
+ * `bridge-simple`, `tunnel-simple`, all reading the `road` source-layer) and
+ * paints every one flat `hsl(0,0%,24%)`. That one value IS the "roads lose
+ * hierarchy" complaint:
+ * the expressway that carries half the light map's life (streets-v12 paints
+ * it orange) renders identical to a residential lane. Since the layer still
+ * reads the `road` source-layer, the hierarchy the style discarded is still
+ * in the data, and one match on `class` puts it back:
+ *
+ *   motorway/trunk  warm and unmistakable, the night echo of the light
+ *                   expressway's orange, held dark enough (34%) that a white
+ *                   route line and every label still dominate it
+ *   primary         a warmer step above the base grey, arterial but calm
+ *   secondary/
+ *   tertiary        the stock hue, one lightness step up, so the grid reads
+ *   everything else stock `hsl(0,0%,24%)`, byte-for-byte
+ *
+ * Subordination is the constraint (controller ruling, recorded in the lane):
+ * these are grounds under the data layer, not signals. Nothing here competes
+ * with markers, labels, or the route.
+ */
+const DARK_ROAD_COLOR: Expression = [
+  "match",
+  ["get", "class"],
+  ["motorway", "trunk"],
+  "hsl(28, 42%, 34%)",
+  "primary",
+  "hsl(30, 14%, 30%)",
+  ["secondary", "tertiary"],
+  "hsl(0, 0%, 27%)",
+  "hsl(0, 0%, 24%)",
+];
+
+/**
  * The dark ground.
  *
  * `land` keeps a trace of warmth (8% saturation) rather than the stock
@@ -507,6 +544,16 @@ export function applyCartography(map: MapboxMap, theme: "light" | "dark"): void 
   // Commercial districts appear at all — filter first, then colour.
   filter("landuse", DARK_LANDUSE_FILTER);
   paint("landuse", "fill-color", DARK_LANDUSE_COLOR);
+
+  // The road network gets its hierarchy back. See DARK_ROAD_COLOR: dark-v11
+  // ships one grey for every road class; the class data survives in the
+  // source layer, so the fix is one data-driven colour — applied to the whole
+  // surface/bridge/tunnel trio, because a Lagos expressway spends real
+  // kilometres on bridges and a hierarchy with grey gaps at every overpass
+  // is not a hierarchy (the refuter caught exactly this).
+  paint("road-simple", "line-color", DARK_ROAD_COLOR);
+  paint("bridge-simple", "line-color", DARK_ROAD_COLOR);
+  paint("tunnel-simple", "line-color", DARK_ROAD_COLOR);
 
   // Neighbourhoods get their identity back for one value.
   paint("settlement-subdivision-label", "text-color", DARK_SUBDIVISION_LABEL);
