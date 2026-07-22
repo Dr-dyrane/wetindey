@@ -160,6 +160,16 @@ Controller-directed, scout confirms exact paths and STOPS to the controller befo
 
 ## Active exact path locks
 
+#### Maps WebKit capture evidence entry - ACTIVE
+
+Owner: Private Contractor, Maps Delivery `c9c17443-ef5e-4a7b-9b6e-c8f5381da30c`. Exact writable path:
+
+- `docs/operations/departments/maps-location.md`
+
+Purpose: the Founder directed this session that the owner-tooling blocker be fixed by another workflow. Playwright's official WebKit build (18.2, build v2104) closes the engine question without Safari settings or an iOS runtime: on real WebKit, both theme-toggle directions produced captured photographs with the overlay bridging and collecting, the frame probe read visible pixels natively, the glow replayed into each new style, and a forced WEBGL_lose_context mid-swap recovered to ready with no stuck overlay. This lane appends the evidence entry narrowing the remaining Unknown to Safari-shell and iOS-device specifics only. Documentation only. Exclusions: every other path.
+
+Completion: tuple stamped and structure green; independent default-to-REFUTED refuter reproduces the WebKit drive; path-scoped commit pushed under the `0bbdb11` class; span-checked release.
+
 #### Farm inputs pillar decision record - RELEASED / PATHLESS
 
 Complete at the ADR-031/WD-I-006 commit, pushed under the `0bbdb11` class. ADR-031 sits Proposed and, upon the Founder's explicit acceptance, amends accepted ADR-008's pillar taxonomy to seven (AGRICULTURE, inputs first); the refuter caught and forced that confrontation. Four implementation lanes are enumerated queued and non-authorizing. The acceptance decision awaits the Founder. Paths released.
