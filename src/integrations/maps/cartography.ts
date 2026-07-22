@@ -388,6 +388,45 @@ const DARK_PARK = "hsl(140, 22%, 18%)";
 const DARK_SUBDIVISION_LABEL = "hsl(220, 15%, 62%)";
 
 /**
+ * The light ground. Three nudges, no repaint — streets-v12 is already a
+ * street map, and the audit's complaint about light was flatness, not
+ * illegibility. Every value here is a step from the stock value it replaces,
+ * read from the live style, not from memory:
+ *
+ *   land   stock `hsl(20,18%,91%)` at our zoom → warmed to hue 33 (sand,
+ *          the hue family the dark land already committed to at 35) with a
+ *          little more saturation and the same lightness, so labels and
+ *          roads keep exactly the contrast they were designed against.
+ *
+ *   water  stock `hsl(200,100%,80%)` is full-saturation sky — bright enough
+ *          that against a warmer land it reads as decoration. Dropping to
+ *          80% saturation and 72% lightness gives the lagoon weight instead
+ *          of shine; hue stays, so it is unmistakably the same water.
+ *
+ *   park   stock colour is fine (`hsl(110,41%,78%)`) — the reason parks
+ *          vanish in light is the opacity ramp ending at 0.2 by z12, the
+ *          same starvation trick dark-v11 pulled with colour. The ramp's
+ *          high-zoom stop rises to 0.32; the colour barely moves. Festac's
+ *          green edge should be visible from the default camera without
+ *          competing with a single label, the exact restraint the dark park
+ *          note above measures at ~1.2:1.
+ */
+const LIGHT_LAND = "hsl(33, 26%, 92%)";
+const LIGHT_WATER = "hsl(202, 80%, 72%)";
+const LIGHT_PARK = "hsl(110, 40%, 76%)";
+const LIGHT_PARK_OPACITY: Expression = [
+  "interpolate",
+  ["linear"],
+  ["zoom"],
+  5,
+  0,
+  6,
+  0.6,
+  12,
+  0.32,
+];
+
+/**
  * Re-cut the basemap into WetinDey's map.
  *
  * Every call here targets a layer the stock style already ships, so this adds
@@ -425,7 +464,15 @@ export function applyCartography(map: MapboxMap, theme: "light" | "dark"): void 
   layout("poi-label", "text-size", POI_TEXT_SIZE);
   paint("poi-label", "text-color", dark ? DARK_POI_COLOR : LIGHT_POI_COLOR);
 
-  if (!dark) return;
+  if (!dark) {
+    // The light ground: warmth without repaint. See the LIGHT_* rationale.
+    paint("land", "background-color", LIGHT_LAND);
+    paint("water", "fill-color", LIGHT_WATER);
+    paint("waterway", "line-color", LIGHT_WATER);
+    paint("national-park", "fill-color", LIGHT_PARK);
+    paint("national-park", "fill-opacity", LIGHT_PARK_OPACITY);
+    return;
+  }
 
   // ── Problem 1: the grey map. Dark only — light is already a street map.
 
