@@ -71,12 +71,14 @@ Every productive cycle this repo has recorded follows the same eight steps.
    idle your roster row, preserve the record in the history archive with its
    SHA-256 indexed, and commit. A stale claim is worse than no claim.
 
-## 2. The four crossing points
+## 2. The crossing points
 
 The modularization holds: whole evenings run with four orchestrators committing
 to main and zero source conflicts, because features live in their own MVC slice
 directories. Vertical slices that end at an existing call site parallelize
-freely. Exactly four places cross, and each has a discipline:
+freely. The known crossing points, each with a discipline (the last two rows
+were handed to this guide by the Full-Stack Delivery seat at `4a8db00` as
+known convergence seams):
 
 | Crossing | Why it crosses | Discipline |
 |---|---|---|
@@ -84,6 +86,8 @@ freely. Exactly four places cross, and each has a discipline:
 | Department worklogs | One append-only log per functional home | The log path must be inside a current claim to write it. If another lane holds your home's log, your entry queues; stage it in your scratchpad and watch for release |
 | The wiring spine (`useHomePage`, `home-page/imports`) | Every feature lands there eventually | Build the slice complete and standalone; the spine integration is a separately claimed, serialized step. This is the repository's own Presence pattern |
 | `scripts/` contract tests | They assert against source text and inject doubles into other lanes' files | Exclude the repo-wide contract suites from feature lanes; a lane may own the test it introduces for its own slice. Expect the reverse too: a test-owning lane may add a narrow guard inside your claimed file to keep its double on a legacy path. Keep it, disclose it in your worklog, never silently absorb or revert it |
+| `src/app/globals.css` | Every slice's tokens and shared surfaces live there | Claim it explicitly or serialize behind whoever holds it; token changes also answer to `npm run audit:tokens` |
+| `src/db/schema/index.ts` | Every data-bearing feature converges on the schema barrel | Same rule as the spine: schema edits ride their own claimed, serialized step with their migration, never piggyback on a UI lane |
 
 ## 3. Races and how they resolved
 
@@ -122,6 +126,50 @@ held.
   headless WebGL, ANGLE Metal for hardware runs), and every conclusion names
   the environment it was proven in. A defect that only reproduces in a
   misleading environment is an environment finding, not a product finding.
+
+## 3a. Incidents handed from the Full-Stack Delivery seat
+
+Contributed by Private Contractor, Full-Stack Delivery `ef98946c` at `4a8db00`,
+each commit-referenced incident verified against its citation before
+incorporation. These arrived
+while the first draft of this guide was mid-refutation and were missed before
+it shipped; the amendment lane that added this section is itself an instance of
+section 1 step 2 (a worklog-adjacent handoff is bounded work with evidence).
+
+- **ADR clearance comes before the claim, not after.** That seat claimed the
+  account-deletion vertical on stale memory of the schema; Accepted ADR-021
+  forbade the synchronous design, the work was reverted, and nothing shipped
+  (`82d1a7d`). Grep `docs/adr` for your domain before claiming: an Accepted ADR
+  outranks any lane. The same gate later blocked evidence media on price
+  reports (ADR-019, raised at `8b1d7ca`) and an App Store requirement lane
+  before that.
+- **Route governance blockers to the controller in LANES.md, not to the Founder
+  in chat.** The Founder corrected exactly this, and the corrected routing is
+  recorded at `8b1d7ca`: engineering you own, claim and drive; policy or
+  cross-seat questions become a recorded request in the registry.
+- **Never `npm run build` while `next dev` is live.** The build clobbers
+  `.next` under the dev server; the symptom is a page that returns 200 while
+  `main-app.js` 404s (a black or error page), and the tell is `.next/BUILD_ID`
+  existing. Recovery: kill the WetinDey dev process by PID only (this machine
+  hosts other projects on shared ports), remove `.next`, restart. The same
+  failure signature is separately recorded in the historical archive's H9
+  incident, where a seat mis-diagnosed it as its own webpack error for a
+  while before finding the clobber.
+- **A seat ID can be live twice.** After a session restart, an active lane may
+  still be executing under your own seat ID. A file changed seconds ago is
+  someone typing, including possibly your predecessor: ask the controller
+  (`6663c75`) and wait; that instance resolved when the running work released
+  (`d3de9dc`).
+- **Shell and tooling traps, all hit in anger:** a literal backtick inside a
+  workflow template-literal prompt terminates the string; `grep X | sed` masks
+  grep's exit code (use `grep -q` when the answer matters); a watch loop must
+  be read-only (`git fetch` plus `git show origin/main:LANES.md`), because
+  `git pull --autostash` in a loop stashes another writer's uncommitted tree.
+- **Browser surfaces are not interchangeable.** The embedded Browser pane
+  reaches the dev server; the owner's Chrome is a different application with
+  its own state (section 3's fourth race). A ReferenceError pointing at a line
+  number that no longer exists is stale HMR, not a real break: reload before
+  diagnosing.
 
 ## 4. Verification standard
 
