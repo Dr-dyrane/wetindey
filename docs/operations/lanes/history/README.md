@@ -57,6 +57,7 @@ These source headings were retained or condensed in root `LANES.md`; they were n
 | `2026-07-documentation-and-enablement-03` | Documentation subfolder organization and sub-READMEs — RELEASED / PATHLESS | [record](./2026-07-documentation-and-enablement.md#2026-07-documentation-and-enablement-03) | `0e8742035588ee1459524a3f1b79b7b1ba090106b1a881cc2abb7f6c7992e85d` |
 | `2026-07-documentation-and-enablement-04` | LANES.md decluttering and historical lane archiving — RELEASED / PATHLESS | [record](./2026-07-documentation-and-enablement.md#2026-07-documentation-and-enablement-04) | `834e4dd9dd855a1bfb5267d9c237aaa291df6d379c3dbf26639a924605af570d` |
 | `2026-07-documentation-and-enablement-05` | Developer Relations & Engineering Enablement: department worklog protocol — COMPLETE / PATHS RELEASED | [record](./2026-07-documentation-and-enablement.md#2026-07-documentation-and-enablement-05) | `b8ebc7e0eeb28a54ca689fc307b9598241311bb011df686beb21fadf0a3fb802` |
+| `2026-07-maps-experience-01` | Maps theme-transition continuity — COMPLETE / PATHS RELEASED | [record](./2026-07-maps-experience.md#2026-07-maps-experience-01) | `0f5ec6011ccb997c647dc86e6ac16bbe58a01b4a2c87166802b41f48a1023c23` |
 
 ## Legacy archive
 
