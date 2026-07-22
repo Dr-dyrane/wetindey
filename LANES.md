@@ -74,26 +74,43 @@ Owner: Private Contractor, Full-Stack Delivery `ef98946c-a55e-4700-aa6e-c1a840e4
 - `src/app/_components/PresentationHost.tsx`
 - `src/app/_components/CrossCategorySignalRail.tsx`
 - `src/app/_components/CurrencyFlag.tsx`
-- `src/app/_components/report-price-sheet/**`
-- `src/app/_components/settings-sheet/**`
-- `src/app/_components/category-selector-sheet/**`
-- `src/app/_components/presentation-host/**`
-- `src/app/_components/cross-category-signal-rail/**`
-- `src/app/_components/currency-flag/**`
+- `src/app/_components/category-selector-sheet/CategorySelectorSheet.tsx`
+- `src/app/_components/category-selector-sheet/hooks/useCategorySelectorSheet.ts`
+- `src/app/_components/category-selector-sheet/imports/imports.ts`
+- `src/app/_components/category-selector-sheet/views/CategorySelectorSheetView.tsx`
+- `src/app/_components/cross-category-signal-rail/CrossCategorySignalRail.tsx`
+- `src/app/_components/cross-category-signal-rail/hooks/useCrossCategorySignalRail.ts`
+- `src/app/_components/cross-category-signal-rail/imports/imports.ts`
+- `src/app/_components/cross-category-signal-rail/views/CrossCategorySignalRailView.tsx`
+- `src/app/_components/currency-flag/CurrencyFlag.tsx`
+- `src/app/_components/currency-flag/hooks/useCurrencyFlag.ts`
+- `src/app/_components/currency-flag/imports/imports.ts`
+- `src/app/_components/currency-flag/views/CurrencyFlagView.tsx`
+- `src/app/_components/presentation-host/PresentationHost.tsx`
+- `src/app/_components/presentation-host/imports/imports.ts`
+- `src/app/_components/presentation-host/views/PresentationHostView.tsx`
+- `src/app/_components/report-price-sheet/ReportPriceSheet.tsx`
+- `src/app/_components/report-price-sheet/hooks/useReportPriceSheet.ts`
+- `src/app/_components/report-price-sheet/imports/imports.ts`
+- `src/app/_components/report-price-sheet/views/ReportPriceSheetView.tsx`
+- `src/app/_components/settings-sheet/SettingsSheet.tsx`
+- `src/app/_components/settings-sheet/hooks/useSettingsSheet.ts`
+- `src/app/_components/settings-sheet/imports/imports.ts`
+- `src/app/_components/settings-sheet/views/SettingsSheetView.tsx`
 - `src/app/_components/home-page/imports/imports.ts`
 - `src/app/_components/home-page/hooks/useHomePage.ts`
-- `src/app/_components/home-page/views/HomePlaceDetailView.tsx`
 - `src/app/_components/currency-picker-sheet/imports/imports.ts`
 - `src/app/_components/exchange-panel/imports/imports.ts`
 - `docs/operations/departments/human-interface.md`
-- `docs/operations/departments/maps-location.md`
 - `scripts/iconography-contracts.test.ts`
 - `scripts/liquid-glass-contract.test.ts`
 - `scripts/live-sheet-inset-contract.test.ts`
 - `scripts/location-default-contract.test.ts`
 - `scripts/motion-contracts.test.ts`
 
-Purpose: Modularize the remaining root UI components inside `src/app/_components/` into clean 6-file MVC slices to satisfy repository line count and modularity rules, and adapt imports and test contract suites.
+Purpose: modularize the remaining root UI components into the smallest live controller,
+hook, view, and import slices needed by each component. Empty copy/style/hook scaffolds are
+forbidden; caller imports and focused UI contracts move in the same bounded candidate.
 
 Completion: All typecheck and contract tests pass cleanly, and the files are successfully moved and re-wired.
 
@@ -167,8 +184,9 @@ Owner: Private Contractor, Maps Delivery `c9c17443-ef5e-4a7b-9b6e-c8f5381da30c`.
 - new `src/integrations/maps/cartography.ts`
 - new `src/integrations/maps/theme-transition.ts`
 - `src/integrations/maps/MapboxAdapter.ts`
+- `docs/operations/departments/maps-location.md`
 
-Purpose: shrink the 3,000-line adapter along its two natural seams with behavior identical. (1) Cartography: the POI hierarchy, market emphasis, and dark-palette constants plus applyCartography move to `cartography.ts`, exporting exactly one function; the adapter keeps a thin `private applyCartography()` wrapper because `scripts/location-default-contract.test.ts` asserts that literal call text. (2) Theme transition: photographFrame and captureThemeSnapshot move as pure functions plus a small overlay holder; setTheme, pendingThemeSwap, and the FakeMap guard stay in the adapter. (3) ADR-016 containment: delete ONLY the dormant contact popup card construction inside setSharedUserMarkers (WhatsApp/tel/sms buttons ADR-016 explicitly prohibits); marker rendering, `activeUserPopup`, the `MapboxPopup` interface, and the renderer-recovery re-add block all remain because the contract test exercises them. Exclusions: `scripts/**`, `src/app/**` including the home-page spine and `useMapPresentation` (live callers exist as of this claim), `MapboxNearbyExchangeSearch.ts`, `docs/operations/departments/maps-location.md` (held by the Root UI Component Decluttering lane; this lane's worklog entry and the completed three-scope evidence entry queue behind that release), schema, migrations, deployment. No push; local path-scoped commits only.
+Purpose: shrink the 3,000-line adapter along its two natural seams with behavior identical. (1) Cartography: the POI hierarchy, market emphasis, and dark-palette constants plus applyCartography move to `cartography.ts`, exporting exactly one function; the adapter keeps a thin `private applyCartography()` wrapper because `scripts/location-default-contract.test.ts` asserts that literal call text. (2) Theme transition: photographFrame and captureThemeSnapshot move as pure functions plus a small overlay holder; setTheme, pendingThemeSwap, and the FakeMap guard stay in the adapter. (3) ADR-016 containment: delete ONLY the dormant contact popup card construction inside setSharedUserMarkers (WhatsApp/tel/sms buttons ADR-016 explicitly prohibits); marker rendering, `activeUserPopup`, the `MapboxPopup` interface, and the renderer-recovery re-add block all remain because the contract test exercises them. Exclusions: `scripts/**`, `src/app/**` including the home-page spine and `useMapPresentation` (live callers exist as of this claim), `MapboxNearbyExchangeSearch.ts`, schema, migrations, deployment. No push; local path-scoped commits only.
 
 Completion: extraction proves behavior identity by a driven browser check (theme toggle bridged both directions, markets emphasized in both themes, route below labels) plus `location-default-contract` 20/20, tsc, eslint, and knip posture unchanged; an independent default-to-REFUTED refuter passes the exact candidate; a path-scoped commit releases these paths.
 
