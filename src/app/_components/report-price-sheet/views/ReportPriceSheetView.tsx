@@ -6,6 +6,7 @@ import {
   Button,
   Input,
   SolidIcon,
+  EvidenceMediaField,
 } from "../imports/imports";
 import type { useReportPriceSheet } from "../hooks/useReportPriceSheet";
 
@@ -235,14 +236,17 @@ export function ReportPriceSheetView(p: ReportPriceSheetViewProps) {
           </Button>
           </>
         ) : (
-          <div className="grid grid-cols-2 gap-2">
-            <Button type="button" variant="secondary" size="md" onClick={p.sheet.reset}>
-              {p.t["contribution.new_report"]}
-            </Button>
-            <Button type="button" variant="primary" size="md" onClick={p.onClose}>
-              {p.t.done}
-            </Button>
-          </div>
+          <>
+            <EvidenceMediaField observationId={p.sheet.admittedObservationId} />
+            <div className="grid grid-cols-2 gap-2">
+              <Button type="button" variant="secondary" size="md" onClick={p.sheet.reset}>
+                {p.t["contribution.new_report"]}
+              </Button>
+              <Button type="button" variant="primary" size="md" onClick={p.onClose}>
+                {p.t.done}
+              </Button>
+            </div>
+          </>
         )}
       </form>
     </ModalSheet>

@@ -205,6 +205,10 @@ export function useReportPriceSheet({
 }: UseReportPriceSheetProps) {
   const variantsForItem = variants.filter((variant) => variant.itemId === itemId);
   const [submission, setSubmission] = useState<ReportSubmissionState>({ phase: "idle" });
+  // The admitted observation id (reportId) surfaced from a successful admission,
+  // so an OPTIONAL evidence-media attach can bind to the pending report. This is
+  // additive and never alters the coordinator's result mapping.
+  const [admittedObservationId, setAdmittedObservationId] = useState<string | null>(null);
   const coordinatorRef = useRef<ReturnType<typeof createReportSubmissionCoordinator> | null>(null);
   if (coordinatorRef.current === null) {
     coordinatorRef.current = createReportSubmissionCoordinator(() => crypto.randomUUID());
@@ -267,7 +271,11 @@ export function useReportPriceSheet({
 
       setSubmission({ phase: "submitting" });
       try {
-        setSubmission(coordinator.resolve(await submitObservation(attempt.request)));
+        const result = await submitObservation(attempt.request);
+        if (result.code === "received_for_review") {
+          setAdmittedObservationId(result.observationId);
+        }
+        setSubmission(coordinator.resolve(result));
       } catch {
         setSubmission(coordinator.transport());
       }
@@ -278,6 +286,7 @@ export function useReportPriceSheet({
   const reset = useCallback(() => {
     if (!coordinator.reset()) return false;
     onPrice("");
+    setAdmittedObservationId(null);
     setSubmission({ phase: "idle" });
     return true;
   }, [coordinator, onPrice]);
@@ -292,6 +301,7 @@ export function useReportPriceSheet({
   return {
     variantsForItem,
     submission,
+    admittedObservationId,
     onPlaceId: selectPlace,
     onItemId: selectItem,
     onVariantId: selectVariant,

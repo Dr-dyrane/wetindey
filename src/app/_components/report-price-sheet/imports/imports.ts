@@ -5,6 +5,7 @@ import { SheetPicker } from "@/design-system/components/SheetPicker";
 import { Button } from "@/design-system/components/Button";
 import { Input } from "@/design-system/components/Input";
 import { SolidIcon } from "@/design-system/icons/SolidIcon";
+import { EvidenceMediaField } from "../EvidenceMediaField";
 
 export {
   React,
@@ -14,4 +15,5 @@ export {
   Button,
   Input,
   SolidIcon,
+  EvidenceMediaField,
 };

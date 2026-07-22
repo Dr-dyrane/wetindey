@@ -1,0 +1,59 @@
+{
+  "kind": "release_manifest",
+  "release": "0019_contribution_evidence_media",
+  "status": "candidate_unapplied",
+  "shared_database_applied": false,
+  "first_shared_application_frozen": false,
+  "parent_release": "0018_deletion_saga_persistence",
+  "parent_snapshot_id": "ed1e3683-c202-457d-ab34-d5a9273fdadb",
+  "result_snapshot_id": "95019bd1-72ea-41ad-adc5-c0a037860eea",
+  "artifacts": {
+    "migration": {
+      "path": "src/db/migrations/0019_contribution_evidence_media.sql",
+      "sha256": "02bea482462f093deb8666efcddcc377521d308899be48e46fe664bcf1e2e6a5"
+    },
+    "snapshot": {
+      "path": "src/db/migrations/meta/0019_snapshot.json",
+      "sha256": "556576589dd77e04899819135b89ba85bed8cae12f784e982ee8afc1652e51b2"
+    },
+    "journal": {
+      "path": "src/db/migrations/meta/_journal.json",
+      "sha256": "9c35d09e18895823be631c55cb43f8ed9c5cfc4bb27a7799426ce183c009ff5e",
+      "entry_index": 19,
+      "entry_when": "1784750400000"
+    }
+  },
+  "source_sha256": {
+    "src/db/schema/evidence-media.ts": "4139ac79946ff0b10003e2505f96444aa366a6bfb3b26f8f558c807f0e409483",
+    "src/db/pillars/90-contribution-evidence-media.sql": "628ad5389c5db28c10ea56f0c8aec1b656a760ebf6011f57d0a51a4c5844a4cb",
+    "src/lib/evidence-media/types.ts": "5e7986c3fca024a07266b9daf0b2c380c2e4ad98992f5e8e1ef81ca08b84750a",
+    "src/lib/evidence-media/keys.ts": "fc6d92fd4ee1539ffff196c5dce9ec7ab42110854d1472271747e24901ede55f",
+    "src/lib/evidence-media/sanitize.ts": "68525b3b94b0ea4c88fb17fd462206a993d2824390af0471135741b15e9de3cf",
+    "src/lib/evidence-media/store.ts": "5c7d98303d51fcad5e65588b0464a29f9203c015d39ab66138289c16a6d402bb",
+    "src/lib/evidence-media/admission.ts": "34dc78e516a81ec3c39caa571478a8aca56515024d1e20c097234a5b6ec614a2",
+    "src/lib/evidence-media/flag.ts": "e1c848bb1f5386e8a8ab03e6ecd5d152de30d3a8a625456cc2b33f361d06e176",
+    "src/app/_actions/evidence-media-actions.ts": "7826d1eb220ecd9d0366157ee7469581a8c4a7e840756685c6d32f1787702bd2",
+    "src/app/_components/report-price-sheet/EvidenceMediaField.tsx": "dd1e95f98757ecfb1c12c5a764daeabea71591c222788dd5b7c5c0eae6d87f8b",
+    "scripts/contributions/contribution-evidence-media-p1-contract.test.ts": "24268fb3ea0e49145e799e344c934d6745c480fd9de96b723e7fdaf1d6e0fd49"
+  },
+  "generator": {
+    "drizzle_kit": "0.31.10",
+    "drizzle_orm": "0.45.2",
+    "journal_version": "7"
+  },
+  "scope": {
+    "adds": [
+      "public.contribution_evidence_media",
+      "public.evidence_media_state"
+    ],
+    "table_or_type_changes": true,
+    "rls_or_policy_changes": true,
+    "direct_table_grants": false,
+    "function_or_acl_changes": []
+  },
+  "authorization": {
+    "shared_migration_execution": false,
+    "preview_activation": false,
+    "production_activation": false
+  }
+}
