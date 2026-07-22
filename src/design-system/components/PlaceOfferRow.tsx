@@ -123,9 +123,9 @@ function ItemArtwork({
           {status ? (
             <StatusBadge
               kind={status}
-              className="rounded-[16px] border-none bg-black/78 px-2.5 py-1
+              className="rounded-[16px] border-none px-2.5 py-1
                          shadow-[0_3px_12px_rgb(0_0_0_/_0.42)] backdrop-blur-sm
-                         [text-shadow:0_1px_2px_rgb(0_0_0_/_0.45)] ring-0
+                         [text-shadow:0_1px_2px_rgb(0_0_0_/_0.45)]
                          forced-colors:bg-[Canvas] forced-colors:text-[CanvasText]
                          forced-colors:outline forced-colors:outline-1 forced-colors:outline-offset-[-1px]"
             >
@@ -133,7 +133,7 @@ function ItemArtwork({
             </StatusBadge>
           ) : (
             <span
-              className="inline-flex items-center gap-1.5 rounded-[14px] border-none bg-black/78 px-2.5 py-1 text-[11px] text-white
+              className="inline-flex items-center gap-1.5 rounded-[14px] border-none px-2.5 py-1 text-[11px] text-media-ink
                          shadow-[0_3px_12px_rgb(0_0_0_/_0.42)] backdrop-blur-sm
                          [text-shadow:0_1px_2px_rgb(0_0_0_/_0.45)]
                          forced-colors:bg-[Canvas] forced-colors:text-[CanvasText]
@@ -149,13 +149,13 @@ function ItemArtwork({
         <>
           <div
             aria-hidden="true"
-            className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black/75 via-black/30 to-transparent"
+            className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-media-scrim/75 via-media-scrim/30 to-transparent"
           />
           <div className="pointer-events-none absolute bottom-2 right-2 z-10 max-w-[calc(100%-1rem)] text-right">
-            <p className="truncate text-subhead font-semibold tabular-nums text-white [text-shadow:0_1px_2px_rgb(0_0_0_/_0.72)]">
+            <p className="truncate text-subhead font-semibold tabular-nums text-media-ink [text-shadow:0_1px_2px_rgb(0_0_0_/_0.72)]">
               {priceLabel(offer)}
             </p>
-            <p className="truncate text-caption-2 text-white/85 [text-shadow:0_1px_2px_rgb(0_0_0_/_0.72)]">
+            <p className="truncate text-caption-2 text-media-ink/85 [text-shadow:0_1px_2px_rgb(0_0_0_/_0.72)]">
               / {offer.unit}
             </p>
           </div>

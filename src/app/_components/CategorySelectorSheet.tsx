@@ -118,8 +118,8 @@ export function CategorySelectorSheet({
                   }
                 }}
                 className={`squircle grid h-12 w-full grid-cols-[2rem_minmax(0,1fr)_auto] items-center gap-3 px-2.5 text-left
-                            transition-colors duration-instant focus-visible:outline-none focus-visible:ring-2
-                            focus-visible:ring-accent focus-visible:ring-inset disabled:cursor-not-allowed disabled:opacity-100 ${
+                            transition-colors duration-instant focus-visible:outline-2
+                            focus-visible:outline-offset-[-2px] focus-visible:outline-accent disabled:cursor-not-allowed disabled:opacity-100 ${
                               active
                                 ? "bg-surface-card text-text-primary shadow-card"
                                 : category.supported

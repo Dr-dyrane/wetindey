@@ -90,11 +90,11 @@ export function ManageProfileSheetView({
                 aria-label="Change profile photo"
               >
                 <Avatar name={name || profile.email || undefined} url={profile.avatarUrl} size={80} />
-                <div className="absolute inset-0 grid place-items-center bg-black/40 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-micro">
-                  <Camera className="h-6 w-6 text-white" />
+                <div className="absolute inset-0 grid place-items-center bg-media-scrim/40 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-micro">
+                  <Camera className="h-6 w-6 text-media-ink" />
                 </div>
                 {avatarBusy && (
-                  <div className="absolute inset-0 grid place-items-center bg-black/50 rounded-full">
+                  <div className="absolute inset-0 grid place-items-center bg-media-scrim/50 rounded-full">
                     <Spinner />
                   </div>
                 )}

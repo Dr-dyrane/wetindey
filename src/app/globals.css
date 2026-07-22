@@ -171,6 +171,17 @@
   --color-scrim: rgba(0, 0, 0, 0.35);
   --color-dim: #000000;
 
+  /* Media overlays painted directly on authentic content: a legibility dim over
+     a photo or avatar, plus the ink that reads on top of it. Theme-invariant,
+     since a dark dim subtracts light and pale ink reads on it the same in both
+     themes, so both blocks carry one value. Space-separated RGB channels, not a
+     packed hex, because the Tailwind opacity modifier compiles to rgb(var() /
+     alpha) and alpha cannot be applied to a packed hex. Kept apart from the
+     scrim pair above on purpose: this dims content, that dims a surface behind
+     a presented sheet. */
+  --color-media-scrim: 0 0 0;
+  --color-media-ink: 255 255 255;
+
   /* ── Signal — Apple system colours, light values ── */
   --color-status-confirmed: #34c759; /* systemGreen */
   --color-status-caution: #ff9500; /* systemOrange */
@@ -364,6 +375,9 @@
   /* Heavier in dark — a 35% dim reads as almost nothing over a dark map. */
   --color-scrim: rgba(0, 0, 0, 0.55);
   --color-dim: #000000;
+  /* Unchanged from light: a content dim and its ink read the same in both themes. */
+  --color-media-scrim: 0 0 0;
+  --color-media-ink: 255 255 255;
   /* Apple's dark variants: brighter, less saturated, to hold against black. */
   --color-status-confirmed: #30d158;
   --color-status-caution: #ff9f0a;

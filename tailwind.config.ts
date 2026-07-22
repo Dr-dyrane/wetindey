@@ -53,6 +53,10 @@ const config: Config = {
         onStatus: "var(--color-on-status)",
         scrim: "var(--color-scrim)",
         dim: "var(--color-dim)",
+        media: {
+          scrim: "rgb(var(--color-media-scrim) / <alpha-value>)",
+          ink: "rgb(var(--color-media-ink) / <alpha-value>)",
+        },
         iconOrb: {
           "neutral-top": "var(--color-icon-orb-neutral-top)",
           "neutral-base": "var(--color-icon-orb-neutral-base)",
