@@ -48,33 +48,70 @@ to idle rather than creating a replacement task.
 
 ## Active exact path locks
 
-#### Food report pending-review experience — ACTIVE
+#### Food report pending-review experience — SOURCE PASS / RELEASED
 
-Owner: controller implementation worker, with a separate default-to-REFUTED independent
-reviewer. This lane may enable only the existing ADR-019 `report_price` admission path and
-must preserve pending moderation, idempotency, rate enforcement, unavailable-without-price,
-and fail-closed runtime outcomes. It does not authorize visit confirmation, auto-approval,
-public projection changes, moderation activation, schema/migration edits, Presence, seller
-work, provider changes, or deployment. Preview and Production runtime activation remain
-separate exact-target evidence steps after the source candidate passes.
+Commit `e554efd` wires only the existing ADR-019 `report_price` admission path. The first
+independent review found an in-flight dismissal duplicate-admission race, mismatched price
+normalization, wrong status semantics, localization/spacing defects, and a regex-only
+contract. The forward correction introduced an executable coordinator contract and the
+delta refuter returned **PASS** with no scoped P1/P2/P3. All six source/test/worklog paths
+are released. Runtime target activation remains blocked on the separately claimed review
+operations vertical below; this source commit must not deploy alone as a false affordance.
+
+#### Contribution moderation service `0015` — ACTIVE
+
+Owner: database service worker. Add only the protected review-detail service needed for a
+second moderator to inspect a decided claim and reverse it without broad table access.
+Preserve immutable `0000`-`0014`; this is a forward release delta and matching desired-state
+pillar repair. No app UI, environment, role login, shared-target migration, flag, deployment,
+or report activation is authorized by this source lane.
 
 Exact writable paths:
 
-- `LANES.md`
-- `src/app/_components/report-price-sheet/ReportPriceSheet.tsx`
-- `src/app/_components/report-price-sheet/hooks/useReportPriceSheet.ts`
-- `src/app/_components/report-price-sheet/views/ReportPriceSheetView.tsx`
-- `src/core/i18n/strings.ts`
-- new `scripts/contributions/report-price-sheet-contract.test.ts`
+- `src/db/pillars/80-contribution-services.sql`
+- `src/db/pillars/90-contribution-security.sql`
+- new `src/db/migrations/0015_contribution_moderation_operations.sql`
+- new `src/db/migrations/meta/0015_snapshot.json`
+- new `src/db/migrations/meta/0015_release_manifest.json`
+- `src/db/migrations/meta/_journal.json`
+- new `scripts/contributions/contribution-moderation-migration-contract.test.ts`
+
+The RPC must assert the authenticated assigned moderator and return only the claim/catalog
+labels plus effective-decision fields required to review or reverse. It must exclude email,
+contact, precise coordinates, source IDs, digests, network/risk signals, private notes, and
+raw payload. Blank and `0000`-`0014` upgrades, rollback, idempotence, exact grants/RLS, and
+independent default-to-REFUTED evidence are required before release.
+
+#### Contribution moderation application — ACTIVE
+
+Owner: application operations worker. Build the least-privileged, unlinked operator route
+against the frozen `0015` RPC contract. It remains disabled before auth/pool/SQL unless the
+exact release flag is present, derives actor identity only from Neon Auth, accepts only
+finite reason codes and client UUID command identities, performs no automatic mutation
+retry, and never returns private contributor or internal-risk material. This lane may not
+use generic app-database access as a substitute for the moderation RPCs.
+
+Exact writable paths:
+
+- new `src/lib/contributions/moderation-runtime.ts`
+- new `src/app/operations/contributions/actions.ts`
+- new `src/app/operations/contributions/page.tsx`
+- new `src/app/operations/contributions/_components/ModerationConsole.tsx`
+- new `src/app/operations/contributions/_components/hooks/useModerationConsole.ts`
+- new `src/app/operations/contributions/_components/views/ModerationConsoleView.tsx`
+- new `src/app/operations/contributions/_components/copy/copy.ts`
+- new `scripts/contributions/contribution-moderation-runtime-contract.test.ts`
+- new `scripts/contributions/contribution-moderator-control.ts`
+- new `scripts/contributions/contribution-moderator-control-contract.test.ts`
 - `docs/operations/departments/contribution-integrity.md`
 
-Acceptance: enabled Food report inputs build the exact discriminated admission payload;
-the browser creates and safely reuses one UUID idempotency key per unchanged intent;
-unavailable clears and omits price; repeat taps cannot duplicate a request; every runtime
-result is presented truthfully; success says only received for review; pending/rejected
-evidence cannot be represented as public; compact focus and disabled/submitting/success
-states remain accessible. Exact-path checks plus independent refutation are required before
-the application paths are released.
+Acceptance includes disabled-before-effects ordering, exact RPC capability probes,
+signed-out/ordinary/suspended/expired/self-review denials, queue/detail/approve/reject/
+different-moderator reverse and audit states, stable same-intent command replay, conflict
+containment, accessible empty/loading/forbidden/error states, noindex/no-store route behavior,
+and an independently refuted exact-path candidate. Provider credentials, named assignments,
+flags, Preview/Production activation, browser proof, migration, push, and deployment remain
+separate operational gates.
 
 #### Governance modularization — RELEASED / PATHLESS
 
