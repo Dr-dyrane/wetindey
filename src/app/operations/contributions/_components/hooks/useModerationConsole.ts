@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useMemo, useRef, useState } from "react";
-import { type ModerationAuditEntry, type ModerationDecision, type ModerationQueueItem, type ModerationReasonCode, type ModerationReviewDetail, MODERATION_REASON_CODES } from "@/lib/contributions/moderation-runtime";
+import { type ModerationAuditEntry, type ModerationDecision, type ModerationQueueItem, type ModerationReasonCode, type ModerationReviewDetail, MODERATION_REASON_CODES } from "@/lib/contributions/moderation-contract";
 import { readModerationQueue, readModerationReview, submitModerationCommand } from "../../actions";
 
 export type ModerationNotice = "idle" | "loading" | "unavailable" | "session_expired" | "forbidden" | "conflict" | "recorded" | "replayed";

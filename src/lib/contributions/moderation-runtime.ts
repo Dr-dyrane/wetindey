@@ -1,6 +1,30 @@
+import "server-only";
+
 import { createHash } from "node:crypto";
 
 import { Pool } from "pg";
+
+import {
+  MODERATION_REASON_CODES,
+  type ModerationAuditEntry,
+  type ModerationCommand,
+  type ModerationDecision,
+  type ModerationQueueItem,
+  type ModerationReasonCode,
+  type ModerationReviewDetail,
+  type ModerationRuntimeResult,
+} from "@/lib/contributions/moderation-contract";
+
+export { MODERATION_REASON_CODES } from "@/lib/contributions/moderation-contract";
+export type {
+  ModerationAuditEntry,
+  ModerationCommand,
+  ModerationDecision,
+  ModerationQueueItem,
+  ModerationReasonCode,
+  ModerationReviewDetail,
+  ModerationRuntimeResult,
+} from "@/lib/contributions/moderation-contract";
 
 const MODERATION_RELEASE = "0015:moderation-operations-v1";
 const MODERATOR_ROLE = "wetindey_contribution_moderator";
@@ -32,14 +56,6 @@ const DETAIL_SQL = `SELECT * FROM public.contribution_review_detail($1::uuid, $2
 const MODERATE_SQL = `SELECT * FROM public.contribution_moderate($1::uuid, $2::uuid, $3::text, $4::uuid, $5::public.contribution_decision, $6::text, $7::uuid)`;
 const AUDIT_SQL = `SELECT * FROM public.contribution_audit_for_observation($1::uuid, $2::uuid, $3::integer)`;
 
-export const MODERATION_REASON_CODES = {
-  approve: ["evidence_sufficient", "independent_confirmation"],
-  reject: ["evidence_insufficient", "claim_conflicts", "policy_violation"],
-  reverse: ["new_evidence", "decision_error"],
-} as const;
-
-export type ModerationDecision = keyof typeof MODERATION_REASON_CODES;
-export type ModerationReasonCode = (typeof MODERATION_REASON_CODES)[ModerationDecision][number];
 type QueryResult = { rows: unknown[] };
 export type ModerationQueryExecutor = { query(statement: string, values: readonly unknown[]): Promise<QueryResult> };
 type ModerationEnvironment = Partial<
@@ -54,52 +70,6 @@ type Dependencies = {
   environment: ModerationEnvironment;
   createExecutor(connectionString: string): ModerationQueryExecutor;
   readActorId(): Promise<string | null>;
-};
-
-export type ModerationQueueItem = {
-  observationId: string;
-  availabilityState: "available" | "unavailable";
-  priceAmountKobo: number | null;
-  observedAt: string;
-  submittedAt: string;
-  collectionMethod: string;
-  correctsPriorEvidence: boolean;
-  attributed: boolean;
-};
-export type ModerationReviewDetail = {
-  observationId: string;
-  itemLabel: string;
-  variantLabel: string | null;
-  unitLabel: string;
-  placeLabel: string;
-  availabilityState: "available" | "unavailable";
-  priceAmountKobo: number | null;
-  observedAt: string;
-  submittedAt: string;
-  collectionMethod: string;
-  correctsPriorEvidence: boolean;
-  attributed: boolean;
-  hasDecisionHistory: boolean;
-  reopenedAfterReversal: boolean;
-  activeDecisionId: string | null;
-  canReverse: boolean;
-};
-export type ModerationAuditEntry = {
-  action: "admission" | "approved" | "rejected" | "reversed" | "projection_updated";
-  actor: "you" | "another_moderator";
-  reasonCode: string | null;
-  createdAt: string;
-};
-export type ModerationRuntimeResult<T> =
-  | { code: "ready"; value: T }
-  | { code: "replayed"; value: T }
-  | { code: "forbidden" | "session_expired" | "conflict" | "unavailable" };
-export type ModerationCommand = {
-  requestId: string;
-  observationId: string;
-  decision: ModerationDecision;
-  reasonCode: ModerationReasonCode;
-  priorDecisionId: string | null;
 };
 
 let sharedExecutor: { connectionString: string; executor: ModerationQueryExecutor } | null = null;

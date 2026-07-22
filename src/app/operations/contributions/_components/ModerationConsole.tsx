@@ -1,6 +1,6 @@
 "use client";
 
-import type { ModerationQueueItem } from "@/lib/contributions/moderation-runtime";
+import type { ModerationQueueItem } from "@/lib/contributions/moderation-contract";
 import { type ModerationNotice, useModerationConsole } from "./hooks/useModerationConsole";
 import { ModerationConsoleView } from "./views/ModerationConsoleView";
 

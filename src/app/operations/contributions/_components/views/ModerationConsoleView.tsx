@@ -1,6 +1,6 @@
 "use client";
 
-import type { ModerationDecision, ModerationQueueItem } from "@/lib/contributions/moderation-runtime";
+import type { ModerationDecision, ModerationQueueItem } from "@/lib/contributions/moderation-contract";
 import { moderationCopy } from "../copy/copy";
 import { type ModerationNotice, MODERATION_REASON_CODES } from "../hooks/useModerationConsole";
 

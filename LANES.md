@@ -137,6 +137,36 @@ and an independently refuted exact-path candidate. Provider credentials, named a
 flags, Preview/Production activation, browser proof, migration, push, and deployment remain
 separate operational gates.
 
+#### Contribution moderation client/server boundary repair — SOURCE PASS / RELEASED
+
+Owner: controller. The Production build exposed one bounded import-boundary defect: the
+client moderation hook imported a value from the PostgreSQL-backed server runtime and
+therefore pulled Node `pg` dependencies into the browser bundle. Move only shared DTOs and
+finite reason-code constants into a client-safe contract, preserve all behavior, and add a
+focused regression assertion that client code cannot import the server runtime.
+
+Exact writable paths:
+
+- `LANES.md`
+- new `src/lib/contributions/moderation-contract.ts`
+- `src/lib/contributions/moderation-runtime.ts`
+- `src/app/operations/contributions/_components/ModerationConsole.tsx`
+- `src/app/operations/contributions/_components/hooks/useModerationConsole.ts`
+- `src/app/operations/contributions/_components/views/ModerationConsoleView.tsx`
+- `scripts/contributions/contribution-moderation-runtime-contract.test.ts`
+- `package.json`
+- `package-lock.json`
+
+No UI, copy, RPC, database, migration, environment, flag, provider, role, or moderation
+semantics may change. The only dependency change allowed is the standard `server-only`
+poison-package guard. Release requires the focused runtime contract, exact-path lint, a
+Production build, independent default-to-REFUTED review, and a path-scoped forward commit.
+
+Final evidence: the focused runtime contract and exact-path lint pass; the full Next
+Production build compiles and generates all 117 routes without the prior `pg` browser
+bundle; independent forward refutation returned PASS with no P1/P2/P3. Paths are released
+upon the path-scoped commit.
+
 #### Governance modularization — RELEASED / PATHLESS
 
 The active serialized governance claim completed as one atomic path-scoped candidate. Independent final refutation returned **PASS**; its exact documentation and archive-split paths are released upon the atomic path-scoped commit. Root `LANES.md` remains the required human coordination index for future current claims, while the current-cycle archive preserves completed evidence without granting authority.

@@ -1,4 +1,6 @@
 import assert from "node:assert/strict";
+import { readdirSync, readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 
 import {
   loadModerationQueue,
@@ -19,6 +21,40 @@ const environment = {
 };
 
 async function main() {
+  const operationRoot = fileURLToPath(
+    new URL("../../src/app/operations/contributions", import.meta.url)
+  );
+  const sourcePaths = (directory: string): string[] =>
+    readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
+      const path = `${directory}/${entry.name}`;
+      return entry.isDirectory()
+        ? sourcePaths(path)
+        : /\.(?:ts|tsx)$/.test(entry.name)
+          ? [path]
+          : [];
+    });
+  for (const path of sourcePaths(operationRoot)) {
+    const source = readFileSync(path, "utf8");
+    if (!/^\s*["']use client["'];/u.test(source)) continue;
+    assert.doesNotMatch(
+      source,
+      /(?:from\s+|import\s*\()\s*["'][^"']*moderation-runtime["']/u,
+      `client module ${path} must not import the PostgreSQL-backed server runtime`
+    );
+  }
+  const clientHook = readFileSync(
+    `${operationRoot}/_components/hooks/useModerationConsole.ts`,
+    "utf8"
+  );
+  const serverActions = readFileSync(`${operationRoot}/actions.ts`, "utf8");
+  const serverRuntime = readFileSync(
+    new URL("../../src/lib/contributions/moderation-runtime.ts", import.meta.url),
+    "utf8"
+  );
+  assert.match(clientHook, /@\/lib\/contributions\/moderation-contract/);
+  assert.match(serverActions, /^\s*["']use server["'];/u);
+  assert.match(serverRuntime, /^import ["']server-only["'];/u);
+
   let effects = 0;
   const disabled = await loadModerationQueue({
     environment: {},
