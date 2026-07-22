@@ -42,6 +42,7 @@ to idle rather than creating a replacement task.
 | Developer Relations & Engineering Enablement `019f7995-5b7b-7ee1-81ef-2c3a3c57b836` | Department worklog protocol complete / released | `62880ac` and fail-closed repair `2523da1` are on current main; remain persistent for later bounded enablement assignments |
 | Catalog Stewardship `019f7999-37d0-7231-8b89-0e71c2569ce2` | Catalog workflow complete / released; employee idle | `8a072e2`/`7b42664` and `fe09dc3` resolved the safety-scope and no-match/transport corrections; no active path claim remains |
 | Private Contractor, Full-Stack Delivery `ef98946c-a55e-4700-aa6e-c1a840e42eef` | Seated by Founder instruction 2026-07-21; first bounded lane claimed below | Account deletion vertical (App Store 5.1.1(v); named absent at this file's Presence readiness audit). Method: multi-agent orchestration ending in default-to-REFUTED independent refutation before any path-scoped commit. Deletion design previously proven on the live database: anonymise `sources.user_id`, tighten the anonymous-source lookup in the same change, erase the `neon_auth` user through its proven `ON DELETE CASCADE` FKs (Neon's own `deleteUser` endpoint returns 404, server-gated), delete the `user_profiles` row and Blob avatar, then sign out. Verification uses a throwaway account only, never the Founder's |
+| Private Contractor, Maps Delivery `c9c17443-ef5e-4a7b-9b6e-c8f5381da30c` | Seated by Founder instruction 2026-07-21; first bounded lane claimed below | Theme-transition continuity under the Maps & Location Experience functional home, satisfying that seat's reopening gate with fresh 2026-07-21 runtime evidence (both-direction browser drive plus the exact console warning). Method: multi-agent orchestration; subagents inherit the lane and may not widen it; a default-to-REFUTED independent refuter drives the exact candidate in a browser before any path-scoped commit |
 
 
 
@@ -61,6 +62,18 @@ Owner: Private Contractor, Full-Stack Delivery `ef98946c-a55e-4700-aa6e-c1a840e4
 Purpose: in-app account deletion (App Store 5.1.1(v)), the wiring this file's Presence readiness audit records as absent. Contributions are anonymised, never deleted: prices remain the commons; identity is erased. The action resolves the session server-side only, takes no client id, and its copy states truthfully that reports stay on the map anonymously. Runtime app writes only; no schema change, no migration, no shared-database target. Exclusions: `src/app/page.tsx`, `src/core/i18n/strings.ts` (copy lives in the slice's own `copy/`), every Presence queued path, every ADR-locked path, providers, deployment.
 
 Completion: an independent default-to-REFUTED refutation must pass on identity safety (session-only, no cross-user deletion), truthfulness of copy, and a driven browser round-trip on a throwaway account; then a path-scoped commit releases these paths and returns the seat to idle.
+
+#### Maps theme-transition continuity — ACTIVE
+
+Owner: Private Contractor, Maps Delivery `c9c17443-ef5e-4a7b-9b6e-c8f5381da30c`. Exact writable paths:
+
+- `src/integrations/maps/MapboxAdapter.ts`
+- `src/design-system/components/MapboxCanvas.tsx`
+- `docs/operations/departments/maps-location.md`
+
+Purpose: remove the 3–4 second blank basemap during theme switch. Fresh runtime evidence (2026-07-21, localhost drive, both directions dark to light and back): the style diff fails with the console warning "Unable to perform style diff: Unimplemented: setSprite.. Rebuilding the style from scratch", so setStyle tears down and refetches every source while the canvas shows bare background paint and WetinDey pins float on nothing. Candidate approaches to be evaluated inside the lane, not pre-decided: a sprite shared between the two styles; single-style paint-property theming; a snapshot cross-fade over the rebuild window. Any fix must preserve applyCartography behavior in both themes and route-below-labels anchoring. This claim satisfies the Maps seat's reopening gate (fresh concrete runtime evidence plus an exact manifest). Exclusions: the queued Presence path set including every sharedUsers seam, POI hierarchy values, route semantics, `src/app/_components/**`, `src/app/page.tsx`, schema, migrations, providers, deployment state. No push; local path-scoped commits only. Known documentation conflict flagged for governance: this file's controller policy names the controller over `LANES.md`, while `docs/operations/lanes/README.md` still instructs self-append; this claim follows the established contractor-seating precedent recorded above under Founder instruction.
+
+Completion: the defect is gone in a driven browser check of both toggle directions on the exact candidate, an independent default-to-REFUTED refuter passes it, the maps-location worklog entry is appended in the same change, and a path-scoped commit releases these paths.
 
 No other source path is currently claimed by this registry. A persistent employee seat is not a path claim.
 
