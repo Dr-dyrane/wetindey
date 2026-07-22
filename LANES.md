@@ -162,7 +162,7 @@ Controller-directed, scout confirms exact paths and STOPS to the controller befo
 
 #### Maps marker keyboard operability - ACTIVE
 
-Owner: Private Contractor, Maps Delivery `c9c17443-ef5e-4a7b-9b6e-c8f5381a30c`. Exact writable path:
+Owner: Private Contractor, Maps Delivery `c9c17443-ef5e-4a7b-9b6e-c8f5381da30c`. Exact writable path:
 
 - `src/integrations/maps/MapboxAdapter.ts`
 
