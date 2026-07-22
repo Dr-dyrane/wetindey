@@ -48,6 +48,34 @@ to idle rather than creating a replacement task.
 
 ## Active exact path locks
 
+#### Food report pending-review experience — ACTIVE
+
+Owner: controller implementation worker, with a separate default-to-REFUTED independent
+reviewer. This lane may enable only the existing ADR-019 `report_price` admission path and
+must preserve pending moderation, idempotency, rate enforcement, unavailable-without-price,
+and fail-closed runtime outcomes. It does not authorize visit confirmation, auto-approval,
+public projection changes, moderation activation, schema/migration edits, Presence, seller
+work, provider changes, or deployment. Preview and Production runtime activation remain
+separate exact-target evidence steps after the source candidate passes.
+
+Exact writable paths:
+
+- `LANES.md`
+- `src/app/_components/report-price-sheet/ReportPriceSheet.tsx`
+- `src/app/_components/report-price-sheet/hooks/useReportPriceSheet.ts`
+- `src/app/_components/report-price-sheet/views/ReportPriceSheetView.tsx`
+- `src/core/i18n/strings.ts`
+- new `scripts/contributions/report-price-sheet-contract.test.ts`
+- `docs/operations/departments/contribution-integrity.md`
+
+Acceptance: enabled Food report inputs build the exact discriminated admission payload;
+the browser creates and safely reuses one UUID idempotency key per unchanged intent;
+unavailable clears and omits price; repeat taps cannot duplicate a request; every runtime
+result is presented truthfully; success says only received for review; pending/rejected
+evidence cannot be represented as public; compact focus and disabled/submitting/success
+states remain accessible. Exact-path checks plus independent refutation are required before
+the application paths are released.
+
 #### Governance modularization — RELEASED / PATHLESS
 
 The active serialized governance claim completed as one atomic path-scoped candidate. Independent final refutation returned **PASS**; its exact documentation and archive-split paths are released upon the atomic path-scoped commit. Root `LANES.md` remains the required human coordination index for future current claims, while the current-cycle archive preserves completed evidence without granting authority.
