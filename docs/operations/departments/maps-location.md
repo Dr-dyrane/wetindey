@@ -205,7 +205,7 @@ docs/operations/departments/maps-location.md
 
 - Lane heading: `#### Maps three-scope evidence entry — ACTIVE`
 - Lane owner: Private Contractor, Maps Delivery `c9c17443-ef5e-4a7b-9b6e-c8f5381da30c`
-- Owned paths: Exactly the 1 path in the preceding Candidate paths (sorted) block; no other path.
+- Owned paths: Exactly the 1 paths in the preceding Candidate paths (sorted) block; no other path.
 - Excluded paths: Every repository path not listed in Candidate paths (sorted), including both map source paths, which this entry cites but does not touch.
 - Concurrent dependencies: Root UI Component Decluttering and Public review privacy containment run concurrently over disjoint paths.
 
@@ -275,7 +275,7 @@ docs/operations/departments/maps-location.md
 
 - Lane heading: `#### Maps renderer-failure evidence entry — ACTIVE`
 - Lane owner: Private Contractor, Maps Delivery `c9c17443-ef5e-4a7b-9b6e-c8f5381da30c`
-- Owned paths: Exactly the 1 path in the preceding Candidate paths (sorted) block; no other path.
+- Owned paths: Exactly the 1 paths in the preceding Candidate paths (sorted) block; no other path.
 - Excluded paths: Every repository path not listed in Candidate paths (sorted), including both map source paths this entry cites but does not touch.
 - Concurrent dependencies: Contribution moderation service and ACL repair lanes run concurrently over disjoint paths.
 
