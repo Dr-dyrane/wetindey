@@ -74,6 +74,13 @@ const SIGNAL_NAIRA = new Intl.NumberFormat("en-NG", {
   notation: "compact",
 });
 
+/**
+ * Mirrors the search action's validation cap (validation.ts:333). A query past
+ * this is rejected by validation, NOT by the network, so we stop it here and
+ * say so honestly rather than letting the catch blame the connection forever.
+ */
+const SEARCH_QUERY_MAX_LENGTH = 80;
+
 function foodSignalPrice(item: ItemCardData): string | null {
   if (typeof item.priceFrom !== "number" || !Number.isFinite(item.priceFrom)) {
     return null;
@@ -441,6 +448,19 @@ export function useHomePage() {
       return;
     }
 
+    // An over-long query is a validation rejection, not a transport failure.
+    // Refuse it here and say so honestly rather than firing a round-trip that
+    // comes back as a false "check your connection" that never clears. The
+    // SearchField maxLength caps typing/paste at 80; this guards the rest.
+    if (searchQuery.length > SEARCH_QUERY_MAX_LENGTH) {
+      setIsSearching(false);
+      // Never leave the previous query's rows standing under a rejection: they
+      // are tappable and would read as this query's answer (ADR-015).
+      setSearchResults([]);
+      setSearchError("That search is too long. Try something shorter.");
+      return;
+    }
+
     let cancelled = false;
     setIsSearching(true);
     setSearchError(null);
@@ -455,6 +475,9 @@ export function useHomePage() {
       } catch (err) {
         console.error("Search failed:", err);
         if (!cancelled) {
+          // Drop the previous query's rows: a failed NEW query must not
+          // re-surface the OLD answer as if it were this one (ADR-015).
+          setSearchResults([]);
           setSearchError("Couldn't search. Check your connection.");
         }
       } finally {
@@ -738,16 +761,26 @@ export function useHomePage() {
     void getNearbyExchangeLocations({
       ...searchOrigin,
       provenance: "browsing",
-    }).then((result) => {
-      if (cancelled) return;
-      if (result.locations.length === 0) {
-        setExchangeLocations([...EXCHANGE_SAMPLE_LOCATIONS]);
-        setExchangeLocationDiscoveryStatus("sample");
-        return;
-      }
-      setExchangeLocations(result.locations);
-      setExchangeLocationDiscoveryStatus("ready");
-    });
+    })
+      .then((result) => {
+        if (cancelled) return;
+        if (result.locations.length === 0) {
+          setExchangeLocations([...EXCHANGE_SAMPLE_LOCATIONS]);
+          setExchangeLocationDiscoveryStatus("sample");
+          return;
+        }
+        setExchangeLocations(result.locations);
+        setExchangeLocationDiscoveryStatus("ready");
+      })
+      .catch(() => {
+        // This had no catch, so a transport failure left the exchange list
+        // spinning on "loading" forever and never reached the honest Sample
+        // fallback. Land on it, exactly like the empty-result branch above.
+        if (!cancelled) {
+          setExchangeLocations([...EXCHANGE_SAMPLE_LOCATIONS]);
+          setExchangeLocationDiscoveryStatus("sample");
+        }
+      });
     return () => {
       cancelled = true;
     };

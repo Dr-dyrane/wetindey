@@ -11,6 +11,13 @@ interface SearchFieldProps {
   onFocus?: () => void;
   onBlur?: () => void;
   placeholder?: string;
+  /**
+   * Hard-caps the query at the DOM level. Defaults to 80 to mirror the search
+   * action's validation cap (validation.ts:333): without it an over-long query
+   * is thrown by validation and surfaced to the user as a false "check your
+   * connection" error that never clears. Callers may override for other uses.
+   */
+  maxLength?: number;
 }
 
 /**
@@ -52,6 +59,7 @@ export function SearchField({
   onFocus,
   onBlur,
   placeholder = "Search",
+  maxLength = 80,
 }: SearchFieldProps) {
   // The ring is on the WRAPPER, not the input, and that is not a style choice:
   // this div is `overflow-hidden` (it clips the fill to the squircle), and an
@@ -72,6 +80,7 @@ export function SearchField({
         onFocus={onFocus}
         onBlur={onBlur}
         placeholder={placeholder}
+        maxLength={maxLength}
         aria-label={placeholder}
         enterKeyHint="search"
         className="h-full w-full bg-transparent pl-8 pr-9 text-body text-text-primary placeholder:text-text-tertiary"
