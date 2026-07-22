@@ -44,7 +44,7 @@ to idle rather than creating a replacement task.
 | Developer Relations & Engineering Enablement `019f7995-5b7b-7ee1-81ef-2c3a3c57b836` | Department worklog protocol complete / released | `62880ac` and fail-closed repair `2523da1` are on current main; remain persistent for later bounded enablement assignments |
 | Catalog Stewardship `019f7999-37d0-7231-8b89-0e71c2569ce2` | Catalog workflow complete / released; employee idle | `8a072e2`/`7b42664` and `fe09dc3` resolved the safety-scope and no-match/transport corrections; no active path claim remains |
 | Private Contractor, Full-Stack Delivery `ef98946c-a55e-4700-aa6e-c1a840e42eef` | Seated by Founder instruction 2026-07-21; first lane (account deletion) RELEASED, blocked by ADR-021, request to controller recorded in Active locks; now discovering the next ADR-clear lane | Method: multi-agent orchestration ending in default-to-REFUTED independent refutation, and ADR-clearance proven before any claim (the deletion lane taught this). Not building on stale memory: a discovery workflow reads the ADRs, this registry, and the gate states to find genuinely open, ADR-clear, unclaimed, high-value work, then executes only on affirmative clearance |
-| Private Contractor, Maps Delivery `c9c17443-ef5e-4a7b-9b6e-c8f5381da30c` | Nine lanes complete / released; Lane B of the richness pass pending an owner semantics call | `f307cef` light ground warmth shipped; queued: routeTint spine slice and commercial-district wash (Lane B), Safari or iOS capture drive (owner tooling), Presence Maps-side serialization when routed |
+| Private Contractor, Maps Delivery `c9c17443-ef5e-4a7b-9b6e-c8f5381da30c` | Ten lanes complete / released; Lane C (dark road hierarchy) in refutation | Richness pass: light warmth `f307cef` and freshness tint `a55eb9a` shipped; dark roads at claim `d4c091f` pending verdict; queued: commercial wash spec (data-bound, recorded), Safari or iOS capture drive (owner tooling), Presence serialization when routed |
 
 
 
@@ -156,22 +156,9 @@ Purpose: Lane C of the Founder-directed richness pass; the Founder observed this
 
 Completion: before and after dark captures show the expressway warm and the road hierarchy legible with labels and markers untouched; light proven pixel-identical; stock citations verified; independent default-to-REFUTED refutation; gates green; path-scoped commit pushed under the `0bbdb11` class; span-checked release.
 
-#### Maps route freshness tint - ACTIVE
+#### Maps route freshness tint - RELEASED / PATHLESS
 
-Owner: Private Contractor, Maps Delivery `c9c17443-ef5e-4a7b-9b6e-c8f5381da30c`. Exact writable paths:
-
-- `src/app/_components/home-page/hooks/useHomePage.ts`
-- `src/app/_components/home-page/imports/imports.ts`
-- `src/app/_components/home-page/views/HomePageView.tsx`
-- `src/app/_components/map-presentation/MapPresentation.tsx`
-- `src/app/_components/map-presentation/imports/imports.ts`
-- `src/app/_components/map-presentation/views/MapPresentationView.tsx`
-
-Purpose: Lane B of the Founder-directed richness pass, semantics decided by the Founder this session: the route line tints by price freshness. The adapter already ships the full seam (RouteTint accent, confirmed, caution, unavailable with token mapping; MapboxCanvas accepts routeTint) and it has never been fed. useHomePage derives the tint from the active route target's freshness signal (StatusKind caution passes through as caution, unavailable as unavailable, everything else stays accent) and the prop threads through HomePageView, MapPresentation, and MapPresentationView to MapboxCanvas. No adapter, canvas, cartography, schema, or copy change. The spine files are claimed exactly because this is the serialized integration step the crossing-point rule requires.
-
-Controller ruling receipt (this session): the wash-and-tint authorization is received with thanks; its guardrails are adopted in full for the commercial-district wash (strict subordination to the data layer, no marker competition, no category or availability reading, dark pixel-identity, contrast and stock citations, default-to-REFUTED gate). On routeTint semantics specifically, the Founder decided directly in-session before the ruling arrived: the tint IS a freshness signal (caution when the target price is stale or conflicted). Founder precedence governs; the mismatch is recorded here rather than silently resolved, and the controller is informed. The tint remains subordinate in practice: it exists only during an active Get-it flow toward one already-chosen offer, ranks nothing, and restates the freshness chip the user has already seen.
-
-Completion: a driven browser flow draws a route to a caution-signal offer and pixel-samples the line amber, and to a fresh offer sampling accent; an independent default-to-REFUTED refuter reviews diff and drive; tsc, eslint, audit:tokens, location contract 20/20; path-scoped commit, push under the `0bbdb11` proven-reversible class, release with span check.
+Complete at `a55eb9a`, pushed under the `0bbdb11` proven-reversible class after NOT REFUTED on all five claims with independent pixel reproduction (caution route amber at the status token, accent route zero orange delta, derivation keyed so a tint cannot outlive its route). Founder semantics of record; the controller ruling receipt and precedence note are preserved in history via this file's log. Known gaps recorded in the commit: unavailable branch type-proven only, no confirmed demo offer. Paths released; MapPresentation.tsx and home-page imports were manifest-listed but proven byte-identical.
 
 #### Maps light cartography warmth - RELEASED / PATHLESS
 
