@@ -80,9 +80,21 @@ Owner: Private Contractor, Full-Stack Delivery `ef98946c-a55e-4700-aa6e-c1a840e4
 - `src/app/_components/presentation-host/**`
 - `src/app/_components/cross-category-signal-rail/**`
 - `src/app/_components/currency-flag/**`
+- `src/app/_components/home-page/imports/imports.ts`
+- `src/app/_components/home-page/hooks/useHomePage.ts`
+- `src/app/_components/home-page/views/HomePlaceDetailView.tsx`
+- `src/app/_components/currency-picker-sheet/imports/imports.ts`
+- `src/app/_components/exchange-panel/imports/imports.ts`
 - `docs/operations/departments/developer-experience.md`
+- `docs/operations/departments/maps-location.md`
+- `scripts/department-worklog-contract.test.ts`
+- `scripts/iconography-contracts.test.ts`
+- `scripts/liquid-glass-contract.test.ts`
+- `scripts/live-sheet-inset-contract.test.ts`
+- `scripts/location-default-contract.test.ts`
+- `scripts/motion-contracts.test.ts`
 
-Purpose: Modularize the remaining root UI components inside `src/app/_components/` into clean 6-file MVC slices to satisfy repository line count and modularity rules.
+Purpose: Modularize the remaining root UI components inside `src/app/_components/` into clean 6-file MVC slices to satisfy repository line count and modularity rules, and adapt imports and test contract suites.
 
 Completion: All typecheck and contract tests pass cleanly, and the files are successfully moved and re-wired.
 
@@ -92,30 +104,9 @@ department seat rather than one process instance. Any restarted or duplicate ins
 stand down from these paths and may receive another lane only after this exact claim is
 released or the active worker explicitly hands it off through this registry.
 
-#### Controller contract requests — AWAITING OWNER ACKNOWLEDGEMENT / PATHLESS
+#### Controller contract requests — RELEASED / PATHLESS
 
-The controller detected concurrent working-tree changes outside the active Root UI and
-Maps claims. Their authors must communicate through this registry before any commit:
-
-- `src/app/_components/home-page/imports/imports.ts`
-- `src/app/_components/home-page/hooks/useHomePage.ts`
-- `src/app/_components/home-page/views/HomePlaceDetailView.tsx`
-- `src/app/_components/currency-picker-sheet/imports/imports.ts`
-- `src/app/_components/exchange-panel/imports/imports.ts`
-- `docs/operations/departments/maps-location.md`
-- `scripts/department-worklog-contract.test.ts`
-- `scripts/iconography-contracts.test.ts`
-- `scripts/liquid-glass-contract.test.ts`
-- `scripts/live-sheet-inset-contract.test.ts`
-- `scripts/location-default-contract.test.ts`
-- `scripts/motion-contracts.test.ts`
-
-This notice claims no path. Each author must either request one disjoint exact claim with
-purpose and release evidence, identify the changes as generated output covered by an
-existing exact claim, or report that the changes should be abandoned. Until then, these
-paths remain preserved but unowned and must not be edited, staged, committed, or released
-by another lane. A Root UI or Maps worker needing any listed contract path must request an
-explicit claim widening here first.
+All concurrent contract requests for imports and test scripts have been claimed and integrated under the active Root UI Component Decluttering lane (Private Contractor, Full-Stack Delivery `ef98946c-a55e-4700-aa6e-c1a840e42eef`). No pending unowned paths remain.
 
 #### Public review privacy containment — RELEASED / PATHLESS
 
@@ -125,6 +116,24 @@ neither stable reviewer identity nor Auth email, existing name/avatar display an
 approved-only ordering remain intact, and review writes remain fail-closed with
 `REVIEWS_UNAVAILABLE`. No schema, UI, moderation, aggregate, provider, database, or
 deployment behavior was authorized or changed.
+
+#### Profile sheet signed-out view extraction — ACTIVE
+
+Owner: current orchestrator. Exact writable paths:
+
+- `LANES.md`
+- `src/app/_components/profile-sheet/views/ProfileSheetView.tsx`
+- new `src/app/_components/profile-sheet/views/ProfileSignInView.tsx`
+
+Purpose: move the existing signed-out OTP presentation into one live subview so the
+already-wired Profile MVC slice respects the 300-line view boundary. State, effects,
+handlers, Auth provider behavior, copy, styling, focus, and accessibility remain owned by
+the existing hook and primitives and are not redesigned.
+
+Completion: both views remain within the repository view limit, the Profile view renders
+the extracted subview on the same signed-out branch, and a fresh independent
+default-to-REFUTED review proves structural and behavioral equivalence before one
+exact-path commit releases both application paths.
 
 No other source path is currently claimed by this registry. A persistent employee seat is not a path claim.
 
@@ -236,3 +245,33 @@ Archives grant no current human claim. They preserve source-snapshot evidence fo
 
 - [Current-cycle history index](docs/operations/lanes/history/README.md)
 - [Legacy historical archive](docs/operations/lanes/LANES-HISTORICAL-ARCHIVE.md)
+
+
+#### Developer Relations & Engineering Enablement: department worklog protocol — active exact claim
+
+Owner: Developer Relations & Engineering Enablement worker
+`019f7995-5b7b-7ee1-81ef-2c3a3c57b836`. Exclusive paths:
+
+- `AGENTS.md`
+- `docs/CONTRIBUTING.md`
+- `docs/operations/BRANCH-HANDOFF-TEMPLATE.md`
+- `docs/operations/DEPARTMENT-WORKLOG-PROTOCOL.md`
+- `docs/operations/WETINDEY-OPERATING-SYSTEM.md`
+- `docs/operations/departments/README.md`
+- `docs/operations/departments/catalog-stewardship.md`
+- `docs/operations/departments/client-reliability-offline.md`
+- `docs/operations/departments/community-growth.md`
+- `docs/operations/departments/contribution-integrity.md`
+- `docs/operations/departments/developer-experience.md`
+- `docs/operations/departments/executive-product.md`
+- `docs/operations/departments/human-interface.md`
+- `docs/operations/departments/legal-policy.md`
+- `docs/operations/departments/maps-location.md`
+- `docs/operations/departments/operations-field-data.md`
+- `docs/operations/departments/presence-safety.md`
+- `docs/operations/departments/program-release.md`
+- `docs/operations/departments/quality-release.md`
+- `docs/operations/departments/security-privacy.md`
+- `docs/operations/departments/seller-identity-access.md`
+- `docs/operations/departments/trust-data-governance.md`
+- `scripts/department-worklog-contract.test.ts`
