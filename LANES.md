@@ -160,16 +160,9 @@ Controller-directed, scout confirms exact paths and STOPS to the controller befo
 
 ## Active exact path locks
 
-#### Farm inputs pillar decision record - ACTIVE
+#### Farm inputs pillar decision record - RELEASED / PATHLESS
 
-Owner: Private Contractor, Maps Delivery `c9c17443-ef5e-4a7b-9b6e-c8f5381da30c`, acting for Product & Portfolio framing only. Exact writable paths:
-
-- new `docs/adr/031-farm-inputs-pillar.md`
-- `docs/operations/PORTFOLIO-AND-IDEA-REGISTER.md`
-
-Purpose: the Founder directed the agriculture lane this session and chose its shape directly: a farm inputs pillar beside Food and Money (seeds, fertilizer, agrochemicals, feed; the user is a farmer buying inputs; the places are agro-dealers; the same truth engine carries it). This lane records that decision: a register entry and a drafted ADR-031 submitted Proposed for the Founder's explicit acceptance. Documentation only; it authorizes no schema, pillar flag, catalog, UI, or launch promise, and the Food Truth phase firewall stands untouched. Implementation candidates are enumerated inside the ADR as queued, separately claimable lanes.
-
-Completion: an independent default-to-REFUTED refuter confirms the ADR contradicts no accepted ADR or the operating system's phase firewall and that every implementation-shaped statement is marked queued and non-authorizing; path-scoped commit pushed under the `0bbdb11` class; span-checked release; the acceptance decision is the Founder's, requested in-session.
+Complete at the ADR-031/WD-I-006 commit, pushed under the `0bbdb11` class. ADR-031 sits Proposed and, upon the Founder's explicit acceptance, amends accepted ADR-008's pillar taxonomy to seven (AGRICULTURE, inputs first); the refuter caught and forced that confrontation. Four implementation lanes are enumerated queued and non-authorizing. The acceptance decision awaits the Founder. Paths released.
 
 #### Maps own-markets glow layer - RELEASED / PATHLESS
 
