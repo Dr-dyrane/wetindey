@@ -117,23 +117,15 @@ approved-only ordering remain intact, and review writes remain fail-closed with
 `REVIEWS_UNAVAILABLE`. No schema, UI, moderation, aggregate, provider, database, or
 deployment behavior was authorized or changed.
 
-#### Profile sheet signed-out view extraction — ACTIVE
+#### Profile sheet signed-out view extraction — RELEASED / PATHLESS
 
-Owner: current orchestrator. Exact writable paths:
-
-- `LANES.md`
-- `src/app/_components/profile-sheet/views/ProfileSheetView.tsx`
-- new `src/app/_components/profile-sheet/views/ProfileSignInView.tsx`
-
-Purpose: move the existing signed-out OTP presentation into one live subview so the
-already-wired Profile MVC slice respects the 300-line view boundary. State, effects,
-handlers, Auth provider behavior, copy, styling, focus, and accessibility remain owned by
-the existing hook and primitives and are not redesigned.
-
-Completion: both views remain within the repository view limit, the Profile view renders
-the extracted subview on the same signed-out branch, and a fresh independent
-default-to-REFUTED review proves structural and behavioral equivalence before one
-exact-path commit releases both application paths.
+Commit `5155567` extracted the live signed-out OTP presentation into
+`ProfileSignInView.tsx`; both application paths are released and own no repository path.
+Independent refutation passed all idle, email, code, verified, stalled, retry, resend,
+different-email, focus/ref, accessibility, style, spinner, handler, and auto-submit
+equivalence checks. `ProfileSheetView.tsx` is 209 lines and `ProfileSignInView.tsx` is 166;
+no Auth provider, state, effect, signed-in flow, UI design, database, or deployment behavior
+changed.
 
 No other source path is currently claimed by this registry. A persistent employee seat is not a path claim.
 
