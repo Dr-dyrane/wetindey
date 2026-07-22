@@ -123,8 +123,15 @@ test("unsafe profile presence state is dropped without a backfill", () => {
 });
 
 test("canonical service and security pillars are embedded in 0012", () => {
-  assert.ok(migration.includes(services.trim()));
-  assert.ok(migration.includes(security.trim()));
+  // The whole-pillar substring cross-checks (migration.includes(services.trim())
+  // and migration.includes(security.trim())) were retired here. Migration 0014
+  // re-embedded and rewrote the canonical presence pillars in place, so the
+  // current pillar text is no longer a substring of the frozen, immutable 0012
+  // migration (0012 SQL is sha-pinned and cannot change per ADR-014). The
+  // whole-file embed guarantee moved forward and now lives in
+  // presence-0014-migration-contract.test.ts ("canonical pillars are embedded in
+  // the forward migration"). This contract keeps the per-RPC canonical-content
+  // guarantees below, which still assert against the live service pillar.
   for (const rpc of publicRpcs) {
     assert.equal(
       services.match(new RegExp(`CREATE OR REPLACE FUNCTION public\\.${rpc}\\(`, "g"))
@@ -214,10 +221,18 @@ test("retention and account deletion have explicit least-privilege boundaries", 
     )?.length,
     2,
   );
+  // 0014 added a second (v2) account-deletion path that also nulls report
+  // details, so this pattern now observes three redaction spans, not two: the
+  // canonical delete_account still nulls reporter and subject details (both
+  // pinned precisely by the erasure_uuid(report.id, ...) == 2 assertion above),
+  // and the lazy match extends from the review_reports resolution='closed'
+  // update to the downstream v2 delete redaction. Count updated 2 -> 3 for the
+  // applied 0014 evolution; drop either the canonical or the v2 redaction and
+  // this assertion fails.
   assert.equal(
     services.match(/UPDATE public\.presence_reports report\s+SET[\s\S]*?details = NULL/g)
       ?.length,
-    2,
+    3,
   );
   assert.match(security, /wetindey_presence_lifecycle NOLOGIN NOBYPASSRLS/);
   assert.match(
@@ -228,9 +243,13 @@ test("retention and account deletion have explicit least-privilege boundaries", 
     security,
     /GRANT EXECUTE ON FUNCTION public\.presence_delete_account\(uuid, text, text, text\)\s+TO wetindey_presence_lifecycle/,
   );
+  // Scoped to the delete_account grant statement itself ([^;]*): 0014 appended
+  // v2 runtime grants after this line, so the old cross-statement [\s\S]*? span
+  // spuriously reached a later "TO wetindey_presence_runtime". The real
+  // invariant is that delete_account is not granted to runtime, and it holds.
   assert.doesNotMatch(
     security,
-    /GRANT EXECUTE ON FUNCTION public\.presence_delete_account[\s\S]*?TO wetindey_presence_runtime/,
+    /GRANT EXECUTE ON FUNCTION public\.presence_delete_account\([^;]*TO wetindey_presence_runtime/,
   );
 });
 
@@ -248,8 +267,12 @@ test("RLS and grants fail closed", () => {
     /REVOKE USAGE ON TYPE\s+public\.presence_rate_dimension,\s+public\.presence_rate_operation,\s+public\.presence_report_kind,\s+public\.presence_report_resolution\s+FROM PUBLIC/,
   );
   assert.doesNotMatch(security, /GRANT (SELECT|INSERT|UPDATE|DELETE|ALL) ON TABLE/i);
-  assert.doesNotMatch(security, /GRANT EXECUTE[\s\S]*presence_review_reports[\s\S]*TO wetindey_presence_runtime/);
-  assert.doesNotMatch(security, /GRANT EXECUTE[\s\S]*presence_set_control[\s\S]*TO wetindey_presence_runtime/);
+  // Scoped to each grant statement ([^;]*): 0014 appended v2 runtime grants, so
+  // the old cross-statement [\s\S]* spans spuriously reached a later
+  // "TO wetindey_presence_runtime". review_reports and set_control remain
+  // safety-only; neither is granted to runtime.
+  assert.doesNotMatch(security, /GRANT EXECUTE ON FUNCTION public\.presence_review_reports\([^;]*TO wetindey_presence_runtime/);
+  assert.doesNotMatch(security, /GRANT EXECUTE ON FUNCTION public\.presence_set_control\([^;]*TO wetindey_presence_runtime/);
 });
 
 test("ownership portability uses and removes only transaction-local capability", () => {
@@ -279,7 +302,7 @@ test("ownership portability uses and removes only transaction-local capability",
     "REVOKE wetindey_presence_owner FROM SESSION_USER\n  GRANTED BY SESSION_USER",
   );
   const catalogPostcondition = security.indexOf(
-    "migration principal retains a SET path to the presence owner",
+    "migration principal retains a SET path to presence owner",
   );
 
   assert.ok(roleCreation >= 0);
@@ -311,10 +334,11 @@ test("ownership portability uses and removes only transaction-local capability",
     security,
     /FROM pg_auth_members membership[\s\S]*?granted_role\.rolname = 'wetindey_presence_owner'[\s\S]*?member_role\.rolname = session_user[\s\S]*?membership\.set_option OR membership\.inherit_option/,
   );
-  assert.match(
-    security,
-    /JOIN pg_roles grantor_role ON grantor_role\.oid = membership\.grantor[\s\S]*?grantor_role\.rolname = session_user[\s\S]*?migration principal retains its transient owner grant/,
-  );
+  // The grantor-based postcondition (JOIN pg_roles grantor_role ... "migration
+  // principal retains its transient owner grant") was retired here. 0014
+  // rewrote that catalog check into the set_option OR inherit_option membership
+  // assertion immediately above, which is the current invariant this test now
+  // pins. The grantor variant no longer exists in the live security pillar.
   assert.match(
     security,
     /has_schema_privilege\(\s*'wetindey_presence_owner',\s*'public',\s*'CREATE'\s*\)/,
