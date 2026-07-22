@@ -111,6 +111,30 @@ Controller-directed Terra + Luna arms, each scout-confirms its exact paths and S
 
 External key (not a decision): activating the prepared contribution, image, and deletion features needs the shared-database migration-owner credential (0017 Preview, 0018, 0019). The controller prepares everything up to it.
 
+## Full Founder release program (all documented proposals and blockers unlocked)
+
+Founder instruction 2026-07-22: release every documented proposal and unlock every blocked pathway into workflows; the proposals are the Founder's and are hereby lanes. The controller releases the whole register and blocker set to bounded Terra + Luna arms, each following the accepted ADRs (build safely, not skip safety), each path-scoped and independently refuted, migrations generated-not-applied and features default-off/fail-closed. The single remaining external key is the shared-database migration-owner credential; every buildable pathway is unlocked up to it.
+
+| Register proposal / blocker | Release lane | State |
+|---|---|---|
+| WD-I-001 one-tap outcome (#audit cf9deb5) | prepare reactivation + one-tap ahead of ADR-019 activation | prepared; activation on the DB key |
+| WD-I-002 coverage cockpit | packet delivered 7833a11; run is an operator step | delivered |
+| WD-I-003 user-facing decision receipt | Discovery deliverable doc | batch 3 |
+| WD-I-004 seller correction link | Discovery deliverable doc | batch 3 |
+| WD-I-005 coverage honesty | user-facing coverage-state contract | batch 3 |
+| WD-P-001 non-Food category launch | typed-capability second-vertical architecture doc | batch 3 |
+| WD-P-002 contextual community (#26) | proposed ADR-030 contained community model (not a social feed) | batch 3 |
+| #20 seller contact ownership | proposed ADR-029 (contact belongs to the seller, not the place) | batch 3 |
+| #22 crypto.randomUUID LAN crash | code fix | batch 1 running |
+| H40 search shows no price | code fix | batch 1 running |
+| #24 App Store | native-readiness + deletion saga | batch 1 running + saga |
+| #25 image evidence-media | full feature to ADR-028, generated-not-applied, default-off | batch 2 |
+| #16 account deletion | saga P1 delivered 4d7038c; P2/P3 continue | batch 2 |
+
+### Batch 3 release arms (design and ADR, disjoint new-file paths, ACTIVE)
+
+Each is a controller-directed Terra draft + Luna default-to-refuted, editing ONLY its one or two new files, authorizing no shared-database mutation, consistent with the accepted ADRs. Exact new-file paths: `docs/adr/029-seller-contact-ownership.md`; `docs/adr/030-contextual-community.md`; `docs/operations/COVERAGE-HONESTY-CONTRACT.md` and `src/lib/coverage/coverage-state.ts`; `docs/operations/discovery/decision-receipt-discovery.md`; `docs/operations/discovery/seller-correction-link-discovery.md`; `docs/operations/decisions/second-vertical-architecture.md`.
+
 ## Active exact path locks
 
 #### Maps light cartography warmth - ACTIVE
