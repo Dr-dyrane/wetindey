@@ -137,7 +137,7 @@ export async function searchItems(
       JOIN matched_items mi ON mi.id = variant.item_id
       JOIN ${units} observed_unit ON observed_unit.id = observation.unit_id
       JOIN ${places} observed_place ON observed_place.id = observation.place_id
-      WHERE observation.moderation_status <> 'rejected'
+      WHERE observation.moderation_status = 'approved'
         AND observation.provenance = 'observed'
         AND observation.observed_at >=
           now() - make_interval(hours => ${FRESHNESS_POLICY.expirationHours})
@@ -707,7 +707,7 @@ const distinctSourceCount = sql<number>`(
   where o.item_variant_id = ${offersCurrent.itemVariantId}
     and o.unit_id = ${offersCurrent.unitId}
     and o.place_id = ${offersCurrent.placeId}
-    and o.moderation_status <> 'rejected'
+    and o.moderation_status = 'approved'
 )`;
 
 export async function getItemNarrowingOptions(input: {
