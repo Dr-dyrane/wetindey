@@ -111,6 +111,23 @@ and zero disposable-database residue; Luna's follow-up verdict is **PASS**. The 
 through commit and guarded exact-target Preview application. Production migration and report activation
 remain separate later gates.
 
+**Controller checkpoint 2026-07-22 (source landed; Preview execution is an EXTERNAL GATE).** The
+source checkpoint is on `origin/main` at `f5e8318` and byte-verified: `0017` SQL sha256
+`a864a63b…` matches the committed manifest, the focused contract is 5/5 PASS at HEAD, scoped diff is
+clean, and immutable `0000`-`0016` are untouched. Read-only Preview identity was confirmed on the exact
+target: `current_setting('neon.branch_id')` = `br-steep-dust-auhcmjk8`, PostgreSQL `170010`,
+`rolsuper=false`. Preview APPLICATION cannot proceed from this controller seat: the only Preview
+credentials handed to it are the runtime principals `wetindey_moderator_preview_login` and
+`wetindey_control_preview_login`, both denied on `drizzle.__drizzle_migrations` and
+`public.contribution_control` (SQLSTATE `42501`); `.env.local` resolves to the base branch, not Preview,
+so it must not be used. Applying the guarded `0017` bytes requires the migration-owner DSN for
+`br-steep-dust-auhcmjk8`, which was not provided. Per the fail-closed operating rules no target was
+fabricated, derived, or substituted. External handoff: the owner-credentialed executor performs the
+guarded apply and then the ledger-hash / owner-and-execute-ACL / ADMIN-only-baseline / no-residue /
+moderator-queue-RPC verification and Luna exact-target refutation; contribution reporting and moderation
+controls remain disabled throughout (their state is also unreadable from these principals). Not waiting
+indefinitely; recorded and released to the external gate.
+
 #### Contribution moderation service `0015` / ACL repair `0016` — PREVIEW APPLIED / SOURCE + RUNTIME PASS / RELEASED
 
 Preview applied immutable `0015`, then direct ACL evidence proved its post-`RESET ROLE`
