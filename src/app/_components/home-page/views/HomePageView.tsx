@@ -112,6 +112,7 @@ export function HomePageView({
   detailPlace,
   mapMarkers,
   route,
+  routeTint,
   handleOriginDisclosed,
   handleArmVisit,
   handleRecenter,
@@ -130,6 +131,7 @@ export function HomePageView({
       cameraCenter={cameraCenter}
       selfIdentity={resolvedSelfIdentity}
       route={route}
+      routeTint={routeTint}
       activeDetent={activeDetent}
       leadingInset={leadingInset}
       isRegular={isRegular}

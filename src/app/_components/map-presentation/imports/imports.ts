@@ -4,7 +4,7 @@ import {
   MapRecenterControl,
   type MapCameraHandle
 } from "@/design-system/components/MapboxCanvas";
-import type { RouteGeometry } from "@/integrations/maps/MapboxAdapter";
+import type { RouteGeometry, RouteTint } from "@/integrations/maps/MapboxAdapter";
 import {
   type Detent,
   type MapRetryCapability
@@ -36,6 +36,7 @@ export interface MapPresentationProps {
   cameraCenter: { lat: number; lng: number };
   selfIdentity: { name: string; avatarUrl: string | null } | null;
   route: RouteGeometry | null;
+  routeTint: RouteTint;
   activeDetent: Detent;
   leadingInset: number;
   isRegular: boolean;

@@ -51,6 +51,7 @@ export function MapPresentationView({
   cameraCenter,
   selfIdentity,
   route,
+  routeTint,
   activeDetent,
   leadingInset,
   isRegular,
@@ -86,6 +87,7 @@ export function MapPresentationView({
         center={cameraCenter}
         selfIdentity={selfIdentity}
         route={route}
+        routeTint={routeTint}
         /* At regular width the shell mounts no bottom sheet, so there is nothing
            below to compensate for, but the panel covers the leading edge, and
            without that padding a pin can be flown to and land behind it. */

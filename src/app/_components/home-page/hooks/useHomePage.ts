@@ -55,7 +55,7 @@ import {
   fetchRoute,
   type DisclosedRouteOrigin
 } from "@/lib/directions";
-import type { RouteGeometry } from "@/integrations/maps/MapboxAdapter";
+import type { RouteGeometry, RouteTint } from "@/integrations/maps/MapboxAdapter";
 import { useMapPresentation } from "@/app/_components/map-presentation/hooks/useMapPresentation";
 
 interface PlaceData {
@@ -987,6 +987,24 @@ export function useHomePage() {
       ? routeResult.geometry
       : null;
 
+  /**
+   * The route line answers "how do I get there"; its tint answers "how much
+   * do we trust the price waiting there". Sourced from the same pairing the
+   * route derives from: the tint only reads the offer's freshness while
+   * `routeTarget` is the get-it key built from this very `getItTarget`, so a
+   * tint can never describe a route other than the one on screen. A
+   * detail-place route has no offer and stays accent, as does any freshness
+   * the shopper need not be warned about.
+   */
+  const routeTintSignal =
+    routeTarget && getItTarget && routeTarget.key === `get-it:${getItTarget.placeId}`
+      ? getItTarget.offer?.freshnessKind
+      : undefined;
+  const routeTint: RouteTint =
+    routeTintSignal === "caution" || routeTintSignal === "unavailable"
+      ? routeTintSignal
+      : "accent";
+
   const handleOriginDisclosed = useEventCallback(
     (targetPlaceId: string, origin: DisclosedRouteOrigin) => {
       if (getItTarget?.placeId !== targetPlaceId) return;
@@ -1136,6 +1154,7 @@ export function useHomePage() {
     detailPlace,
     mapMarkers,
     route,
+    routeTint,
     handleOriginDisclosed,
     handleArmVisit
   };
