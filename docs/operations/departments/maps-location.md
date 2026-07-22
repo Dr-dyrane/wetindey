@@ -184,3 +184,73 @@ Reverting the two source paths restores the prior direct-swap behavior with the 
 - Action: Capture the three-scope runtime evidence named in Unknown resolution action on a hardware-GPU device.
 - Target: Exact path layout and snapshot evidence on `src/integrations/maps/MapboxAdapter.ts` and `src/design-system/components/MapboxCanvas.tsx` during theme swaps.
 - Completion: The next lane-owned Maps entry records the three scopes with direct evidence and closes or narrows this entry's Unknown scope.
+
+### 2026-07-21 - Three-scope transition evidence
+
+#### Transfer coordinates
+
+- Evidence ID: `WD-MAPS-THEMEFADE-20260721-2`
+- Base SHA: `8b1d7ca4bfe67215f4cbaa963ed1a093849f7182`
+- Candidate tree SHA-256: `21b35ad55c26aebf725e1fc30cdb16fcb4e8eeb513469874ebbfae92e4c4ec4c`
+- Candidate hash algorithm: `wetindey-candidate-tree-v1`
+- Candidate paths (sorted):
+
+```text
+docs/operations/departments/maps-location.md
+```
+
+- Final commit SHA: Reported by the worker/controller after commit; not embedded in these bytes.
+
+#### Lane and path boundaries
+
+- Lane heading: `#### Maps three-scope evidence entry — ACTIVE`
+- Lane owner: Private Contractor, Maps Delivery `c9c17443-ef5e-4a7b-9b6e-c8f5381da30c`
+- Owned paths: Exactly the 1 path in the preceding Candidate paths (sorted) block; no other path.
+- Excluded paths: Every repository path not listed in Candidate paths (sorted), including both map source paths, which this entry cites but does not touch.
+- Concurrent dependencies: Root UI Component Decluttering and Public review privacy containment run concurrently over disjoint paths.
+
+#### Decisions and rationale
+
+This entry records evidence only; no decision changes. It resolves the three-scope
+Unknown left by `WD-MAPS-THEMEFADE-20260721-1` using the diagnostics that entry
+installed (`data-map-theme-snapshot`, overlay presence, lifecycle attributes).
+
+#### Implementation
+
+Documentation-only. No source path changed; the cited behavior shipped at `370cf07`.
+
+#### Evidence and refutations
+
+- Refuter ID: independent-claude-refuter-evidence-20260721-02
+- Review binding: Full Base SHA, canonical Candidate tree SHA-256, and sorted Candidate paths.
+- Verdict location: External read-only refuter output keyed by Evidence ID and Refuter ID; not embedded because changing reviewed bytes invalidates it.
+- Runtime and external evidence: (1) real-device capture behavior CLOSED: Playwright chromium on ANGLE Metal (`Apple M2 Pro`, hardware renderer confirmed via WEBGL_debug_renderer_info): toggle produced `data-map-theme-snapshot="captured"`, overlay bridged and was collected by t+318ms, zero skeleton frames. (2) hidden-document skip runtime behavior CLOSED: the embedded browser pane with `document.visibilityState === "hidden"` and lifecycle ready produced `data-map-theme-snapshot="skipped-hidden"`, no overlay, direct swap to loading. (3) failed-swap runtime behavior NARROWED: with every `mapbox.com` host aborted and HTTP cache disabled mid-session, the adapter still reached ready (the pre-existing read-error-is-diagnostic-only policy; refuter Finding B, outside this lane), so a failed lifecycle remains unforceable in this environment; the user-facing risk is disproven directly because the overlay was collected at t+505ms via the first-idle fallback with the provider severed, never sticking.
+- Checks not run: Safari and iOS device runs; a genuine renderer failure during a bridged swap.
+
+#### Known failures
+
+`UNKNOWN` remains for Safari and iOS capture behavior (no Safari or iOS run exists yet) and for renderer-failure bridging behavior (a genuine renderer failure during a bridged swap was not produced; only provider outage was driven).
+
+- Unknown scope: `Safari and iOS capture behavior; renderer-failure bridging behavior`
+- Unknown owner: Maps/Location chief and Quality/Release
+- Unknown resolution action: Capture direct evidence for `Safari and iOS capture behavior` with one Safari or iOS Simulator drive and for `renderer-failure bridging behavior` with one forced context-loss during a bridged swap, recording `data-map-theme-snapshot` and overlay state in the next lane-owned Maps entry.
+
+#### External gates
+
+- External gate owner: Maps/Location chief and Quality/Release
+- Gate state: No gate is inferred closed by this entry.
+
+#### Integration order
+
+Append after the in-flight edits by other lanes to `LANES.md` and this log commit; claim first; release the lane in the immediately following LANES.md commit.
+
+#### Rollback or disable
+
+Documentation-only; reverting this entry removes evidence, not behavior.
+
+#### Exact next action
+
+- Actor: Maps and Location chief
+- Action: Capture the Safari or iOS Simulator drive and the forced context-loss drive named in Unknown resolution action.
+- Target: `data-map-theme-snapshot` diagnostic and snapshot-overlay lifecycle during theme swaps in Safari or the iOS Simulator and under a forced WebGL context loss.
+- Completion: The next lane-owned Maps entry records both scopes with direct evidence and closes or narrows this entry's Unknown scope.
