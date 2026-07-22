@@ -66,7 +66,11 @@ The Founder directed full-company activation: every department takes a lane of t
 | Community-Growth | WD-P-002 reviews/community | PARKED by register; no unparking without trigger |
 | Legal-Policy, Client-Reliability, Quality-Release, DevRel, Program-Release | Standing refutation, release, worklog, and reconciliation duties on demand | STANDING |
 
-#### ADR-021 P1 deletion saga: persistence and provider boundary (ACTIVE, wave 1)
+#### ADR-021 P1 deletion saga: persistence and provider boundary (DELIVERED 4d7038c, wave 1)
+
+DELIVERED and Luna-refuted-then-fixed: schema/migration/adapter/primitives landed on the 9-path set, tsc clean, deletion P1 contract 17/17, worklog contract still 5/5, `0018` candidate_unapplied with all authorization flags false, immutables 0000-0017 byte-frozen, no DB contacted. EXTERNAL EXIT GATE before any shared application: the disposable PGlite fresh-and-upgrade reconstruction proof (the contract ran static-only because `@electric-sql/pglite` is absent from this host; installing the disposable dep is an owner/host tooling step) plus P2 cleanup adapters. P1 owns no UI, Blob, Presence UI, or public action; no account is deletable from this code.
+
+
 
 Owner: controller-directed Terra under Presence-Safety `019f759f-3521-7ee1-90a3-5af3539d757e` and Security-Privacy seats. Exact writable paths (widened 2026-07-22 after the scout proved the original six were ADR-014-noncompliant; the controller approved exactly this additive set, no silent widening): new `src/db/schema/deletion.ts` (Drizzle desired-state tables and enums, because ADR-014 forbids a pillar owning tables and hand-editing a snapshot), new `src/db/pillars/90-deletion-saga.sql` (roles/grants/RLS only, no tables), new `src/db/migrations/0018_deletion_saga_persistence.sql` (generated), new `src/db/migrations/meta/0018_snapshot.json` (generated), new `src/db/migrations/meta/0018_release_manifest.json` (records candidate_unapplied and all authorization flags false), `src/db/migrations/meta/_journal.json` (append 0018 only), one appended `export * from "./deletion"` line in `src/db/schema/index.ts`, new `src/lib/deletion/` (types, guards, inert adapter, compare-and-set phase and idempotency primitives), and new `scripts/deletion/deletion-saga-p1-contract.test.ts`. NO department worklog edit (protect the 5/5 contract). Contract: exactly ADR-021 P1 (deletion-request/phase/audit schema, server-only Neon branch administrative auth adapter with exact-target fail-closed guards, phase transition and idempotency worker primitives). P1 owns NO UI, Blob deletion, Presence UI, or public action; exit requires disposable PGlite fresh and upgrade migration proof and a pure-unit provider-capability fail-closed refutation WITHOUT any real destructive provider call or real account. NO shared-database apply: `0018` stays candidate_unapplied with all authorization flags false; immutables 0000-0017 stay byte-unchanged.
 
@@ -77,6 +81,14 @@ Owner: controller-directed Terra under Operations-Field-Data. Exact writable pat
 #### Evidence-media policy draft, proposed ADR-028 (DELIVERED 9c808f5, wave 1)
 
 Owner: controller-directed Terra under Trust-Data-Governance `019f7599-0eaa-7423-9ebf-a1bfea8efe37`. Exact writable path: new `docs/adr/028-contribution-evidence-media.md` (Status: Proposed, decision owner Founder) plus a `docs/operations/departments/trust-data-governance.md` append entry. Contract: draft the retention, admission/moderation flow, privacy, Blob storage layout, and display gating for user photos on price reports, consistent with ADR-013/015/019 and the moderation pipeline; authorizes nothing by itself; closes the open REQUEST TO CONTROLLER on image-on-price-reports when the Founder accepts or rejects.
+
+#### WD-I-001 one-tap outcome audit (ACTIVE, wave 2)
+
+Owner: controller-directed Terra under Human-Interface and Executive-Product. Exact writable path: new `docs/operations/audits/one-tap-outcome-audit.md` only. Contract: the register's smallest step, a READ-ONLY audit of the existing visit-confirmation flow and its event/analytics semantics (no product, code, schema, or copy change). Map the current live path, the event model, the eligibility trigger, accessibility, and whether "was there" and "price matched" stay distinct facts, then record gaps against WD-I-001 guardrails (no continuous tracking, no incentive, no hidden identity linkage) for a Founder portfolio review. Authorizes no implementation.
+
+#### App Store distribution decision packet (ACTIVE, wave 2)
+
+Owner: controller-directed Terra under Executive-Product. Exact writable path: new `docs/operations/decisions/app-store-distribution-packet.md` only. Contract: a Founder decision packet for issue #24 (WetinDey is a PWA; Apple cannot ingest a PWA). Lay out the real options (stay PWA, TWA/Play, a native wrapper such as Capacitor, or a thin native shell), each option's cost, review-guideline exposure (including Apple 5.1.1(v) in-app account deletion, which the ADR-021 saga is the groundwork for), maintenance, and pilot-phase fit, ending in a clear recommendation and the exact decision the Founder must make. Authorizes nothing; opens no lane.
 
 ## Active exact path locks
 
