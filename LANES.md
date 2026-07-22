@@ -76,6 +76,13 @@ The Founder confirmed 2026-07-22 that a requested feature is itself the decision
 
 The single real external key that unblocks activation of the prepared contribution, image, and deletion features is the shared-database migration-owner credential (0017 Preview, 0018, and any 0019). That is a missing key, not a decision; the controller prepares everything up to it.
 
+### Security recommendations awaiting Founder / Security seat (from the perf/security audit, 2026-07-22)
+
+Two security-depth findings the controller will NOT act on autonomously because each needs owner judgment or production telemetry:
+
+1. CSP is not actually enforcing script protection. The browser-enforced header (`vercel.json` script-src) still permits `'unsafe-inline'`; the strong nonce + `strict-dynamic` policy exists but is emitted only as `Content-Security-Policy-Report-Only` (`middleware.ts`). So today the enforced CSP gives near-zero script-injection defense (a latent XSS-mitigation gap; no live sink exists, React auto-escapes, JSON-LD escapes). Flipping to enforcing must be verified on a PREVIEW deploy first (confirm Next's inline bootstrap/Flight scripts carry the middleware nonce with zero report-only violations); a blind flip on production risks a blank page. Recommend: verify on Preview, then switch middleware to enforcing and drop `'unsafe-inline'` from `vercel.json` before the real-user pilot.
+2. `submitProblemReport` (`src/app/_actions/problem-report-actions.ts`) is a public, anonymous-reachable Server Action with a body length cap but NO per-caller rate limit (acknowledged in-code per ADR-003, deferred to a Phase-2 throttle). An anonymous script can insert unbounded `problem_reports` rows (storage + moderation-queue spam the owner reads directly). A pilot launch is exactly when this gets abused. Recommend weighing pulling the planned throttle forward before the pilot; this is an accepted ADR deferral, so it is a Founder/Security call, not a defect.
+
 ### Migration-governance decisions awaiting Founder (from the 16-department audit, 2026-07-22)
 
 The controller fixed every feasible thing (ADR-019 pending-leak fully closed at `0b2a807`/`8b87ca5`; dark-mode AA at `428e54a`; forward-compat `0017`+`presence-0014` contracts and CI immutability coverage at `5362089`). Three items are genuine governance decisions the controller will NOT act on autonomously:
