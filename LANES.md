@@ -48,46 +48,6 @@ to idle rather than creating a replacement task.
 
 ## Active exact path locks
 
-#### Presence `0014` shared-target reconciliation — INDEPENDENT STATIC + OPERATIONAL PASS / RELEASE ON ATOMIC COMMIT
-
-Owner: current Codex implementation session. This atomic reconciliation lane owns exactly:
-
-- `LANES.md`
-- `AGENTS.md`
-- `docs/CONTRIBUTING.md`
-- `docs/WETINDEY_BIBLE.md`
-- `docs/architecture/RELEASE-CONTROLLER.md`
-- `docs/architecture/SERVICE-ARCHITECTURE.md`
-- `docs/database/README.md`
-- `docs/database/evidence/preview-0014-presence-2026-07-21.md`
-- `docs/ingestion/NBS-SELECTED-FOOD-PRICE-WATCH.md`
-- `docs/operations/WETINDEY-OPERATING-SYSTEM.md`
-- `docs/product/COMMUNITY-TRUST-AND-CONTRIBUTION-LOOP.md`
-- `docs/product/FOUNDER-FEEDBACK.md`
-- `docs/quality/EXECUTABLE-QUALITY-PIPELINE.md`
-- `src/db/migrations/meta/0014_release_manifest.json`
-- `scripts/presence/presence-0014-preview-preflight.mjs`
-- `scripts/presence/presence-migration-contract.test.ts`
-
-Independent operational evidence proves Production `main` (`br-flat-band-aui9waf5`) and
-Preview `preview/wetindey-presence` (`br-steep-dust-auhcmjk8`) are exact immutable
-`0000`-`0014` results with shared fingerprint
-`a0126839bc0671fff9b9ad3bc4954e3dfb2286fccdbb352651a199f74b23ab03`, default-off
-controls, empty allowlist and active Presence state, and temporary privilege cleanup.
-Scope is limited to reconciling current-facing facts, finalizing the redacted shared-target
-manifest/evidence, retiring migration execution semantics, and repairing the frozen-prefix
-contract. Migration SQL, snapshots, journal, schema, pillars, runtime flags, pilot traffic,
-providers, deployment, and product implementation remain excluded.
-
-Independent static refutation is **PASS** across the exact 16-path candidate. Independent
-operational refutation is **PASS** on Production `main` (`br-flat-band-aui9waf5`) and Preview
-`preview/wetindey-presence` (`br-steep-dust-auhcmjk8`) for exact identity, immutable
-`0000`-`0014` ledger/hash/fingerprint equivalence, default-off controls, empty allowlist and
-active Presence state, safe roles, and privilege cleanup. These 16 paths are released upon
-one atomic commit containing the candidate; until that commit, they remain the bounded
-claim. Duplicate migration execution remains prohibited. This completion does not satisfy
-or weaken the separate pathless runtime, private-pilot, privacy, safety, or product NO-GO.
-
 #### Governance modularization — RELEASED / PATHLESS
 
 The active serialized governance claim completed as one atomic path-scoped candidate. Independent final refutation returned **PASS**; its exact documentation and archive-split paths are released upon the atomic path-scoped commit. Root `LANES.md` remains the required human coordination index for future current claims, while the current-cycle archive preserves completed evidence without granting authority.
@@ -111,6 +71,28 @@ Owner: Private Contractor, Maps Delivery `c9c17443-ef5e-4a7b-9b6e-c8f5381da30c`.
 Purpose: remove the 3–4 second blank basemap during theme switch. Fresh runtime evidence (2026-07-21, localhost drive, both directions dark to light and back): the style diff fails with the console warning "Unable to perform style diff: Unimplemented: setSprite.. Rebuilding the style from scratch", so setStyle tears down and refetches every source while the canvas shows bare background paint and WetinDey pins float on nothing. Candidate approaches to be evaluated inside the lane, not pre-decided: a sprite shared between the two styles; single-style paint-property theming; a snapshot cross-fade over the rebuild window. Any fix must preserve applyCartography behavior in both themes and route-below-labels anchoring. This claim satisfies the Maps seat's reopening gate (fresh concrete runtime evidence plus an exact manifest). Exclusions: the queued Presence path set including every sharedUsers seam, POI hierarchy values, route semantics, `src/app/_components/**`, `src/app/page.tsx`, schema, migrations, providers, deployment state. No push; local path-scoped commits only. Known documentation conflict flagged for governance: this file's controller policy names the controller over `LANES.md`, while `docs/operations/lanes/README.md` still instructs self-append; this claim follows the established contractor-seating precedent recorded above under Founder instruction.
 
 Completion: the defect is gone in a driven browser check of both toggle directions on the exact candidate, an independent default-to-REFUTED refuter passes it, the maps-location worklog entry is appended in the same change, and a path-scoped commit releases these paths.
+
+#### Root UI Component Decluttering — ACTIVE
+
+Owner: Private Contractor, Full-Stack Delivery `ef98946c-a55e-4700-aa6e-c1a840e42eef`. Exact writable paths:
+
+- `src/app/_components/ReportPriceSheet.tsx`
+- `src/app/_components/SettingsSheet.tsx`
+- `src/app/_components/CategorySelectorSheet.tsx`
+- `src/app/_components/PresentationHost.tsx`
+- `src/app/_components/CrossCategorySignalRail.tsx`
+- `src/app/_components/CurrencyFlag.tsx`
+- `src/app/_components/report-price-sheet/**`
+- `src/app/_components/settings-sheet/**`
+- `src/app/_components/category-selector-sheet/**`
+- `src/app/_components/presentation-host/**`
+- `src/app/_components/cross-category-signal-rail/**`
+- `src/app/_components/currency-flag/**`
+- `docs/operations/departments/developer-experience.md`
+
+Purpose: Modularize the remaining root UI components inside `src/app/_components/` into clean 6-file MVC slices to satisfy repository line count and modularity rules.
+
+Completion: All typecheck and contract tests pass cleanly, and the files are successfully moved and re-wired.
 
 No other source path is currently claimed by this registry. A persistent employee seat is not a path claim.
 
@@ -140,6 +122,12 @@ may supply it.
 ##### Presence `0014` shared-target migration — OPERATIONAL PASS / PATHLESS
 
 Owner: Nearby Presence Platform Engineer `019f759f-3521-7ee1-90a3-5af3539d757e`. This gate owns no repository path and authorizes no UI, peer visibility, flag enablement, or public rollout.
+
+Atomic reconciliation commit `55fb0d8` is on `origin/main`; its exact 16-path scope is
+released and owns no repository path. Independent static and operational refutation remain
+**PASS**. This release removes the former overlap with the controller's exact two-path
+claim and does not weaken the separate runtime, private-pilot, privacy, safety, lifecycle,
+or product NO-GO.
 
 Current proven Preview facts: persistent Neon branch `preview/wetindey-presence` (`br-steep-dust-auhcmjk8`) exists; its pooled and unpooled endpoints directly connected; Vercel Preview database aliases plus the contribution and Presence safety URLs were overridden; Production variables were untouched; and Preview deployment `dpl_HVgUnhDSmdhDw7fSCnTuPk8iGCyY` built `READY`. No Vercel CLI command is represented as disclosing sensitive runtime values.
 
@@ -216,33 +204,3 @@ Archives grant no current human claim. They preserve source-snapshot evidence fo
 
 - [Current-cycle history index](docs/operations/lanes/history/README.md)
 - [Legacy historical archive](docs/operations/lanes/LANES-HISTORICAL-ARCHIVE.md)
-
-
-#### Developer Relations & Engineering Enablement: department worklog protocol — active exact claim
-
-Owner: Developer Relations & Engineering Enablement worker
-`019f7995-5b7b-7ee1-81ef-2c3a3c57b836`. Exclusive paths:
-
-- `AGENTS.md`
-- `docs/CONTRIBUTING.md`
-- `docs/operations/BRANCH-HANDOFF-TEMPLATE.md`
-- `docs/operations/DEPARTMENT-WORKLOG-PROTOCOL.md`
-- `docs/operations/WETINDEY-OPERATING-SYSTEM.md`
-- `docs/operations/departments/README.md`
-- `docs/operations/departments/catalog-stewardship.md`
-- `docs/operations/departments/client-reliability-offline.md`
-- `docs/operations/departments/community-growth.md`
-- `docs/operations/departments/contribution-integrity.md`
-- `docs/operations/departments/developer-experience.md`
-- `docs/operations/departments/executive-product.md`
-- `docs/operations/departments/human-interface.md`
-- `docs/operations/departments/legal-policy.md`
-- `docs/operations/departments/maps-location.md`
-- `docs/operations/departments/operations-field-data.md`
-- `docs/operations/departments/presence-safety.md`
-- `docs/operations/departments/program-release.md`
-- `docs/operations/departments/quality-release.md`
-- `docs/operations/departments/security-privacy.md`
-- `docs/operations/departments/seller-identity-access.md`
-- `docs/operations/departments/trust-data-governance.md`
-- `scripts/department-worklog-contract.test.ts`
