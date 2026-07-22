@@ -42,31 +42,15 @@ to idle rather than creating a replacement task.
 | Developer Relations & Engineering Enablement `019f7995-5b7b-7ee1-81ef-2c3a3c57b836` | Department worklog protocol complete / released | `62880ac` and fail-closed repair `2523da1` are on current main; remain persistent for later bounded enablement assignments |
 | Catalog Stewardship `019f7999-37d0-7231-8b89-0e71c2569ce2` | Catalog workflow complete / released; employee idle | `8a072e2`/`7b42664` and `fe09dc3` resolved the safety-scope and no-match/transport corrections; no active path claim remains |
 | Private Contractor, Full-Stack Delivery `ef98946c-a55e-4700-aa6e-c1a840e42eef` | Seated by Founder instruction 2026-07-21; first lane (account deletion) RELEASED, blocked by ADR-021, request to controller recorded in Active locks; now discovering the next ADR-clear lane | Method: multi-agent orchestration ending in default-to-REFUTED independent refutation, and ADR-clearance proven before any claim (the deletion lane taught this). Not building on stale memory: a discovery workflow reads the ADRs, this registry, and the gate states to find genuinely open, ADR-clear, unclaimed, high-value work, then executes only on affirmative clearance |
-| Private Contractor, Maps Delivery `c9c17443-ef5e-4a7b-9b6e-c8f5381da30c` | Docs lane ACTIVE below: contractor workflow playbook | Maps deliverables `370cf07`/`03adfad`/`8fb9b02` released; standing availability for bounded Maps and platform assignments on a self-paced check-in loop |
+| Private Contractor, Maps Delivery `c9c17443-ef5e-4a7b-9b6e-c8f5381da30c` | All four lanes complete / released; seat idle on a self-paced check-in loop | `370cf07`, `03adfad`, `8fb9b02`, `9c1db98`; standing next actions per the maps-location worklog Unknown scope: Safari or iOS Simulator capture drive and forced context-loss drive; watch item: Presence integration serialization unblocking |
 
 
 
 ## Active exact path locks
 
-#### Contractor workflow playbook — ACTIVE
+#### Contractor workflow playbook — RELEASED / PATHLESS
 
-Owner: Private Contractor, Maps Delivery `c9c17443-ef5e-4a7b-9b6e-c8f5381da30c`. Exact writable path:
-
-- new `docs/operations/CONTRACTOR-PLAYBOOK.md`
-
-Purpose: preserve the proven multi-session contractor loop as a practical field guide so parallel orchestrators onboard and hand off smoothly while the product is live. The document is memory and method only: it grants no path, decision, migration, push, or deployment authority, and where it disagrees with LANES.md, AGENTS.md, the operating system, or the worklog protocol, those win. Content is distilled from this cycle's recorded incidents (hot-file sweep risk, cross-lane candidate landing, tuple restamp after HEAD races, environment false-negatives). Exclusions: every other path.
-
-Completion: an independent default-to-REFUTED refuter checks the guide contradicts no governing document and cites only real recorded events; a path-scoped commit releases this path.
-
-Contributor input (from Full-Stack Delivery `ef98946c-a55e-4700-aa6e-c1a840e42eef`, not editing your path): the Founder also directed me to a contractor workflow guide; you hold the claim, so I am not writing a second doc, I am handing you this cycle's recorded incidents from my seat as citable material, and I offer to be your independent refuter when the draft lands. Real events, each evidenced:
-- ADR-clearance BEFORE claiming: I claimed account-deletion on stale memory; Accepted ADR-021 forbade the synchronous design; reverted, nothing shipped (`82d1a7d`). Grep `docs/adr` for the domain first; an Accepted ADR outranks a lane. Same gate hit #25 (ADR-019 evidence-media) and #24 (App Store).
-- Route governance blockers to the controller in LANES, not to the Founder in chat (the Founder corrected me; recorded at `8b1d7ca`). Engineering you own: claim and drive. Policy or cross-seat: LANES request.
-- Dev server: never `npm run build` while `next dev` is live, it clobbers `.next` (a 200 whose `main-app.js` 404s is a black page; `.next/BUILD_ID` present is the tell). Recover by killing the wetindey dev by PID only (a co-located `jelo` project shares the machine), `rm -rf .next`, restart.
-- Seat-ID collision on restart: an active lane can be running live under your own seat ID; treat a file changed seconds ago as someone typing, ask the controller (`6663c75`), do not clobber; it resolved when that work released (`d3de9dc`).
-- Modular slices stay separate; the only convergence seams are the wiring barrel `home-page/imports/imports.ts`, `globals.css`, and `schema/index.ts`. Own a slice plus its action; claim or serialize those three.
-- Commit path-scoped `git commit -- <paths>`, never bare `git add`; before committing a shared file confirm the diff is only yours (no swallow); sync with `-c rebase.autoStash=true pull` so a concurrent writer's uncommitted work survives.
-- Tooling traps I hit: a literal backtick inside a Workflow template-literal prompt terminates the string; `grep X | sed` masks grep's exit code (use `grep -q`); a watch loop must be read-only (`git fetch` + `git show origin/main:LANES.md`), never `git pull --autostash` in a loop, it stashes another writer's tree.
-- Verify in a browser with `mcp__Claude_Browser__` (it reaches the dev server); `claude-in-chrome` is a different app; a ReferenceError to a line number that no longer exists is stale HMR, not a real break.
+Complete at `9c1db98`: `docs/operations/CONTRACTOR-PLAYBOOK.md` preserves the recorded multi-session loop as method-only memory, granting no authority. Independent refutation passed after two bounded repair rounds (six findings repaired, then two, then NOT REFUTED). Path released.
 
 #### Food report pending-review experience — SOURCE PASS / RELEASED
 
