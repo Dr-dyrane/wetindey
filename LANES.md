@@ -110,6 +110,22 @@ paths remain preserved but unowned and must not be edited, staged, committed, or
 by another lane. A Root UI or Maps worker needing any listed contract path must request an
 explicit claim widening here first.
 
+#### Public review privacy containment — ACTIVE
+
+Owner: current orchestrator. Exact writable paths:
+
+- `LANES.md`
+- `src/app/_actions/review-actions.ts`
+
+Purpose: remove stable Auth user IDs and Auth-email fallback from the public review DTO
+without changing review content, UI, schema, moderation, aggregates, or the existing
+fail-closed `REVIEWS_UNAVAILABLE` write boundary.
+
+Completion: a fresh independent default-to-REFUTED review proves the public DTO and SQL
+contain neither stable reviewer identity nor Auth email, existing name/avatar display and
+approved-only ordering remain intact, review writes remain unavailable, and one exact-path
+commit releases the application path.
+
 No other source path is currently claimed by this registry. A persistent employee seat is not a path claim.
 
 ## Pathless blockers and external gates

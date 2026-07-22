@@ -6,7 +6,6 @@ import { eq, and, sql } from "drizzle-orm";
 
 export interface ReviewData {
   id: string;
-  userId: string | null;
   reviewerName: string;
   reviewerAvatarUrl: string | null;
   rating: number;
@@ -26,9 +25,7 @@ export async function getReviewsForEntity(
 ): Promise<ReviewData[]> {
   const result = await db.execute<{
     id: string;
-    user_id: string | null;
     reviewer_name: string | null;
-    reviewer_email: string | null;
     reviewer_avatar_url: string | null;
     rating: number;
     title: string | null;
@@ -37,9 +34,7 @@ export async function getReviewsForEntity(
   }>(sql`
     SELECT
       r.id,
-      r.user_id,
       u.name as reviewer_name,
-      u.email as reviewer_email,
       up.avatar_url as reviewer_avatar_url,
       r.rating,
       r.title,
@@ -56,8 +51,7 @@ export async function getReviewsForEntity(
 
   return result.rows.map((row) => ({
     id: row.id,
-    userId: row.user_id,
-    reviewerName: row.reviewer_name || row.reviewer_email || "Anonymous",
+    reviewerName: row.reviewer_name || "Anonymous",
     reviewerAvatarUrl: row.reviewer_avatar_url,
     rating: Number(row.rating),
     title: row.title,
