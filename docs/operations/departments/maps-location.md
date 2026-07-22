@@ -153,7 +153,7 @@ Theme switching between `streets-v12` and `dark-v11` cannot style-diff: Mapbox l
 - Refuter ID: `independent-claude-refuter-mapdrive-20260721-01`
 - Review binding: Full Base SHA, canonical Candidate tree SHA-256, and sorted Candidate paths.
 - Verdict location: External read-only refuter output keyed by Evidence ID and Refuter ID; not embedded because changing reviewed bytes invalidates it.
-- Runtime evidence: Playwright chromium (SwiftShader WebGL) against the local dev server. Both toggle directions: `data-map-theme-snapshot="captured"`, overlay present through the loading window, loading skeleton suppressed only while bridged (`loading|captured|ov=true|skel=false`), fade observed mid-transition (computed opacity 0.425), overlay collected, lifecycle ends ready, zero snapshot overlays remain. `npx tsx scripts/location-default-contract.test.ts` passes 20 of 20 against the candidate; `npx tsc --noEmit` and eslint on both source paths are clean.
+- Runtime and external evidence: Playwright chromium (SwiftShader WebGL) against the local dev server. Both toggle directions: `data-map-theme-snapshot="captured"`, overlay present through the loading window, loading skeleton suppressed only while bridged (`loading|captured|ov=true|skel=false`), fade observed mid-transition (computed opacity 0.425), overlay collected, lifecycle ends ready, zero snapshot overlays remain. `npx tsx scripts/location-default-contract.test.ts` passes 20 of 20 against the candidate; `npx tsc --noEmit` and eslint on both source paths are clean.
 - Checks not run: real-device capture behavior on hardware GPUs and Safari or iOS; hidden-document skip runtime behavior (code-read only, the embedded pane could not initialize the map while hidden); failed-swap runtime behavior (a genuine style failure could not be forced because the pre-existing read-error policy still reaches ready with provider hosts blocked).
 - Delta refutation nuances, accepted as bounded: a bridged swap whose style load outlives the 8-second overlay ceiling shows bare rebuild paint (the old defect, never a masked failure) for at most 2 seconds until ready or the exhausted-attempts failure card; a context restore during a bridged swap keeps the skeleton suppressed while the physically present overlay still bridges, which matches the continuity predicate.
 
@@ -163,7 +163,7 @@ The candidate is proven in one rendering environment only. `UNKNOWN` remains for
 
 - Unknown scope: `real-device capture behavior; hidden-document skip runtime behavior; failed-swap runtime behavior`
 - Unknown owner: Maps/Location chief and Quality/Release
-- Unknown resolution action: Drive one hardware-GPU browser session (Safari or iOS included) capturing real-device capture behavior, one backgrounded-tab toggle capturing hidden-document skip runtime behavior, and one forced provider outage capturing failed-swap runtime behavior, recording `data-map-theme-snapshot` and overlay state for each in the next lane-owned Maps entry.
+- Unknown resolution action: Capture direct evidence from one hardware-GPU browser session (Safari or iOS included) capturing real-device capture behavior, one backgrounded-tab toggle capturing hidden-document skip runtime behavior, and one forced provider outage capturing failed-swap runtime behavior, recording `data-map-theme-snapshot` and overlay state for each in the next lane-owned Maps entry.
 
 #### External gates
 
@@ -182,5 +182,5 @@ Reverting the two source paths restores the prior direct-swap behavior with the 
 
 - Actor: Maps and Location chief
 - Action: Capture the three-scope runtime evidence named in Unknown resolution action on a hardware-GPU device.
-- Target: `data-map-theme-snapshot` diagnostic and snapshot-overlay lifecycle on `src/integrations/maps/MapboxAdapter.ts` and `src/design-system/components/MapboxCanvas.tsx` during theme swaps.
+- Target: Exact path layout and snapshot evidence on `src/integrations/maps/MapboxAdapter.ts` and `src/design-system/components/MapboxCanvas.tsx` during theme swaps.
 - Completion: The next lane-owned Maps entry records the three scopes with direct evidence and closes or narrows this entry's Unknown scope.
