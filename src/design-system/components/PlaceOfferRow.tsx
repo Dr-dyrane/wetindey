@@ -125,7 +125,8 @@ function ItemArtwork({
               kind={status}
               className="rounded-[16px] border-none px-2.5 py-1
                          shadow-[0_3px_12px_rgb(0_0_0_/_0.42)] backdrop-blur-sm
-                         [text-shadow:0_1px_2px_rgb(0_0_0_/_0.45)]
+                         [text-shadow:0_1px_2px_rgb(255_255_255_/_0.7),0_0_3px_rgb(255_255_255_/_0.5)]
+                         dark:[text-shadow:0_1px_2px_rgb(0_0_0_/_0.72),0_0_3px_rgb(0_0_0_/_0.55)]
                          forced-colors:bg-[Canvas] forced-colors:text-[CanvasText]
                          forced-colors:outline forced-colors:outline-1 forced-colors:outline-offset-[-1px]"
             >
@@ -135,7 +136,7 @@ function ItemArtwork({
             <span
               className="inline-flex items-center gap-1.5 rounded-[14px] border-none px-2.5 py-1 text-[11px] text-media-ink
                          shadow-[0_3px_12px_rgb(0_0_0_/_0.42)] backdrop-blur-sm
-                         [text-shadow:0_1px_2px_rgb(0_0_0_/_0.45)]
+                         [text-shadow:0_1px_2px_rgb(0_0_0_/_0.72),0_0_3px_rgb(0_0_0_/_0.55)]
                          forced-colors:bg-[Canvas] forced-colors:text-[CanvasText]
                          forced-colors:outline forced-colors:outline-1 forced-colors:outline-offset-[-1px]"
             >
