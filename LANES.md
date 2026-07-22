@@ -42,7 +42,7 @@ to idle rather than creating a replacement task.
 | Developer Relations & Engineering Enablement `019f7995-5b7b-7ee1-81ef-2c3a3c57b836` | Department worklog protocol complete / released | `62880ac` and fail-closed repair `2523da1` are on current main; remain persistent for later bounded enablement assignments |
 | Catalog Stewardship `019f7999-37d0-7231-8b89-0e71c2569ce2` | Catalog workflow complete / released; employee idle | `8a072e2`/`7b42664` and `fe09dc3` resolved the safety-scope and no-match/transport corrections; no active path claim remains |
 | Private Contractor, Full-Stack Delivery `ef98946c-a55e-4700-aa6e-c1a840e42eef` | Seated by Founder instruction 2026-07-21; first lane (account deletion) RELEASED, blocked by ADR-021, request to controller recorded in Active locks; now discovering the next ADR-clear lane | Method: multi-agent orchestration ending in default-to-REFUTED independent refutation, and ADR-clearance proven before any claim (the deletion lane taught this). Not building on stale memory: a discovery workflow reads the ADRs, this registry, and the gate states to find genuinely open, ADR-clear, unclaimed, high-value work, then executes only on affirmative clearance |
-| Private Contractor, Maps Delivery `c9c17443-ef5e-4a7b-9b6e-c8f5381da30c` | Maps platform consolidation complete / released | Commits `370cf07` and `03adfad`; employee idle for the next exact Maps assignment |
+| Private Contractor, Maps Delivery `c9c17443-ef5e-4a7b-9b6e-c8f5381da30c` | Consolidation released; one docs-only lane ACTIVE below: three-scope evidence entry | Commits `370cf07` and `03adfad`; the staged evidence entry closes the first entry's Unknown scope |
 
 
 
@@ -141,6 +141,16 @@ Chromium theme-transition evidence without overstating it. Hardware-GPU Safari/i
 hidden-document, and forced-provider-failure behavior remain explicit runtime residuals;
 the browser-control safety layer blocked the post-recovery action, so no new browser PASS is
 claimed. All four paths are released.
+
+#### Maps three-scope evidence entry — ACTIVE
+
+Owner: Private Contractor, Maps Delivery `c9c17443-ef5e-4a7b-9b6e-c8f5381da30c`. Exact writable path:
+
+- `docs/operations/departments/maps-location.md`
+
+Purpose: append the already-gathered evidence entry resolving the three-scope Unknown left by `WD-MAPS-THEMEFADE-20260721-1` (hardware-GPU capture on ANGLE Metal Apple M2 Pro: captured and bridged; hidden-document skip: `skipped-hidden` observed live; provider-outage swap: failure unforceable under the pre-existing read-error policy but the overlay provably collected at t+505ms via first-idle, never stuck). Documentation-only; no source path. Exclusions: every other repository path.
+
+Completion: the entry passes the worklog contract test structure, an independent refuter reviews the tuple, and a path-scoped commit releases this path.
 
 No other source path is currently claimed by this registry. A persistent employee seat is not a path claim.
 
