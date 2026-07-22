@@ -130,28 +130,39 @@ test("0017 freezes the exact ordered 0000-0016 SQL, journal, and snapshot lineag
 });
 
 test("0017 advances detached metadata without claiming runtime application", () => {
-  assert.equal(journal.entries.length, 18);
+  // The journal is append-only: it only grows as later migrations land, so an
+  // exact length is wrong. Require entries 0..17 to be present, idx-aligned, and
+  // strictly monotonic through the frozen 0017 prefix without forbidding later
+  // entries.
+  assert.ok(journal.entries.length >= 18, "journal must hold at least entries 0..17");
+  for (let i = 0; i <= 17; i += 1) {
+    assert.equal(journal.entries[i].idx, i, `entry ${i} idx drifted`);
+    if (i > 0) {
+      assert.ok(
+        journal.entries[i].when > journal.entries[i - 1].when,
+        `journal when must be strictly monotonic through the 0017 prefix at ${i}`,
+      );
+    }
+  }
 
   assert.equal(snapshot.id, "6f49b946-260e-5ed7-b740-189bad171017");
   assert.equal(snapshot.prevId, "c85fd31e-0793-5ded-8c66-9fbcf12d1f4c");
   assert.equal(snapshot.version, "7");
   assert.equal(snapshot.dialect, "postgresql");
-  assert.deepEqual(journal.entries.slice(-2), [
-    {
-      idx: 16,
-      version: "7",
-      when: 1784739600000,
-      tag: "0016_contribution_review_acl_repair",
-      breakpoints: true,
-    },
-    {
-      idx: 17,
-      version: "7",
-      when: 1784743200000,
-      tag: "0017_contribution_pending_queue_shape_repair",
-      breakpoints: true,
-    },
-  ]);
+  assert.deepEqual(journal.entries[16], {
+    idx: 16,
+    version: "7",
+    when: 1784739600000,
+    tag: "0016_contribution_review_acl_repair",
+    breakpoints: true,
+  });
+  assert.deepEqual(journal.entries[17], {
+    idx: 17,
+    version: "7",
+    when: 1784743200000,
+    tag: "0017_contribution_pending_queue_shape_repair",
+    breakpoints: true,
+  });
 
   assert.equal(manifest.kind, "release_manifest");
   assert.equal(manifest.release, "0017_contribution_pending_queue_shape_repair");
@@ -166,7 +177,20 @@ test("0017 advances detached metadata without claiming runtime application", () 
     snapshotWithoutLinkage(snapshot0016),
     "0017 snapshot may differ from immutable 0016 only by id and prevId",
   );
-  for (const artifact of Object.values(manifest.artifacts)) {
+  for (const [name, artifact] of Object.entries(manifest.artifacts)) {
+    if (name === "journal") {
+      // The journal is append-only, so its whole-file hash legitimately changes
+      // as later migrations land. Prove the frozen 0017 prefix (entries 0..17) is
+      // byte-for-byte unchanged by reconstructing it and matching the recorded
+      // hash; manifest.artifacts.journal.sha256 stays a historical 0017-time record.
+      const journal0017 = { ...journal, entries: journal.entries.slice(0, 18) };
+      assert.equal(
+        artifact.sha256,
+        sha256(`${JSON.stringify(journal0017, null, 2)}\n`),
+        "0017-era journal prefix drift",
+      );
+      continue;
+    }
     assert.equal(sha256(read(artifact.path)), artifact.sha256, `${artifact.path} manifest hash mismatch`);
   }
   for (const [sourcePath, sourceHash] of Object.entries(manifest.source_sha256)) {

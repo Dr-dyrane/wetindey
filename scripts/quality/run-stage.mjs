@@ -34,8 +34,16 @@ const stages = Object.freeze({
       label: "contribution action contracts",
       ...tsxScript("scripts/contributions/contribution-actions-contract.test.ts"),
     },
+    {
+      label: "contribution evidence media P1 contract",
+      ...tsxScript("scripts/contributions/contribution-evidence-media-p1-contract.test.ts"),
+    },
     { label: "CSP policy contracts", ...tsxScript("scripts/csp-policy-contracts.test.ts") },
     { label: "CSP report contracts", ...tsxScript("scripts/csp-report-contracts.test.ts") },
+    {
+      label: "deletion saga P1 contract",
+      ...tsxScript("scripts/deletion/deletion-saga-p1-contract.test.ts"),
+    },
     { label: "iconography contracts", ...tsxScript("scripts/iconography-contracts.test.ts") },
     { label: "ingestion contracts", ...tsxScript("scripts/ingestion/ingestion-contract.test.ts") },
     { label: "live sheet inset contract", ...tsxScript("scripts/live-sheet-inset-contract.test.ts") },

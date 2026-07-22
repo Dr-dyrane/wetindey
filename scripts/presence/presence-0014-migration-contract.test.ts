@@ -46,8 +46,11 @@ test("0011, 0012, and 0013 lineage is frozen and 0014 is append-only", () => {
     sha256(readFileSync(resolve(root, "src/db/migrations/meta/0013_snapshot.json"))),
     "a0787dd0b1f617c72130965438662dfa4e13a6a6e13f0c09a17e6e231335e9bc",
   );
-  assert.equal(journal.entries.slice(-1)[0]?.idx, 14);
-  assert.equal(journal.entries.slice(-1)[0]?.tag, "0014_presence_capabilities");
+  // The journal is append-only, so an exact tail is wrong once later migrations
+  // land. Assert the 0014 entry sits at its own idx without forbidding successors.
+  const entry0014 = journal.entries.find((entry) => entry.idx === 14);
+  assert.ok(entry0014, "journal must hold the 0014 entry");
+  assert.equal(entry0014.tag, "0014_presence_capabilities");
   assert.equal(journal.entries.slice(0, 14).map((entry) => entry.tag).join(","),
     "0000_careless_piledriver,0001_cute_harrier,0002_calm_meteorite,0003_condemned_sally_floyd,0004_old_mordo,0005_handy_brood,0006_ordinary_meltdown,0007_gray_king_cobra,0008_sturdy_lockjaw,0009_observation_provenance,0010_public_source_ingestion_boundary,0011_classy_the_stranger,0012_guarded_presence,0013_contribution_integrity");
 });

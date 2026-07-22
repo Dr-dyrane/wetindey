@@ -25,7 +25,7 @@
   },
   "source_sha256": {
     "src/db/pillars/80-contribution-services.sql": "1395c8361fc43612685b9c13325674e73f797d3de2aa278d9aad0809683bf50f",
-    "scripts/contributions/contribution-pending-queue-shape-repair-contract.test.ts": "bad4968bd69a7681b960f9c5e5b4d78fe590af68f73dc8a5976e2a8316db4fa3"
+    "scripts/contributions/contribution-pending-queue-shape-repair-contract.test.ts": "9e3deeea6ab31b21d6b164a63ffa415f835091bfe5a17e3cb2429ba82fe2cb8e"
   },
   "generator": {
     "drizzle_kit": "0.31.10",
