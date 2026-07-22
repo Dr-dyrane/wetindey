@@ -70,7 +70,7 @@ delta refuter returned **PASS** with no scoped P1/P2/P3. All six source/test/wor
 are released. Runtime target activation remains blocked on the separately claimed review
 operations vertical below; this source commit must not deploy alone as a false affordance.
 
-#### Contribution moderation service `0015` / ACL repair `0016` — RUNTIME REFUTED / ACTIVE
+#### Contribution moderation service `0015` / ACL repair `0016` — PREVIEW APPLIED / SOURCE + RUNTIME PASS / ACTIVE
 
 Preview applied immutable `0015`, then direct ACL evidence proved its post-`RESET ROLE`
 `REVOKE`/`GRANT` statements were no-ops: `PUBLIC` retained `EXECUTE` and the intended

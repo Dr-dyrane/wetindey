@@ -299,3 +299,30 @@ schema-CREATE capabilities.
 - Action: refute static scope first; after a PASS, prove blank/upgrade/idempotence/injected-rollback and
   exact owner/moderator/public ACLs on isolated PostgreSQL 17 before separately authorized Preview
   application and revalidation.
+
+### 2026-07-22 - `0016` runtime proof and Preview application
+
+The corrected candidate at `aaaa9830613bc5e247a876eb664dfec8efd753ce` was independently exercised
+against PostgreSQL 17 on the authorized persistent Preview Neon branch. The candidate migration hash was
+`669864c8a532b2b941dcd30258b2cb7a1e1c9a7406e4f5d6ddf4a5a3bbb6d6ec`. Three uniquely named disposable
+databases proved the blank `0000`-`0016` path, `0015`-to-`0016` upgrade, second Drizzle migrate, direct
+idempotent repair, and injected-failure rollback. The review-detail function definition remained stable;
+the owner converged to `wetindey_contribution_owner`; EXECUTE converged to owner plus
+`wetindey_contribution_moderator`; and every disposable database was dropped. A separate base query found
+zero generated-database residue. The independent verdict was PASS with no recorded failures.
+
+The authorized Preview target was then guarded as project `wild-rain-23091788`, branch
+`br-steep-dust-auhcmjk8`, database `neondb`, role `neondb_owner`. Its precondition was exactly 16 ledger
+rows through `0015`. The first operator invocation supplied `DATABASE_URL_UNPOOLED`, while the repository
+Drizzle config reads `DATABASE_URL`; Drizzle rejected the empty URL before sending migration SQL. The
+corrected invocation applied `0016` once. Post-application evidence is 17 ledger rows with max id 17 and
+the exact candidate hash; `public.contribution_review_detail(uuid,uuid)` is owned by the dedicated owner,
+has `search_path=pg_catalog`, and grants EXECUTE only to the owner and moderator. The session user has no
+SET path to the owner, the owner has no CREATE on `public`, and no self-granted transient membership
+remains.
+
+This closes the source, disposable-runtime, and shared-Preview migration gates only. Reporting and
+moderation remain disabled, Production remains unchanged, and no moderator was assigned. The next bounded
+operation is to provision separately scoped moderator/control principals and Preview-only environment
+configuration, then drive the signed-in moderation and Food-report lifecycle before any Production
+migration or public enablement.
