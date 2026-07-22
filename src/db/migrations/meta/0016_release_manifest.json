@@ -10,7 +10,7 @@
   "artifacts": {
     "migration": {
       "path": "src/db/migrations/0016_contribution_review_acl_repair.sql",
-      "sha256": "bf133a640fad82cd8bf6f64fc201ba826a18a9cf7ffd88cb68f45d7668fc0707"
+      "sha256": "669864c8a532b2b941dcd30258b2cb7a1e1c9a7406e4f5d6ddf4a5a3bbb6d6ec"
     },
     "snapshot": {
       "path": "src/db/migrations/meta/0016_snapshot.json",
@@ -25,7 +25,7 @@
   },
   "source_sha256": {
     "src/db/pillars/90-contribution-security.sql": "f94f1a94f47af1e262d1edfe4c39ea826afbc4add50663c1a489881592368df5",
-    "scripts/contributions/contribution-moderation-acl-repair-contract.test.ts": "fcd5426720005d406abf45dc2fe7cce13e6eda46363aa280ff1f43cc1168a3be"
+    "scripts/contributions/contribution-moderation-acl-repair-contract.test.ts": "c40dde17855794b3dbe7897d44444b8c8cc98a598483eeb5078e9e6237154be6"
   },
   "generator": {
     "drizzle_kit": "0.31.10",

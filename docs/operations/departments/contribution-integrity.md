@@ -289,6 +289,9 @@ schema-CREATE capabilities.
   rewrite, and checks explicit cleanup plus fail-closed ACL assertions.
 - This is source-only evidence. It does not execute PostgreSQL 17, prove Drizzle transaction rollback,
   apply Preview, assign any moderator, enable reporting, or authorize Production.
+- Independent source refutation first found that the ACL allowlist trusted the function's current owner
+  without proving its identity. The forward correction now fails closed unless the owner is exactly
+  `wetindey_contribution_owner`; the focused contract carries that regression assertion.
 
 #### Exact next action
 

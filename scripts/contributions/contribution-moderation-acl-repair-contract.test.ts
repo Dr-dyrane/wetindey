@@ -98,6 +98,10 @@ test("0016 converges only the review-detail ACL while the owner role is active",
   assert.match(repair, /REVOKE CREATE ON SCHEMA public FROM wetindey_contribution_owner;/);
   assert.match(repair, /REVOKE wetindey_contribution_owner FROM SESSION_USER GRANTED BY SESSION_USER;/);
   assert.match(repair, /pg_catalog\.aclexplode\(/);
+  assert.match(
+    repair,
+    /procedure\.proowner[\s\S]*IS DISTINCT FROM 'wetindey_contribution_owner'::regrole/,
+  );
   assert.match(repair, /privilege\.grantee NOT IN \([\s\S]*procedure\.proowner,[\s\S]*'wetindey_contribution_moderator'::regrole/);
   assert.match(repair, /pg_has_role\(session_user, 'wetindey_contribution_owner', 'SET'\)/);
   assert.match(repair, /has_schema_privilege\([\s\S]*'wetindey_contribution_owner',[\s\S]*'public',[\s\S]*'CREATE'/);

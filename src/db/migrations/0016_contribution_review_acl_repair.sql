@@ -18,6 +18,15 @@ REVOKE wetindey_contribution_owner FROM SESSION_USER GRANTED BY SESSION_USER;
 
 DO $$
 BEGIN
+  IF (
+    SELECT procedure.proowner
+    FROM pg_catalog.pg_proc procedure
+    WHERE procedure.oid = 'public.contribution_review_detail(uuid, uuid)'::regprocedure
+  ) IS DISTINCT FROM 'wetindey_contribution_owner'::regrole THEN
+    RAISE EXCEPTION 'contribution review-detail owner is not the dedicated owner role'
+      USING ERRCODE = '42501';
+  END IF;
+
   IF NOT has_function_privilege(
     'wetindey_contribution_owner',
     'public.contribution_review_detail(uuid, uuid)',
