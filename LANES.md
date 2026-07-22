@@ -146,6 +146,16 @@ Controller-directed, scout confirms exact paths and STOPS to the controller befo
 
 ## Active exact path locks
 
+#### Maps dark road hierarchy and wash strength - ACTIVE
+
+Owner: Private Contractor, Maps Delivery `c9c17443-ef5e-4a7b-9b6e-c8f5381da30c`. Exact writable path:
+
+- `src/integrations/maps/cartography.ts`
+
+Purpose: Lane C of the Founder-directed richness pass; the Founder observed this session that dark is still not colored. Root cause cited from the live style: dark-v11 collapses every road class into one `road-simple` line layer at flat `hsl(0,0%,24%)`, so the network that gives light half its life (the orange expressway, the primary grid) has no hierarchy to color. This lane reintroduces hierarchy data-driven on `road-simple` via a match on the road class (motorway and trunk warm and unmistakable, primary a warmer step, secondary and tertiary a lightness step, everything else stock), and audits the commercial wash strength which currently resolves near-invisible over the land. Dark only; the controller ruling's subordination guardrails apply (ground stays under the data layer, no marker competition); light must stay pixel-identical at the 0.00 percent bar Lane A set for dark. Exclusions: every other path.
+
+Completion: before and after dark captures show the expressway warm and the road hierarchy legible with labels and markers untouched; light proven pixel-identical; stock citations verified; independent default-to-REFUTED refutation; gates green; path-scoped commit pushed under the `0bbdb11` class; span-checked release.
+
 #### Maps route freshness tint - ACTIVE
 
 Owner: Private Contractor, Maps Delivery `c9c17443-ef5e-4a7b-9b6e-c8f5381da30c`. Exact writable paths:
