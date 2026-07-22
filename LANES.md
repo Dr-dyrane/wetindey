@@ -137,6 +137,21 @@ Each is a controller-directed Terra draft + Luna default-to-refuted, editing ONL
 
 ## Active exact path locks
 
+#### Maps route freshness tint - ACTIVE
+
+Owner: Private Contractor, Maps Delivery `c9c17443-ef5e-4a7b-9b6e-c8f5381da30c`. Exact writable paths:
+
+- `src/app/_components/home-page/hooks/useHomePage.ts`
+- `src/app/_components/home-page/imports/imports.ts`
+- `src/app/_components/home-page/views/HomePageView.tsx`
+- `src/app/_components/map-presentation/MapPresentation.tsx`
+- `src/app/_components/map-presentation/imports/imports.ts`
+- `src/app/_components/map-presentation/views/MapPresentationView.tsx`
+
+Purpose: Lane B of the Founder-directed richness pass, semantics decided by the Founder this session: the route line tints by price freshness. The adapter already ships the full seam (RouteTint accent, confirmed, caution, unavailable with token mapping; MapboxCanvas accepts routeTint) and it has never been fed. useHomePage derives the tint from the active route target's freshness signal (StatusKind caution passes through as caution, unavailable as unavailable, everything else stays accent) and the prop threads through HomePageView, MapPresentation, and MapPresentationView to MapboxCanvas. No adapter, canvas, cartography, schema, or copy change. The spine files are claimed exactly because this is the serialized integration step the crossing-point rule requires.
+
+Completion: a driven browser flow draws a route to a caution-signal offer and pixel-samples the line amber, and to a fresh offer sampling accent; an independent default-to-REFUTED refuter reviews diff and drive; tsc, eslint, audit:tokens, location contract 20/20; path-scoped commit, push under the `0bbdb11` proven-reversible class, release with span check.
+
 #### Maps light cartography warmth - RELEASED / PATHLESS
 
 Complete at `f307cef`, pushed under the `0bbdb11` proven-reversible class after a NOT REFUTED verdict on all five claims: light land warmed to the sand family, water settled, park opacity ramp lifted, dark proven pixel-identical (0.00% diff), stock citations verified against the live style. The commercial-district area wash and the routeTint spine slice remain the Lane B candidates, pending an owner call on tint semantics. Path released.
