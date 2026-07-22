@@ -152,6 +152,16 @@ Controller-directed, scout confirms exact paths and STOPS to the controller befo
 
 ## Active exact path locks
 
+#### Maps own-markets glow layer - ACTIVE
+
+Owner: Private Contractor, Maps Delivery `c9c17443-ef5e-4a7b-9b6e-c8f5381da30c`. Exact writable path:
+
+- `src/integrations/maps/MapboxAdapter.ts`
+
+Purpose: Lane D, Founder-directed this session: the commercial-district richness the tiles cannot provide comes from WetinDey's own admitted places instead. The adapter already receives every candidate with placeType and coordinates through the existing addMarker/clearMarkers cycle; this lane maintains a wetindey-places GeoJSON source from that cycle and renders one soft warm glow circle layer for the market family only (open_market, supermarket), slotted beneath the route and first label layer by the existing route precedent, replayed on style settle beside cartography and route, theme-aware and deliberately faint. Subordination guardrails apply in full: the glow is ground under the data layer, ranks nothing, and must never read as an availability or category signal beyond "a WetinDey market lives here". No spine, canvas, cartography, schema, or copy change. Exclusions: every other path.
+
+Completion: driven captures in both themes show the glow present, subtle, and beneath every label, pin, and route; markers and labels unmoved; an independent default-to-REFUTED refuter reproduces the drive and checks source/layer teardown safety across theme swaps and context loss; gates green; path-scoped commit pushed under the `0bbdb11` class; span-checked release.
+
 #### Maps dark road hierarchy and wash strength - RELEASED / PATHLESS
 
 Complete at `c66dcd3`, pushed under the `0bbdb11` proven-reversible class. The dark network's hierarchy is restored data-driven across the road-simple/bridge-simple/tunnel-simple trio; the refuter refuted the first draft's single-layer citation and bridge gap, and the repair is credited in the source. Light held pixel-identical at 0.00 percent through both drafts. The commercial wash was audited and deliberately left honest: applied and opaque, bounded by Festac's sparse commercial_area polygon data. The Founder-directed richness pass (Lanes A, B, C) is complete. Path released.
