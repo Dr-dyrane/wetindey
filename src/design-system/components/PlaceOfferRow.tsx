@@ -33,6 +33,11 @@ function availabilityKind(offer: PlaceOffer): StatusKind | null {
   if (availability === "unavailable") return "unavailable";
   if (availability !== "available") return null;
 
+  // A synthetic Sample is never a confirmed live offer. The trust layer already
+  // assigns non-observed origins 'caution' (food-trust.ts toReadTrust), so mirror
+  // that here: the badge keeps the "Available" fact but must not read fresh-green.
+  if (offer.trust?.origin === "synthetic") return "caution";
+
   const freshness =
     offer.trust?.origin === "observed"
       ? offer.trust.freshness
@@ -46,6 +51,10 @@ function availabilityKind(offer: PlaceOffer): StatusKind | null {
 }
 
 function freshnessLabel(offer: PlaceOffer) {
+  // A Sample is seed data, not an observed report: its freshness is unverified,
+  // so it must never claim "Fresh". Stays consistent with the row's Sample star
+  // and the trust layer's 'caution' status for synthetic origins.
+  if (offer.trust?.origin === "synthetic") return "Freshness unverified";
   const freshness =
     offer.trust?.origin === "observed"
       ? offer.trust.freshness
