@@ -389,35 +389,41 @@
   --color-status-unavailable-bg: rgba(255, 69, 58, 0.18);
   --color-status-info-bg: rgba(10, 132, 255, 0.2);
 
-  /* Dark ink, and it is NOT simply the pure hue — two of the four never passed.
+  /* Dark ink for 11px status text on a tint, and it is NOT the pure hue: all four
+   * failed once the real backing was checked.
    *
-   * Setting `-fg` = the hue reads as elegant and fails: measured on
-   * `surface #1C1C1E` with the 18% tint composited, `unavailable #FF453A` is
-   * **4.34** and `info #0A84FF` is **4.14**, both under the 4.5:1 floor that
-   * StatusBadge's 11px/600 text carries. They passed on `background #000` and
-   * failed on the surface a badge actually sits on inside a card.
+   * The earlier pass measured on `surface #1C1C1E`. But a StatusBadge inside an
+   * ItemCard sits on `bg-surface-card`, which in dark is `#3A3A3C`, the LIGHTEST
+   * content surface. Dark ink is bright, so a lighter surface under the tint
+   * RAISES the composited background's luminance and LOWERS contrast. `#3A3A3C`
+   * is the worst case, not `#1C1C1E`, and the old comment never tested it.
    *
-   * So the polarity flips between themes and the fix flips with it: light darkens
-   * its ink, dark LIGHTENS it. Confirmed and caution already clear it comfortably
-   * (6.58 / 6.46 on surface) and keep the hue.
+   * Composite each `-bg` tint (18%, info 20%) over `#3A3A3C` and the old inks all
+   * fell through the 4.5:1 floor: confirmed `#30D158` 4.07, caution `#FF9F0A`
+   * 4.00, unavailable `#FF6961` 3.41, info `#409CFF` 3.29. Each hue is lightened
+   * only until it clears 4.5:1 on `#3A3A3C` with its tint composited. Because
+   * lightening dark ink only gains contrast as the surface darkens, clearing the
+   * lightest surface clears `#1C1C1E` and `#000` with room to spare.
    *
-   *                 on surface #1C1C1E   on background #000000
-   *   confirmed          6.58                 8.80    (hue, unchanged)
-   *   caution            6.46                 8.64    (hue, unchanged)
-   *   unavailable        5.24                 6.69    (was 4.34 FAIL)
-   *   info               5.33                 6.82    (was 4.14 FAIL)
+   *                 on surface-card #3A3A3C   surface #1C1C1E   background #000
+   *   confirmed              4.70                  6.85              9.28
+   *   caution                4.61                  6.72              9.14
+   *   unavailable            4.82                  6.91              8.95
+   *   info                   5.14                  7.35              9.65
+   *
+   * As plain ink (no tint) each also clears 4.5:1 on the lightest dark control
+   * fill `#48484A` (confirmed 5.21, caution 5.12, unavailable 4.57, info 5.04),
+   * covering the ~15 `-fg` consumers beyond StatusBadge.
    *
    * The pure hue is still on `--color-status-*` above for dots and bars, which is
    * where fidelity belongs. This token is ink, and ink has to be readable.
    *
-   * docs/ACCESSIBILITY.md P0-6 tabulated this and it was missed once: a first pass
-   * at this file asserted "dark mode passes comfortably; this is light-only",
-   * which is false and contradicted the very document it cited.
+   * docs/ACCESSIBILITY.md P0-6.
    */
-  --color-status-confirmed-fg: #30d158;
-  --color-status-caution-fg: #ff9f0a;
-  --color-status-unavailable-fg: #ff6961;
-  --color-status-info-fg: #409cff;
+  --color-status-confirmed-fg: #40df6a;
+  --color-status-caution-fg: #ffb340;
+  --color-status-unavailable-fg: #ff9d96;
+  --color-status-info-fg: #8fc5ff;
 
   --color-focus-ring: #0a84ff;
 

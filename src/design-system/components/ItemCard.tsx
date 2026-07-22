@@ -208,7 +208,7 @@ export function ItemCard({
                   ? "bg-status-caution-bg text-status-caution-fg"
                   : item.foodTrend.state === "down"
                     ? "bg-status-confirmed-bg text-status-confirmed-fg"
-                    : "bg-fillSecondary text-text-secondary"
+                    : "bg-fillSecondary text-text-primary"
               }`}
             >
               {item.foodTrend.label}
