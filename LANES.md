@@ -149,26 +149,17 @@ windows, one-hour revalidation, eight-second timeout, parsing, errors, fallback 
 and provider attribution remain unchanged. No UI, browser-cache, provider-network, database,
 or deployment behavior changed. Both action paths are released.
 
-#### Food trust query extraction — ACTIVE
+#### Food trust query extraction — RELEASED / PATHLESS
 
-Owner: current orchestrator with a bounded Food topology worker.
-Exact writable paths:
-
-- `LANES.md`
-- `src/app/_actions/food-actions.ts`
-- new `src/app/_actions/food-trust.ts`
-
-Purpose: move only the private read-side trust key/types, normalization helpers, and batch
-query implementation into one directly imported server helper. Keep `getOfferTrustBatch`
-and `getOfferTrust` as the public action boundary in `food-actions.ts`; preserve trust
-policy, SQL eligibility, provenance handling, batching, ordering, empty fallbacks, public
-types/signatures, and all callers. The helper must have a live caller in the same change
-and must not introduce a second `use server` boundary.
-
-Completion: exact paths only; `food-actions.ts` is materially reduced; a fresh independent
-default-to-REFUTED review proves trust/query/export equivalence; one path-scoped commit then
-releases both action paths. No UI, schema, migration, provider, database, browser, or
-deployment work is authorized.
+Commit `93bba80` moved the private read-side trust key/types, normalization, fallback
+mapping, key serialization, and unchanged batch SQL/query processing into the directly
+imported server helper `src/app/_actions/food-trust.ts`. `food-actions.ts` retains the sole
+`use server` boundary plus the public `getOfferTrustBatch` and `getOfferTrust` actions and
+re-exported `OfferKey`/`ReadTrust` types. Independent default-to-REFUTED review returned PASS
+with no P1/P2/P3: SQL eligibility, provenance, trust assessment, newest-observation ordering,
+batching, empty/missing fallbacks, exports, signatures, and live callers remain equivalent.
+No UI, schema, migration, provider, database, browser, or deployment behavior changed. Both
+action paths are released.
 
 #### Maps platform consolidation — ACTIVE
 
