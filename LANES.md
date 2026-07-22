@@ -42,21 +42,15 @@ to idle rather than creating a replacement task.
 | Developer Relations & Engineering Enablement `019f7995-5b7b-7ee1-81ef-2c3a3c57b836` | Department worklog protocol complete / released | `62880ac` and fail-closed repair `2523da1` are on current main; remain persistent for later bounded enablement assignments |
 | Catalog Stewardship `019f7999-37d0-7231-8b89-0e71c2569ce2` | Catalog workflow complete / released; employee idle | `8a072e2`/`7b42664` and `fe09dc3` resolved the safety-scope and no-match/transport corrections; no active path claim remains |
 | Private Contractor, Full-Stack Delivery `ef98946c-a55e-4700-aa6e-c1a840e42eef` | Seated by Founder instruction 2026-07-21; first lane (account deletion) RELEASED, blocked by ADR-021, request to controller recorded in Active locks; now discovering the next ADR-clear lane | Method: multi-agent orchestration ending in default-to-REFUTED independent refutation, and ADR-clearance proven before any claim (the deletion lane taught this). Not building on stale memory: a discovery workflow reads the ADRs, this registry, and the gate states to find genuinely open, ADR-clear, unclaimed, high-value work, then executes only on affirmative clearance |
-| Private Contractor, Maps Delivery `c9c17443-ef5e-4a7b-9b6e-c8f5381da30c` | Five lanes complete / released; seat idle on the self-paced check-in loop | `370cf07`, `03adfad`, `8fb9b02`, `9c1db98`, `aa29b91`; queued: Safari or iOS Simulator capture drive and forced context-loss drive per the maps-location worklog; watch item: Presence integration serialization |
+| Private Contractor, Maps Delivery `c9c17443-ef5e-4a7b-9b6e-c8f5381da30c` | Six lanes complete / released; seat idle on the self-paced check-in loop | `370cf07`, `03adfad`, `8fb9b02`, `9c1db98`, `aa29b91`, `23b1aef`; sole queued Maps scope: Safari or iOS capture drive, blocked on owner-installed host tooling (iOS Simulator runtime or Safari Allow Remote Automation); watch item: Presence integration serialization |
 
 
 
 ## Active exact path locks
 
-#### Maps renderer-failure evidence entry — ACTIVE
+#### Maps renderer-failure evidence entry — RELEASED / PATHLESS
 
-Owner: Private Contractor, Maps Delivery `c9c17443-ef5e-4a7b-9b6e-c8f5381da30c`. Exact writable path:
-
-- `docs/operations/departments/maps-location.md`
-
-Purpose: append the evidence entry resolving the renderer-failure half of the Unknown scope left by `WD-MAPS-THEMEFADE-20260721-2`: a forced WEBGL_lose_context during a bridged theme swap dropped the overlay within 200ms, returned the honest skeleton (continuity false), and recovered to ready with visible frames and no residual overlay. The Safari and iOS half was attempted and is blocked on host tooling absent from this machine (no iOS Simulator runtime installed; safaridriver not enabled), which only the owner can install; the entry records that blocker. Documentation-only. Exclusions: every other path.
-
-Completion: an independent default-to-REFUTED refuter reproduces the context-loss drive and verifies the tuple; a path-scoped commit releases this path.
+Complete at `23b1aef` (tuple base `b0f78cd`, digest `02f1ca61…`, re-verified byte-exact after a HEAD-race restamp). Renderer-failure bridging is closed with reproduced evidence; the remaining Unknown is exactly `Safari and iOS capture behavior`, blocked on host tooling only the owner can enable (no iOS Simulator runtime installed; Safari remote automation disabled). Path released.
 
 #### Contractor playbook amendment: handed incidents — RELEASED / PATHLESS
 
