@@ -53,9 +53,9 @@ prohibited boundary or are not deterministic local contracts:
 - `scripts/motion-contracts.test.ts` is currently stale against the active `page.tsx`
   compact-detail structure; its Motion owner must reconcile the contract before it can
   become a required stage.
-- `scripts/presence/presence-migration-contract.test.ts` currently asserts the old `0012`
-  journal tail while the repository has a later `0013` entry; its migration owner must
-  reconcile the frozen-prefix assertion before it can become a required stage.
+- `scripts/presence/presence-migration-contract.test.ts` preserves the frozen `0011`/`0012`
+  prefix without claiming `0012` is the journal tail; the separate `0014` contract owns
+  current-head proof. Neither static contract substitutes for shared-target evidence.
 - Browser suites and Playwright configuration do not exist in this slice.
 
 These two stale contracts are explicit residual gates, not environment-conditional skips:

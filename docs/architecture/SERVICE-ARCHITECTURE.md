@@ -39,11 +39,11 @@ Their detailed model is not accepted implementation scope. See
 7. **Database desired state and rollout history are different artifacts.**
 [ADR-014](../adr/014-pillar-baselines-and-release-migrations.md) is the decision authority:
 canonical pillars describe the intended schema, while numbered Drizzle migrations record
-forward release deltas. The exact applied `0000`-`0008` lineage is preserved. `0009` is
-independently validated but has not been applied to a shared database; final ingestion
-`0010` is also unapplied. A baseline is for an empty database only. Existing databases
-receive pending deltas, and their remote ledger is never edited merely because repository
-files changed. Operational guidance starts at [docs/database/README.md](../database/README.md).
+forward release deltas. The exact `0000`-`0014` lineage is applied and immutable on both
+Preview and Production; every defect is repaired forward and no applied release is rerun or
+rewritten. A baseline is for an empty database only. Existing databases receive only future
+pending deltas, and their remote ledger is never edited merely because repository files
+changed. Operational guidance starts at [docs/database/README.md](../database/README.md).
 
 8. **Browsing context is not physical self-location.** Accepted
 [ADR-023](../adr/023-browsing-context-and-device-location.md) separates the area being
@@ -71,7 +71,8 @@ physical-presence evidence. Block wins bidirectionally, report holds suppress vi
 and ephemeral Wave is the first positive/social interaction; Block, Report, and Close
 remain mandatory safety/navigation controls. ADR-016's reciprocal presence-profile
 consent remains independent and is not broadened. Under ADR-014, the corrected `0012` →
-contribution `0013+` → operational `0014` gates remain binding. No schema, migration, server, UI,
+contribution `0013+` → operational `0014` sequencing remains binding. Shared-target `0014`
+application is proved, while runtime and rollout gates remain closed. No new schema, migration, server, UI,
 provider, messaging, pilot, or rollout work is authorized.
 
 ---
@@ -1388,8 +1389,8 @@ browsing point into a person marker. The future sequence is:
    never a fabricated Festac peer marker. Messaging or external action requires a later ADR.
 
 No phase authorizes schema, migration, server, UI, provider, pilot traffic, deployment, or
-rollout. Corrected Presence `0012`, contribution `0013+`, and operational `0014` remain
-separate gates. Markers and cards must not feed `locationStore`, `Me`, route origin, device
+rollout. Corrected Presence `0012`, contribution `0013+`, and shared-target `0014` are
+proved prerequisites; runtime, pilot, and rollout remain separate closed gates. Markers and cards must not feed `locationStore`, `Me`, route origin, device
 evidence, camera/browsing context, trust, contact, follower, or popularity surfaces.
 
 ### Phase 3 — Make the field data trustworthy (1–2 weeks)

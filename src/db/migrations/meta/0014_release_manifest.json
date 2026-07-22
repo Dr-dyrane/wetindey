@@ -1,27 +1,16 @@
 {
   "kind": "release_manifest",
   "release": "0014_presence_capabilities",
-  "status": "candidate_no_go",
-  "shared_database_applied": false,
-  "first_shared_application_frozen": false,
+  "status": "shared_applied_immutable",
+  "shared_database_applied": true,
+  "first_shared_application_frozen": true,
   "parent_release": "0013_contribution_integrity",
   "parent_snapshot_id": "9ab87346-01b0-4a36-a3f1-bc3708d079a1",
   "result_snapshot_id": "667de345-b0c2-43f5-9e37-a7c00e30ea50",
   "artifacts": {
-    "migration": {
-      "path": "src/db/migrations/0014_presence_capabilities.sql",
-      "sha256": "ed532eab5f7941245cfebb66463a2194ab9df235b30f9fd678e1c0e1065008bf"
-    },
-    "snapshot": {
-      "path": "src/db/migrations/meta/0014_snapshot.json",
-      "sha256": "2a83ceda227c1a9721f767b0270a4aef6f3cb7a8b3501ae5725c482011ec2bdf"
-    },
-    "journal": {
-      "path": "src/db/migrations/meta/_journal.json",
-      "sha256": "b8a2273e5acdbe54b79451829018b830ce1dda3d7a78a51fbf3779f81f6339ce",
-      "entry_index": 14,
-      "entry_when": "1784454430015"
-    }
+    "migration": { "path": "src/db/migrations/0014_presence_capabilities.sql", "sha256": "ed532eab5f7941245cfebb66463a2194ab9df235b30f9fd678e1c0e1065008bf" },
+    "snapshot": { "path": "src/db/migrations/meta/0014_snapshot.json", "sha256": "2a83ceda227c1a9721f767b0270a4aef6f3cb7a8b3501ae5725c482011ec2bdf" },
+    "journal": { "path": "src/db/migrations/meta/_journal.json", "sha256": "b8a2273e5acdbe54b79451829018b830ce1dda3d7a78a51fbf3779f81f6339ce", "entry_index": 14, "entry_when": "1784454430015" }
   },
   "parent_lineage": [
     { "index": 0, "tag": "0000_careless_piledriver", "when": "1784224072266", "sha256": "71be7b38a05007fdb05c4f3a773c643796f090305c78379c2813a37cb88933fd" },
@@ -39,73 +28,26 @@
     { "index": 12, "tag": "0012_guarded_presence", "when": "1784386976072", "sha256": "a8b31034aae22a6e9fa62416df8a1bb483c6783947fdf742c674e82cac373302" },
     { "index": 13, "tag": "0013_contribution_integrity", "when": "1784439194861", "sha256": "052769850c3d633230d9ec109c2b09067b73a686cadb7c139a613622184f0f0a" }
   ],
-  "result_lineage_entry": {
-    "index": 14,
-    "tag": "0014_presence_capabilities",
-    "when": "1784454430015",
-    "sha256": "ed532eab5f7941245cfebb66463a2194ab9df235b30f9fd678e1c0e1065008bf"
+  "result_lineage_entry": { "index": 14, "tag": "0014_presence_capabilities", "when": "1784454430015", "sha256": "ed532eab5f7941245cfebb66463a2194ab9df235b30f9fd678e1c0e1065008bf" },
+  "accepted_result_fingerprint_sha256": "a0126839bc0671fff9b9ad3bc4954e3dfb2286fccdbb352651a199f74b23ab03",
+  "provider_identity_packet_sha256": "7744db329e61aa7a4e34a240454f9f23bf5c66bd99c92b2d446d2788efe2ffc7",
+  "targets": {
+    "production": {
+      "environment": "production", "project_id": "wild-rain-23091788", "branch_name": "main", "branch_id": "br-flat-band-aui9waf5",
+      "database": "neondb", "migration_role": "neondb_owner", "endpoint_hostname_sha256": "49e9bfbdb1d253190391c88980d8b293eb8da2eaae1af606defecb4bb3542804",
+      "audit_packet_sha256": "1a872cfdc03c71cf31c7c96c88609c5cd91a349acb6ee58d4b463e3f82faa258", "result": "PASS"
+    },
+    "preview": {
+      "environment": "preview", "project_id": "wild-rain-23091788", "branch_name": "preview/wetindey-presence", "branch_id": "br-steep-dust-auhcmjk8",
+      "database": "neondb", "migration_role": "neondb_owner", "endpoint_hostname_sha256": "b47f36e8b9349d0e686b0468c2d41c0b3209911576abaa3af8fb2f14d344beaf",
+      "audit_packet_sha256": "f5ed59e18f1745c6b2e7d5a3518bc3322b313ea1fd2671f5398aa8844328ee7f", "result": "PASS",
+      "physical_inheritance": { "parent_lsn": "0/7368FF50", "parent_lsn_observed_at": "2026-07-21T22:29:06Z", "branch_created_at": "2026-07-21T22:29:18Z", "xmin": "228412", "relfilenode": "368692" }
+    }
   },
-  "approved_preview_target": {
-    "approved": false,
-    "environment": "preview",
-    "branch_name": "preview/wetindey-presence",
-    "branch_id": "br-steep-dust-auhcmjk8",
-    "project_id": null,
-    "database": null,
-    "migration_role": null,
-    "endpoint_hostname_sha256": null,
-    "provider_identity_evidence_sha256": null
-  },
-  "fingerprints": {
-    "parent": { "approved": false, "sha256": null, "evidence_sha256": null },
-    "result": { "approved": false, "sha256": null, "evidence_sha256": null }
-  },
-  "backup_restore": {
-    "approved": false,
-    "provider_backup_id": null,
-    "source_project_id": null,
-    "source_branch_id": null,
-    "source_database": null,
-    "created_at": null,
-    "restore_target_project_id": null,
-    "restore_target_branch_id": null,
-    "restore_target_database": null,
-    "restore_owner": null,
-    "restorable": false,
-    "restore_tested_at": null,
-    "evidence_sha256": null,
-    "max_age_seconds": 3600
-  },
-  "independent_authorization": {
-    "approved": false,
-    "owner": null,
-    "verdict": null,
-    "authorized_at": null,
-    "scope": null,
-    "evidence_packet_sha256": null,
-    "max_age_seconds": 3600
-  },
-  "expected_preconditions": {
-    "parent_ledger_exact": true,
-    "sole_pending_release": "0014_presence_capabilities",
-    "operations_allowed": false,
-    "runtime_allowed": false,
-    "allowlist_empty": true,
-    "active_presence_rows_empty": true,
-    "presence_roles_no_login_no_bypass_rls": true,
-    "migration_principal_createrole": true
-  },
-  "evidence": {
-    "target_identity": null,
-    "parent_preflight": null,
-    "execution_receipt": null,
-    "result_postflight": null,
-    "incident": null,
-    "independent_verdict": null
-  },
-  "authorization": {
-    "preview_execution": false,
-    "production_execution": false,
-    "reason": "Direct Preview identity, accepted parent/result fingerprints, bounded backup/restorability proof, and independent authorization are absent."
-  }
+  "postconditions": { "operations_allowed": false, "runtime_allowed": false, "allowlist_empty": true, "active_presence_empty": true, "temporary_privileges_removed": true },
+  "independent_operational_verdict": "PASS",
+  "pre_application_backup": null,
+  "source_commit": null,
+  "source_commit_time": null,
+  "authorization": { "migration_execution": false, "duplicate_execution": false, "runtime_activation": false, "pilot_traffic": false, "production_rollout": false }
 }

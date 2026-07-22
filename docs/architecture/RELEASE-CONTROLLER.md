@@ -105,10 +105,10 @@ the current `HEAD`.
 
 ## Migration compatibility gate
 
-ADR-014 governs database evolution. The controller preserves the exact applied `0000`-`0013`
-lineage and immutable ledger evidence, repairing defects forward only. `0014` is the sole
-current unapplied migration gate and is Preview-only until its exact-target preflight and
-independent refutation pass; Production is not considered by that fact alone.
+ADR-014 governs database evolution. The controller preserves the exact applied `0000`-`0014`
+lineage and immutable ledger evidence, repairing defects forward only. Independent evidence
+proves the same `0014` result on Preview and Production; duplicate execution is forbidden.
+Runtime, pilot, privacy, safety, deployment, and rollout gates remain separate.
 
 Before any migration-sensitive push, record and prove:
 
@@ -127,8 +127,8 @@ proves compatibility with a shared target.
 
 Historical bootstrap note only: migration `0010` was independently `NOT_REFUTED` at clean
 `c6f304b`; its volatile disposable manifest and pre-`0011` scope are not current shared-target
-evidence. Current posture is recorded in root `LANES.md`: `0000` through `0013` are applied
-and immutable, while `0014` remains the separately gated Preview-only migration.
+evidence. Current posture is recorded in root `LANES.md`: `0000` through `0014` are applied
+and immutable on Preview and Production with one accepted result fingerprint.
 
 ## Path-scoped documentation commits
 
@@ -618,12 +618,12 @@ safety/integrity lanes until their separate gates are independently satisfied.
   approximate position marker only; unsigned fallback is a generic position marker, and
   neither has a self-avatar contract. Self-avatar/profile work remains a separate pathless
   location/profile lane. Peer presence requires a future exact adapter/canvas/page plus
-  presence-data/schema/action handoff and remains gated by ADR-016, unapplied `0012`,
+  presence-data/schema/action handoff and remains gated by ADR-016 runtime and pilot evidence,
   privacy, consent, leases, rate controls, block/report, and kill-switch evidence. No path
   is claimed; no edit, browser, DB, push, or deployment is authorized.
-- Preview schema/ledger drift remains proven and quarantined. Production identity, ledger,
-  schema/RPC/RLS/grant fingerprint, migration state, compatibility, restore evidence, and
-  deployment ordering remain unknown.
+- Preview and Production identity, exact `0000`-`0014` ledger, and shared
+  schema/RPC/RLS/grant fingerprint are independently proved. This closes migration state
+  only; deployment ordering and product activation remain separately unauthorized.
 - Presence target authorization, counsel, safety-responder, rate-budget, two-account
   Festac allowlist, default-off application flag, database kill switch, retention, pilot,
   and public-rollout gates remain unresolved.

@@ -77,7 +77,7 @@ test("frozen 0011 artifacts and journal prefix remain exact", () => {
     ),
     "53879b6f64d36205545d71857e87bd6d87001e736c25797a37cbe94e472320bd",
   );
-  assert.deepEqual(journal.entries.at(-1), {
+  assert.deepEqual(journal.entries[12], {
     idx: 12,
     version: "7",
     when: journal.entries[12]?.when,

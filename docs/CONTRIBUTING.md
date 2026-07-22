@@ -234,14 +234,12 @@ release delta from the exact current parent state.
 
 The current boundary is precise:
 
-- `0000` through `0013` are recorded applied shared-environment lineage.
+- `0000` through `0014` are recorded applied shared-environment lineage on Preview and Production.
 - Their migration bytes and ledger evidence are immutable.
-- `0014` is the current unapplied Preview-only migration gate.
 
-Do not regenerate or rewrite applied `0000` through `0013`. Repair defects forward under
-an exact schema lane. `0014` may proceed only through its separately recorded Preview
-preflight and independent refutation; no Production consideration follows without a new
-exact-target gate.
+Do not regenerate, rerun, or rewrite applied `0000` through `0014`. Repair defects forward
+under an exact schema lane. Shared-target migration completion does not enable Presence
+runtime, private-pilot traffic, deployment, or public rollout.
 
 Generation is not rollout. Do not access Neon, run a migration or destructive
 seed, or alter `drizzle.__drizzle_migrations` without separate exact-target

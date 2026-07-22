@@ -83,7 +83,7 @@ document and an ADR disagree about policy, the ADR wins.
 | State | Meaning in this document | Current examples |
 |---|---|---|
 | **Implemented** | A wired live call site exists and the code can exercise the stated behavior without treating repository artifacts as environment proof. | Owner profile, avatar management, owner-scoped My Reports read, approved-review read, claim-specific Food trust read |
-| **Dormant or contained** | Code/schema artifacts exist, but a flag, capability check, unavailable action, disabled UI, missing target proof, or rollout gate prevents a truthful live-capability claim. | Contribution admission runtime and `0013` artifacts, disabled report form, throwing visit/review writes, Presence schema/migration/RLS/cleanup, always-empty Presence read |
+| **Dormant or contained** | Code/schema artifacts exist, but a flag, capability check, unavailable action, disabled UI, or rollout gate prevents a truthful live-capability claim. | Contribution admission runtime and `0013` artifacts, disabled report form, throwing visit/review writes, applied Presence schema/RLS/cleanup with default-off runtime and always-empty Presence read |
 | **Proposed** | This product contract defines a later complete vertical; no path is currently owned or authorized. | Impact receipts, scoped public trust profiles, earned badges, structured actions, subject follows, community RLS |
 | **Prohibited** | The model must not be introduced by any phase described here. | Purchasable/transferable points, universal trust score, follower-count trust/ranking, self-validation, Presence-to-message linkage, unrestricted messaging without a new accepted ADR |
 
@@ -505,8 +505,7 @@ thread schema, inbox service, provider adapter, or speculative message table.
 
 **Dependencies**
 
-- corrected Presence `0012` applied and proved on the exact target;
-- ADR-019 contribution integrity `0013+` applied and proved;
+- corrected Presence `0012`, contribution integrity `0013`, and capability correction `0014` applied and proved on both supported targets;
 - public reporting separately authorized and enabled;
 - safe public review identity correction;
 - named moderation operator, reason codes, service levels, audit, and appeals; and

@@ -48,32 +48,45 @@ to idle rather than creating a replacement task.
 
 ## Active exact path locks
 
-#### Presence `0014` Preview preflight handoff — INDEPENDENT PASS / RELEASE ON ATOMIC COMMIT
+#### Presence `0014` shared-target reconciliation — INDEPENDENT STATIC + OPERATIONAL PASS / RELEASE ON ATOMIC COMMIT
 
-Owner: current Codex implementation session. This atomic candidate owns exactly:
+Owner: current Codex implementation session. This atomic reconciliation lane owns exactly:
 
 - `LANES.md`
-- new `src/db/migrations/meta/0014_release_manifest.json`
-- new `scripts/presence/presence-0014-preview-preflight.mjs`
-- new `docs/database/evidence/preview-0014-presence-2026-07-21.md`
+- `AGENTS.md`
+- `docs/CONTRIBUTING.md`
+- `docs/WETINDEY_BIBLE.md`
+- `docs/architecture/RELEASE-CONTROLLER.md`
+- `docs/architecture/SERVICE-ARCHITECTURE.md`
+- `docs/database/README.md`
+- `docs/database/evidence/preview-0014-presence-2026-07-21.md`
+- `docs/ingestion/NBS-SELECTED-FOOD-PRICE-WATCH.md`
+- `docs/operations/WETINDEY-OPERATING-SYSTEM.md`
+- `docs/product/COMMUNITY-TRUST-AND-CONTRIBUTION-LOOP.md`
+- `docs/product/FOUNDER-FEEDBACK.md`
+- `docs/quality/EXECUTABLE-QUALITY-PIPELINE.md`
+- `src/db/migrations/meta/0014_release_manifest.json`
+- `scripts/presence/presence-0014-preview-preflight.mjs`
+- `scripts/presence/presence-migration-contract.test.ts`
 
-Scope is limited to a fail-closed, Preview-only operational preflight wrapper, frozen
-release manifest, and redacted execution handoff. It authorizes no database access or
-migration execution by itself. Production, frozen migration/schema/pillar paths, runtime
-flags, provider state, deployment, and application paths remain out of scope. The gate
-remains **NO-GO** until direct Preview identity/lineage/role/control/backup evidence and an
-independent default-to-REFUTED verdict are recorded. Refuter findings have been
-forward-corrected in the candidate: audit-only collection remains available, but execution
-is structurally denied while the frozen manifest keeps Preview authorization false or any
-approved target identity, accepted parent/result fingerprint, bounded backup/restorability
-proof, or independent authorization field null or unapproved. Operator environment values
-may provide a connection secret and execution confirmation only; they cannot define the
-expected target.
+Independent operational evidence proves Production `main` (`br-flat-band-aui9waf5`) and
+Preview `preview/wetindey-presence` (`br-steep-dust-auhcmjk8`) are exact immutable
+`0000`-`0014` results with shared fingerprint
+`a0126839bc0671fff9b9ad3bc4954e3dfb2286fccdbb352651a199f74b23ab03`, default-off
+controls, empty allowlist and active Presence state, and temporary privilege cleanup.
+Scope is limited to reconciling current-facing facts, finalizing the redacted shared-target
+manifest/evidence, retiring migration execution semantics, and repairing the frozen-prefix
+contract. Migration SQL, snapshots, journal, schema, pillars, runtime flags, pilot traffic,
+providers, deployment, and product implementation remain excluded.
 
-Independent implementation refutation is **PASS**. The four exact paths above are released
-upon one atomic commit containing this candidate; until that commit, they remain the bounded
-candidate claim. This source verdict does not satisfy, weaken, or authorize the separate
-pathless Preview execution gate below.
+Independent static refutation is **PASS** across the exact 16-path candidate. Independent
+operational refutation is **PASS** on Production `main` (`br-flat-band-aui9waf5`) and Preview
+`preview/wetindey-presence` (`br-steep-dust-auhcmjk8`) for exact identity, immutable
+`0000`-`0014` ledger/hash/fingerprint equivalence, default-off controls, empty allowlist and
+active Presence state, safe roles, and privilege cleanup. These 16 paths are released upon
+one atomic commit containing the candidate; until that commit, they remain the bounded
+claim. Duplicate migration execution remains prohibited. This completion does not satisfy
+or weaken the separate pathless runtime, private-pilot, privacy, safety, or product NO-GO.
 
 #### Governance modularization — RELEASED / PATHLESS
 
@@ -127,23 +140,24 @@ claims. Scheduler paths are released. Never source Presence from browsing
 may supply it.
 
 
-##### Presence `0014` shared-target operational gate — NO-GO / PATHLESS
+##### Presence `0014` shared-target migration — OPERATIONAL PASS / PATHLESS
 
 Owner: Nearby Presence Platform Engineer `019f759f-3521-7ee1-90a3-5af3539d757e`. This gate owns no repository path and authorizes no UI, peer visibility, flag enablement, or public rollout.
 
 Current proven Preview facts: persistent Neon branch `preview/wetindey-presence` (`br-steep-dust-auhcmjk8`) exists; its pooled and unpooled endpoints directly connected; Vercel Preview database aliases plus the contribution and Presence safety URLs were overridden; Production variables were untouched; and Preview deployment `dpl_HVgUnhDSmdhDw7fSCnTuPk8iGCyY` built `READY`. No Vercel CLI command is represented as disclosing sensitive runtime values.
 
-Migration `0014` remains unapplied and is a Preview-only gate. Before any Preview execution, prove the exact migration target identity, parent ledger, role/options, backup/rollback, empty allowlist, both runtime kill switches false, migration hash/snapshot/schema/RPC/RLS/grants, idempotence, cleanup/retention compatibility, and an independent default-to-REFUTED operational verdict. Exact execution and post-migration identity/evidence remain required. Only after that Preview gate passes may a separate Production consideration receive its own exact-target authorization and evidence; do not substitute a local, guessed, or Production DSN.
+Independent operational evidence proves exact `0000`-`0014` ledger/hash/result equivalence
+on Production `main` (`br-flat-band-aui9waf5`) and Preview
+`preview/wetindey-presence` (`br-steep-dust-auhcmjk8`) in Neon project
+`wild-rain-23091788`, database `neondb`, role `neondb_owner`. Both targets match fingerprint
+`a0126839bc0671fff9b9ad3bc4954e3dfb2286fccdbb352651a199f74b23ab03`; controls remain
+default off, the allowlist and active Presence state are empty, and transient owner
+privileges are absent. Preview physical inheritance is independently supported by parent
+LSN `0/7368FF50`, `xmin` `228412`, and relfilenode `368692`.
 
-The implementation artifact is independently PASS, but execution remains **NO-GO** because
-the frozen manifest still has no approved exact Preview project/database/migration-role and
-endpoint/provider identity evidence; no independently accepted parent or result
-schema/RPC/RLS/grant fingerprint and evidence hash; no approved fresh provider backup,
-distinct restore-branch target, named restore owner, successful restorability proof, and
-backup evidence hash; no fresh independent owner, scoped PASS authorization, or evidence
-packet hash; and `authorization.preview_execution` remains false. This operational gate is
-pathless and grants no repository edit, database access, migration, flag, pilot, deployment,
-Production consideration, or rollout authority.
+The migration is complete and duplicate execution is forbidden. This PASS grants no
+runtime flag, allowlist population, peer visibility, private pilot, privacy/safety/legal
+approval, deployment, or public rollout. Those remain separate fail-closed gates below.
 
 ##### Private-pilot manifest convergence — QUEUED, NOT ACTIVE
 
@@ -152,8 +166,9 @@ Readiness remains **EVIDENCE-REFUTED**. Frozen `0012` exposes stable
 activation/report lack idempotency; the block-versus-Wave safety race is unproved; a stable
 profile avatar URL is unsuitable; and app/account-deletion wiring is absent. The `0014`
 source correction exists on current main and both `0012` and Contribution `0013` are operationally passed/applied as recorded, but
-no Presence UI or code claim may activate before the pathless `0014` Preview gate
-above passes independently. Production consideration is separately gated afterward.
+no Presence UI or code claim may activate merely because the shared-target `0014` migration
+passed. Runtime, private-pilot, privacy, safety, lifecycle, and product evidence remain
+separately gated.
 
 The four new files are not independently activatable: without a live caller they would
 violate the repository's no-dead-service/component rule. The Platform manifest must choose
@@ -204,3 +219,33 @@ Archives grant no current human claim. They preserve source-snapshot evidence fo
 
 - [Current-cycle history index](docs/operations/lanes/history/README.md)
 - [Legacy historical archive](docs/operations/lanes/LANES-HISTORICAL-ARCHIVE.md)
+
+
+#### Developer Relations & Engineering Enablement: department worklog protocol — active exact claim
+
+Owner: Developer Relations & Engineering Enablement worker
+`019f7995-5b7b-7ee1-81ef-2c3a3c57b836`. Exclusive paths:
+
+- `AGENTS.md`
+- `docs/CONTRIBUTING.md`
+- `docs/operations/BRANCH-HANDOFF-TEMPLATE.md`
+- `docs/operations/DEPARTMENT-WORKLOG-PROTOCOL.md`
+- `docs/operations/WETINDEY-OPERATING-SYSTEM.md`
+- `docs/operations/departments/README.md`
+- `docs/operations/departments/catalog-stewardship.md`
+- `docs/operations/departments/client-reliability-offline.md`
+- `docs/operations/departments/community-growth.md`
+- `docs/operations/departments/contribution-integrity.md`
+- `docs/operations/departments/developer-experience.md`
+- `docs/operations/departments/executive-product.md`
+- `docs/operations/departments/human-interface.md`
+- `docs/operations/departments/legal-policy.md`
+- `docs/operations/departments/maps-location.md`
+- `docs/operations/departments/operations-field-data.md`
+- `docs/operations/departments/presence-safety.md`
+- `docs/operations/departments/program-release.md`
+- `docs/operations/departments/quality-release.md`
+- `docs/operations/departments/security-privacy.md`
+- `docs/operations/departments/seller-identity-access.md`
+- `docs/operations/departments/trust-data-governance.md`
+- `scripts/department-worklog-contract.test.ts`

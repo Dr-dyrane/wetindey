@@ -83,9 +83,10 @@ read-side trust blockers come first.
 [ADR-014](docs/adr/014-pillar-baselines-and-release-migrations.md).** Drizzle schema
 declarations and reviewed SQL are organised as canonical desired-state pillars; numbered
 migrations are release deltas, not the permanent desired-state authoring model. The
-recorded shared-environment lineage `0000` through `0013` is applied and immutable: preserve
-its exact bytes and ledger evidence and repair every defect forward. Migration `0014` is the
-current unapplied Preview gate; it is not regenerable against the applied lineage. Never run
+recorded shared-environment lineage `0000` through `0014` is applied and immutable: preserve
+its exact bytes and ledger evidence and repair every defect forward. Migration `0014` is
+independently proven on both Preview and Production and must never be rerun or regenerated
+against the applied lineage. Never run
 a baseline against an existing database, edit a remote ledger to imitate deployment, or
 access a database without exact-target authorization. Start at
 [docs/database/README.md](docs/database/README.md).

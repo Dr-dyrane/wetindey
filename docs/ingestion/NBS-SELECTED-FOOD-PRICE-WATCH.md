@@ -128,10 +128,9 @@ availability assertion, or permission to style evidence as confirmed.
 - live UI or the existing synthetic/demo fixture; or
 - market/place coverage claims.
 
-Shared or Production application of migration `0010` remains separately blocked. This
-policy does not authorize a shared database write, Production write, live promotion,
-push, or deployment. The current Preview quarantine and unknown Production migration
-state are not changed by repository review artifacts.
+Shared-target lineage through `0014`, including `0010`, is independently proved on Preview
+and Production. This policy still does not authorize a database write, live ingestion
+promotion, push, or deployment; migration completion does not admit staged evidence.
 
 ## Historical artifact preservation
 
