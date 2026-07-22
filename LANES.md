@@ -135,6 +135,15 @@ Founder instruction 2026-07-22: release every documented proposal and unlock eve
 
 Each is a controller-directed Terra draft + Luna default-to-refuted, editing ONLY its one or two new files, authorizing no shared-database mutation, consistent with the accepted ADRs. Exact new-file paths: `docs/adr/029-seller-contact-ownership.md`; `docs/adr/030-contextual-community.md`; `docs/operations/COVERAGE-HONESTY-CONTRACT.md` and `src/lib/coverage/coverage-state.ts`; `docs/operations/discovery/decision-receipt-discovery.md`; `docs/operations/discovery/seller-correction-link-discovery.md`; `docs/operations/decisions/second-vertical-architecture.md`.
 
+Batch-3 status 2026-07-22: ADR-030 + coverage-honesty DELIVERED `80d1839`; ADR-029 + native-readiness + second-vertical + WD-I-003 + WD-I-004 DELIVERED `330c8a8`; H40 search price band DELIVERED `20965e0`; blocker #22 was already fixed at `2bc8a3c`. The two REFUTED verdicts (ADR-029, native-readiness) were only an over-strict tree-isolation check tripping on sibling-arm files, content passed and was committed path-scoped.
+
+### Batch 2 feature builds (heaviest lanes, scout-gated, ACTIVE)
+
+Controller-directed, scout confirms exact paths and STOPS to the controller before any widening; migrations generated-not-applied; features default-off and fail-closed; independent Luna default-to-refuted before commit. Two disjoint lanes:
+
+- Feature #25 contribution evidence-media (ADR-028 Accepted): image CRUD on the price-update flow. Scout-confirmed set expected around a new `src/db/schema/evidence-media.ts`, generated migration `0019` + snapshot + release-manifest (all authorization flags false) + journal append, `src/lib/evidence-media/` (Vercel Blob adapter, moderation admission, exact-prefix layout per ADR-028 `contribution-evidence/{reportId}/{mediaId}`), the media server actions appended to `src/app/_actions/food-actions.ts`, the report-price upload UI, display gating for approved-only, and a contract test. Fail-closed behind moderation exactly as ADR-019 requires; no shared-DB apply; activation waits on the shared-DB owner credential.
+- Feature #16 deletion saga P2 (ADR-021 P2, P1 delivered `4d7038c`, 0012 proven): cleanup adapters and orchestration under `src/lib/deletion/` plus its contract test. Profile deletion, `sources.user_id` null with observation-preservation proof, ordinary `problem_reports` deletion, exact-prefix paginated Blob enumeration/deletion, idempotent Presence account-deletion invocation and safety tombstoning, retries/backoff/terminal/manual states, redacted audit, purge. Inert boundary, deletes no real account; disposable-proof only; no shared-DB apply.
+
 ## Active exact path locks
 
 #### Maps route freshness tint - ACTIVE
