@@ -220,3 +220,33 @@ Archives grant no current human claim. They preserve source-snapshot evidence fo
 
 - [Current-cycle history index](docs/operations/lanes/history/README.md)
 - [Legacy historical archive](docs/operations/lanes/LANES-HISTORICAL-ARCHIVE.md)
+
+
+#### Developer Relations & Engineering Enablement: department worklog protocol — active exact claim
+
+Owner: Developer Relations & Engineering Enablement worker
+`019f7995-5b7b-7ee1-81ef-2c3a3c57b836`. Exclusive paths:
+
+- `AGENTS.md`
+- `docs/CONTRIBUTING.md`
+- `docs/operations/BRANCH-HANDOFF-TEMPLATE.md`
+- `docs/operations/DEPARTMENT-WORKLOG-PROTOCOL.md`
+- `docs/operations/WETINDEY-OPERATING-SYSTEM.md`
+- `docs/operations/departments/README.md`
+- `docs/operations/departments/catalog-stewardship.md`
+- `docs/operations/departments/client-reliability-offline.md`
+- `docs/operations/departments/community-growth.md`
+- `docs/operations/departments/contribution-integrity.md`
+- `docs/operations/departments/developer-experience.md`
+- `docs/operations/departments/executive-product.md`
+- `docs/operations/departments/human-interface.md`
+- `docs/operations/departments/legal-policy.md`
+- `docs/operations/departments/maps-location.md`
+- `docs/operations/departments/operations-field-data.md`
+- `docs/operations/departments/presence-safety.md`
+- `docs/operations/departments/program-release.md`
+- `docs/operations/departments/quality-release.md`
+- `docs/operations/departments/security-privacy.md`
+- `docs/operations/departments/seller-identity-access.md`
+- `docs/operations/departments/trust-data-governance.md`
+- `scripts/department-worklog-contract.test.ts`
