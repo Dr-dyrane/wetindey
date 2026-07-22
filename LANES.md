@@ -167,15 +167,16 @@ Controller-directed, scout confirms exact paths and STOPS to the controller befo
 
 ## Active exact path locks
 
-#### Maps marker keyboard operability - ACTIVE
+#### Maps performance and operability pass - ACTIVE
 
-Owner: Private Contractor, Maps Delivery `c9c17443-ef5e-4a7b-9b6e-c8f5381da30c`. Exact writable path:
+Owner: Private Contractor, Maps Delivery `c9c17443-ef5e-4a7b-9b6e-c8f5381da30c`. Exact writable paths:
 
+- `src/design-system/components/MapboxCanvas.tsx`
 - `src/integrations/maps/MapboxAdapter.ts`
 
-Purpose: controller-routed robustness-audit finding: map marker elements carry an aria-label and a click listener but no role, no tabindex, and no keyboard handler, leaving them unreachable and unoperable by keyboard and assistive tech (WCAG AA operability). Minimal fix as routed: role button, tabindex 0, and an Enter or Space keydown mirroring the existing click, aria-label kept. The edit waits until the in-flight map QA sweep finishes driving the dev server so hot reload does not poison its findings. Exclusions: every other path.
+Purpose: consolidates the controller-routed marker keyboard operability finding (previously claimed alone under this heading's predecessor) with the two controller-routed MED performance findings, all map-side: (1) markers gain role button, tabindex 0, and an Enter or Space keydown mirroring click; (2) pure selection changes restyle only the previously and newly selected markers instead of clear-and-rebuild-all, dropping selectedPlaceId from the rebuild trigger; (3) applyPlacesGlow hoists out of the per-marker path to run once per batch; (4) MapboxCanvas injects the mapbox-gl script and stylesheet on demand when the library is absent, making the canvas self-sufficient so the controller can afterwards remove the global tags from `src/app/layout.tsx` (that half stays with the controller by their offer; strict ordering, canvas self-sufficiency lands first). Edits remain held until the in-flight map QA sweep releases the dev server. Exclusions: every other path, including `src/app/layout.tsx`.
 
-Completion: a driven keyboard pass proves Tab reaches a marker and Enter and Space activate it identically to click; independent default-to-REFUTED refutation; gates green; path-scoped commit pushed under the `0bbdb11` class; span-checked release.
+Completion: keyboard drive proves Tab plus Enter and Space activate markers; a selection-change drive proves no full marker teardown and the glow diagnostic shows one batch application; a fresh profile shows mapbox-gl arriving via the canvas injector; independent default-to-REFUTED refutation; gates green; path-scoped commit pushed under the `0bbdb11` class; span-checked release.
 
 #### Maps WebKit capture evidence entry - RELEASED / PATHLESS
 
