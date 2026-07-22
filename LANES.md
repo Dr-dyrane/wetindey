@@ -48,6 +48,36 @@ to idle rather than creating a replacement task.
 
 
 
+## Company activation map (controller, 2026-07-22, Founder-directed)
+
+The Founder directed full-company activation: every department takes a lane of the Founder's plan, orchestrated by the controller through bounded Terra implementation and Luna default-to-refuted review. Register receipts WD-D-001..003 record the bounded approvals. Wave 1 lanes are ACTIVE below; wave 2 is QUEUED and activates as wave 1 releases; external-gated items stay recorded, not waited on.
+
+| Department / seat | Plan item | Lane state |
+|---|---|---|
+| Presence-Safety + Security-Privacy | ADR-021 P1 deletion saga (persistence + provider boundary, migration `0018` assigned) | ACTIVE wave 1 (App Store critical path) |
+| Operations-Field-Data (Food Operations) | WD-I-002 coverage cockpit, smallest step: read-only daily coverage packet | ACTIVE wave 1 |
+| Trust-Data-Governance | Evidence-media policy draft, proposed `ADR-028` (answers the open image-on-reports request) | ACTIVE wave 1 |
+| Human-Interface + Executive-Product (Consumer App) | WD-I-001 one-tap outcome confirmation, smallest step: audit the live visit-confirmation flow and event semantics, no product change | QUEUED wave 2 |
+| Trust-Data-Governance (Data/Truth Platform) | WD-I-005 coverage honesty, smallest step: define the coverage-state contract, no result-language change | QUEUED wave 2 |
+| Catalog-Stewardship + Food Evidence Provenance | Standing review authorization: classify recurring NBS/current Food evidence, no live promotion | QUEUED wave 2 |
+| Executive-Product | App Store distribution decision packet (PWA vs native wrapper) for Founder decision | QUEUED wave 2 |
+| Contribution-Integrity | 0017 Preview apply + moderation lifecycle | EXTERNAL GATE: owner migration credential |
+| Maps-Location | Safari/iOS capture drive; Presence integration serialization | EXTERNAL GATE: owner host tooling; 0014 gates |
+| Community-Growth | WD-P-002 reviews/community | PARKED by register; no unparking without trigger |
+| Legal-Policy, Client-Reliability, Quality-Release, DevRel, Program-Release | Standing refutation, release, worklog, and reconciliation duties on demand | STANDING |
+
+#### ADR-021 P1 deletion saga: persistence and provider boundary (ACTIVE, wave 1)
+
+Owner: controller-directed Terra under Presence-Safety `019f759f-3521-7ee1-90a3-5af3539d757e` and Security-Privacy seats. Exact writable paths: new `src/db/pillars/90-deletion-saga.sql`, new `src/db/migrations/0018_deletion_saga_persistence.sql`, new `src/db/migrations/meta/0018_snapshot.json`, `src/db/migrations/meta/_journal.json`, new `src/lib/deletion/` (adapter, guards, phase primitives), new `scripts/deletion/deletion-saga-p1-contract.test.ts`, and a `docs/operations/departments/presence-safety.md` append entry. Contract: exactly ADR-021 P1 (deletion-request/phase/audit schema, server-only Neon branch administrative auth adapter with exact-target fail-closed guards, phase transition and idempotency worker primitives). P1 owns NO UI, Blob deletion, Presence UI, or public action; exit requires disposable fresh/upgrade migration proof (0017-harness pattern, disposable databases only) and provider-capability refutation WITHOUT deleting any real account. NO shared-database apply: `0018` stays candidate_unapplied with all authorization flags false.
+
+#### WD-I-002 coverage daily packet (ACTIVE, wave 1)
+
+Owner: controller-directed Terra under Operations-Field-Data. Exact writable paths: new `scripts/operations/coverage-daily-packet.mjs`, new `docs/operations/COVERAGE-PACKET.md`, and a `docs/operations/departments/operations-field-data.md` append entry. Contract: the register's smallest learning step only, a READ-ONLY daily packet from existing admissible observed data (ADR-012/014/015 boundaries: no synthetic or quarantined source counts as live coverage, no public operator data, no contributor traces, unknown stays unknown). SELECT-only against the live database; zero writes; no dashboard, no automation, no public output.
+
+#### Evidence-media policy draft, proposed ADR-028 (ACTIVE, wave 1)
+
+Owner: controller-directed Terra under Trust-Data-Governance `019f7599-0eaa-7423-9ebf-a1bfea8efe37`. Exact writable path: new `docs/adr/028-contribution-evidence-media.md` (Status: Proposed, decision owner Founder) plus a `docs/operations/departments/trust-data-governance.md` append entry. Contract: draft the retention, admission/moderation flow, privacy, Blob storage layout, and display gating for user photos on price reports, consistent with ADR-013/015/019 and the moderation pipeline; authorizes nothing by itself; closes the open REQUEST TO CONTROLLER on image-on-price-reports when the Founder accepts or rejects.
+
 ## Active exact path locks
 
 #### Maps worklog action-noun conformance - RELEASED / PATHLESS
