@@ -66,7 +66,23 @@ delta refuter returned **PASS** with no scoped P1/P2/P3. All six source/test/wor
 are released. Runtime target activation remains blocked on the separately claimed review
 operations vertical below; this source commit must not deploy alone as a false affordance.
 
-#### Contribution moderation service `0015` — ACTIVE
+#### Contribution moderation service `0015` / ACL repair `0016` — RUNTIME REFUTED / ACTIVE
+
+Preview applied immutable `0015`, then direct ACL evidence proved its post-`RESET ROLE`
+`REVOKE`/`GRANT` statements were no-ops: `PUBLIC` retained `EXECUTE` and the intended
+moderator grant was absent. `0015` and its metadata are now read-only. The forward repair
+owns exactly `src/db/pillars/90-contribution-security.sql`, new
+`src/db/migrations/0016_contribution_review_acl_repair.sql`, new
+`src/db/migrations/meta/0016_snapshot.json`, new
+`src/db/migrations/meta/0016_release_manifest.json`,
+`src/db/migrations/meta/_journal.json`, new
+`scripts/contributions/contribution-moderation-acl-repair-contract.test.ts`, and
+`docs/operations/departments/contribution-integrity.md`. It must repair the ACL while
+`wetindey_contribution_owner` is the active role, leave only owner plus
+`wetindey_contribution_moderator` execution, revoke all temporary membership/schema
+capabilities, prove rollback/idempotence on PostgreSQL 17, and be independently refuted
+before Preview revalidation. No Production migration or runtime enablement is authorized
+by this claim.
 
 Owner: database service worker. Add only the protected review-detail service needed for a
 second moderator to inspect a decided claim and reverse it without broad table access.
@@ -90,7 +106,7 @@ contact, precise coordinates, source IDs, digests, network/risk signals, private
 raw payload. Blank and `0000`-`0014` upgrades, rollback, idempotence, exact grants/RLS, and
 independent default-to-REFUTED evidence are required before release.
 
-#### Contribution moderation application — ACTIVE
+#### Contribution moderation application — SOURCE PASS / RELEASED
 
 Owner: application operations worker. Build the least-privileged, unlinked operator route
 against the frozen `0015` RPC contract. It remains disabled before auth/pool/SQL unless the
