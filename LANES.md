@@ -85,7 +85,7 @@ Owner: Private Contractor, Full-Stack Delivery `ef98946c-a55e-4700-aa6e-c1a840e4
 - `src/app/_components/home-page/views/HomePlaceDetailView.tsx`
 - `src/app/_components/currency-picker-sheet/imports/imports.ts`
 - `src/app/_components/exchange-panel/imports/imports.ts`
-- `docs/operations/departments/developer-experience.md`
+- `docs/operations/departments/human-interface.md`
 - `docs/operations/departments/maps-location.md`
 - `scripts/department-worklog-contract.test.ts`
 - `scripts/iconography-contracts.test.ts`
