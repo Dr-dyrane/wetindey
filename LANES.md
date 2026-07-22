@@ -66,6 +66,14 @@ The Founder directed full-company activation: every department takes a lane of t
 | Community-Growth | WD-P-002 reviews/community | PARKED by register; no unparking without trigger |
 | Legal-Policy, Client-Reliability, Quality-Release, DevRel, Program-Release | Standing refutation, release, worklog, and reconciliation duties on demand | STANDING |
 
+### Decisions awaiting Founder (controller-surfaced, none actioned)
+
+These are ready read-only inputs; the controller has actioned none of them. Each returns to the register as a dated disposition once decided.
+
+1. ADR-028 contribution evidence-media policy (`9c808f5`, Proposed): accept, reject, or amend. Acceptance is what would let image-on-price-reports (#25) become a claimable lane; nothing proceeds until then.
+2. App Store distribution path (`f808468`): pick one of stay-PWA / Android TWA / Capacitor wrapper / native shell, and its sequencing against the ADR-021 deletion saga (Apple 5.1.1(v) gate) and the Food pilot. Recommendation on file: stay PWA through the pilot.
+3. WD-I-001 one-tap outcome (`cf9deb5`): the visit-confirmation flow is currently PAUSED behind a safety message. Decide whether to reactivate it (with the ADR-019 safety checks) before any one-tap simplification, since there is no live outcome to simplify until then.
+
 #### ADR-021 P1 deletion saga: persistence and provider boundary (DELIVERED 4d7038c, wave 1)
 
 DELIVERED and Luna-refuted-then-fixed: schema/migration/adapter/primitives landed on the 9-path set, tsc clean, deletion P1 contract 17/17, worklog contract still 5/5, `0018` candidate_unapplied with all authorization flags false, immutables 0000-0017 byte-frozen, no DB contacted. EXTERNAL EXIT GATE before any shared application: the disposable PGlite fresh-and-upgrade reconstruction proof (the contract ran static-only because `@electric-sql/pglite` is absent from this host; installing the disposable dep is an owner/host tooling step) plus P2 cleanup adapters. P1 owns no UI, Blob, Presence UI, or public action; no account is deletable from this code.
@@ -82,11 +90,11 @@ Owner: controller-directed Terra under Operations-Field-Data. Exact writable pat
 
 Owner: controller-directed Terra under Trust-Data-Governance `019f7599-0eaa-7423-9ebf-a1bfea8efe37`. Exact writable path: new `docs/adr/028-contribution-evidence-media.md` (Status: Proposed, decision owner Founder) plus a `docs/operations/departments/trust-data-governance.md` append entry. Contract: draft the retention, admission/moderation flow, privacy, Blob storage layout, and display gating for user photos on price reports, consistent with ADR-013/015/019 and the moderation pipeline; authorizes nothing by itself; closes the open REQUEST TO CONTROLLER on image-on-price-reports when the Founder accepts or rejects.
 
-#### WD-I-001 one-tap outcome audit (ACTIVE, wave 2)
+#### WD-I-001 one-tap outcome audit (DELIVERED cf9deb5, wave 2)
 
 Owner: controller-directed Terra under Human-Interface and Executive-Product. Exact writable path: new `docs/operations/audits/one-tap-outcome-audit.md` only. Contract: the register's smallest step, a READ-ONLY audit of the existing visit-confirmation flow and its event/analytics semantics (no product, code, schema, or copy change). Map the current live path, the event model, the eligibility trigger, accessibility, and whether "was there" and "price matched" stay distinct facts, then record gaps against WD-I-001 guardrails (no continuous tracking, no incentive, no hidden identity linkage) for a Founder portfolio review. Authorizes no implementation.
 
-#### App Store distribution decision packet (ACTIVE, wave 2)
+#### App Store distribution decision packet (DELIVERED f808468, wave 2)
 
 Owner: controller-directed Terra under Executive-Product. Exact writable path: new `docs/operations/decisions/app-store-distribution-packet.md` only. Contract: a Founder decision packet for issue #24 (WetinDey is a PWA; Apple cannot ingest a PWA). Lay out the real options (stay PWA, TWA/Play, a native wrapper such as Capacitor, or a thin native shell), each option's cost, review-guideline exposure (including Apple 5.1.1(v) in-app account deletion, which the ADR-021 saga is the groundwork for), maintenance, and pilot-phase fit, ending in a clear recommendation and the exact decision the Founder must make. Authorizes nothing; opens no lane.
 
