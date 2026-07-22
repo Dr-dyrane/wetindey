@@ -48,6 +48,14 @@ to idle rather than creating a replacement task.
 
 ## Active exact path locks
 
+#### Status-chip media-scrim fill (PlaceOfferRow): NO-FILL, RESOLVED, no code change
+
+HI seat decision on the token-lane question deferred by `1704eda` (whether the two regular-layout status chips in `src/design-system/components/PlaceOfferRow.tsx` at ~126 and ~136 should take `bg-media-scrim/<alpha>` after the dead `bg-black/78` was swept). Decision: no fill, keep the shipped treatment, no code change; path stays released, no reopen.
+
+Grounds are accessibility, not taste. The `StatusBadge` chip already paints its own semantic tint (`bg-status-*-bg` at 14% opacity) under semantic ink (`-fg`) tuned to 4.5:1 on that tint per P0-6. `bg-media-scrim/80` is one background-color, so it does not layer over the 14% tint, it replaces it, putting semantic ink on roughly 80% black. Light-mode inks compute below AA there: `caution-fg #a94c00` about 3.7:1, `confirmed-fg #1e7634` about 3.7:1, `unavailable-fg #be261b` about 3.5:1, all under 4.5:1. The only dark-scrim pairing that passes is white text, which is exactly the `text-white` the Founder removed in `d2f557f` to preserve semantic ink. So the refuter's target (orange "Available", which renders as a `StatusBadge kind=confirmed|caution`) is the one chip where a scrim both fails AA and reverses a prior Founder decision.
+
+Residuals, not actioned here, each needing its own exact HI claim plus independent light/dark and P0-6 refutation: (a) the orange "Available" photo legibility the refuter flagged is real, but an AA-safe fix is a heavier semantic tint or stronger text-shadow, not a black scrim; (b) the fallback `<span>` (unknown-availability branch) uses white `text-media-ink` and currently has no fill, so `bg-media-scrim/80` there is AA-safe (about 15:1) and would close its genuine no-fill gap.
+
 #### Maps renderer-failure evidence entry — RELEASED / PATHLESS
 
 Complete at `23b1aef` (tuple base `b0f78cd`, digest `02f1ca61…`, re-verified byte-exact after a HEAD-race restamp). Renderer-failure bridging is closed with reproduced evidence; the remaining Unknown is exactly `Safari and iOS capture behavior`, blocked on host tooling only the owner can enable (no iOS Simulator runtime installed; Safari remote automation disabled). Path released.
