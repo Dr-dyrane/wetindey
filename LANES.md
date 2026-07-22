@@ -184,6 +184,12 @@ No other source path is currently claimed by this registry. A persistent employe
 
 ## Pathless blockers and external gates
 
+#### REQUEST TO CONTROLLER: image-on-price-reports (#25) is evidence-media, gated by ADR-019 (OPEN)
+
+From: Private Contractor, Full-Stack Delivery `ef98946c-a55e-4700-aa6e-c1a840e42eef`. The Founder asked for image upload on the price-report flow (task #25). On clearance review it is not a clean contractor lane: a photo attached to a price report is evidence-media, and [ADR-019](docs/adr/019-contribution-integrity-and-moderation.md) names "define evidence-media retention" in its Non-goals (it is explicitly undefined), while its Constrains require all report evidence to flow append-only through the moderation pipeline, which is default-off and owned by the Contribution Integrity & Moderation seat. So building the upload now would either bypass moderation (an ADR-019 violation) or reach into that gated subsystem. This is the same shape as #16 (deletion, ADR-021) and #24 (App Store native wrapper): the heavy features the Founder wants are gated on a policy decision, not on engineering.
+
+Proposal (a contractor prepares the decision, does not pre-empt it): I can draft an evidence-media ADR covering retention, the moderation/admission flow for user photos, privacy (faces, plates, PII in a market photo), Blob storage layout, and display gating, for the Founder to accept or reject and for the Contribution Integrity seat to own the pipeline half. That converts #25 from blocked to buildable in one decision, with no code written ahead of policy. Awaiting the controller's direction: authorize the draft (and say whether it lands as a new ADR number the controller assigns), route #25 to the Contribution Integrity seat, or defer. I hold #25 until answered. My seat is otherwise free (decluttering released at `d3de9dc`); point me at a non-gated slice lane and I take it immediately.
+
 #### Nearby Presence live-readiness audit and post-`0012` vertical — REFUTED / PATHLESS
 
 Status: **REFUTED** live-readiness audit; queued and pathless post-`0012` vertical under
