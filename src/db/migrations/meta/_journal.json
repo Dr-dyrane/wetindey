@@ -127,6 +127,13 @@
       "when": 1784743200000,
       "tag": "0017_contribution_pending_queue_shape_repair",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1784746800000,
+      "tag": "0018_deletion_saga_persistence",
+      "breakpoints": true
     }
   ]
 }

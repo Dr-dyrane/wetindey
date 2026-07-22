@@ -1,0 +1,57 @@
+{
+  "kind": "release_manifest",
+  "release": "0018_deletion_saga_persistence",
+  "status": "candidate_unapplied",
+  "shared_database_applied": false,
+  "first_shared_application_frozen": false,
+  "parent_release": "0017_contribution_pending_queue_shape_repair",
+  "parent_snapshot_id": "6f49b946-260e-5ed7-b740-189bad171017",
+  "result_snapshot_id": "ed1e3683-c202-457d-ab34-d5a9273fdadb",
+  "artifacts": {
+    "migration": {
+      "path": "src/db/migrations/0018_deletion_saga_persistence.sql",
+      "sha256": "6926ee24bc266538c98f1fc1c3e26841cb99b361210e33b3d1f6161b469c3dfc"
+    },
+    "snapshot": {
+      "path": "src/db/migrations/meta/0018_snapshot.json",
+      "sha256": "227305690c8517876774cbaca3b778758cd7df17a850e0650c3bdab6d95cc26c"
+    },
+    "journal": {
+      "path": "src/db/migrations/meta/_journal.json",
+      "sha256": "f326cbfcabe3bb89b27d0d6a22a5da3695ce84653bc7080846ef6db9547e0235",
+      "entry_index": 18,
+      "entry_when": "1784746800000"
+    }
+  },
+  "source_sha256": {
+    "src/db/schema/deletion.ts": "81644918a67e314167f9ec2b8ed798a60a8b9424d78b5562e56c0a626205dd03",
+    "src/db/pillars/90-deletion-saga.sql": "24932807f3b8e8d4127bfb8009dd760d1a8a361d0ca6fb228c339e3bb49717ff",
+    "src/lib/deletion/types.ts": "3157474506b56b95652c5f3ecc0f31d4870f9c35691d03dfd2d4e3e5dbff58b6",
+    "src/lib/deletion/guards.ts": "d12bc7976577b9d3603fb77c37acbf71f88b8a85a072d707f82b81533d1ff719",
+    "src/lib/deletion/adapter.ts": "5b9edf8b600f0d6578d244f0d0b182324739cfe9cdb11e06c5ce9a38cb265dea",
+    "src/lib/deletion/phases.ts": "c3a94b347cdb15ea8fedb173c2acb96ad5f5e0de03d16512b84b4f2fe9897bf8",
+    "scripts/deletion/deletion-saga-p1-contract.test.ts": "92bbccff168088e3c45ff9dd0e938ecc9c19edec3122fdaed162053a2afb4fe8"
+  },
+  "generator": {
+    "drizzle_kit": "0.31.10",
+    "drizzle_orm": "0.45.2",
+    "journal_version": "7"
+  },
+  "scope": {
+    "adds": [
+      "public.deletion_requests",
+      "public.deletion_audit",
+      "public.deletion_phase",
+      "public.deletion_outcome"
+    ],
+    "table_or_type_changes": true,
+    "rls_or_policy_changes": true,
+    "direct_table_grants": false,
+    "function_or_acl_changes": []
+  },
+  "authorization": {
+    "shared_migration_execution": false,
+    "preview_activation": false,
+    "production_activation": false
+  }
+}

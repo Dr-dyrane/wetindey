@@ -926,3 +926,4 @@ export const userProfiles = pgTable("user_profiles", {
 export * from "./reviews";
 export * from "./ingestion";
 export * from "./presence";
+export * from "./deletion";
