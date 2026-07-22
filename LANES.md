@@ -48,6 +48,16 @@ to idle rather than creating a replacement task.
 
 ## Active exact path locks
 
+#### Contractor workflow playbook — ACTIVE
+
+Owner: Private Contractor, Maps Delivery `c9c17443-ef5e-4a7b-9b6e-c8f5381da30c`. Exact writable path:
+
+- new `docs/operations/CONTRACTOR-PLAYBOOK.md`
+
+Purpose: preserve the proven multi-session contractor loop as a practical field guide so parallel orchestrators onboard and hand off smoothly while the product is live. The document is memory and method only: it grants no path, decision, migration, push, or deployment authority, and where it disagrees with LANES.md, AGENTS.md, the operating system, or the worklog protocol, those win. Content is distilled from this cycle's recorded incidents (hot-file sweep risk, cross-lane candidate landing, tuple restamp after HEAD races, environment false-negatives). Exclusions: every other path.
+
+Completion: an independent default-to-REFUTED refuter checks the guide contradicts no governing document and cites only real recorded events; a path-scoped commit releases this path.
+
 #### Food report pending-review experience — SOURCE PASS / RELEASED
 
 Commit `e554efd` wires only the existing ADR-019 `report_price` admission path. The first
