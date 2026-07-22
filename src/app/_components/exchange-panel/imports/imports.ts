@@ -16,7 +16,7 @@ import {
   isReferenceCurrencyCode,
   type ReferenceCurrencyCode,
 } from "@/app/_data/reference-currencies";
-import { CurrencyFlag } from "@/app/_components/CurrencyFlag";
+import { CurrencyFlag } from "@/app/_components/currency-flag/CurrencyFlag";
 import { CurrencyPickerSheet } from "@/app/_components/currency-picker-sheet/CurrencyPickerSheet";
 import type {
   ExchangeLocationKind,

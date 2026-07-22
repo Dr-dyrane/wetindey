@@ -1,49 +1,19 @@
-"use client";
+import {
+  Utensils,
+  ChevronRight,
+  CurrencyFlag,
+} from "../imports/imports";
+import type { CrossCategorySignalRailProps } from "../CrossCategorySignalRail";
+import type { useCrossCategorySignalRail } from "../hooks/useCrossCategorySignalRail";
 
-import { useEffect, useState } from "react";
-import { Utensils, ChevronRight } from "lucide-react";
-
-import { CurrencyFlag } from "@/app/_components/CurrencyFlag";
-import type { CategoryPillar } from "@/app/_components/CategorySelectorSheet";
-
-export interface CrossCategorySignal {
-  id: string;
-  category: Extract<CategoryPillar, "food" | "money">;
-  code?: string;
-  amount: string;
-  trendText?: string | null;
-  accessibleLabel: string;
-  visual: "food" | "usd";
-  trendTone?: "positive" | "negative" | "neutral";
+export interface CrossCategorySignalRailViewProps extends CrossCategorySignalRailProps {
+  sheet: ReturnType<typeof useCrossCategorySignalRail>;
 }
 
-interface CrossCategorySignalRailProps {
-  signals: readonly CrossCategorySignal[];
-  onActivate: (category: CrossCategorySignal["category"]) => void;
-}
+export function CrossCategorySignalRailView(p: CrossCategorySignalRailViewProps) {
+  const { index, setPaused } = p.sheet;
 
-const ROTATION_MS = 7_000;
-
-export function CrossCategorySignalRail({
-  signals,
-  onActivate,
-}: CrossCategorySignalRailProps) {
-  const [index, setIndex] = useState(0);
-  const [paused, setPaused] = useState(false);
-
-  useEffect(() => {
-    setIndex((current) => (signals.length === 0 ? 0 : current % signals.length));
-  }, [signals.length]);
-
-  useEffect(() => {
-    if (paused || signals.length < 2) return;
-    const timer = window.setInterval(() => {
-      setIndex((current) => (current + 1) % signals.length);
-    }, ROTATION_MS);
-    return () => window.clearInterval(timer);
-  }, [paused, signals.length]);
-
-  const signal = signals[index];
+  const signal = p.signals[index];
   if (!signal) return <span className="min-w-0 flex-1" aria-hidden />;
 
   return (
@@ -51,7 +21,7 @@ export function CrossCategorySignalRail({
       type="button"
       className="group grid h-9 min-w-0 flex-1 place-items-center px-0.5 text-left active:scale-[0.96] transition-transform duration-150"
       aria-label={signal.accessibleLabel}
-      onClick={() => onActivate(signal.category)}
+      onClick={() => p.onActivate(signal.category)}
       onPointerEnter={() => setPaused(true)}
       onPointerLeave={() => setPaused(false)}
       onFocus={() => setPaused(true)}

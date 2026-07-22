@@ -159,7 +159,10 @@ const navigationStackSource = readFileSync(
   join(process.cwd(), "src/design-system/components/NavigationStack.tsx"),
   "utf8"
 );
-const pageSource = readFileSync(join(process.cwd(), "src/app/page.tsx"), "utf8");
+const pageSource =
+  readFileSync(join(process.cwd(), "src/app/_components/home-page/views/HomePageView.tsx"), "utf8") +
+  "\n" +
+  readFileSync(join(process.cwd(), "src/app/_components/home-page/views/HomePlaceDetailView.tsx"), "utf8");
 const globalCss = readFileSync(join(process.cwd(), "src/app/globals.css"), "utf8");
 
 test("the modal shell has one document Escape owner", () => {
@@ -520,7 +523,7 @@ test("compact detail uses one bounded viewport instead of a terminal reservation
   );
   assert.match(
     pageSource,
-    /data-navigation-detail-bounded\s+className="flex h-\[calc\(var\(--navigation-detail-visible-height,100dvh\)-24px\)\] min-h-0 flex-col gap-4 md:h-full md:overflow-hidden"/
+    /data-navigation-detail-bounded\s+className="home-detail-bounded"/
   );
   assert.doesNotMatch(
     pageSource,
@@ -804,7 +807,7 @@ test("a downward touch drag takes the sheet as soon as an owned list reaches its
   assert.match(bottomSheetSource, /drag\.pointerEnded[\s\S]*finishScrolledDrag\(drag\)/);
   assert.match(bottomSheetSource, /cancelDrag = \(event: React\.PointerEvent/);
   assert.match(bottomSheetSource, /!drag \|\| drag\.pointerId !== event\.pointerId/);
-  assert.match(bottomSheetSource, /drag && drag\.pointerId !== event\.pointerId/);
+  assert.match(bottomSheetSource, /shouldHandlePointerCancellation/);
   assert.match(
     bottomSheetSource,
     /drag\?\.pointerType === "touch"[\s\S]*drag\.claim === null[\s\S]*drag\.claim = "scroll"/

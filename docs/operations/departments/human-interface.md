@@ -111,3 +111,107 @@ through a separately authorized forward change.
 - Action: Record one bounded Human Interface outcome in an exact path and evidence manifest.
 - Target: One exact UI path set plus direct visual and accessibility evidence requirements.
 - Completion: LANES.md records a non-overlapping claim and independent refuter before UI editing.
+
+### 2026-07-21 - Root UI Component Decluttering
+
+#### Transfer coordinates
+
+- Base SHA: `8352f9f4101011b11abb71c0f11667fa4d0d2c6f`
+- Candidate tree SHA-256: `68eaccd1e91a2aa220633cf548fa6874a27097f2df6b894f87f9624dd3e46984`
+- Candidate hash algorithm: `wetindey-candidate-tree-v1`
+- Candidate paths (sorted):
+
+```text
+docs/operations/departments/human-interface.md
+scripts/iconography-contracts.test.ts
+scripts/liquid-glass-contract.test.ts
+scripts/live-sheet-inset-contract.test.ts
+scripts/location-default-contract.test.ts
+scripts/motion-contracts.test.ts
+src/app/_components/CategorySelectorSheet.tsx
+src/app/_components/CrossCategorySignalRail.tsx
+src/app/_components/CurrencyFlag.tsx
+src/app/_components/PresentationHost.tsx
+src/app/_components/ReportPriceSheet.tsx
+src/app/_components/SettingsSheet.tsx
+src/app/_components/category-selector-sheet/CategorySelectorSheet.tsx
+src/app/_components/category-selector-sheet/hooks/useCategorySelectorSheet.ts
+src/app/_components/category-selector-sheet/imports/imports.ts
+src/app/_components/category-selector-sheet/views/CategorySelectorSheetView.tsx
+src/app/_components/cross-category-signal-rail/CrossCategorySignalRail.tsx
+src/app/_components/cross-category-signal-rail/hooks/useCrossCategorySignalRail.ts
+src/app/_components/cross-category-signal-rail/imports/imports.ts
+src/app/_components/cross-category-signal-rail/views/CrossCategorySignalRailView.tsx
+src/app/_components/currency-flag/CurrencyFlag.tsx
+src/app/_components/currency-flag/hooks/useCurrencyFlag.ts
+src/app/_components/currency-flag/imports/imports.ts
+src/app/_components/currency-flag/views/CurrencyFlagView.tsx
+src/app/_components/currency-picker-sheet/imports/imports.ts
+src/app/_components/exchange-panel/imports/imports.ts
+src/app/_components/home-page/hooks/useHomePage.ts
+src/app/_components/home-page/imports/imports.ts
+src/app/_components/presentation-host/PresentationHost.tsx
+src/app/_components/presentation-host/imports/imports.ts
+src/app/_components/presentation-host/views/PresentationHostView.tsx
+src/app/_components/report-price-sheet/ReportPriceSheet.tsx
+src/app/_components/report-price-sheet/hooks/useReportPriceSheet.ts
+src/app/_components/report-price-sheet/imports/imports.ts
+src/app/_components/report-price-sheet/views/ReportPriceSheetView.tsx
+src/app/_components/settings-sheet/SettingsSheet.tsx
+src/app/_components/settings-sheet/hooks/useSettingsSheet.ts
+src/app/_components/settings-sheet/imports/imports.ts
+src/app/_components/settings-sheet/views/SettingsSheetView.tsx
+```
+
+- Final commit SHA: Reported by the worker/controller after commit; not embedded in these bytes.
+
+#### Lane and path boundaries
+
+- Lane heading: `#### Root UI Component Decluttering — ACTIVE`
+- Lane owner: Private Contractor, Full-Stack Delivery `ef98946c-a55e-4700-aa6e-c1a840e42eef`
+- Owned paths: Exactly the 39 paths in the preceding Candidate paths (sorted) block; no other path.
+- Excluded paths: Every repository path not listed in Candidate paths (sorted), including LANES.md, DevRel-owned paths, Maps-owned paths, schema paths, and migration paths.
+
+#### Decisions and rationale
+
+Decomposed the remaining root UI components under `src/app/_components/` into the smallest live controller, hook, view, and import slices needed to reduce root-folder line count without adding ceremonial modules.
+
+#### Implementation
+
+Extracted layout views, only the hooks with live state or behavior, and dependency imports for the six target sheet and signal widgets. Removed empty copy and style placeholders, and kept PresentationHost as a direct controller-to-view path because it has no local state.
+
+#### Evidence and refutations
+
+- Evidence ID: `WD-DEVREL-WORKLOG-20260721-DECLUTTER1`
+- Refuter ID: `independent-claude-refuter-declutter-20260721-01`
+- Review binding: Full Base SHA, canonical Candidate tree SHA-256, and sorted Candidate paths.
+- Verdict location: External read-only refuter output keyed by Evidence ID and Refuter ID; not embedded because changing reviewed bytes invalidates it.
+- Runtime and external evidence: No test, build, browser, database, or external validation was claimed for this source-only candidate correction.
+
+#### Known failures
+
+The decluttering does not change runtime domain logic. It changes how code modules are loaded. Browser rendering remains unverified for this source-only candidate correction.
+
+- Unknown scope: `browser rendering`
+- Unknown owner: Private Contractor, Full-Stack Delivery and Quality/Release
+- Unknown resolution action: Inspect browser rendering and preserved UI behavior independently in a reused browser tab before release.
+
+#### External gates
+
+- External gate owner: Quality & Release Controller
+- Gate state: All contract test suite files must pass green.
+
+#### Integration order
+
+Verify compilation, run test suite, push local commits scoped to the modular directories.
+
+#### Rollback or disable
+
+Reverting the modular directories and restoring the deleted root files returns the codebase layout to the previous state.
+
+#### Exact next action
+
+- Actor: Private Contractor, Full-Stack Delivery
+- Action: Run the contract test suite command `npm run test` or check all scripts manually.
+- Target: The 18 modularized paths and lanes manifest.
+- Completion: All test files passes green and the verdict is recorded.

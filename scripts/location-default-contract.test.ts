@@ -241,7 +241,7 @@ test("avatar session callbacks directly refresh map self identity avatar state",
   );
   assert.match(home, /const resolvedSelfAvatarUrl = selfHeaderAvatarUrl \?\? userProfile\?\.avatarUrl;/);
   assert.match(homeView, /selfIdentity=\{resolvedSelfIdentity\}/);
-  assert.match(homeView, /url=\{resolvedSelfAvatarUrl\}/);
+  assert.match(homeView, /resolvedSelfAvatarUrl=\{resolvedSelfAvatarUrl\}/);
   assert.doesNotMatch(
     home,
     /const resolvedSelfIdentity = useMemo\(\(\) => \{[\s\S]{0,200}avatarUrl: selfAvatarUrl/,

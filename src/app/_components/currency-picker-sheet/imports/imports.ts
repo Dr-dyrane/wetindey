@@ -9,7 +9,7 @@ import {
   isSupportedReferenceCurrencyCode,
   type SupportedReferenceCurrencyCode,
 } from "@/app/_data/reference-currencies";
-import { CurrencyFlag } from "@/app/_components/CurrencyFlag";
+import { CurrencyFlag } from "@/app/_components/currency-flag/CurrencyFlag";
 import type { ReferenceCurrencyCatalogEntry } from "@/app/_actions/currency-actions";
 
 export {

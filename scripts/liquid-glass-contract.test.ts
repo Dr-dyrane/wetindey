@@ -74,7 +74,8 @@ test("BottomSheet keeps detents, clip geometry, scroll handoff, and one material
   assert.match(bottomSheet, /material-context-island/);
   assert.match(bottomSheet, /"--stack-surface":\s*"transparent"/);
   assert.match(bottomSheet, /data-sheet-shell/);
-  assert.match(bottomSheet, /h-11 min-h-11[^`]*p-0/);
+  assert.match(bottomSheet, /SHEET_HANDLE_TARGET_PX\b/);
+  assert.match(bottomSheet, /absolute inset-0 flex cursor-grab touch-none items-center justify-center p-0/);
   assert.doesNotMatch(bottomSheet, /bg-surface-persistent/);
   assert.match(globals, /\[data-sheet-shell\] \[inert\]\[aria-hidden="true"\][\s\S]*?opacity:\s*0;/);
   assert.match(globals, /\[data-sheet-shell\] \[inert\]\[aria-hidden="true"\][\s\S]*?pointer-events:\s*none;/);

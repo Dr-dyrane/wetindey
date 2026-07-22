@@ -12,11 +12,11 @@ import {
   type MapRetryCapability
 } from "@/design-system/components/BottomSheet";
 import { useModalPresented } from "@/design-system/components/ModalSheet";
-import { type CategoryPillar } from "@/app/_components/CategorySelectorSheet";
+import { type CategoryPillar } from "@/app/_components/category-selector-sheet/CategorySelectorSheet";
 import { type ItemCardData } from "@/design-system/components/ItemCard";
 import { useLocationIdentity } from "@/app/_hooks/useLocationIdentity";
 import type { ExchangeLocationFilter } from "@/app/_components/exchange-panel/ExchangePanel";
-import type { CrossCategorySignal } from "@/app/_components/CrossCategorySignalRail";
+import type { CrossCategorySignal } from "@/app/_components/cross-category-signal-rail/CrossCategorySignalRail";
 import {
   getNearbyExchangeLocations,
   type ExchangeLocationDiscoveryResult,

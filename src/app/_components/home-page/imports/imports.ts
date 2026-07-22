@@ -25,22 +25,22 @@ import {
   PlaceOfferRow,
   PlaceOfferRowSkeleton
 } from "@/design-system/components/PlaceOfferRow";
-import { SettingsSheet } from "@/app/_components/SettingsSheet";
-import { ReportPriceSheet } from "@/app/_components/ReportPriceSheet";
+import { SettingsSheet } from "@/app/_components/settings-sheet/SettingsSheet";
+import { ReportPriceSheet } from "@/app/_components/report-price-sheet/ReportPriceSheet";
 import { ProfileSheet, Avatar } from "@/app/_components/profile-sheet/ProfileSheet";
-import { CategorySelectorSheet, type CategoryPillar } from "@/app/_components/CategorySelectorSheet";
+import { CategorySelectorSheet, type CategoryPillar } from "@/app/_components/category-selector-sheet/CategorySelectorSheet";
 import { useLocationIdentity } from "@/app/_hooks/useLocationIdentity";
 import {
   ExchangePanel,
   type ExchangeLocationFilter
 } from "@/app/_components/exchange-panel/ExchangePanel";
-import { CrossCategorySignalRail } from "@/app/_components/CrossCategorySignalRail";
+import { CrossCategorySignalRail } from "@/app/_components/cross-category-signal-rail/CrossCategorySignalRail";
 import {
   ItemDetailSheet,
   type OfferPresentation,
   type PresentedOffer
 } from "@/app/_components/item-detail-sheet/ItemDetailSheet";
-import { PresentationHost } from "@/app/_components/PresentationHost";
+import { PresentationHost } from "@/app/_components/presentation-host/PresentationHost";
 import { GetItSheet, type GetItTarget } from "@/app/_components/get-it-sheet/GetItSheet";
 import {
   ConfirmVisitSheet,

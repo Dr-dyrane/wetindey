@@ -1,19 +1,20 @@
-"use client";
-
-import React from "react";
-import { IconOrb } from "@/design-system/components/IconOrb";
-import { ModalSheet } from "@/design-system/components/ModalSheet";
-import { SheetPicker } from "@/design-system/components/SheetPicker";
-import { Button } from "@/design-system/components/Button";
-import { Input } from "@/design-system/components/Input";
-import { SolidIcon } from "@/design-system/icons/SolidIcon";
+import {
+  React,
+  IconOrb,
+  ModalSheet,
+  SheetPicker,
+  Button,
+  Input,
+  SolidIcon,
+} from "../imports/imports";
+import type { useReportPriceSheet } from "../hooks/useReportPriceSheet";
 
 interface Option {
   id: string;
   name: string;
 }
 
-interface ReportPriceSheetProps {
+export interface ReportPriceSheetProps {
   open: boolean;
   onClose: () => void;
   t: Record<string, string>;
@@ -36,10 +37,12 @@ interface ReportPriceSheetProps {
   onUnitId: (v: string) => void;
   onPrice: (v: string) => void;
   onAvailable: (v: "available" | "unavailable") => void;
-
 }
 
-/** Inline result banner. Uses the status ramp so meaning is carried by colour + icon + text. */
+export interface ReportPriceSheetViewProps extends ReportPriceSheetProps {
+  sheet: ReturnType<typeof useReportPriceSheet>;
+}
+
 function Banner({ kind, icon, children }: { kind: "confirmed" | "caution" | "unavailable"; icon: React.ReactNode; children: React.ReactNode }) {
   const map = {
     confirmed: "bg-status-confirmed-bg text-status-confirmed-fg",
@@ -54,8 +57,8 @@ function Banner({ kind, icon, children }: { kind: "confirmed" | "caution" | "una
   );
 }
 
-export function ReportPriceSheet(p: ReportPriceSheetProps) {
-  const variantsForItem = p.variants.filter((v) => v.itemId === p.itemId);
+export function ReportPriceSheetView(p: ReportPriceSheetViewProps) {
+  const { variantsForItem } = p.sheet;
   return (
     <ModalSheet open={p.open} onClose={p.onClose} title={p.t.report_price} size="page">
       <form onSubmit={(event) => event.preventDefault()} className="space-y-5 py-4">
@@ -73,9 +76,6 @@ export function ReportPriceSheet(p: ReportPriceSheetProps) {
           </span>
         </Banner>
 
-        {/* Pull-down menus rather than horizontal pill rails. With 15 markets and
-            11 items, a rail hid most options off-screen behind a swipe and gave
-            no indication of how many there were. */}
         <div className="mx-4 space-y-4">
           <SheetPicker
             title={p.t.market}

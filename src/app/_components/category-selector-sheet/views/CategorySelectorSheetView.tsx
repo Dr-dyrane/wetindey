@@ -1,7 +1,5 @@
-"use client";
-
-import React from "react";
 import {
+  React,
   Bus,
   Check,
   CircleDollarSign,
@@ -11,39 +9,29 @@ import {
   Utensils,
   Users,
   type LucideIcon,
-} from "lucide-react";
-import { ModalSheet } from "@/design-system/components/ModalSheet";
-import { IconOrb, type IconOrbTone } from "@/design-system/components/IconOrb";
-import { haptics } from "@/lib/haptics";
+  ModalSheet,
+  IconOrb,
+} from "../imports/imports";
+import type { CategorySelectorSheetProps, SelectorCategory } from "../CategorySelectorSheet";
+import type { useCategorySelectorSheet } from "../hooks/useCategorySelectorSheet";
 
-export type CategoryPillar = "food" | "home" | "health" | "money" | "transport" | "community";
-type SelectorCategory = CategoryPillar | "fuel";
-
-interface CategorySelectorSheetProps {
-  open: boolean;
-  onClose: () => void;
-  activeCategory: CategoryPillar;
-  onCategoryChange: (category: CategoryPillar) => void;
-  t: Record<string, string>;
+export interface CategorySelectorSheetViewProps extends CategorySelectorSheetProps {
+  sheet: ReturnType<typeof useCategorySelectorSheet>;
 }
 
-export function CategorySelectorSheet({
-  open,
-  onClose,
-  activeCategory,
-  onCategoryChange,
-  t,
-}: CategorySelectorSheetProps) {
+export function CategorySelectorSheetView(p: CategorySelectorSheetViewProps) {
+  const { handleSelect } = p.sheet;
+
   const categories: {
     id: SelectorCategory;
     label: string;
     icon: LucideIcon;
     supported: boolean;
-    tone: Extract<IconOrbTone, "neutral" | "domain-food" | "domain-money">;
+    tone: "neutral" | "domain-food" | "domain-money";
   }[] = [
     {
       id: "food",
-      label: t.category_food || "Food",
+      label: p.t.category_food || "Food",
       icon: Utensils,
       supported: true,
       tone: "domain-food",
@@ -51,14 +39,14 @@ export function CategorySelectorSheet({
     { id: "fuel", label: "Fuel prices", icon: Fuel, supported: false, tone: "neutral" },
     {
       id: "home",
-      label: t.category_home || "Home & Living",
+      label: p.t.category_home || "Home & Living",
       icon: House,
       supported: false,
       tone: "neutral",
     },
     {
       id: "health",
-      label: t.category_health || "Health & Beauty",
+      label: p.t.category_health || "Health & Beauty",
       icon: HeartPulse,
       supported: false,
       tone: "neutral",
@@ -72,38 +60,30 @@ export function CategorySelectorSheet({
     },
     {
       id: "transport",
-      label: t.category_transport || "Transport",
+      label: p.t.category_transport || "Transport",
       icon: Bus,
       supported: false,
       tone: "neutral",
     },
     {
       id: "community",
-      label: t.category_community || "Community",
+      label: p.t.category_community || "Community",
       icon: Users,
       supported: false,
       tone: "neutral",
     },
   ];
 
-  const handleSelect = (category: CategoryPillar) => {
-    if (category !== activeCategory) {
-      haptics.selection();
-      onCategoryChange(category);
-    }
-    onClose();
-  };
-
   return (
-    <ModalSheet open={open} onClose={onClose} title={t.select_category || "Select Category"} size="form">
+    <ModalSheet open={p.open} onClose={p.onClose} title={p.t.select_category || "Select Category"} size="form">
       <div className="py-2">
         <div
           className="squircle-card bg-fillTertiary p-1"
           role="group"
-          aria-label={t.select_category || "Select Category"}
+          aria-label={p.t.select_category || "Select Category"}
         >
           {categories.map((category) => {
-            const active = category.id === activeCategory;
+            const active = category.id === p.activeCategory;
             const Icon = category.icon;
 
             return (

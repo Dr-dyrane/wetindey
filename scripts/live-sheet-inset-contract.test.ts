@@ -150,7 +150,7 @@ const adaptiveShellSource = readFileSync(
   join(process.cwd(), "src/design-system/components/AdaptiveShell.tsx"),
   "utf8"
 );
-const pageSource = readFileSync(join(process.cwd(), "src/app/page.tsx"), "utf8");
+const pageSource = readFileSync(join(process.cwd(), "src/app/_components/map-presentation/styles/MapPresentation.css"), "utf8");
 
 test("pointer paths transfer ownership and layout cleanup cancels all publishers", () => {
   assert.match(bottomSheetSource, /pointerDownPublicationAction\(/);

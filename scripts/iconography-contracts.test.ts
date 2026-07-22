@@ -11,17 +11,21 @@ const PATHS = {
   solid: "src/design-system/icons/SolidIcon.tsx",
   listRow: "src/design-system/components/ListRow.tsx",
   itemCard: "src/design-system/components/ItemCard.tsx",
-  category: "src/app/_components/CategorySelectorSheet.tsx",
-  profile: "src/app/_components/ProfileSheet.tsx",
-  getIt: "src/app/_components/GetItSheet.tsx",
-  about: "src/app/_components/AboutSheet.tsx",
-  location: "src/app/_components/LocationSheet.tsx",
-  reportProblem: "src/app/_components/ReportProblemSheet.tsx",
+  category: "src/app/_components/category-selector-sheet/views/CategorySelectorSheetView.tsx",
+  profile: "src/app/_components/profile-sheet/views/ProfileSheetView.tsx",
+  getIt: "src/app/_components/get-it-sheet/views/GetItSheetView.tsx",
+  about: "src/app/_components/about-sheet/views/AboutSheetView.tsx",
+  location: "src/app/_components/location-sheet/views/LocationSheetView.tsx",
+  reportProblem: "src/app/_components/report-problem-sheet/views/ReportProblemSheetView.tsx",
   contract: "scripts/iconography-contracts.test.ts",
 } as const;
 
 function read(path: string): string {
-  return readFileSync(join(ROOT, path), "utf8");
+  let content = readFileSync(join(ROOT, path), "utf8");
+  if (path === "src/app/_components/about-sheet/views/AboutSheetView.tsx") {
+    content += "\n" + readFileSync(join(ROOT, "src/app/_components/about-sheet/views/AboutSheetDetail.tsx"), "utf8");
+  }
+  return content;
 }
 
 function matches(source: string, pattern: RegExp): number {
