@@ -21,6 +21,11 @@ export function isContactKind(v: string | null): v is ContactKind {
   return v === "phone" || v === "whatsapp" || v === "sms";
 }
 
+// Mirror the server's own avatar constraints so the size/type message only ever
+// shows for a file that truly violates it (see uploadMyAvatar in profile-actions).
+const AVATAR_MAX_BYTES = 2 * 1024 * 1024;
+const AVATAR_ALLOWED_TYPES = ["image/png", "image/jpeg", "image/webp"];
+
 export interface UseManageProfileSheetOptions {
   open: boolean;
   user: { name: string; email: string } | null;
@@ -152,6 +157,15 @@ export function useManageProfileSheet({
     if (!file) return;
 
     haptics.selection();
+
+    // Client-side precheck: the size/type message is honest only when the file
+    // actually violates it. Everything past this point is a network/server fault.
+    if (!AVATAR_ALLOWED_TYPES.includes(file.type) || file.size > AVATAR_MAX_BYTES) {
+      setAvatarError(copy.avatarSizeError);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+      return;
+    }
+
     setAvatarBusy("upload");
     setAvatarError(null);
 
@@ -164,7 +178,9 @@ export function useManageProfileSheet({
       onSessionChange();
     } catch (err) {
       console.error("ManageProfileSheet: failed to upload avatar", err);
-      setAvatarError(copy.avatarSizeError);
+      // The precheck already ruled out size/type, so this is a network or server
+      // fault. Show an honest generic failure, never the misleading size message.
+      setAvatarError(t("profile.save_error"));
     } finally {
       setAvatarBusy(null);
       if (fileInputRef.current) fileInputRef.current.value = "";

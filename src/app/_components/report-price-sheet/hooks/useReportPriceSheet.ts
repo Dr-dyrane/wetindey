@@ -293,9 +293,16 @@ export function useReportPriceSheet({
 
   const dismiss = useCallback(
     (onClose: () => void) => () => {
+      // A submit in flight must never trap the user behind a frozen sheet on a
+      // slow network. Close it and leave the retained idempotency key intact so
+      // any later replay of the identical intent stays a safe server-side no-op.
+      if (coordinator.isInFlight()) {
+        onClose();
+        return;
+      }
       if (reset()) onClose();
     },
-    [reset]
+    [coordinator, reset]
   );
 
   return {
