@@ -31,7 +31,7 @@ import {
   sources,
   units,
 } from "@/db/schema";
-import { and, eq, lte, ne } from "drizzle-orm";
+import { and, eq, lte } from "drizzle-orm";
 import {
   assessTrust,
   FRESHNESS_POLICY,
@@ -346,8 +346,8 @@ function projectEvidence<T extends EvidenceRow>(
 }
 
 /**
- * Public evidence for an item. Moderation admits every non-rejected immutable
- * row; provenance and freshness admission happen in `projectEvidence`.
+ * Public evidence for an item. Moderation admits only approved immutable
+ * rows; provenance and freshness admission happen in `projectEvidence`.
  */
 export async function getItemOffers(itemId: string): Promise<SeoItemOffersResult> {
   const now = new Date();
@@ -377,7 +377,7 @@ export async function getItemOffers(itemId: string): Promise<SeoItemOffersResult
     .where(
       and(
         eq(itemVariants.itemId, itemId),
-        ne(observations.moderationStatus, "rejected"),
+        eq(observations.moderationStatus, "approved"),
         lte(observations.observedAt, now),
       ),
     );
@@ -545,7 +545,7 @@ export async function getPlaceOffersForSeo(
       and(
         eq(observations.placeId, placeId),
         eq(items.active, true),
-        ne(observations.moderationStatus, "rejected"),
+        eq(observations.moderationStatus, "approved"),
         lte(observations.observedAt, now),
       ),
     );

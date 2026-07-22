@@ -132,7 +132,7 @@ export async function getOfferTrustBatchImpl(
     .innerJoin(sources, eq(observations.sourceId, sources.id))
     .where(
       and(
-        sql`${observations.moderationStatus} <> 'rejected'`,
+        sql`${observations.moderationStatus} = 'approved'`,
         or(
           ...keys.map((key) =>
             and(
