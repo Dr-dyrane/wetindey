@@ -172,7 +172,7 @@ Seat recommendation: no fill, on accessibility grounds. The `StatusBadge` chip a
 
 CONTROLLER RULING 2026-07-22: NO-FILL affirmed. The seat's AA computation stands and a media-scrim on the StatusBadge both fails the P0-6 4.5:1 floor for every light-mode semantic ink and reverses the Founder's `d2f557f` removal of `text-white`; the controller will not trade semantic ink or a Founder decision for a scrim. The legibility concern is routed correctly to the HI text-shadow claim below, which is cleared to proceed under its default-to-REFUTED light/dark and P0-6 contrast gate. Any heavier semantic-tint option needs a separate Iconography/token claim, not a scrim.
 
-#### HI claim: AA-safe status-chip legibility over media (PlaceOfferRow) - SOURCE COMPLETE / REFUTER NOT REFUTED / PUSH HELD
+#### HI claim: AA-safe status-chip legibility over media (PlaceOfferRow) - RELEASED / PUSHED
 
 - **Owner:** Human Interface Design Engineer `019f75a5-0fc6-7f40-9a0f-8097ead3b45d`. Opened per Founder instruction 2026-07-22; the fresh product evidence that lifts the prior "no reopen" hold is the refuter's over-photo legibility finding plus the AA computation above.
 - **Exclusive path:** `src/design-system/components/PlaceOfferRow.tsx` only.
@@ -180,7 +180,7 @@ CONTROLLER RULING 2026-07-22: NO-FILL affirmed. The seat's AA computation stands
 - **Exclusions:** no `bg-media-scrim` and no black scrim on the `StatusBadge`; no `text-white`; no `StatusBadge.tsx` or `globals.css` token edits (a heavier semantic tint would need those, so route it as a separate Iconography/token claim); no other `PlaceOfferRow` behavior.
 - **Gate:** independent light/dark and P0-6 contrast refutation, default-to-REFUTED, before release. No push.
 - **Evidence:** source complete at `25054a9` (path-scoped, `PlaceOfferRow.tsx` only). Two-layer theme-aware `text-shadow`: white halo in light mode and a black halo via `dark:` for the semantic-ink `StatusBadge` (dark ink in light, bright ink in dark), and a stronger black shadow for the white-ink fallback `<span>`. Independent default-to-REFUTED refuter returned NOT REFUTED, no P1/P2, two P3 non-defects. It compiled the exact classes on the project Tailwind 3.4.19 and confirmed both rules emit with the `dark:` variant winning by `:is(.dark *)` specificity, verified ink direction per theme, confirmed background-color and ink are unchanged so the P0-6 measured contrast is bit-identical, and confirmed forced-colors and the light/dark sync path untouched. `typecheck` and `audit:tokens` are clean.
-- **Push:** authorized by the controller under the authorization of record once the contrast refuter passes; held pending an owner light/dark visual glance, because a runtime screenshot was not captured in-session (a competing dev server would disrupt the active `:3000`, which already reflects the change via HMR). Path stays claimed until pushed or released.
+- **Push:** owner glanced light/dark and approved; pushed under the authorization of record. `25054a9` (code) and `085809b` (evidence) are on `origin/main` in the ancestry of `3fce90e`, and `git push` confirmed up-to-date. Path released; the HI seat returns to idle.
 
 #### Maps renderer-failure evidence entry — RELEASED / PATHLESS
 
