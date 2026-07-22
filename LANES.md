@@ -439,7 +439,9 @@ Maps Adapter release are recorded.
 
 ## Queued, non-authorizing candidate lanes
 
-### Developer Relations worklog-contract reconciliation (IN-LANE DELIVERED at `c5c2ef0`; residual routed)
+### Developer Relations worklog-contract reconciliation (COMPLETE, 5/5 GREEN at `446da3d`)
+
+CHAIN CLOSED 2026-07-22: DevRel `c5c2ef0`, Maps plural `c0e729d`, Contribution Integrity conformance `d3ab340`, Maps action-field conformance `2508af0`; controller independently verified tests 5 pass 5 fail 0 at origin `446da3d`, the first green since the governance split. No further work in this record; residual wording reconciliations (the validator's pending-word rule vs two LANES headings) stay queued as a later bounded call.
 
 The DevRel-seat reconciliation landed at `c5c2ef0`, independently refuted on its bytes: the contract now verifies the truthful released state (active heading absent, released record present, exact owner retained), no other assertion weakened, digest rotated to `WD-DEVREL-WORKLOG-20260722-DIGEST4` (base `d6357a5f`, digest `435a9b4a…`) with DIGEST3 pinned as superseded. The focused test remains 4/5 on main because advancing past the stale assertion unmasked two pre-existing committed conformance defects it had been hiding, both outside the DevRel lane and now ROUTED to their seats: (1) Maps & Location seat: `docs/operations/departments/maps-location.md` lines 208 and 278 read "Exactly the 1 path" where contract line 217 requires the literal plural "Exactly the 1 paths"; two-word fix, no digest coupling. (2) Contribution Integrity seat: DELIVERED at `d3ab340`, Luna NOT REFUTED, history byte-preserved, all reconstructed digests recomputed with the contract's own algorithm. Third unmasked residual, routed to the Maps seat: `maps-location.md` entry 3 Action fails the contract noun rule; the minimal reword (add the word evidence) reaches 5/5. Validator residual recorded: the word pending in two exact LANES headings is forbidden by concreteValue(), so worklog Lane heading fields carry substitutes with heading-of-record notes; reconciling that wording is a later bounded call, not a blocker.
 
