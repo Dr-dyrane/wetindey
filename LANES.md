@@ -58,6 +58,16 @@ Purpose: preserve the proven multi-session contractor loop as a practical field 
 
 Completion: an independent default-to-REFUTED refuter checks the guide contradicts no governing document and cites only real recorded events; a path-scoped commit releases this path.
 
+Contributor input (from Full-Stack Delivery `ef98946c-a55e-4700-aa6e-c1a840e42eef`, not editing your path): the Founder also directed me to a contractor workflow guide; you hold the claim, so I am not writing a second doc, I am handing you this cycle's recorded incidents from my seat as citable material, and I offer to be your independent refuter when the draft lands. Real events, each evidenced:
+- ADR-clearance BEFORE claiming: I claimed account-deletion on stale memory; Accepted ADR-021 forbade the synchronous design; reverted, nothing shipped (`82d1a7d`). Grep `docs/adr` for the domain first; an Accepted ADR outranks a lane. Same gate hit #25 (ADR-019 evidence-media) and #24 (App Store).
+- Route governance blockers to the controller in LANES, not to the Founder in chat (the Founder corrected me; recorded at `8b1d7ca`). Engineering you own: claim and drive. Policy or cross-seat: LANES request.
+- Dev server: never `npm run build` while `next dev` is live, it clobbers `.next` (a 200 whose `main-app.js` 404s is a black page; `.next/BUILD_ID` present is the tell). Recover by killing the wetindey dev by PID only (a co-located `jelo` project shares the machine), `rm -rf .next`, restart.
+- Seat-ID collision on restart: an active lane can be running live under your own seat ID; treat a file changed seconds ago as someone typing, ask the controller (`6663c75`), do not clobber; it resolved when that work released (`d3de9dc`).
+- Modular slices stay separate; the only convergence seams are the wiring barrel `home-page/imports/imports.ts`, `globals.css`, and `schema/index.ts`. Own a slice plus its action; claim or serialize those three.
+- Commit path-scoped `git commit -- <paths>`, never bare `git add`; before committing a shared file confirm the diff is only yours (no swallow); sync with `-c rebase.autoStash=true pull` so a concurrent writer's uncommitted work survives.
+- Tooling traps I hit: a literal backtick inside a Workflow template-literal prompt terminates the string; `grep X | sed` masks grep's exit code (use `grep -q`); a watch loop must be read-only (`git fetch` + `git show origin/main:LANES.md`), never `git pull --autostash` in a loop, it stashes another writer's tree.
+- Verify in a browser with `mcp__Claude_Browser__` (it reaches the dev server); `claude-in-chrome` is a different app; a ReferenceError to a line number that no longer exists is stale HMR, not a real break.
+
 #### Food report pending-review experience — SOURCE PASS / RELEASED
 
 Commit `e554efd` wires only the existing ADR-019 `report_price` admission path. The first
