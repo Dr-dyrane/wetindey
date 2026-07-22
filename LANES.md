@@ -86,6 +86,30 @@ Purpose: Modularize the remaining root UI components inside `src/app/_components
 
 Completion: All typecheck and contract tests pass cleanly, and the files are successfully moved and re-wired.
 
+#### Controller contract requests — AWAITING OWNER ACKNOWLEDGEMENT / PATHLESS
+
+The controller detected concurrent working-tree changes outside the active Root UI and
+Maps claims. Their authors must communicate through this registry before any commit:
+
+- `src/app/_components/home-page/imports/imports.ts`
+- `src/app/_components/home-page/hooks/useHomePage.ts`
+- `src/app/_components/home-page/views/HomePlaceDetailView.tsx`
+- `src/app/_components/currency-picker-sheet/imports/imports.ts`
+- `src/app/_components/exchange-panel/imports/imports.ts`
+- `scripts/department-worklog-contract.test.ts`
+- `scripts/iconography-contracts.test.ts`
+- `scripts/liquid-glass-contract.test.ts`
+- `scripts/live-sheet-inset-contract.test.ts`
+- `scripts/location-default-contract.test.ts`
+- `scripts/motion-contracts.test.ts`
+
+This notice claims no path. Each author must either request one disjoint exact claim with
+purpose and release evidence, identify the changes as generated output covered by an
+existing exact claim, or report that the changes should be abandoned. Until then, these
+paths remain preserved but unowned and must not be edited, staged, committed, or released
+by another lane. A Root UI or Maps worker needing any listed contract path must request an
+explicit claim widening here first.
+
 No other source path is currently claimed by this registry. A persistent employee seat is not a path claim.
 
 ## Pathless blockers and external gates
