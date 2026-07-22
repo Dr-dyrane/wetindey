@@ -48,6 +48,33 @@ to idle rather than creating a replacement task.
 
 ## Active exact path locks
 
+#### Presence `0014` Preview preflight handoff — INDEPENDENT PASS / RELEASE ON ATOMIC COMMIT
+
+Owner: current Codex implementation session. This atomic candidate owns exactly:
+
+- `LANES.md`
+- new `src/db/migrations/meta/0014_release_manifest.json`
+- new `scripts/presence/presence-0014-preview-preflight.mjs`
+- new `docs/database/evidence/preview-0014-presence-2026-07-21.md`
+
+Scope is limited to a fail-closed, Preview-only operational preflight wrapper, frozen
+release manifest, and redacted execution handoff. It authorizes no database access or
+migration execution by itself. Production, frozen migration/schema/pillar paths, runtime
+flags, provider state, deployment, and application paths remain out of scope. The gate
+remains **NO-GO** until direct Preview identity/lineage/role/control/backup evidence and an
+independent default-to-REFUTED verdict are recorded. Refuter findings have been
+forward-corrected in the candidate: audit-only collection remains available, but execution
+is structurally denied while the frozen manifest keeps Preview authorization false or any
+approved target identity, accepted parent/result fingerprint, bounded backup/restorability
+proof, or independent authorization field null or unapproved. Operator environment values
+may provide a connection secret and execution confirmation only; they cannot define the
+expected target.
+
+Independent implementation refutation is **PASS**. The four exact paths above are released
+upon one atomic commit containing this candidate; until that commit, they remain the bounded
+candidate claim. This source verdict does not satisfy, weaken, or authorize the separate
+pathless Preview execution gate below.
+
 #### Governance modularization — RELEASED / PATHLESS
 
 The active serialized governance claim completed as one atomic path-scoped candidate. Independent final refutation returned **PASS**; its exact documentation and archive-split paths are released upon the atomic path-scoped commit. Root `LANES.md` remains the required human coordination index for future current claims, while the current-cycle archive preserves completed evidence without granting authority.
@@ -100,13 +127,23 @@ claims. Scheduler paths are released. Never source Presence from browsing
 may supply it.
 
 
-##### Presence `0014` shared-target operational gate — BLOCKED / PATHLESS
+##### Presence `0014` shared-target operational gate — NO-GO / PATHLESS
 
 Owner: Nearby Presence Platform Engineer `019f759f-3521-7ee1-90a3-5af3539d757e`. This gate owns no repository path and authorizes no UI, peer visibility, flag enablement, or public rollout.
 
 Current proven Preview facts: persistent Neon branch `preview/wetindey-presence` (`br-steep-dust-auhcmjk8`) exists; its pooled and unpooled endpoints directly connected; Vercel Preview database aliases plus the contribution and Presence safety URLs were overridden; Production variables were untouched; and Preview deployment `dpl_HVgUnhDSmdhDw7fSCnTuPk8iGCyY` built `READY`. No Vercel CLI command is represented as disclosing sensitive runtime values.
 
 Migration `0014` remains unapplied and is a Preview-only gate. Before any Preview execution, prove the exact migration target identity, parent ledger, role/options, backup/rollback, empty allowlist, both runtime kill switches false, migration hash/snapshot/schema/RPC/RLS/grants, idempotence, cleanup/retention compatibility, and an independent default-to-REFUTED operational verdict. Exact execution and post-migration identity/evidence remain required. Only after that Preview gate passes may a separate Production consideration receive its own exact-target authorization and evidence; do not substitute a local, guessed, or Production DSN.
+
+The implementation artifact is independently PASS, but execution remains **NO-GO** because
+the frozen manifest still has no approved exact Preview project/database/migration-role and
+endpoint/provider identity evidence; no independently accepted parent or result
+schema/RPC/RLS/grant fingerprint and evidence hash; no approved fresh provider backup,
+distinct restore-branch target, named restore owner, successful restorability proof, and
+backup evidence hash; no fresh independent owner, scoped PASS authorization, or evidence
+packet hash; and `authorization.preview_execution` remains false. This operational gate is
+pathless and grants no repository edit, database access, migration, flag, pilot, deployment,
+Production consideration, or rollout authority.
 
 ##### Private-pilot manifest convergence — QUEUED, NOT ACTIVE
 

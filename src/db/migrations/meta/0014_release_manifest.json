@@ -1,0 +1,111 @@
+{
+  "kind": "release_manifest",
+  "release": "0014_presence_capabilities",
+  "status": "candidate_no_go",
+  "shared_database_applied": false,
+  "first_shared_application_frozen": false,
+  "parent_release": "0013_contribution_integrity",
+  "parent_snapshot_id": "9ab87346-01b0-4a36-a3f1-bc3708d079a1",
+  "result_snapshot_id": "667de345-b0c2-43f5-9e37-a7c00e30ea50",
+  "artifacts": {
+    "migration": {
+      "path": "src/db/migrations/0014_presence_capabilities.sql",
+      "sha256": "ed532eab5f7941245cfebb66463a2194ab9df235b30f9fd678e1c0e1065008bf"
+    },
+    "snapshot": {
+      "path": "src/db/migrations/meta/0014_snapshot.json",
+      "sha256": "2a83ceda227c1a9721f767b0270a4aef6f3cb7a8b3501ae5725c482011ec2bdf"
+    },
+    "journal": {
+      "path": "src/db/migrations/meta/_journal.json",
+      "sha256": "b8a2273e5acdbe54b79451829018b830ce1dda3d7a78a51fbf3779f81f6339ce",
+      "entry_index": 14,
+      "entry_when": "1784454430015"
+    }
+  },
+  "parent_lineage": [
+    { "index": 0, "tag": "0000_careless_piledriver", "when": "1784224072266", "sha256": "71be7b38a05007fdb05c4f3a773c643796f090305c78379c2813a37cb88933fd" },
+    { "index": 1, "tag": "0001_cute_harrier", "when": "1784228935914", "sha256": "6ed801dcd1e68d6214539aa48bcec349115bcdd1a5cc82f103387275bf5c2ccb" },
+    { "index": 2, "tag": "0002_calm_meteorite", "when": "1784243402077", "sha256": "0ce00cbcd239ac0cc52d94e5e423b3902514116eda6b2eabd910a867bd840ff7" },
+    { "index": 3, "tag": "0003_condemned_sally_floyd", "when": "1784262578471", "sha256": "0cce50bd4f13b5a6956452da588ce4ccc5cada203303370b472eba374735ce81" },
+    { "index": 4, "tag": "0004_old_mordo", "when": "1784286337066", "sha256": "b7b6e97b3c40af6f0b34f34bf06cb6ff206fb0f127c38f444c5099bffca42645" },
+    { "index": 5, "tag": "0005_handy_brood", "when": "1784312030209", "sha256": "d98917554fda9e094c57db5f0195063c8c803cae47b601dcb93e14502928c509" },
+    { "index": 6, "tag": "0006_ordinary_meltdown", "when": "1784316697473", "sha256": "1373746f002441dd43ce8185fc2e9cdccbaaf513768557e56ffbf208b9235fa3" },
+    { "index": 7, "tag": "0007_gray_king_cobra", "when": "1784317329757", "sha256": "c5d01c6bfb88b9386abe6fa3c9f68d5d345e9bd9f0f59bfb5e26027dfc2dc6f6" },
+    { "index": 8, "tag": "0008_sturdy_lockjaw", "when": "1784317496453", "sha256": "150356e3db8061d2934fdc1176b84d2cd478aec2c9988550fac8bb26b2480073" },
+    { "index": 9, "tag": "0009_observation_provenance", "when": "1784329382289", "sha256": "34dd394d6d4f1aad24a73edee5eb88a93441449a1ff86985b60d3ba04f927b4c" },
+    { "index": 10, "tag": "0010_public_source_ingestion_boundary", "when": "1784336532977", "sha256": "9aa8cc511374010f1deb68ec330573a9c4940c2aff1188218d5f3e841fccd7fe" },
+    { "index": 11, "tag": "0011_classy_the_stranger", "when": "1784356204352", "sha256": "1ad4a33a06dfdc58affcfa92dc7085b5843478e09761ee26a24c7cd6b3c0151b" },
+    { "index": 12, "tag": "0012_guarded_presence", "when": "1784386976072", "sha256": "a8b31034aae22a6e9fa62416df8a1bb483c6783947fdf742c674e82cac373302" },
+    { "index": 13, "tag": "0013_contribution_integrity", "when": "1784439194861", "sha256": "052769850c3d633230d9ec109c2b09067b73a686cadb7c139a613622184f0f0a" }
+  ],
+  "result_lineage_entry": {
+    "index": 14,
+    "tag": "0014_presence_capabilities",
+    "when": "1784454430015",
+    "sha256": "ed532eab5f7941245cfebb66463a2194ab9df235b30f9fd678e1c0e1065008bf"
+  },
+  "approved_preview_target": {
+    "approved": false,
+    "environment": "preview",
+    "branch_name": "preview/wetindey-presence",
+    "branch_id": "br-steep-dust-auhcmjk8",
+    "project_id": null,
+    "database": null,
+    "migration_role": null,
+    "endpoint_hostname_sha256": null,
+    "provider_identity_evidence_sha256": null
+  },
+  "fingerprints": {
+    "parent": { "approved": false, "sha256": null, "evidence_sha256": null },
+    "result": { "approved": false, "sha256": null, "evidence_sha256": null }
+  },
+  "backup_restore": {
+    "approved": false,
+    "provider_backup_id": null,
+    "source_project_id": null,
+    "source_branch_id": null,
+    "source_database": null,
+    "created_at": null,
+    "restore_target_project_id": null,
+    "restore_target_branch_id": null,
+    "restore_target_database": null,
+    "restore_owner": null,
+    "restorable": false,
+    "restore_tested_at": null,
+    "evidence_sha256": null,
+    "max_age_seconds": 3600
+  },
+  "independent_authorization": {
+    "approved": false,
+    "owner": null,
+    "verdict": null,
+    "authorized_at": null,
+    "scope": null,
+    "evidence_packet_sha256": null,
+    "max_age_seconds": 3600
+  },
+  "expected_preconditions": {
+    "parent_ledger_exact": true,
+    "sole_pending_release": "0014_presence_capabilities",
+    "operations_allowed": false,
+    "runtime_allowed": false,
+    "allowlist_empty": true,
+    "active_presence_rows_empty": true,
+    "presence_roles_no_login_no_bypass_rls": true,
+    "migration_principal_createrole": true
+  },
+  "evidence": {
+    "target_identity": null,
+    "parent_preflight": null,
+    "execution_receipt": null,
+    "result_postflight": null,
+    "incident": null,
+    "independent_verdict": null
+  },
+  "authorization": {
+    "preview_execution": false,
+    "production_execution": false,
+    "reason": "Direct Preview identity, accepted parent/result fingerprints, bounded backup/restorability proof, and independent authorization are absent."
+  }
+}
