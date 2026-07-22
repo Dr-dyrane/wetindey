@@ -121,13 +121,19 @@ Complete at `2508af0`, pushed under the authorization of record `0bbdb11`: the r
 
 Complete at the pluralization commit: both Owned paths lines now match the contract template; the focused test's only remaining failure is contribution-integrity's, separately routed. The routed push was declined; push authority stays with the owner. Path released.
 
-#### Status-chip media-scrim fill (PlaceOfferRow): NO-FILL, RESOLVED, no code change
+#### REQUEST TO CONTROLLER: status-chip media-scrim fill (PlaceOfferRow) - seat recommends NO-FILL
 
-HI seat decision on the token-lane question deferred by `1704eda` (whether the two regular-layout status chips in `src/design-system/components/PlaceOfferRow.tsx` at ~126 and ~136 should take `bg-media-scrim/<alpha>` after the dead `bg-black/78` was swept). Decision: no fill, keep the shipped treatment, no code change; path stays released, no reopen.
+Forwarded for the controller's decision; the seat holds `PlaceOfferRow.tsx` scrim edits and does not pre-empt. The token lane `1704eda` deferred whether the two regular-layout status chips in `src/design-system/components/PlaceOfferRow.tsx` (~126, ~136) should take `bg-media-scrim/<alpha>` after the dead `bg-black/78` was swept.
 
-Grounds are accessibility, not taste. The `StatusBadge` chip already paints its own semantic tint (`bg-status-*-bg` at 14% opacity) under semantic ink (`-fg`) tuned to 4.5:1 on that tint per P0-6. `bg-media-scrim/80` is one background-color, so it does not layer over the 14% tint, it replaces it, putting semantic ink on roughly 80% black. Light-mode inks compute below AA there: `caution-fg #a94c00` about 3.7:1, `confirmed-fg #1e7634` about 3.7:1, `unavailable-fg #be261b` about 3.5:1, all under 4.5:1. The only dark-scrim pairing that passes is white text, which is exactly the `text-white` the Founder removed in `d2f557f` to preserve semantic ink. So the refuter's target (orange "Available", which renders as a `StatusBadge kind=confirmed|caution`) is the one chip where a scrim both fails AA and reverses a prior Founder decision.
+Seat recommendation: no fill, on accessibility grounds. The `StatusBadge` chip already paints its own semantic tint (`bg-status-*-bg`, 14% opacity) under semantic ink (`-fg`) tuned to 4.5:1 on that tint per P0-6. `bg-media-scrim/80` is one background-color, so it replaces the 14% tint rather than layering over it, landing semantic ink on roughly 80% black. Light-mode inks fall below AA there: `caution-fg #a94c00` about 3.7:1, `confirmed-fg #1e7634` about 3.7:1, `unavailable-fg #be261b` about 3.5:1. The only dark-scrim pairing that passes is white text, exactly the `text-white` the Founder removed in `d2f557f` to preserve semantic ink. So the refuter's target (orange "Available", a `StatusBadge kind=confirmed|caution`) is the one chip where a scrim both fails AA and reverses a Founder decision. The underlying legibility concern is real and is pursued AA-safe under the HI claim below.
 
-Residuals, not actioned here, each needing its own exact HI claim plus independent light/dark and P0-6 refutation: (a) the orange "Available" photo legibility the refuter flagged is real, but an AA-safe fix is a heavier semantic tint or stronger text-shadow, not a black scrim; (b) the fallback `<span>` (unknown-availability branch) uses white `text-media-ink` and currently has no fill, so `bg-media-scrim/80` there is AA-safe (about 15:1) and would close its genuine no-fill gap.
+#### HI claim: AA-safe status-chip legibility over media (PlaceOfferRow) - ACTIVE
+
+- **Owner:** Human Interface Design Engineer `019f75a5-0fc6-7f40-9a0f-8097ead3b45d`. Opened per Founder instruction 2026-07-22; the fresh product evidence that lifts the prior "no reopen" hold is the refuter's over-photo legibility finding plus the AA computation above.
+- **Exclusive path:** `src/design-system/components/PlaceOfferRow.tsx` only.
+- **Contract:** improve the orange "Available" chip's legibility over busy photos in-file, preserving semantic ink and the P0-6 4.5:1 floor. Primary lever is a stronger or layered `text-shadow` (it aids ink over varied photos without changing background-color or ink, so the measured contrast is unaffected). Optionally close the fallback `<span>` no-fill gap in the same file under the same gate.
+- **Exclusions:** no `bg-media-scrim` and no black scrim on the `StatusBadge`; no `text-white`; no `StatusBadge.tsx` or `globals.css` token edits (a heavier semantic tint would need those, so route it as a separate Iconography/token claim); no other `PlaceOfferRow` behavior.
+- **Gate:** independent light/dark and P0-6 contrast refutation, default-to-REFUTED, before release. No push.
 
 #### Maps renderer-failure evidence entry — RELEASED / PATHLESS
 
