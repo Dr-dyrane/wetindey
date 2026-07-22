@@ -238,7 +238,9 @@ export async function searchItems(
       WHERE NOT EXISTS (
         SELECT 1
         FROM live_offers
-        WHERE live_offers.item_id = sample_current_offers.item_id
+        WHERE live_offers.item_variant_id = sample_current_offers.item_variant_id
+          AND live_offers.unit_id = sample_current_offers.unit_id
+          AND live_offers.place_id = sample_current_offers.place_id
       )
     ),
     detail_places AS (
