@@ -30,7 +30,7 @@
     "src/lib/deletion/guards.ts": "d12bc7976577b9d3603fb77c37acbf71f88b8a85a072d707f82b81533d1ff719",
     "src/lib/deletion/adapter.ts": "5b9edf8b600f0d6578d244f0d0b182324739cfe9cdb11e06c5ce9a38cb265dea",
     "src/lib/deletion/phases.ts": "c3a94b347cdb15ea8fedb173c2acb96ad5f5e0de03d16512b84b4f2fe9897bf8",
-    "scripts/deletion/deletion-saga-p1-contract.test.ts": "92bbccff168088e3c45ff9dd0e938ecc9c19edec3122fdaed162053a2afb4fe8"
+    "scripts/deletion/deletion-saga-p1-contract.test.ts": "879b24a7e35098057daa216bd5c2ade4d6e667e9d7a1c4cd56d4d42ae317ef73"
   },
   "generator": {
     "drizzle_kit": "0.31.10",

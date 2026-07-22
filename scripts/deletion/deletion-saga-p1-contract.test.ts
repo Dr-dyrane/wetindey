@@ -176,15 +176,28 @@ test("migrations 0000..0017 and their snapshots are byte-frozen", () => {
   assert.equal(parent.id, PARENT_SNAPSHOT_ID, "0017 snapshot id drifted");
 });
 
-test("the journal appends only the 0018 entry with a hand-set round epoch", () => {
+test("the journal carries the 0018 entry at idx 18 with a hand-set round epoch", () => {
   const journal = JSON.parse(read("src/db/migrations/meta/_journal.json")) as {
     version: string;
     entries: Array<{ idx: number; version: string; when: number; tag: string; breakpoints: boolean }>;
   };
   assert.equal(journal.version, "7");
-  assert.equal(journal.entries.length, 19, "journal must hold entries 0..18");
-  const last = journal.entries.at(-1);
-  assert.deepEqual(last, {
+  // The journal is append-only: it only grows as later migrations land, so an
+  // exact length is wrong. Require entries 0..18 to be present and the 0018-era
+  // prefix to be idx-aligned and strictly monotonic, without forbidding later
+  // entries.
+  assert.ok(journal.entries.length >= 19, "journal must hold at least entries 0..18");
+  for (let i = 0; i <= 18; i += 1) {
+    assert.equal(journal.entries[i].idx, i, `entry ${i} idx drifted`);
+    if (i > 0) {
+      assert.ok(
+        journal.entries[i].when > journal.entries[i - 1].when,
+        `journal when must be strictly monotonic through the 0018 prefix at ${i}`,
+      );
+    }
+  }
+  const entry0018 = journal.entries[18];
+  assert.deepEqual(entry0018, {
     idx: 18,
     version: "7",
     when: JOURNAL_WHEN_0018,
@@ -295,10 +308,19 @@ test("0018 release manifest marks the candidate present but UNAPPLIED", () => {
     sha256(read("src/db/migrations/meta/0018_snapshot.json")),
     "snapshot hash drift",
   );
+  // The journal is append-only, so its whole-file hash legitimately changes as
+  // later migrations land; do NOT compare the manifest's 0018-era journal hash
+  // to the current growing file. Instead prove the 0018 prefix (entries 0..18)
+  // is byte-for-byte unchanged by reconstructing it and matching the recorded
+  // hash. manifest.artifacts.journal.sha256 stays a historical 0018-time record.
+  const journalDoc = JSON.parse(read("src/db/migrations/meta/_journal.json")) as {
+    entries: unknown[];
+  };
+  const journal0018 = { ...journalDoc, entries: journalDoc.entries.slice(0, 19) };
   assert.equal(
     manifest.artifacts.journal.sha256,
-    sha256(read("src/db/migrations/meta/_journal.json")),
-    "journal hash drift",
+    sha256(`${JSON.stringify(journal0018, null, 2)}\n`),
+    "0018-era journal prefix drift",
   );
   for (const [relativePath, expected] of Object.entries(manifest.source_sha256)) {
     assert.equal(sha256(read(relativePath)), expected, `${relativePath} manifest hash drift`);
