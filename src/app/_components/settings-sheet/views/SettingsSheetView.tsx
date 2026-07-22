@@ -97,7 +97,7 @@ export function SettingsSheetView(p: SettingsSheetViewProps) {
         <ListGroup header={p.t.radius}>
           <div className="px-4 py-3.5 space-y-2">
             <div className="flex items-baseline justify-between">
-              <span className="text-[15px] text-text-primary">Search radius</span>
+              <span className="text-[15px] text-text-primary">{p.t["settings.radius_label"]}</span>
               <span className="text-[15px] font-semibold text-text-primary tabular-nums">{p.radiusKm} km</span>
             </div>
             <input
@@ -105,7 +105,7 @@ export function SettingsSheetView(p: SettingsSheetViewProps) {
               min="1"
               max="20"
               value={p.radiusKm}
-              aria-label="Search radius in kilometres"
+              aria-label={p.t["settings.radius_a11y"]}
               onChange={(e) => p.onRadiusChange(parseInt(e.target.value))}
               className="w-full h-1.5 rounded-full appearance-none cursor-pointer bg-fillTertiary accent-status-info"
             />

@@ -17,6 +17,7 @@ import {
   type Detent,
   useReducedMotion,
 } from "@/design-system/motion";
+import { useStrings } from "@/core/i18n";
 
 export type { Detent } from "@/design-system/motion";
 export { DETENT_FRACTION } from "@/design-system/motion";
@@ -369,6 +370,8 @@ export function BottomSheet({
   const [isDragging, setIsDragging] = useState(false);
   const [settlingFraction, setSettlingFraction] = useState<number | null>(null);
   const reducedMotion = useReducedMotion();
+  // Zero-wiring module store (see @/core/i18n): no provider, no prop threading.
+  const t = useStrings();
 
   const restingFraction = settlingFraction ?? DETENT_FRACTION[detent];
   /* The outer transform box keeps one geometry at every detent. Only its
@@ -1284,7 +1287,15 @@ export function BottomSheet({
               ref={handleRef}
               type="button"
               onClick={cycleDetent}
-              aria-label={`Sheet position: ${detent}. Activate to change.`}
+              aria-label={
+                t[
+                  detent === "peek"
+                    ? "sheet.position_collapsed"
+                    : detent === "large"
+                      ? "sheet.position_expanded"
+                      : "sheet.position_half"
+                ]
+              }
               className={`absolute inset-0 flex cursor-grab touch-none items-center justify-center p-0 active:cursor-grabbing active:opacity-70 ${transition.press}`}
             >
               <span className="h-[5px] w-9 rounded-full bg-text-tertiary" />

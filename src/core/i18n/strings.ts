@@ -144,10 +144,25 @@ export const en = {
   light_mode: "Light Mode",
   dark_mode: "Dark Mode",
 
+  /* Category chip, the home header's domain switcher. "Aboki FX" (money) is a
+     proper noun and stays literal in the view; "Food" is the label that
+     translates, so it is the one that gets a key. Used by HomeSheetHeaderView
+     and, out of this lane, CategorySelectorSheet. */
+  category_food: "Food",
+
   /* Settings, SettingsSheet.tsx:107,115 are hardcoded English today. */
   "settings.radius_label": "Search radius",
   "settings.radius_a11y": "Search radius in kilometres",
   "settings.radius_value": "{km} km",
+
+  /* BottomSheet drag handle, the icon-only control that cycles the map sheet
+     through its three detents. Its aria-label used to interpolate the raw detent
+     token ("peek"/"medium"/"large"), a developer word a screen-reader user has no
+     use for; these name the position in human terms instead. One full sentence
+     each, so none of the label's structure is baked into the view. */
+  "sheet.position_collapsed": "Sheet collapsed. Activate to change.",
+  "sheet.position_half": "Sheet half open. Activate to change.",
+  "sheet.position_expanded": "Sheet expanded. Activate to change.",
 
   /* Profile, ProfileSheet.tsx. No line numbers: they rot, and a comment that
      points at the wrong line is worse than no comment.
@@ -179,6 +194,10 @@ export const en = {
      `save_error` / `load_error` are Nigerian English, matching `reports.err_load`
      and LocationSheet's register verbatim, the app's English voice. */
   "profile.manage": "Manage profile",
+  /* Avatar controls, ManageProfileSheet. `change_photo` is the icon-only
+     avatar button's aria-label; `remove_photo` is the visible text link. */
+  "profile.change_photo": "Change profile photo",
+  "profile.remove_photo": "Remove photo",
   "profile.name_label": "Name",
   "profile.email_label": "Email",
   "profile.email_readonly_note": "Sign-in email.",
@@ -687,9 +706,19 @@ const pidgin: LocaleTable = {
   light_mode: "Day time style",
   dark_mode: "Night time style",
 
+  // "Food" is standard in Lagos Pidgin and unambiguous as a category label.
+  category_food: "Food",
+
   "settings.radius_label": "How far you wan look",
   "settings.radius_a11y": "How far you wan look, for kilometre",
   "settings.radius_value": "{km} km",
+
+  // BottomSheet handle a11y, UNTRANSLATED: a compound screen-reader instruction
+  // ("… Activate to change.") is exactly the register the header says to leave
+  // rather than guess. English shows through.
+  "sheet.position_collapsed": UNTRANSLATED,
+  "sheet.position_half": UNTRANSLATED,
+  "sheet.position_expanded": UNTRANSLATED,
 
   "profile.title_signed_in": "Profile",
   "profile.title_signed_out": "You",
@@ -709,6 +738,11 @@ const pidgin: LocaleTable = {
      mirror `reports.err_load`'s construction verbatim, the confident "We no fit
      ___ right now" register this table already ships. */
   "profile.manage": "Manage profile",
+  // "Comot photo" mirrors `clear_search` ("Comot Search") verbatim in register;
+  // "Change profile photo" mirrors `profile.change_area` ("Change area"), English
+  // kept exactly as that row keeps it.
+  "profile.change_photo": "Change profile photo",
+  "profile.remove_photo": "Comot photo",
   "profile.name_label": "Name",
   "profile.email_label": "Email",
   "profile.email_readonly_note": UNTRANSLATED,
@@ -1097,9 +1131,17 @@ const yoruba: LocaleTable = {
   light_mode: "Ipo Imọlẹ",
   dark_mode: "Ipo Okunkun",
 
+  // LANES H2: Yorùbá withheld pending a native speaker; no agent stands in.
+  category_food: UNTRANSLATED,
+
   "settings.radius_label": UNTRANSLATED,
   "settings.radius_a11y": UNTRANSLATED,
   "settings.radius_value": "{km} km",
+
+  // LANES H2: Yorùbá withheld pending a native speaker.
+  "sheet.position_collapsed": UNTRANSLATED,
+  "sheet.position_half": UNTRANSLATED,
+  "sheet.position_expanded": UNTRANSLATED,
 
   "profile.title_signed_in": UNTRANSLATED,
   "profile.title_signed_out": UNTRANSLATED,
@@ -1114,6 +1156,8 @@ const yoruba: LocaleTable = {
   /* Manage profile. Every key UNTRANSLATED, LANES H2: Yorùbá is withheld pending
      a native speaker, and no agent may stand in for one. English shows through. */
   "profile.manage": UNTRANSLATED,
+  "profile.change_photo": UNTRANSLATED,
+  "profile.remove_photo": UNTRANSLATED,
   "profile.name_label": UNTRANSLATED,
   "profile.email_label": UNTRANSLATED,
   "profile.email_readonly_note": UNTRANSLATED,

@@ -87,7 +87,7 @@ export function ManageProfileSheetView({
                 disabled={Boolean(avatarBusy)}
                 onClick={() => fileInputRef.current?.click()}
                 className="relative block rounded-full focus:outline-none focus-ring"
-                aria-label="Change profile photo"
+                aria-label={t("profile.change_photo")}
               >
                 <Avatar name={name || profile.email || undefined} url={profile.avatarUrl} size={80} />
                 <div className="absolute inset-0 grid place-items-center bg-media-scrim/40 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-micro">
@@ -113,7 +113,7 @@ export function ManageProfileSheetView({
                 onClick={handleAvatarRemove}
                 className="text-[13px] font-medium text-status-unavailable active:opacity-60 transition duration-micro"
               >
-                Remove photo
+                {t("profile.remove_photo")}
               </button>
             )}
             {avatarError && (

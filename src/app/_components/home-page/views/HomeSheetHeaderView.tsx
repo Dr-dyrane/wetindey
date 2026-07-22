@@ -52,9 +52,7 @@ export function HomeSheetHeaderView({
           >
             <span className="flex h-[30px] items-center gap-0.5 rounded-[18px] bg-fillSecondary px-2.5 shadow-sm">
               <span>
-                {activeCategory === "money"
-                  ? "Aboki FX"
-                  : (t as Record<string, string>).category_food || "Food"}
+                {activeCategory === "money" ? "Aboki FX" : t.category_food}
               </span>
               <ChevronDown className="h-3 w-3 text-text-secondary" />
             </span>
