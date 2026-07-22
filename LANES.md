@@ -255,29 +255,13 @@ Archives grant no current human claim. They preserve source-snapshot evidence fo
 - [Legacy historical archive](docs/operations/lanes/LANES-HISTORICAL-ARCHIVE.md)
 
 
-#### Developer Relations & Engineering Enablement: department worklog protocol — active exact claim
+#### Developer Relations department worklog protocol — RELEASED / PATHLESS
 
-Owner: Developer Relations & Engineering Enablement worker
-`019f7995-5b7b-7ee1-81ef-2c3a3c57b836`. Exclusive paths:
-
-- `AGENTS.md`
-- `docs/CONTRIBUTING.md`
-- `docs/operations/BRANCH-HANDOFF-TEMPLATE.md`
-- `docs/operations/DEPARTMENT-WORKLOG-PROTOCOL.md`
-- `docs/operations/WETINDEY-OPERATING-SYSTEM.md`
-- `docs/operations/departments/README.md`
-- `docs/operations/departments/catalog-stewardship.md`
-- `docs/operations/departments/client-reliability-offline.md`
-- `docs/operations/departments/community-growth.md`
-- `docs/operations/departments/contribution-integrity.md`
-- `docs/operations/departments/developer-experience.md`
-- `docs/operations/departments/executive-product.md`
-- `docs/operations/departments/legal-policy.md`
-- `docs/operations/departments/operations-field-data.md`
-- `docs/operations/departments/presence-safety.md`
-- `docs/operations/departments/program-release.md`
-- `docs/operations/departments/quality-release.md`
-- `docs/operations/departments/security-privacy.md`
-- `docs/operations/departments/seller-identity-access.md`
-- `docs/operations/departments/trust-data-governance.md`
-- `scripts/department-worklog-contract.test.ts`
+Commit `350882e` rebased the fixed-digest repair onto the final Root UI parent, reconciled
+the active department manifest to 21 exclusive paths, and preserved the historical
+23-path bootstrap evidence append-only. The canonical digest
+`759e9cd3263030be967fcce995935253b54dd4eb09c9f8402eca3c0d63b00597` is a fixed literal;
+normalization removes only its self-reference and permits no dynamic acceptance.
+Independent final refutation passed all five focused department-worklog contracts. All
+DevRel paths are released; the persistent employee remains available for later bounded
+assignments.
