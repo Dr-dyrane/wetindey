@@ -50,7 +50,7 @@ to idle rather than creating a replacement task.
 
 ## Company activation map (controller, 2026-07-22, Founder-directed)
 
-The Founder directed full-company activation: every department takes a lane of the Founder's plan, orchestrated by the controller through bounded Terra implementation and Luna default-to-refuted review. Register receipts WD-D-001..003 record the bounded approvals. Wave 1 lanes are ACTIVE below; wave 2 is QUEUED and activates as wave 1 releases; external-gated items stay recorded, not waited on.
+The Founder directed full-company activation: every department takes a lane of the Founder's plan, orchestrated by the controller through bounded Terra implementation and Luna default-to-refuted review. No Founder Approved decision is claimed for any wave-1 item: each is a bounded, reversible, controller/chief Discovery-authority step under the register's movement controls (accepted-ADR-directed groundwork, an internal read-only learning step, or a Proposed-ADR draft that authorizes nothing). Consequential product choices still return to the Founder. Wave 1 lanes are ACTIVE below; wave 2 is QUEUED and activates as wave 1 releases; external-gated items stay recorded, not waited on.
 
 | Department / seat | Plan item | Lane state |
 |---|---|---|
