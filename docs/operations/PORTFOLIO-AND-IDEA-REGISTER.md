@@ -483,6 +483,60 @@ Trust & Safety, Growth/Analytics, Localization/Accessibility, Quality/Release.
 **Decision history:** Shaped as a Candidate. No approval, lane, implementation, or release
 commitment.
 
+### WD-I-006: Farm inputs pillar (Agri)
+
+| Field | Record |
+|---|---|
+| Stage | Candidate |
+| Date captured | 2026-07-22 |
+| Proposer | Dr. Dyrane Alexander (Founder, directed in-session) |
+| Portfolio owner | Product & Portfolio |
+| Accountable function | Product & Portfolio; Data/Truth Platform and Maps/Location consulted |
+| Department classification | Active now |
+| Current phase relevance | Outside current phase |
+| Consequential choice | Yes: a new pillar amends accepted ADR-008's six-pillar taxonomy and requires Founder acceptance of ADR-031 |
+| ADR status | Proposed ADR-031 |
+| Lane status | None; ideas never imply a lane |
+| Next review | On Founder acceptance or rejection of ADR-031 |
+
+**Problem:** A farmer buying fertilizer, seed, agrochemicals, or feed faces harsher
+versions of the food shopper's uncertainty: seasonal price swings, long trips to
+agro-dealers, and a wasted trip costing a working day inside a planting window.
+
+**Hypothesis:** The Food truth engine reuse is the enabler: the existing truth engine (priced items in real units at named places,
+freshness decay, admission rules) serves farm inputs without engine changes, giving
+farmers the same pre-trip confidence food shoppers get.
+
+**Evidence:** Grade C: structural analogy to the proven Food model plus common
+knowledge of Nigerian input markets; no field data collected. Unknowns: per-pillar
+freshness decay (seasonal stability then daily movement), adulteration-driven trust
+needs distinct from price freshness.
+
+**Smallest learning step:** Founder decision on ADR-031; then a read-only field survey
+of agro-dealers in the pilot geography before any schema work.
+
+**Success signal:** A farmer checks an input price before traveling and the price holds
+on arrival, measured the same way Food measures wasted trips.
+
+**Guardrails:** Food Truth phase firewall untouched; no launch promise; no synthetic
+Agri truth; no agent-invented local-language copy; adulteration trust signals must not
+conflate with price freshness (Trust & Safety flag recorded in ADR-031).
+
+**Dependencies:** ADR-031 acceptance; schema lane (agro_dealer place type, input
+catalog); spine lane (pillar flag, category surface); maps lane (dealer symbol, POI
+budget review); human-led field coverage.
+
+**Non-goals:** Produce selling, two-sided marketplace, equipment rental, extension
+advice, credit, or any fulfilment.
+
+**Functions consulted:** Product & Portfolio (framing), Maps/Location (symbol and POI
+budget noted), Data/Truth (freshness tuning flagged); no unresolved disagreement
+recorded.
+
+**Decision history:** 2026-07-22: Founder directed the agriculture lane and chose the
+farm inputs shape from framed alternatives in-session; ADR-031 drafted Proposed and
+submitted for explicit acceptance.
+
 ## 10. Approved
 
 No entries.
