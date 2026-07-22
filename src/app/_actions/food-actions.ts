@@ -1,7 +1,7 @@
 "use server";
 
 import { db } from "@/db";
-import { items, itemAliases, itemVariants, places, offersCurrent, units, observations, sources } from "@/db/schema";
+import { items, itemAliases, itemVariants, places, offersCurrent, units, observations } from "@/db/schema";
 import { eq, or, and, sql, asc } from "drizzle-orm";
 import {
   parseSearchQuery,
@@ -11,181 +11,23 @@ import {
   parseItemNarrowingOptions,
   parseOffersNarrowed,
 } from "@/lib/validation";
-import {
-  assessTrust,
-  FRESHNESS_POLICY,
-  type TrustAssessment,
-  type TrustObservation,
-} from "@/lib/trust";
+import { FRESHNESS_POLICY, type TrustAssessment } from "@/lib/trust";
 import { calculateCohortFoodPriceTrend, type CohortObservationPoint } from "@/core/food-trend";
+import {
+  getOfferTrustBatchImpl,
+  nullableOfferKey,
+  offerKeyOf,
+  readTrustForKey,
+  type OfferKey,
+  type ReadTrust,
+} from "./food-trust";
 
-export interface ReadTrust {
-  confidenceScore: number;
-  band: TrustAssessment["band"];
-  freshness: TrustAssessment["freshness"];
-  availability: TrustAssessment["availability"] | null;
-  ageHours: number | null;
-  distinctSourceCount: number;
-  observationCount: number;
-  provenanceSummary: TrustAssessment["provenanceSummary"];
-  explanation: string;
-  status: "confirmed" | "caution" | "unavailable";
-  origin: "observed" | "synthetic" | "inadmissible" | "empty";
-  provenanceLabel: string;
-}
-
-export interface OfferKey {
-  itemVariantId: string;
-  unitId: string;
-  placeId: string;
-}
-
-function offerKeyOf(k: OfferKey) {
-  return `${k.itemVariantId}|${k.unitId}|${k.placeId}`;
-}
-
-function toReadTrust(
-  assessment: TrustAssessment,
-  fallbackAvailability: string | null
-): ReadTrust {
-  const { provenanceSummary } = assessment;
-  const origin: ReadTrust["origin"] =
-    provenanceSummary.observed > 0
-      ? "observed"
-      : provenanceSummary.synthetic > 0
-        ? "synthetic"
-        : provenanceSummary.partner +
-          provenanceSummary.reference +
-          provenanceSummary.inferred >
-          0
-          ? "inadmissible"
-          : "empty";
-
-  let availability: ReadTrust["availability"] =
-    origin === "observed" ? assessment.availability : null;
-  if (origin !== "observed" && fallbackAvailability !== null) {
-    if (fallbackAvailability !== "available" && fallbackAvailability !== "unavailable") {
-      throw new Error(
-        `Trust DTO: unknown fallback availability ${JSON.stringify(fallbackAvailability)}`
-      );
-    }
-    availability = fallbackAvailability;
-  }
-
-  return {
-    confidenceScore: assessment.confidenceScore,
-    band: assessment.band,
-    freshness: assessment.freshness,
-    availability,
-    ageHours: Number.isFinite(assessment.ageHours) ? assessment.ageHours : null,
-    distinctSourceCount: assessment.distinctSourceCount,
-    observationCount: assessment.observationCount,
-    provenanceSummary,
-    explanation: assessment.explanation,
-    origin,
-    provenanceLabel:
-      origin === "observed"
-        ? "Observed reports"
-        : origin === "synthetic"
-          ? "Sample"
-          : "No observed reports",
-    status:
-      origin !== "observed"
-        ? "caution"
-        : assessment.availability === "unavailable"
-          ? "unavailable"
-          : assessment.freshness === "fresh"
-            ? "confirmed"
-            : "caution",
-  };
-}
-
-function nullableOfferKey(row: {
-  trustVariantId: string | null;
-  trustUnitId: string | null;
-  trustPlaceId: string | null;
-}): OfferKey | null {
-  if (!row.trustVariantId || !row.trustUnitId || !row.trustPlaceId) return null;
-  return {
-    itemVariantId: row.trustVariantId,
-    unitId: row.trustUnitId,
-    placeId: row.trustPlaceId,
-  };
-}
-
-function readTrustForKey(
-  assessments: Record<string, TrustAssessment>,
-  key: OfferKey | null,
-  fallbackAvailability: string | null
-): ReadTrust | null {
-  if (!key) return toReadTrust(assessTrust([]), fallbackAvailability);
-  const assessment = assessments[offerKeyOf(key)];
-  return assessment ? toReadTrust(assessment, fallbackAvailability) : null;
-}
+export type { OfferKey, ReadTrust } from "./food-trust";
 
 export async function getOfferTrustBatch(
   keys: OfferKey[]
 ): Promise<Record<string, TrustAssessment>> {
-  if (keys.length === 0) return {};
-
-  const rows = await db
-    .select({
-      itemVariantId: observations.itemVariantId,
-      unitId: observations.unitId,
-      placeId: observations.placeId,
-      observedAt: observations.observedAt,
-      sourceId: observations.sourceId,
-      sourceReliability: sources.reliabilityScoreInternal,
-      collectionMethod: observations.collectionMethod,
-      availabilityState: observations.availabilityState,
-      provenance: observations.provenance,
-    })
-    .from(observations)
-    .innerJoin(sources, eq(observations.sourceId, sources.id))
-    .where(
-      and(
-        sql`${observations.moderationStatus} <> 'rejected'`,
-        or(
-          ...keys.map((k) =>
-            and(
-              eq(observations.itemVariantId, k.itemVariantId),
-              eq(observations.unitId, k.unitId),
-              eq(observations.placeId, k.placeId)
-            )
-          )
-        )
-      )
-    )
-    .orderBy(
-      asc(observations.itemVariantId),
-      asc(observations.unitId),
-      asc(observations.placeId),
-      sql`${observations.observedAt} desc`,
-      asc(observations.id)
-    );
-
-  const grouped = new Map<string, TrustObservation[]>();
-  for (const r of rows) {
-    const key = offerKeyOf(r);
-    const bucket = grouped.get(key);
-    const observation: TrustObservation = {
-      observedAt: r.observedAt,
-      sourceId: r.sourceId,
-      sourceReliability: r.sourceReliability,
-      collectionMethod: r.collectionMethod,
-      availabilityState: r.availabilityState,
-      provenance: r.provenance,
-    };
-    if (bucket) bucket.push(observation);
-    else grouped.set(key, [observation]);
-  }
-
-  const out: Record<string, TrustAssessment> = {};
-  for (const k of keys) {
-    const key = offerKeyOf(k);
-    out[key] = assessTrust(grouped.get(key) ?? []);
-  }
-  return out;
+  return getOfferTrustBatchImpl(keys);
 }
 
 export async function getOfferTrust(key: OfferKey): Promise<TrustAssessment> {
