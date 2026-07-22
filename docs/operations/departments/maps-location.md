@@ -251,8 +251,8 @@ Documentation-only; reverting this entry removes evidence, not behavior.
 #### Exact next action
 
 - Actor: Maps and Location chief
-- Action: Capture the Safari or iOS Simulator drive and the forced context-loss drive named in Unknown resolution action.
-- Target: `data-map-theme-snapshot` diagnostic and snapshot-overlay lifecycle during theme swaps in Safari or the iOS Simulator and under a forced WebGL context loss.
+- Action: Capture the Safari or iOS Simulator drive evidence and the forced context-loss drive evidence named in Unknown resolution action.
+- Target: `data-map-theme-snapshot` diagnostic evidence and snapshot-overlay lifecycle evidence during theme swaps in Safari or the iOS Simulator and under a forced WebGL context loss.
 - Completion: The next lane-owned Maps entry records both scopes with direct evidence and closes or narrows this entry's Unknown scope.
 
 ### 2026-07-22 - Renderer-failure bridging evidence
@@ -301,7 +301,7 @@ Documentation-only. No source path changed; the cited behavior ships at `370cf07
 
 - Unknown scope: `Safari and iOS capture behavior`
 - Unknown owner: Maps/Location chief and the Founder for host tooling
-- Unknown resolution action: After the owner installs an iOS Simulator runtime or enables safaridriver on this machine, capture direct evidence for `Safari and iOS capture behavior` with one Safari or iOS Simulator theme-toggle drive recording `data-map-theme-snapshot` and overlay state in the next lane-owned Maps entry.
+- Unknown resolution action: Capture direct evidence for `Safari and iOS capture behavior` with one Safari or iOS Simulator theme-toggle drive recording `data-map-theme-snapshot` and overlay state in the next lane-owned Maps entry, once the owner installs an iOS Simulator runtime or enables safaridriver on this machine.
 
 #### External gates
 
@@ -319,6 +319,6 @@ Documentation-only; reverting this entry removes evidence, not behavior.
 #### Exact next action
 
 - Actor: Founder, then Maps and Location chief
-- Action: Install an iOS Simulator runtime or enable safaridriver, then run the Safari or iOS theme-toggle capture drive named in Unknown resolution action.
-- Target: `data-map-theme-snapshot` diagnostic and snapshot-overlay lifecycle during theme swaps in Safari or the iOS Simulator.
+- Action: Run the Safari or iOS theme-toggle capture drive named in Unknown resolution action, once an iOS Simulator runtime is installed or safaridriver is enabled.
+- Target: `data-map-theme-snapshot` diagnostic evidence and snapshot-overlay lifecycle evidence during theme swaps in Safari or the iOS Simulator.
 - Completion: The next lane-owned Maps entry records the scope with direct evidence and closes this entry's Unknown scope.
