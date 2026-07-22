@@ -260,6 +260,62 @@ const ROUTE_TINT_TOKEN: Record<RouteTint, string> = {
   unavailable: "--color-status-unavailable",
 };
 
+const PLACES_SOURCE_ID = "wetindey-places";
+const PLACES_GLOW_LAYER_ID = "wetindey-places-glow";
+
+/**
+ * Which admitted place types cast the ground glow, and why only these.
+ *
+ * The glow answers one question — where does commerce live? — and Festac's
+ * tiles cannot answer it: dark-v11 ships no commercial_area polygons here, so
+ * WetinDey's own admitted places are the only honest source (recorded in the
+ * Lane C release). Markets are the thesis; banks, kiosks and BDCs are merely
+ * candidates, and a glow under everything is a glow under nothing.
+ */
+const PLACES_GLOW_TYPES = new Set(["open_market", "supermarket"]);
+
+/**
+ * Full blur pushes the entire circle into its falloff, so neighbouring
+ * markets merge into one soft ground wash instead of stacked discs — the
+ * point is a warmth in the ground, never a shape with an edge.
+ */
+const PLACES_GLOW_BLUR = 1;
+
+/**
+ * Ground-scale, not pin-scale — and sized against the one thing that does
+ * NOT scale with zoom: the 36px DOM pin disc sitting on top. blur 1 fades
+ * the circle to nothing at its radius, so at the app's opening zoom (14.5,
+ * see MapboxCanvas) a radius under ~34px is swallowed whole by the disc and
+ * an isolated market casts no visible warmth at all; measured, not guessed —
+ * the first cut (10 at z12, 42 at z16) put 30px under a 36px pin. These
+ * values keep a quiet rim beyond the disc from the opening view up, while
+ * z12 stays a hint and z16 reads as the block the market occupies.
+ */
+const PLACES_GLOW_RADIUS: Expression = ["interpolate", ["linear"], ["zoom"], 12, 12, 16, 54];
+
+/**
+ * Warm amber in the market label's family (cartography.ts paints market
+ * labels hsl(38,92%,60%) dark / hsl(32,90%,34%) light), deliberately NOT the
+ * same value: the label is ink and must clear 4.5:1, the glow is ground and
+ * must never compete with ink. Slightly desaturated and mid-lightness so the
+ * blur falloff stays warm rather than going muddy (dark) or grey (light).
+ */
+const PLACES_GLOW_COLOR: Record<"light" | "dark", string> = {
+  dark: "hsl(38, 80%, 55%)",
+  light: "hsl(35, 85%, 45%)",
+};
+
+/**
+ * Faint is the constraint, per theme because the grounds differ: the dark
+ * land sits near-black so amber carries further there; the light land is a
+ * warm sand that would amplify the same opacity into a stain. Both values
+ * keep the glow subordinate to labels, pins and the route.
+ */
+const PLACES_GLOW_OPACITY: Record<"light" | "dark", number> = {
+  dark: 0.14,
+  light: 0.08,
+};
+
 const PLACE_TYPE_SYMBOLS: Record<string, string> = {
   open_market: '<path d="M4 10h16l-1-5H5l-1 5Z"/><path d="M5 10v9h14v-9"/><path d="M9 19v-5h6v5"/>',
   supermarket:
@@ -334,15 +390,34 @@ interface MapboxCameraOptions {
   duration?: number;
 }
 
-/** The one GeoJSON shape this adapter ever builds. */
+/** The route's GeoJSON shape — one LineString feature. */
 interface RouteFeature {
   type: "Feature";
   properties: Record<string, never>;
   geometry: { type: "LineString"; coordinates: RouteGeometry };
 }
 
+/** One admitted place, as a Point in GeoJSON `[lng, lat]` order. */
+interface PlaceFeature {
+  type: "Feature";
+  properties: Record<string, never>;
+  geometry: { type: "Point"; coordinates: [number, number] };
+}
+
+interface PlacesFeatureCollection {
+  type: "FeatureCollection";
+  features: PlaceFeature[];
+}
+
+/**
+ * The GeoJSON this adapter builds: the route's LineString and the places
+ * glow's point collection. A union rather than a generic "any GeoJSON" so a
+ * third shape still has to be declared here before it can exist.
+ */
+type AdapterGeoJson = RouteFeature | PlacesFeatureCollection;
+
 interface MapboxGeoJsonSource {
-  setData(data: RouteFeature): void;
+  setData(data: AdapterGeoJson): void;
 }
 
 interface MapboxLineLayer {
@@ -351,6 +426,18 @@ interface MapboxLineLayer {
   source: string;
   layout: { "line-cap": "round"; "line-join": "round" };
   paint: { "line-color": string; "line-width": number };
+}
+
+interface MapboxCircleLayer {
+  id: string;
+  type: "circle";
+  source: string;
+  paint: {
+    "circle-color": string;
+    "circle-blur": number;
+    "circle-radius": Expression;
+    "circle-opacity": number;
+  };
 }
 
 /** `[[west, south], [east, north]]` — Mapbox's own LngLatBounds tuple form. */
@@ -402,14 +489,15 @@ export interface MapboxMap {
         layers?: { id: string; type: string }[];
       }
     | undefined;
-  addSource(id: string, source: { type: "geojson"; data: RouteFeature }): void;
+  addSource(id: string, source: { type: "geojson"; data: AdapterGeoJson }): void;
   /**
-   * Narrowed to the only source this adapter ever adds. Accurate rather than
-   * optimistic: nothing else here calls addSource, so nothing else can come back.
+   * Narrowed to the sources this adapter adds — all geojson. Accurate rather
+   * than optimistic: only the route and the places glow call addSource, so
+   * nothing of any other source type can come back.
    */
   getSource(id: string): MapboxGeoJsonSource | undefined;
   removeSource(id: string): void;
-  addLayer(layer: MapboxLineLayer, beforeId?: string): void;
+  addLayer(layer: MapboxLineLayer | MapboxCircleLayer, beforeId?: string): void;
   getLayer(id: string): { id: string } | undefined;
   removeLayer(id: string): void;
   /**
@@ -499,6 +587,15 @@ export class MapboxAdapter implements MapProviderAdapter {
   private mapContextLostListener: (() => void) | null = null;
   private mapContextRestoredListener: (() => void) | null = null;
   private markersMap: Map<string, MapboxMarker> = new Map();
+  /**
+   * Coordinates of the CURRENT glow-eligible markers, keyed like markersMap.
+   * A parallel map rather than a widened markersMap value because the two
+   * have different owners: markersMap holds DOM objects a style swap cannot
+   * touch, this holds style-layer data a style swap destroys — the glow's
+   * replay reads it back. Only PLACES_GLOW_TYPES entries are kept; the
+   * exclusion of every other place type happens at admission, by design.
+   */
+  private markerPlaces: Map<string, { lng: number; lat: number }> = new Map();
   private sharedUserMarkers: Map<string, MapboxMarker> = new Map();
   private activeUserPopup: MapboxPopup | null = null;
   /**
@@ -588,6 +685,38 @@ export class MapboxAdapter implements MapProviderAdapter {
     return theme === "dark"
       ? "mapbox://styles/mapbox/dark-v11"
       : "mapbox://styles/mapbox/streets-v12";
+  }
+
+  /**
+   * The name each styleFor style reports once it is actually live. Paired
+   * with styleFor and only meaningful beside it: change one, change both.
+   *
+   * This exists because "the current style is loaded" and "the current style
+   * is the one this attempt installed" are different facts, and mapbox-gl v3
+   * splits them: a cross-style setStyle first tries to DIFF, keeping the
+   * OUTGOING style current while the replacement downloads, and only tears
+   * down when the diff fails ("Unimplemented: setSprite" — every dark/light
+   * swap here). In that window the old style is loaded, idle can fire and
+   * isStyleLoaded() returns true — all describing the style being replaced.
+   * Accepting that evidence completed the attempt, replayed cartography into
+   * the dying style and detached the listeners, so the real style landed
+   * bare: stock POI colours, no route, no glow, lifecycle lying "ready".
+   * The name is the public discriminator for which style is answering.
+   */
+  private static styleNameFor(theme: "light" | "dark"): string {
+    return theme === "dark" ? "Mapbox Dark" : "Mapbox Streets";
+  }
+
+  /**
+   * Whether the style currently answering is the one this attempt intends.
+   * Fail-open on a missing name: custom styles and test doubles that do not
+   * model names must not be locked out of readiness — the gate exists only
+   * to reject KNOWN-stale identity, never to demand identity be modelled.
+   */
+  private liveStyleMatchesIntent(map: MapboxMap): boolean {
+    const name = map.getStyle()?.name;
+    if (!name) return true;
+    return name === MapboxAdapter.styleNameFor(this.currentTheme);
   }
 
   public setStyleLifecycleListener(listener: MapStyleLifecycleListener | null): void {
@@ -721,6 +850,10 @@ export class MapboxAdapter implements MapProviderAdapter {
     if (!this.currentMapIs(map, epoch) || !this.styleAttemptIsInstalled(generation)) {
       return false;
     }
+    // Evidence from the outgoing style is not readiness — see styleNameFor.
+    // Rejecting keeps this generation's listeners attached, so the intended
+    // style's own style.load still completes the attempt.
+    if (!this.liveStyleMatchesIntent(map)) return false;
 
     this.clearStyleLoadTimer();
     this.clearStyleMutationListeners();
@@ -963,7 +1096,10 @@ export class MapboxAdapter implements MapProviderAdapter {
     this.clearStyleRenderListener();
     // Replay only after the current style's subsequent usable render;
     // applyRoute still requires styleReady, so mutation safety is unchanged.
+    // Route before glow: the glow anchors beneath the route layer when one
+    // exists, so the route must already be in the stack.
     this.applyRoute();
+    this.applyPlacesGlow();
     if (!wasUsable) {
       this.emitStyleLifecycle({
         status: "ready",
@@ -1758,11 +1894,23 @@ export class MapboxAdapter implements MapProviderAdapter {
       .addTo(this.mapInstance);
 
     this.markersMap.set(options.id, markerInstance);
+
+    if (PLACES_GLOW_TYPES.has(placeType)) {
+      this.markerPlaces.set(options.id, { lng: options.lng, lat: options.lat });
+      this.applyPlacesGlow();
+    }
   }
 
   public clearMarkers(): void {
     this.markersMap.forEach((marker) => marker.remove());
     this.markersMap.clear();
+    // Only touch the style when there is something to retract: clearMarkers
+    // also runs during destroy, where an idle glow must not become a style
+    // mutation on the way out.
+    if (this.markerPlaces.size > 0) {
+      this.markerPlaces.clear();
+      this.applyPlacesGlow();
+    }
   }
 
   /**
@@ -2045,14 +2193,18 @@ export class MapboxAdapter implements MapProviderAdapter {
   }
 
   /**
-   * Context restoration retains the JavaScript style, including our route.
-   * Remove that custom paint before probing the restored framebuffer so a
-   * bright route over a black basemap cannot certify the basemap as usable.
+   * Context restoration retains the JavaScript style, including our route and
+   * the places glow. Remove that custom paint before probing the restored
+   * framebuffer so a bright route — or amber glow pixels that clear the
+   * channel floor — over a black basemap cannot certify the basemap as
+   * usable. Both replay from completeUsableFrame once the probe passes.
    */
   private removeRouteForRendererProbe(map: MapboxMap): boolean {
     try {
       if (map.getLayer(ROUTE_LAYER_ID)) map.removeLayer(ROUTE_LAYER_ID);
       if (map.getSource(ROUTE_SOURCE_ID)) map.removeSource(ROUTE_SOURCE_ID);
+      if (map.getLayer(PLACES_GLOW_LAYER_ID)) map.removeLayer(PLACES_GLOW_LAYER_ID);
+      if (map.getSource(PLACES_SOURCE_ID)) map.removeSource(PLACES_SOURCE_ID);
       return true;
     } catch {
       // If isolation itself is unsafe, keep the overlay and take the bounded
@@ -2180,6 +2332,84 @@ export class MapboxAdapter implements MapProviderAdapter {
     return layers.find((layer) => layer.type === "symbol")?.id;
   }
 
+  /**
+   * Reconcile the live style with `markerPlaces` — the market ground glow.
+   *
+   * Same discipline as applyRoute, for the same reasons: existence is asked
+   * of the map every time (setStyle destroys custom layers silently), the
+   * styleReady/styleUsable gate defers rather than drops (the replay in
+   * completeUsableFrame brings the glow back after every style rebuild, which
+   * is also how a theme change re-resolves colour and opacity — both read
+   * `currentTheme` at apply time), and an empty collection updates in place
+   * rather than removing the layer, because clearMarkers/addMarker churn on
+   * every search and add/remove churn would rebuild the layer each keystroke.
+   *
+   * The method-presence checks have no Mapbox counterpart in applyRoute and
+   * exist for the FakeMap seam: test doubles owned by other lanes stub only
+   * the surface their contract exercises, and a glow that assumes the full
+   * Map API would make marker admission throw under them.
+   */
+  private applyPlacesGlow(): void {
+    const map = this.mapInstance;
+    if (!map || !this.styleReady || !this.styleUsable) return;
+    if (
+      typeof map.getSource !== "function" ||
+      typeof map.addSource !== "function" ||
+      typeof map.getLayer !== "function" ||
+      typeof map.addLayer !== "function" ||
+      typeof map.setPaintProperty !== "function"
+    ) {
+      return;
+    }
+
+    const data: PlacesFeatureCollection = {
+      type: "FeatureCollection",
+      features: Array.from(this.markerPlaces.values(), ({ lng, lat }): PlaceFeature => ({
+        type: "Feature",
+        properties: {},
+        geometry: { type: "Point", coordinates: [lng, lat] },
+      })),
+    };
+
+    const source = map.getSource(PLACES_SOURCE_ID);
+    if (source) source.setData(data);
+    else map.addSource(PLACES_SOURCE_ID, { type: "geojson", data });
+
+    const colour = PLACES_GLOW_COLOR[this.currentTheme];
+    const opacity = PLACES_GLOW_OPACITY[this.currentTheme];
+    if (map.getLayer(PLACES_GLOW_LAYER_ID)) {
+      // Context restoration retains the layer while the theme may have moved
+      // on; repaint rather than trust what a previous theme resolved.
+      map.setPaintProperty(PLACES_GLOW_LAYER_ID, "circle-color", colour);
+      map.setPaintProperty(PLACES_GLOW_LAYER_ID, "circle-opacity", opacity);
+      // Same contract as data-map-frame-evidence: a safe record of what the
+      // glow reconciliation last did, for drivers and refuters. Counts only,
+      // never coordinates.
+      this.setSafeDiagnostic("data-map-places-glow", `repainted:${data.features.length}`);
+      return;
+    }
+
+    // BENEATH the route, which is itself beneath the labels: ground, then
+    // route, then ink. Anchoring on the route when it exists keeps that order
+    // exact; otherwise the glow takes the route's own anchor and a later
+    // route insert at the first label still lands above it.
+    map.addLayer(
+      {
+        id: PLACES_GLOW_LAYER_ID,
+        type: "circle",
+        source: PLACES_SOURCE_ID,
+        paint: {
+          "circle-color": colour,
+          "circle-blur": PLACES_GLOW_BLUR,
+          "circle-radius": PLACES_GLOW_RADIUS,
+          "circle-opacity": opacity,
+        },
+      },
+      map.getLayer(ROUTE_LAYER_ID) ? ROUTE_LAYER_ID : this.firstSymbolLayerId(map)
+    );
+    this.setSafeDiagnostic("data-map-places-glow", `layer-added:${data.features.length}`);
+  }
+
   public resize(): void {
     if (this.mapInstance) {
       this.mapInstance.resize();
@@ -2189,6 +2419,12 @@ export class MapboxAdapter implements MapProviderAdapter {
   public destroy(): void {
     this.styleGeneration += 1;
     this.mapEpoch += 1;
+    // Dropped BEFORE clearMarkers below, not only in the field reset at the
+    // end: clearMarkers retracts the places glow through applyPlacesGlow,
+    // whose styleReady gate is what keeps that retraction from reaching into
+    // a style this method is about to tear down whole.
+    this.styleReady = false;
+    this.styleUsable = false;
     this.pendingThemeSwap = null;
     this.overlay.remove(false);
     this.clearStyleLoadTimer();
@@ -2235,9 +2471,11 @@ export class MapboxAdapter implements MapProviderAdapter {
     this.clearSafeDiagnostic("data-map-frame-evidence");
     this.clearSafeDiagnostic("data-map-failure-reason");
     this.clearSafeDiagnostic("data-map-lifecycle");
+    this.clearSafeDiagnostic("data-map-places-glow");
     this.mapContainer = null;
     this.styleLifecycleListener = null;
     this.routeCoords = null;
     this.routeTint = "accent";
+    this.markerPlaces.clear();
   }
 }
