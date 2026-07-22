@@ -1,16 +1,18 @@
 # ADR-028: Contribution evidence-media is optional, moderated, and fail-closed
 
-**Status:** Proposed
+**Status:** Accepted
 **Date:** 2026-07-22
 **Decision owner:** Founder
+**Decision:** Accepted by the Founder on 2026-07-22 ("it is already decided, I asked for it"),
+confirming the standing request for image CRUD on the price-update flow (portfolio #25). This
+policy now governs that feature.
 **Scope:** Whether and how an optional user photo may accompany a Food price report,
 its admission, moderation, retention, privacy, Blob storage layout, and display gating
 
-> This decision records proposed policy only. It authorizes no lane, no schema, no
-> migration, no Blob container or provisioning, no application code, no deployment, and no
-> rollout. Acceptance does not claim `0017+` or any later migration number, does not open a
-> media upload path, and does not enable any public projection. Implementation, if any, is a
-> separately claimed and independently refuted lane.
+> Acceptance sets the policy the evidence-media feature must obey. It does not by itself
+> mutate any shared database or enable any public projection: implementation is a separately
+> claimed, independently refuted lane, and media stays fail-closed behind moderation exactly
+> as ADR-019 requires. Acceptance does authorize that lane to be claimed and built.
 
 ## Context
 

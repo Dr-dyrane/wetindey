@@ -66,13 +66,15 @@ The Founder directed full-company activation: every department takes a lane of t
 | Community-Growth | WD-P-002 reviews/community | PARKED by register; no unparking without trigger |
 | Legal-Policy, Client-Reliability, Quality-Release, DevRel, Program-Release | Standing refutation, release, worklog, and reconciliation duties on demand | STANDING |
 
-### Decisions awaiting Founder (controller-surfaced, none actioned)
+### Founder decisions ON RECORD (decided, controller executing)
 
-These are ready read-only inputs; the controller has actioned none of them. Each returns to the register as a dated disposition once decided.
+The Founder confirmed 2026-07-22 that a requested feature is itself the decision; nothing already asked for returns as pending. Recorded as decided, now under execution:
 
-1. ADR-028 contribution evidence-media policy (`9c808f5`, Proposed): accept, reject, or amend. Acceptance is what would let image-on-price-reports (#25) become a claimable lane; nothing proceeds until then.
-2. App Store distribution path (`f808468`): pick one of stay-PWA / Android TWA / Capacitor wrapper / native shell, and its sequencing against the ADR-021 deletion saga (Apple 5.1.1(v) gate) and the Food pilot. Recommendation on file: stay PWA through the pilot.
-3. WD-I-001 one-tap outcome (`cf9deb5`): the visit-confirmation flow is currently PAUSED behind a safety message. Decide whether to reactivate it (with the ADR-019 safety checks) before any one-tap simplification, since there is no live outcome to simplify until then.
+1. Contribution evidence-media (image CRUD, #25): ADR-028 ACCEPTED at the ADR (Founder words "it is already decided, I asked for it"). The image feature is a claimable, buildable lane, fail-closed behind moderation per ADR-019; the shared-database apply remains the only external gate (owner credential).
+2. App Store distribution: DECIDED, stay PWA and build the app native-incorporation-ready (Capacitor-ready structure) without leaving the PWA. Under execution as the native-readiness lane; Apple 5.1.1(v) deletion is covered by the ADR-021 saga continuing to P2/P3.
+3. One-tap outcome and contribution reactivation: PREPARE toward it. The only thing standing between prepared and live is the ADR-019 fail-closed activation, which is the shared-database owner credential, not a Founder decision.
+
+The single real external key that unblocks activation of the prepared contribution, image, and deletion features is the shared-database migration-owner credential (0017 Preview, 0018, and any 0019). That is a missing key, not a decision; the controller prepares everything up to it.
 
 #### ADR-021 P1 deletion saga: persistence and provider boundary (DELIVERED 4d7038c, wave 1)
 
