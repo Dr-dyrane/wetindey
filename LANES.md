@@ -64,65 +64,18 @@ REQUEST TO CONTROLLER / FOUNDER (a decision only they can make): account deletio
 
 Complete at candidate `370cf07`: theme swaps hold the outgoing frame and cross-fade; the skeleton is suppressed only while bridged. Independent refutation passed (initial and delta). All three paths are released; the record is preserved at [2026-07-maps-experience-01](docs/operations/lanes/history/2026-07-maps-experience.md#2026-07-maps-experience-01). The release-critical Maps Adapter lane is closed, so the queued Presence integration serialization is no longer blocked by a Maps lock.
 
-#### Root UI Component Decluttering — ACTIVE
+#### Root UI Component Decluttering — RELEASED / PATHLESS
 
-Owner: Private Contractor, Full-Stack Delivery `ef98946c-a55e-4700-aa6e-c1a840e42eef`. Exact writable paths:
-
-- `src/app/_components/ReportPriceSheet.tsx`
-- `src/app/_components/SettingsSheet.tsx`
-- `src/app/_components/CategorySelectorSheet.tsx`
-- `src/app/_components/PresentationHost.tsx`
-- `src/app/_components/CrossCategorySignalRail.tsx`
-- `src/app/_components/CurrencyFlag.tsx`
-- `src/app/_components/category-selector-sheet/CategorySelectorSheet.tsx`
-- `src/app/_components/category-selector-sheet/hooks/useCategorySelectorSheet.ts`
-- `src/app/_components/category-selector-sheet/imports/imports.ts`
-- `src/app/_components/category-selector-sheet/views/CategorySelectorSheetView.tsx`
-- `src/app/_components/cross-category-signal-rail/CrossCategorySignalRail.tsx`
-- `src/app/_components/cross-category-signal-rail/hooks/useCrossCategorySignalRail.ts`
-- `src/app/_components/cross-category-signal-rail/imports/imports.ts`
-- `src/app/_components/cross-category-signal-rail/views/CrossCategorySignalRailView.tsx`
-- `src/app/_components/currency-flag/CurrencyFlag.tsx`
-- `src/app/_components/currency-flag/hooks/useCurrencyFlag.ts`
-- `src/app/_components/currency-flag/imports/imports.ts`
-- `src/app/_components/currency-flag/views/CurrencyFlagView.tsx`
-- `src/app/_components/presentation-host/PresentationHost.tsx`
-- `src/app/_components/presentation-host/imports/imports.ts`
-- `src/app/_components/presentation-host/views/PresentationHostView.tsx`
-- `src/app/_components/report-price-sheet/ReportPriceSheet.tsx`
-- `src/app/_components/report-price-sheet/hooks/useReportPriceSheet.ts`
-- `src/app/_components/report-price-sheet/imports/imports.ts`
-- `src/app/_components/report-price-sheet/views/ReportPriceSheetView.tsx`
-- `src/app/_components/settings-sheet/SettingsSheet.tsx`
-- `src/app/_components/settings-sheet/hooks/useSettingsSheet.ts`
-- `src/app/_components/settings-sheet/imports/imports.ts`
-- `src/app/_components/settings-sheet/views/SettingsSheetView.tsx`
-- `src/app/_components/home-page/imports/imports.ts`
-- `src/app/_components/home-page/hooks/useHomePage.ts`
-- `src/app/_components/currency-picker-sheet/imports/imports.ts`
-- `src/app/_components/exchange-panel/imports/imports.ts`
-- `docs/operations/departments/human-interface.md`
-- `scripts/iconography-contracts.test.ts`
-- `scripts/liquid-glass-contract.test.ts`
-- `scripts/live-sheet-inset-contract.test.ts`
-- `scripts/location-default-contract.test.ts`
-- `scripts/motion-contracts.test.ts`
-
-Purpose: modularize the remaining root UI components into the smallest live controller,
-hook, view, and import slices needed by each component. Empty copy/style/hook scaffolds are
-forbidden; caller imports and focused UI contracts move in the same bounded candidate.
-
-Completion: All typecheck and contract tests pass cleanly, and the files are successfully moved and re-wired.
-
-Controller resolution for commit `6663c75`: this is a legitimate active worker under the
-persistent Full-Stack Delivery seat, not orphaned work. The seat ID identifies the durable
-department seat rather than one process instance. Any restarted or duplicate instance must
-stand down from these paths and may receive another lane only after this exact claim is
-released or the active worker explicitly hands it off through this registry.
-
-#### Controller contract requests — RELEASED / PATHLESS
-
-All concurrent contract requests for imports and test scripts have been claimed and integrated under the active Root UI Component Decluttering lane (Private Contractor, Full-Stack Delivery `ef98946c-a55e-4700-aa6e-c1a840e42eef`). No pending unowned paths remain.
+Commit `699d1a5` moved the six remaining root UI components into the smallest live
+controller, hook, view, and import slices, rewired all four caller seams, and updated five
+focused UI contracts. Independent refutation first rejected an incomplete manifest, dead
+copy/style/hook scaffolds, an unused PresentationHost prop, and an unrelated place-detail
+layout change. The forward candidate removed the ceremonial layers, restored
+`home-detail-bounded`, and then passed TypeScript plus iconography, liquid-glass,
+live-sheet-inset, location-default, and motion contracts. The exact 39-path receipt is in
+the Human Interface worklog. Browser rendering remains explicitly unverified because the
+browser-control safety layer blocked the post-recovery action; no runtime success is
+claimed. All Root UI paths and contract requests are released.
 
 #### Public review privacy containment — RELEASED / PATHLESS
 
