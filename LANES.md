@@ -50,6 +50,16 @@ to idle rather than creating a replacement task.
 
 ## Active exact path locks
 
+#### Maps worklog action-noun conformance - ACTIVE
+
+Owner: Private Contractor, Maps Delivery `c9c17443-ef5e-4a7b-9b6e-c8f5381da30c`. Exact writable path:
+
+- `docs/operations/departments/maps-location.md`
+
+Purpose: the controller-routed final worklog-contract blocker: entry 3's Action line gains the noun "evidence" twice ("the Safari or iOS Simulator drive evidence and the forced context-loss drive evidence") to satisfy the contract's concrete-noun rule (test line ~197), the same fix contribution-integrity entry 7 took at `d3ab340`. In-place conformance repair of a committed entry, disclosed; historical tuples stay bound to immutable git objects; the file is not in the test's repairPaths so no digest recompute. Exclusions: every other path.
+
+Completion: `npx tsx scripts/department-worklog-contract.test.ts` reaches 5 of 5; a path-scoped commit releases this path; push per the authorization of record `0bbdb11`, which names this seat's conformance class.
+
 #### Maps worklog plural conformance - RELEASED / PATHLESS
 
 Complete at the pluralization commit: both Owned paths lines now match the contract template; the focused test's only remaining failure is contribution-integrity's, separately routed. The routed push was declined; push authority stays with the owner. Path released.
