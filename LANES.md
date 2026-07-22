@@ -42,21 +42,15 @@ to idle rather than creating a replacement task.
 | Developer Relations & Engineering Enablement `019f7995-5b7b-7ee1-81ef-2c3a3c57b836` | Department worklog protocol complete / released | `62880ac` and fail-closed repair `2523da1` are on current main; remain persistent for later bounded enablement assignments |
 | Catalog Stewardship `019f7999-37d0-7231-8b89-0e71c2569ce2` | Catalog workflow complete / released; employee idle | `8a072e2`/`7b42664` and `fe09dc3` resolved the safety-scope and no-match/transport corrections; no active path claim remains |
 | Private Contractor, Full-Stack Delivery `ef98946c-a55e-4700-aa6e-c1a840e42eef` | Seated by Founder instruction 2026-07-21; first lane (account deletion) RELEASED, blocked by ADR-021, request to controller recorded in Active locks; now discovering the next ADR-clear lane | Method: multi-agent orchestration ending in default-to-REFUTED independent refutation, and ADR-clearance proven before any claim (the deletion lane taught this). Not building on stale memory: a discovery workflow reads the ADRs, this registry, and the gate states to find genuinely open, ADR-clear, unclaimed, high-value work, then executes only on affirmative clearance |
-| Private Contractor, Maps Delivery `c9c17443-ef5e-4a7b-9b6e-c8f5381da30c` | Six lanes complete / released; seat idle on the self-paced check-in loop | `370cf07`, `03adfad`, `8fb9b02`, `9c1db98`, `aa29b91`, `23b1aef`; sole queued Maps scope: Safari or iOS capture drive, blocked on owner-installed host tooling (iOS Simulator runtime or Safari Allow Remote Automation); watch item: Presence integration serialization |
+| Private Contractor, Maps Delivery `c9c17443-ef5e-4a7b-9b6e-c8f5381da30c` | Seven lanes complete / released; seat idle on the self-paced check-in loop | `370cf07`, `03adfad`, `8fb9b02`, `9c1db98`, `aa29b91`, `23b1aef`, plus the controller-routed plural conformance; queued: Safari or iOS capture drive (owner tooling) and Presence Maps-side serialization when routed |
 
 
 
 ## Active exact path locks
 
-#### Maps worklog plural conformance - ACTIVE
+#### Maps worklog plural conformance - RELEASED / PATHLESS
 
-Owner: Private Contractor, Maps Delivery `c9c17443-ef5e-4a7b-9b6e-c8f5381da30c`. Exact writable path:
-
-- `docs/operations/departments/maps-location.md`
-
-Purpose: the two-word conformance fix the controller routed at `7f35896`: lines 208 and 278 change "Exactly the 1 path in" to "Exactly the 1 paths in" to match the worklog contract's literal template (test line 221), unmasked by the DevRel reconciliation `c5c2ef0`. This edits two committed entries' Owned paths lines in place; the historical tuples stay bound to their immutable git objects, and this claim discloses the in-place conformance repair per the routing record's instruction to record it. Exclusions: every other path; the contribution-integrity conformance is separately routed to its seat.
-
-Completion: `npx tsx scripts/department-worklog-contract.test.ts` no longer fails on maps-location; a path-scoped commit releases this path. No push.
+Complete at the pluralization commit: both Owned paths lines now match the contract template; the focused test's only remaining failure is contribution-integrity's, separately routed. The routed push was declined; push authority stays with the owner. Path released.
 
 #### Status-chip media-scrim fill (PlaceOfferRow): NO-FILL, RESOLVED, no code change
 
