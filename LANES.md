@@ -160,6 +160,16 @@ Controller-directed, scout confirms exact paths and STOPS to the controller befo
 
 ## Active exact path locks
 
+#### Maps marker keyboard operability - ACTIVE
+
+Owner: Private Contractor, Maps Delivery `c9c17443-ef5e-4a7b-9b6e-c8f5381a30c`. Exact writable path:
+
+- `src/integrations/maps/MapboxAdapter.ts`
+
+Purpose: controller-routed robustness-audit finding: map marker elements carry an aria-label and a click listener but no role, no tabindex, and no keyboard handler, leaving them unreachable and unoperable by keyboard and assistive tech (WCAG AA operability). Minimal fix as routed: role button, tabindex 0, and an Enter or Space keydown mirroring the existing click, aria-label kept. The edit waits until the in-flight map QA sweep finishes driving the dev server so hot reload does not poison its findings. Exclusions: every other path.
+
+Completion: a driven keyboard pass proves Tab reaches a marker and Enter and Space activate it identically to click; independent default-to-REFUTED refutation; gates green; path-scoped commit pushed under the `0bbdb11` class; span-checked release.
+
 #### Maps WebKit capture evidence entry - RELEASED / PATHLESS
 
 Complete at the WD-MAPS-THEMEFADE-20260722-4 commit, pushed under the `0bbdb11` class after independent end-to-end reproduction on Playwright WebKit 18.2 (both toggle directions captured and bridged, native probe reads, glow replay, context-loss recovery). The owner-tooling blocker is dissolved at engine level; the residual Unknown is exactly Safari shell and iOS device behavior. Path released.
