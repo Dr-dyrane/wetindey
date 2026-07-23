@@ -7,12 +7,13 @@
  * component) as a literal object of 34 keys. Two consequences, both observed:
  *
  *   1. No component could add a key without editing page.tsx, so every sheet
- *      built after it, GetItSheet, ItemDetailSheet, LocationSheet,
- *      AreaPickerSheet, ProfileSheet, is hardcoded English regardless of the
- *      language the user picked. Selecting Yorùbá today changes the map header
- *      and leaves the entire "Get it" flow in English.
- *   2. It forked. `ConfirmVisitSheet.tsx:185` carries its OWN `COPY` record in
- *      the same three languages. Its Yorùbá is markedly better than page.tsx's
+ *      built after it, GetItSheet, ItemDetailSheet, LocationSheet, the
+ *      since-deleted AreaPickerSheet, ProfileSheet, was hardcoded English
+ *      regardless of the language the user picked. That is history now: the
+ *      sheets consume this dictionary.
+ *   2. It forked. The confirm-visit sheet carries its OWN `COPY` record
+ *      (src/app/_components/confirm-visit-sheet/copy/copy.ts) in the same
+ *      three languages. Its Yorùbá is markedly better than page.tsx's
  *      (properly toned: "Ṣé ó wà níbẹ̀?"). Two dictionaries, one product.
  *
  * This file is the merge. `ConfirmVisitSheet`'s strings are reproduced verbatim
@@ -78,8 +79,8 @@ export type Locale = (typeof LOCALES)[number];
 export const DEFAULT_LOCALE: Locale = "en";
 
 /* `LOCALE_NAMES`, the endonyms {en: "English", pidgin: "Pidgin", yoruba:
-   "Yorùbá"}, used to live here and had no caller. SettingsSheet.tsx:74-76
-   hardcodes those exact three literals instead, so this was not a dictionary the
+   "Yorùbá"}, used to live here and had no caller. The old SettingsSheet.tsx
+   hardcoded those exact three literals instead, so this was not a dictionary the
    picker read; it was a fourth copy of the picker's labels, waiting to disagree
    with them. AGENTS.md §0 is unambiguous, so it is deleted rather than kept warm
    for a call site that has never arrived. It comes back in the change that makes
@@ -108,7 +109,7 @@ type Untranslated = typeof UNTRANSLATED;
  */
 export const en = {
   /* Shell, keys 1:1 with the old page.tsx dictionary. Names unchanged so the
-     swap at page.tsx:87 is a deletion, not a rewrite. */
+     swap in the old page.tsx was a deletion, not a rewrite. */
   wetin_dey: "WetinDey",
   search_placeholder: "Wetin you dey find?",
   popular_items: "Popular items around",
@@ -173,7 +174,8 @@ export const en = {
   back: "Back",
   back_to_previous_step: "Back to previous step",
 
-  /* Settings, SettingsSheet.tsx:107,115 are hardcoded English today. */
+  /* Settings. Once hardcoded English in the old SettingsSheet.tsx; the
+     settings sheet reads this dictionary now. */
   "settings.radius_label": "Search radius",
   "settings.radius_a11y": "Search radius in kilometres",
   "settings.radius_value": "{km} km",
@@ -197,7 +199,8 @@ export const en = {
      points at the wrong line is worse than no comment.
 
      `profile.reports_one` / `profile.reports_other` used to live here. They were
-     deleted, not disabled: `reportCount` was never once supplied, page.tsx
+     deleted, not disabled: `reportCount` was never once supplied,
+     `useLocationIdentity` (src/app/_hooks/useLocationIdentity.ts)
      builds `sessionUser` as `{ name, email }`, so the pluralisation resolved to
      "0 prices reported" for every signed-in user, including one who had reported
      twenty. Keeping the keys would have kept `coverage()` counting Pidgin nobody
@@ -252,8 +255,9 @@ export const en = {
    * WHAT NONE OF THIS COPY MAY SAY: that signing in makes your report count for
    * more. It is the natural line to reach for and it is FALSE TODAY, the shared
    * anonymous Contributor row is seeded at reliability 98, the highest in the
-   * table, while a new per-user row is minted at 75 (actions.ts:317), and
-   * trust.ts multiplies by score/100. Signing in currently weighs 23% LESS. The
+   * table, while a new per-user row is minted at 70 (`contribution_admit` in
+   * src/db/pillars/80-contribution-services.sql), and
+   * trust.ts multiplies by score/100. Signing in currently weighs about 29% LESS. The
    * promise here is only what is true: your reports GATHER here, and you can SEE
    * them.
    *
@@ -272,8 +276,9 @@ export const en = {
   "reports.signed_out_title": "Sign in to see your reports",
   "reports.signed_out_body":
     "You can report a price without an account (WetinDey never asks). Sign in and the prices you report gather here.",
-  /* Pidgin-inflected English in the `en` table, matching LocationSheet.tsx:132's
-     "We no fit load the areas right now." verbatim in register. This app's
+  /* Pidgin-inflected English in the `en` table, matching the location sheet's
+     "We no fit load the areas right now." (`location.load_error` below,
+     hoisted into this file) verbatim in register. This app's
      English locale already reads "Wetin you dey find?", the default voice is
      Nigerian English, not Received Standard. */
   "reports.err_load": "We no fit load your reports right now.",
@@ -494,8 +499,9 @@ export const en = {
   "auth.session_stalled": "Code accepted. Refresh this screen.",
   "auth.refresh_session": "Refresh",
 
-  /* Geolocation problem titles. Shared verbatim between AreaPickerSheet and
-     LocationSheet; only the remedy (the body) differs, so only the body forks.
+  /* Geolocation problem titles. Shared verbatim between the since-deleted
+     AreaPickerSheet and LocationSheet, both surfaces now inside the location
+     sheet; only the remedy (the body) differs, so only the body forks.
      These stay five distinct titles, never collapsed into "Couldn't get your
      location", five causes with five different fixes.
 
@@ -529,7 +535,9 @@ export const en = {
      Two keys, one sentence, same precedent as auth.retry / confirm.retry. */
   "geo.err_unknown_body": "Try again, or continue with your browsing area.",
 
-  /* Area picker, AreaPickerSheet.tsx:117-227. Remedy is "pick an area below". */
+  /* Area picker rows, now rendered by `LocationSheetView`
+     (src/app/_components/location-sheet/views/LocationSheetView.tsx); their
+     AreaPickerSheet origin is deleted. Remedy is "pick an area below". */
   "area.title": "Choose area",
   "area.use_my_location": "Use my location",
   "area.locating": "Finding you…",
@@ -552,7 +560,7 @@ export const en = {
   "area.err_unknown_body":
     "Your browser refused the request without saying why. Pick an area below instead.",
 
-  /* Location sheet, LocationSheet.tsx:204-512. Remedy is "simulate above". */
+  /* Location sheet, LocationSheet.tsx. Remedy is "simulate above". */
   "location.title": "Where are you?",
   "location.no_areas": "No areas are set up yet",
   "location.coverage_unreachable":
@@ -580,7 +588,8 @@ export const en = {
   "location.coverage_check_failed_body":
     "Your current location is saved for this session, but we couldn't check nearby price coverage. Try again.",
 
-  /* Item detail, ItemDetailSheet.tsx:143-500, hardcoded English today. */
+  /* Item detail. Once hardcoded English in ItemDetailSheet.tsx; the sheet
+     reads this dictionary now. */
   "item.title_fallback": "Prices",
   "item.choose": "Choose",
   "item.choose_type": "Choose type",
@@ -642,7 +651,8 @@ export const en = {
   "item.status_caution": "Check am",
   "item.status_unavailable": "E no dey",
 
-  /* Get it, GetItSheet.tsx:99-504, hardcoded English today. */
+  /* Get it. Once hardcoded English in GetItSheet.tsx; the sheet reads this
+     dictionary now. */
   "get.title": "Get it",
   "get.go_there": "Go there",
   "get.share": "Share",
@@ -733,7 +743,8 @@ export const en = {
   "currency.no_trend": "No trend",
   "currency.selected_a11y": "Choose currency, {name} selected",
 
-  /* Report price, ReportPriceSheet.tsx:88-166, hardcoded English today. */
+  /* Report price. Once hardcoded English in ReportPriceSheet.tsx; the sheet
+     reads this dictionary now. */
   "report.choose_market": "Choose market",
   "report.choose_item": "Choose item",
   "report.choose_quality": "Choose quality",
@@ -774,7 +785,8 @@ export const en = {
   "contribution.transport": "Couldn't confirm that report. Try again.",
   "contribution.new_report": "New report",
 
-  /* Confirm visit, lifted verbatim from ConfirmVisitSheet.tsx:185-249, which
+  /* Confirm visit, lifted verbatim from the confirm-visit COPY fork (now at
+     src/app/_components/confirm-visit-sheet/copy/copy.ts), which
      already ships all three languages. The `at`/`qPrice` closures become
      `{place}`/`{price}` interpolation; the words are untouched. */
   "confirm.title": "How did it go?",
@@ -891,7 +903,7 @@ const pidgin: LocaleTable = {
   radius: "Distance where you dey find market",
   pilot_areas: "Places where we dey work for Lagos",
   report_price: "Tell us how much dem sell food",
-  // Was "O ti tan" in page.tsx:133, that is Yorùbá, sitting in the Pidgin
+  // Was "O ti tan" in the old page.tsx dictionary, that is Yorùbá, sitting in the Pidgin
   // table. Not a translation choice, a copy-paste. Pidgin uses "Done".
   done: "Done",
   submit: "Send Report",
@@ -1010,7 +1022,7 @@ const pidgin: LocaleTable = {
    * The three keys that ARE written here each have direct precedent in this file
    * and invent nothing:
    *   · `reports.title` matches `profile.my_reports` above, verbatim.
-   *   · `reports.err_load` mirrors LocationSheet.tsx:132's existing register.
+   *   · `reports.err_load` mirrors the location sheet's existing register.
    *   · `reports.sold_out` is `item.status_unavailable`'s word, owner-approved. */
   "reports.title": "My reports",
   "reports.empty_title": UNTRANSLATED,
@@ -1374,7 +1386,8 @@ const pidgin: LocaleTable = {
   "contribution.transport": UNTRANSLATED,
   "contribution.new_report": UNTRANSLATED,
 
-  // Verbatim from ConfirmVisitSheet.tsx:207-227.
+  // Verbatim from the confirm-visit COPY fork's pidgin table
+  // (src/app/_components/confirm-visit-sheet/copy/copy.ts).
   "confirm.title": "How e go?",
   "confirm.at": "For {place}",
   "confirm.q_there": "E dey there?",
@@ -1870,7 +1883,8 @@ const yoruba: LocaleTable = {
   "contribution.transport": UNTRANSLATED,
   "contribution.new_report": UNTRANSLATED,
 
-  // Verbatim from ConfirmVisitSheet.tsx:228-248, the good Yorùbá in this repo.
+  // Verbatim from the confirm-visit COPY fork's yoruba table
+  // (src/app/_components/confirm-visit-sheet/copy/copy.ts), the good Yorùbá in this repo.
   "confirm.title": "Báwo ni ó ṣe lọ?",
   "confirm.at": "Ní {place}",
   "confirm.q_there": "Ṣé ó wà níbẹ̀?",

@@ -14,16 +14,16 @@
  *     · age-decayed confidence
  *     · confidence-ranked sorting
  *
- * The seed already derives freshness from that same policy (src/db/seed.ts:29-30,
- * :309-315). The app's WRITE path now does too — `submitObservation` derives
+ * The seed already derives freshness from that same policy (`STALE_HOURS` and
+ * `EXPIRATION_HOURS` in src/db/seed.ts). The app's WRITE path now does too — `submitObservation` derives
  * `trust_level` and `freshness_state` through `assessTrust` and windows its price
  * band on `FRESHNESS_POLICY`, so this module has live call sites rather than
  * aspirational ones.
  *
- * One caller still holds the old arithmetic: `getFoodItemCandidates`
- * (src/app/actions.ts:194) computes `supportingObservationCount * 10` — uncapped,
- * and blind to who reported. Ten reports from one person on a sofa read as 100%.
- * Its consumer is owned by another lane and it is flagged, not silently moved.
+ * History: `getFoodItemCandidates` carried the old arithmetic
+ * (`supportingObservationCount * 10`, uncapped and blind to who reported) and
+ * never gained a caller; it was deleted at f06dc1b. Nothing bypasses this
+ * module's assessment that way today, and nothing should reintroduce it.
  *
  * What this module keeps from that earlier policy, verbatim in spirit:
  *   · the 24h/72h policy
@@ -76,12 +76,19 @@ export const FRESHNESS_POLICY: FreshnessPolicy = {
  * How much a report is worth by how it was collected.
  *
  * Grounded in what the codebase actually writes, not in what would be tidy:
- *   · 'visit_confirmation' — src/app/actions.ts:512, :601. Somebody went to the
- *     place and confirmed. This is the strongest signal the app can produce: the
- *     act of arriving is the corroboration.
- *   · 'app_entry'          — src/app/actions.ts:275, src/db/seed.ts:294. A form
+ *   · 'visit_confirmation' — stamped by the `contribution_admit` SQL boundary
+ *     (`v_collection_method` in src/db/pillars/80-contribution-services.sql);
+ *     the app-side visit flow (`submitVisitConfirmation` in
+ *     src/app/_actions/food-actions.ts) is currently disabled and throws.
+ *     Somebody went to the place and confirmed. This is the strongest signal
+ *     the app can produce: the act of arriving is the corroboration.
+ *   · 'app_entry'          — stamped by that same SQL boundary for price
+ *     reports (`submitObservation` in src/app/_actions/report-actions.ts via
+ *     `admitFoodContribution`), and by the seed (`collectionMethod` in
+ *     src/db/seed.ts). A form
  *     fill. Honest, but unwitnessed — the reporter may be on a sofa.
- *   · 'sms', 'scraper'     — declared in src/db/schema/index.ts:175, written by
+ *   · 'sms', 'scraper'     — declared on `observations.collectionMethod` in
+ *     src/db/schema/index.ts, written by
  *     nothing yet. Weighted now so that the day they start writing, they do not
  *     silently arrive at parity with a person who walked to the market.
  *
@@ -509,9 +516,8 @@ function describe(
  *
  * Live call sites: `submitObservation` (the write path — it derives the
  * `trust_level` and `freshness_state` it stores from this) and
- * `getOfferTrustBatch` (the read path). `getFoodItemCandidates` still reports
- * `supportingObservationCount * 10` and is the last holdout; see the module
- * docblock.
+ * `getOfferTrustBatchImpl` in src/lib/food-trust.ts (the read path). The old
+ * `supportingObservationCount * 10` holdout is gone; see the module docblock.
  *
  * Callers pass every observation admitted by their existing moderation policy.
  * Provenance admission is deliberately not delegated to them: `observed` is the

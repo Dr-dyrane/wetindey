@@ -33,7 +33,7 @@ export function Skeleton({
            * way since `c73b527`, the initial design-system commit: this never
            * worked once. Same structural cause as the dead press states in
            * `Button.tsx` (LANES H20) — this is that bug's fourth sibling, and
-           * `page.tsx:1249` is the fifth and last (LANES H33).
+           * the fifth and last lived in the old page.tsx (LANES H33).
            *
            * It did not fail evenly, which is why it survived so long.
            * `ItemCardSkeleton`'s image well uses a solid token, so it always

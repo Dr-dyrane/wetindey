@@ -21,7 +21,8 @@ import { reportError } from "@/lib/report-error";
  * layout itself.
  *
  * VOICE: the same register as the rest of the failure copy — "Map no fit load"
- * (MapLoader.tsx:84), "We no fit reach the price data right now." (page.tsx:290).
+ * (src/design-system/components/MapLoader.tsx), "We no fit reach the price data
+ * right now." (`home.err_prices_unreachable` in src/core/i18n/strings.ts).
  * A failure is not the moment to switch into a different accent.
  */
 export default function RouteError({

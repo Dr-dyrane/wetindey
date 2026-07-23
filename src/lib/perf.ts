@@ -7,13 +7,16 @@ import { useCallback, useInsertionEffect, useRef } from "react";
  * LATEST closure.
  *
  * WHY THIS EXISTS, concretely. `MapboxCanvas`'s marker effect depends on the
- * `onMarkerClick` prop (MapboxCanvas.tsx:276). page.tsx passes
- * `handleMarkerSelection` (page.tsx:407), a plain function declaration that gets
+ * `onMarkerClick` prop (the marker effect in MapboxCanvas.tsx). The home page
+ * passes `handleMarkerSelection` (src/app/_components/home-page/hooks/useHomePage.ts,
+ * now wrapped in this very hook), which before this hook was a plain function
+ * declaration that got
  * a fresh identity on every single render. So every HomePage render — including
- * ones that change nothing the map cares about, like focus/blur — re-runs that
+ * ones that change nothing the map cares about, like focus/blur — re-ran that
  * effect, which does `clearMarkers()` followed by a full re-`addMarker()` of the
  * set. Each marker is a createElement + an innerHTML SVG parse + an
- * addEventListener + a `new mapboxgl.Marker` (MapboxAdapter.ts:267-308). The
+ * addEventListener + a `new mapboxgl.Marker` (`addMarker` in
+ * src/integrations/maps/MapboxAdapter.ts). The
  * marker data is not the problem: the `mapMarkers` memo is already stable.
  *
  * WHY NOT `useCallback`. `useCallback` is stable only until its deps change, and

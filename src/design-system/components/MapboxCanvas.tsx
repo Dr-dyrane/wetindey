@@ -247,13 +247,15 @@ const APPROXIMATE_DEVICE_ACCURACY_M = 100;
  * canvas is spoken for.
  *
  * 44, not the 36 an earlier version of this comment claimed: the theme toggle is
- * 36px (`h-9`), but the location pill beside it carries `min-h-tap` — 44px, from
- * tailwind.config.ts:106 — and the row is `items-start`, so the taller of the two
- * sets the height (page.tsx:998-1018). 12 + 44 = 56; the extra 4px here is slack.
+ * 36px (`h-9`), but the location pill beside it is `h-11` — 44px, from
+ * the `tap` spacing key in tailwind.config.ts — and the row is `items-start`, so
+ * the taller of the two sets the height (`MapPresentationView` in
+ * src/app/_components/map-presentation/views/MapPresentationView.tsx).
+ * 12 + 44 = 56; the extra 4px here is slack.
  *
  * Kept as a constant rather than measured: measuring here would couple the camera
- * to page.tsx's DOM, and the number is stable enough that the coupling costs more
- * than it buys.
+ * to the map chrome's DOM, and the number is stable enough that the coupling costs
+ * more than it buys.
  *
  * An earlier version of this comment claimed the opposite of what the code does —
  * that the constant "is only load-bearing at the large detent, where it is clamped

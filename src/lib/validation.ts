@@ -11,13 +11,14 @@
  * ₦900,000,000 rice report is not a typo. It is a write to the price band that
  * every other user then reads.
  *
- * WIRING STATUS, every schema below has a live call site in `actions.ts`.
- * Both write paths and all nine read paths are gated. Nothing here is
- * aspirational; if you add a schema, wire it in the same change or do not add it.
+ * WIRING STATUS, every schema below has a live call site in the action modules
+ * under src/app/_actions/. Both write paths and all nine read paths are gated.
+ * Nothing here is aspirational; if you add a schema, wire it in the same change
+ * or do not add it.
  *
- * WHY IT LIVES HERE AND NOT IN actions.ts
+ * WHY IT LIVES HERE AND NOT IN THE ACTION MODULES
  *
- * `actions.ts` carries "use server", and a "use server" module may only export
+ * The action modules carry "use server", and a "use server" module may only export
  * async functions. Exporting a schema object from it is a build error. Schemas
  * therefore live in a plain module and the actions import them.
  *
@@ -167,20 +168,22 @@ const nigeriaCoordinate = worldCoordinate.refine(
 /**
  * A search radius, in km.
  *
- * The 500 km ceiling is not invented here, `searchRadiusMetres` (actions.ts:686)
- * already enforces it for discovery. This states the same number for the
- * location actions, where `getPlacesNear` (actions.ts:961) and
- * `getCoverageForPoint` (actions.ts:1009) check only `> 0` today, so a radius of
- * 40,000 km asks PostGIS to ST_DWithin the entire places table with the index
- * unable to help.
+ * The 500 km ceiling is not invented here, `searchRadiusMetres`
+ * (src/app/_actions/food-actions.ts) already enforces it for discovery. This
+ * states the same number for the location actions: `getPlacesNear` and
+ * `getCoverageForPoint` (src/app/_actions/place-actions.ts) now parse through
+ * this schema at their boundary, where they once checked only `> 0` and a
+ * radius of 40,000 km asked PostGIS to ST_DWithin the entire places table with
+ * the index unable to help.
  */
 const radiusKm = z.number().finite().gt(0, "radiusKm must be positive").lte(500, "radiusKm must be at most 500");
 
 /**
  * A row cap.
  *
- * Every `limit` in actions.ts is a client-supplied number with a default and no
- * ceiling. Drizzle binds it as a parameter, so this is not an injection, it is
+ * Every `limit` in the action modules (src/app/_actions/) is a client-supplied
+ * number with a default; without this cap it had no ceiling. Drizzle binds it
+ * as a parameter, so this is not an injection, it is
  * an amplification: one small POST with `limit: 1e9` asks the database for the
  * world and asks the server to serialise it back.
  */
@@ -246,17 +249,21 @@ export type ContributionAdmissionInput = z.infer<
 /**
  * `submitVisitConfirmation`.
  *
- * A discriminated union rather than a bag of optionals, because the action's own
- * comments say the shape is conditional and then enforce it with three hand-rolled
- * throws (actions.ts:559, 579, 584). Two of those checks are the ones this union
- * states declaratively; the third, `actualPrice` having no CEILING at
- * actions.ts:559, is a hole this closes. `submitVisitConfirmation` delegates to
- * `submitObservation` (actions.ts:587), so an attacker who cannot write ₦900M
- * through the front door can write it through the visit path unless both are gated.
+ * A discriminated union rather than a bag of optionals, because the original
+ * action said the shape is conditional and then enforced it with three
+ * hand-rolled throws, one of which left `actualPrice` with no CEILING, a hole
+ * this union closes declaratively. That action body is history:
+ * `submitVisitConfirmation` (src/app/_actions/food-actions.ts) is currently
+ * disabled and throws unconditionally while safety checks are added. When the
+ * visit path returns it must parse through this union first, because the old
+ * path delegated into the observation write: an attacker who cannot write
+ * ₦900M through the front door could write it through the visit path unless
+ * both are gated.
  *
- * `didBuy` is typed `boolean` and lands in `observations.raw_payload`
- * (actions.ts:606), a jsonb column. At runtime an unvalidated `didBuy` is
- * whatever was sent, including a multi-megabyte object. jsonb will store it.
+ * `didBuy` is typed `boolean` and in the old path landed in
+ * `observations.raw_payload`, a jsonb column. At runtime an unvalidated
+ * `didBuy` is whatever was sent, including a multi-megabyte object. jsonb will
+ * store it.
  */
 const visitIdentity = {
   placeId: uuidField("placeId"),
@@ -280,8 +287,8 @@ const visitConfirmationInput = z
       })
       // No priceWasRight, no actualPrice, no didBuy. You cannot buy what is not
       // there, and "not there right now" says nothing about what it costs, the
-      // action deliberately leaves the price bounds alone on this path
-      // (actions.ts:534-550). Anything sent alongside is a caller bug.
+      // original action deliberately left the price bounds alone on this path.
+      // Anything sent alongside is a caller bug.
       .strict(),
     z
       .object({
@@ -320,13 +327,14 @@ type VisitConfirmationInput =
  * `searchFoodItems`.
  *
  * The cap is the point. The query is interpolated into a LIKE pattern
- * (actions.ts:25) against `items.canonical_name`, `items.slug` AND
+ * (`searchItems` in src/app/_actions/food-actions.ts) against
+ * `items.canonical_name`, `items.slug` AND
  * `item_aliases.alias` across a `selectDistinctOn` with a left join, three
  * ILIKE scans per call, on every keystroke, with no index able to serve a
  * leading `%`. An 8 KB query string is a cheap way to make that expensive.
  *
  * Empty is permitted, not rejected: the action already guards it and returns []
- * (actions.ts:21), and the search box calls this on every keystroke including
+ * (same symbol), and the search box calls this on every keystroke including
  * the one that clears it. Throwing there would break a working path to defend
  * nothing.
  */
@@ -430,7 +438,8 @@ const placesNearInput = z
  *
  * This is the one action whose purpose is to answer "am I outside coverage?".
  * Rejecting a point outside Nigeria would refuse to answer the question it was
- * built to answer, and the action's own docstring (actions.ts:998) commits to
+ * built to answer, and the action's own docstring (`getCoverageForPoint` in
+ * src/app/_actions/place-actions.ts) commits to
  * telling an uncovered user so rather than teleporting them to Festac. (0, 0) is
  * still refused, because that is not a user somewhere else, that is a bug.
  */
