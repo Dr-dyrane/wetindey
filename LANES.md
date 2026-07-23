@@ -14,6 +14,24 @@ The currently recorded controller evidence is indexed in [2026-07 release and go
 
 **Push authorization of record (controller, 2026-07-22, from the Founder's own words).** The Founder's standing instruction ("handle git, check for good checkpoints and push"), the active controller brief ("Commit those exact paths... Push main immediately"; operating rule "Commit and push proven checkpoints promptly"), and the corrected governance rule ("an explicit owner instruction to push authorises pushing; push the checkpoints is not push the irreversible") together authorize pushing PROVEN, PATH-SCOPED, REVERSIBLE checkpoints to main. CLARIFIED 2026-07-22 (controller): this covers both documentation/conformance fixes AND runtime-affecting SOURCE fixes (UI, copy, styling, behavior) that are independently refuted, path-scoped, and that a `git revert` plus redeploy fully undoes. A code deploy to the live app is reversible and is therefore in scope; "reversible checkpoint" was never limited to docs. This authorization does NOT cover the irreversible: shared-database migrations or writes, activation or control-flag flips, account or data deletion, Preview or Production DATABASE/state mutation, or anything a revert cannot undo; those remain separately and explicitly gated. Seats holding refuted local checkpoints under this class (for example the Maps worklog plural conformance at `c0e729d`, or the HI status-chip text-shadow legibility fix at `25054a9`, refuter NOT REFUTED) may push per this record.
 
+### Shared-database `0015`-`0019` completion and evidence lane — ACTIVE
+
+Controller-owned exact paths: `LANES.md`, `docs/database/README.md`,
+`docs/database/MIGRATION-RULEBOOK.md`, `src/db/migrations/meta/0013_release_manifest.json`,
+`src/db/migrations/meta/0015_release_manifest.json`,
+`src/db/migrations/meta/0016_release_manifest.json`,
+`src/db/migrations/meta/0017_release_manifest.json`,
+`src/db/migrations/meta/0018_release_manifest.json`,
+`src/db/migrations/meta/0019_release_manifest.json`,
+`scripts/contributions/contribution-pending-queue-shape-repair-contract.test.ts`,
+`scripts/deletion/deletion-saga-p1-contract.test.ts`,
+`scripts/contributions/contribution-evidence-media-p1-contract.test.ts`, and the already
+corrected `0018`/`0019` SQL, pillar, and manifest-source paths shown by the current scoped
+diff. Shared Preview and Production now hold the exact ordered `0000`-`0019` ledger; no
+`0020` was applied. This lane corrects stale release evidence and publishes the migration
+rulebook. Applied SQL is immutable. Reporting, moderation, deletion, and evidence-media
+activation remain off and are not part of this metadata lane.
+
 ## Persistent employee roster
 
 ### Pinned persistent employee roster
@@ -61,7 +79,7 @@ The Founder directed full-company activation: every department takes a lane of t
 | Trust-Data-Governance (Data/Truth Platform) | WD-I-005 coverage honesty, smallest step: define the coverage-state contract, no result-language change | QUEUED wave 2 |
 | Catalog-Stewardship + Food Evidence Provenance | Standing review authorization: classify recurring NBS/current Food evidence, no live promotion | QUEUED wave 2 |
 | Executive-Product | App Store distribution decision packet (PWA vs native wrapper) for Founder decision | QUEUED wave 2 |
-| Contribution-Integrity | 0017 Preview apply + moderation lifecycle | EXTERNAL GATE: owner migration credential |
+| Contribution-Integrity | 0017 Preview/Production apply + moderation lifecycle | DATABASE APPLY COMPLETE; runtime activation remains fail-closed |
 | Maps-Location | Safari/iOS capture drive; Presence integration serialization | EXTERNAL GATE: owner host tooling; 0014 gates |
 | Community-Growth | WD-P-002 reviews/community | PARKED by register; no unparking without trigger |
 | Legal-Policy, Client-Reliability, Quality-Release, DevRel, Program-Release | Standing refutation, release, worklog, and reconciliation duties on demand | STANDING |
@@ -74,7 +92,7 @@ The Founder confirmed 2026-07-22 that a requested feature is itself the decision
 2. App Store distribution: DECIDED, stay PWA and build the app native-incorporation-ready (Capacitor-ready structure) without leaving the PWA. Under execution as the native-readiness lane; Apple 5.1.1(v) deletion is covered by the ADR-021 saga continuing to P2/P3.
 3. One-tap outcome and contribution reactivation: PREPARE toward it. The only thing standing between prepared and live is the ADR-019 fail-closed activation, which is the shared-database owner credential, not a Founder decision.
 
-The single real external key that unblocks activation of the prepared contribution, image, and deletion features is the shared-database migration-owner credential (0017 Preview, 0018, and any 0019). That is a missing key, not a decision; the controller prepares everything up to it.
+The shared-database migration-owner credential gate is RESOLVED. Preview and Production now hold the exact ordered `0000`-`0019` ledger with controls still false. Runtime activation remains a separate least-privilege control-credential, named-actor, environment-flag, and lifecycle-proof gate; migration-owner access is never a substitute.
 
 ### Security recommendations awaiting Founder / Security seat (from the perf/security audit, 2026-07-22)
 
@@ -124,7 +142,7 @@ Controller-directed Terra + Luna arms, each scout-confirms its exact paths and S
 - App Store native-readiness (decided: stay PWA, build native-incorporation-ready): a readiness assessment plus inert non-breaking scaffolding so a later Capacitor wrap is a small step. Arm area: new `docs/operations/decisions/native-readiness.md` and a new inert `capacitor.config.ts` only; no dependency install, no `next.config` change, the live PWA build must stay green.
 - Feature #25 contribution evidence-media (ADR-028 Accepted): a full buildable lane, migration generated-not-applied, fail-closed behind moderation, default-off. Launches after H40 lands to avoid an actions collision; scout confirms the exact schema/adapter/server-action/UI/contract path set.
 
-External key (not a decision): activating the prepared contribution, image, and deletion features needs the shared-database migration-owner credential (0017 Preview, 0018, 0019). The controller prepares everything up to it.
+Database apply is complete through `0019` on Preview and Production. Activation remains default-off until the dedicated control credential, approved actor identities, environment flags, and signed-in lifecycle evidence are independently proved.
 
 ## Full Founder release program (all documented proposals and blockers unlocked)
 
@@ -156,7 +174,7 @@ Batch-3 status 2026-07-22: ADR-030 + coverage-honesty DELIVERED `80d1839`; ADR-0
 
 Every documented proposal and blocker the Founder released is now built to ready and on main, each independently refuted and path-scoped: #22 crypto LAN crash (already fixed `2bc8a3c`), H40 search price band (`20965e0`), #24 App Store native-readiness (`330c8a8`), #25 image evidence-media (`250fee8`, default-off), #16 account deletion saga P1 (`4d7038c`) + P2 (`f775459`), #26 contextual community ADR-030 (`80d1839`), #20 seller-contact ADR-029 (`330c8a8`), WD-I-001 one-tap audit (`cf9deb5`), WD-I-002 coverage packet (`7833a11`), WD-I-003/004 discoveries (`330c8a8`), WD-I-005 coverage honesty (`80d1839`), WD-P-001 second-vertical architecture (`330c8a8`), ADR-028 accepted (`9c40753`). The deletion P1 contract was made forward-compatible for 0019 (`3967f57`). Migrations 0018 and 0019 are candidate_unapplied with all authorization flags false; no shared database was contacted.
 
-THE ONE REMAINING GATE (not a decision, a missing physical key): live activation of contribution reporting (0013), image evidence-media (0019), and account deletion (0018), plus one-tap reactivation and the 0017 Preview repair, all require the shared-database migration-owner credential to apply the migrations to Preview then Production and flip the fail-closed flags. The controller has prepared everything up to that key. When the owner provides the credential or names the executor, the P3/activation lanes run under the usual disposable-then-Preview-then-Production proof with independent refutation.
+DATABASE GATE RESOLVED: Preview and Production hold the exact ordered `0000`-`0019` ledger, including `0017`, `0018`, and `0019`; no `0020` was included. The remaining work is runtime activation, not migration. It requires the dedicated least-privilege control credential, approved actor identities, exact environment flags, signed-in lifecycle evidence, rollback proof, and independent refutation. All controls remain false until that separate lane passes.
 
 ### Founder activation approvals addendum (2026-07-22, in-session, recorded by the Maps seat)
 
@@ -176,6 +194,17 @@ Controller-directed, scout confirms exact paths and STOPS to the controller befo
 - Feature #16 deletion saga P2 (ADR-021 P2, P1 delivered `4d7038c`, 0012 proven): cleanup adapters and orchestration under `src/lib/deletion/` plus its contract test. Profile deletion, `sources.user_id` null with observation-preservation proof, ordinary `problem_reports` deletion, exact-prefix paginated Blob enumeration/deletion, idempotent Presence account-deletion invocation and safety tombstoning, retries/backoff/terminal/manual states, redacted audit, purge. Inert boundary, deletes no real account; disposable-proof only; no shared-DB apply.
 
 ## Active exact path locks
+
+#### CSP dev-environment resolution defect - ACTIVE
+
+Owner: Private Contractor, Maps Delivery `c9c17443-ef5e-4a7b-9b6e-c8f5381da30c`, self-claimed under the Founder's standing continuous-work directive after lane 3 released. Exact writable paths:
+
+- `src/lib/security/csp-policy.ts`
+- `scripts/csp-policy-contracts.test.ts`
+
+Purpose: fix a proven defect, not a posture change. Measured at HEAD with a fresh Chromium drive: one dev page load emits 679 report-only violations ("Evaluating a string as JavaScript"), because `.env.local` pulled from Vercel carries `VERCEL_ENV="preview"`, and `resolveCspEnvironment` lets that stamp outrank the literal `NODE_ENV=development` of the running dev server, dropping the development-only `'unsafe-eval'` allowance that webpack dev source maps require. Every `vercel env pull` regresses any machine the same way; the noise drowns runtime evidence capture and feeds garbage into the CSP report pipeline. Fix: `nodeEnvironment === "development"` wins over a pulled `VERCEL_ENV` value, because a process running the dev server is development as a physical fact; deployed behavior cannot change since Vercel builds always run `NODE_ENV=production`. The contract test gains `resolveCspEnvironment` coverage it currently lacks entirely. Boundary unchanged and explicit: the browser-facing policy remains Report-Only; this lane does not touch the Founder/Security-gated enforcing flip, the middleware, the report endpoint, or any directive of the policy itself. Exclusions: every other path, including `src/middleware.ts` and `src/lib/security/csp-report*`.
+
+Completion: contract green with new environment-resolution legs, gates green, a re-drive showing the violation flood gone in dev, independent default-to-REFUTED refutation, path-scoped commit pushed under the `0bbdb11` class, span-checked release.
 
 #### ADR-031 lane 3 agri map surface - RELEASED / PATHLESS
 
@@ -291,7 +320,7 @@ approvals, recursive no-`SET ROLE` membership closure, and one serializable pre-
 transaction passed focused contracts, exact-path lint, live Preview read-only proof, and independent
 refutation. Paths released.
 
-#### Contribution pending-queue row-shape repair `0017` — ACTIVE
+#### Contribution pending-queue row-shape repair `0017` — SHARED APPLIED / IMMUTABLE
 
 - **Owner:** database service worker; independent Database/Quality refuter required before any apply.
 - **Exclusive paths:** `src/db/pillars/80-contribution-services.sql`, new
