@@ -7,7 +7,7 @@ import { formatNaira } from "@/lib/money";
 import { useT } from "@/core/i18n";
 import { transition } from "@/design-system/motion";
 
-import type { FoodPriceTrend } from "@/core/food-trend";
+import { trendBadge, type FoodPriceTrend } from "@/core/food-trend";
 
 export interface ItemCardData {
   id: string;
@@ -202,7 +202,12 @@ export function ItemCard({
         <div className="mt-1 flex items-center gap-1.5 flex-wrap">
           <StatusBadge kind={status}>{statusLabel[status]}</StatusBadge>
           {item.foodTrend && item.foodTrend.state !== "insufficient" && (
+            /* Visible: an arrow and the percent (↑4%). The verbose
+               "Down 4% this week" rides on aria-label so a screen reader,
+               which cannot voice a lone glyph, still gets the full sentence
+               into the card button's name. */
             <span
+              aria-label={item.foodTrend.label}
               className={`squircle px-1.5 py-0.5 text-caption-2 font-bold tabular-nums ${
                 item.foodTrend.state === "up"
                   ? "bg-status-caution-bg text-status-caution-fg"
@@ -211,7 +216,7 @@ export function ItemCard({
                     : "bg-fillSecondary text-text-primary"
               }`}
             >
-              {item.foodTrend.label}
+              {trendBadge(item.foodTrend)}
             </span>
           )}
           {item.placeCount ? (

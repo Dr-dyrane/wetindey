@@ -17,6 +17,7 @@ import { type ItemCardData } from "@/design-system/components/ItemCard";
 import { useLocationIdentity } from "@/app/_hooks/useLocationIdentity";
 import type { ExchangeLocationFilter } from "@/app/_components/exchange-panel/ExchangePanel";
 import type { CrossCategorySignal } from "@/app/_components/cross-category-signal-rail/CrossCategorySignalRail";
+import { trendBadge } from "@/core/food-trend";
 import {
   getNearbyExchangeLocations,
   type ExchangeLocationDiscoveryResult,
@@ -844,11 +845,7 @@ export function useHomePage() {
     const price = item ? foodSignalPrice(item) : null;
     if (!item || !price) return [];
     const trend = item.foodTrend && item.foodTrend.state !== "insufficient" ? item.foodTrend : null;
-    const movement = trend
-      ? `${trend.state === "up" ? "↑" : trend.state === "down" ? "↓" : "→"}${Math.abs(
-          Math.round(trend.changePercent)
-        )}%`
-      : null;
+    const movement = trend ? trendBadge(trend) : null;
     return [{
       id: `food-${item.id}-${price}`,
       category: "food",

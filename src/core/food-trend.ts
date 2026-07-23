@@ -146,3 +146,21 @@ export function calculateCohortFoodPriceTrend(
     label,
   };
 }
+
+/**
+ * The succinct VISIBLE badge for a computed trend: a direction arrow and the
+ * rounded percent, nothing else (↑4%, ↓4%, →0%). The verbose `label`
+ * ("Down 4% this week") stays as the accessible, screen-reader form, because a
+ * reader over a lone glyph announces nothing useful. The cadence is weekly and
+ * constant, so once a viewer has seen it, spelling out "this week" on every card
+ * is noise: the house rule is the most succinct copy, Apple style.
+ *
+ * Returns null when there is no trend to show, so a caller can gate on it. This
+ * is the single source of the glyph+percent form, shared by the item card and
+ * the cross-category signal rail so the two can never drift apart.
+ */
+export function trendBadge(trend: FoodPriceTrend): string | null {
+  if (trend.state === "insufficient") return null;
+  const arrow = trend.state === "up" ? "↑" : trend.state === "down" ? "↓" : "→";
+  return `${arrow}${Math.abs(Math.round(trend.changePercent))}%`;
+}
