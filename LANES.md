@@ -167,6 +167,17 @@ Controller-directed, scout confirms exact paths and STOPS to the controller befo
 
 ## Active exact path locks
 
+#### Maps recenter control detent clamp - ACTIVE
+
+Owner: Private Contractor, Maps Delivery `c9c17443-ef5e-4a7b-9b6e-c8f5381da30c`. Exact writable paths:
+
+- `src/app/_components/map-presentation/styles/MapPresentation.css`
+- `src/app/_components/map-presentation/views/MapPresentationView.tsx`
+
+Purpose: QA sweep finding D5: at the expanded detent on compact viewports the recenter control's detent-tracking inset pushes it to y -11, half off-screen and overlapping the theme toggle at y 12, so taps aimed at the toggle hit the recenter button. Fix clamps the control below the top chrome instead of letting the inset carry it above the viewport. Edits held until the in-flight perf-pass refutation stops driving the dev server. Exclusions: every other path.
+
+Completion: a compact drive across all detents shows the control fully on-screen, never overlapping the top chrome, camera padding behavior unchanged; independent default-to-REFUTED refutation; gates green; path-scoped commit pushed under the `0bbdb11` class; span-checked release.
+
 #### Maps performance and operability pass - ACTIVE
 
 Owner: Private Contractor, Maps Delivery `c9c17443-ef5e-4a7b-9b6e-c8f5381da30c`. Exact writable paths:
