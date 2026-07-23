@@ -13,7 +13,9 @@ import {
   removeMyAvatar,
   type MyProfile,
 } from "@/app/_actions/profile-actions";
-import { Avatar } from "@/app/_components/profile-sheet/ProfileSheet";
+// Direct module, not through ProfileSheet: importing the container coupled
+// this chunk to the entire profile-sheet chunk for one presentational atom.
+import { Avatar } from "@/app/_components/profile-sheet/views/Avatar";
 import { haptics } from "@/lib/haptics";
 
 export {

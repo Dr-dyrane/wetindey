@@ -110,6 +110,12 @@ for (const hot of ["ItemDetailSheet", "GetItSheet", "ConfirmVisitSheet"]) {
   );
 }
 assert.match(homeBarrel, /import \{ Avatar \} from "@\/app\/_components\/profile-sheet\/views\/Avatar"/);
+// The manage-profile barrel must also take Avatar directly: importing it
+// through ProfileSheet coupled two on-demand chunks for one atom.
+assert.match(
+  read("src/app/_components/manage-profile-sheet/imports/imports.ts"),
+  /import \{ Avatar \} from "@\/app\/_components\/profile-sheet\/views\/Avatar"/,
+);
 assert.match(read("src/app/_components/profile-sheet/views/Avatar.tsx"), /export function Avatar\(/);
 
 console.log("home code-split contract: all assertions passed");
