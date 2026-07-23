@@ -112,7 +112,7 @@ export function HomeSheetResultsView({
                 </h4>
                 {popularItems && popularItems.length > 0 && (
                   <span className="text-caption-1 text-text-secondary tabular-nums">
-                    {popularItems.reduce((n, i) => n + (i.offerCount ?? 0), 0)} prices
+                    {t("home.prices_count", { n: popularItems.reduce((sum, i) => sum + (i.offerCount ?? 0), 0) })}
                   </span>
                 )}
               </div>

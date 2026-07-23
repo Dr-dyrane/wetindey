@@ -46,8 +46,8 @@ export function HomePlaceDetailView({
   // Zero-wiring module store (see @/core/i18n): no provider, no prop threading.
   const t = useT();
   const visitLabel = /kiosk|shop|supermarket/.test(detailPlace.placeType.toLowerCase())
-    ? "Visit shop"
-    : "Visit market";
+    ? t("home.visit_shop")
+    : t("home.visit_market");
 
   const getItAction = (
     <div
@@ -100,7 +100,7 @@ export function HomePlaceDetailView({
         <button
           type="button"
           onClick={() => setDetailPlaceId(null)}
-          aria-label="Close"
+          aria-label={t("close")}
           className="grid min-h-tap min-w-tap shrink-0 place-items-center rounded-full
                      text-text-secondary transition-colors hover:text-text-primary
                      focus-visible:outline-2 focus-visible:outline-offset-2

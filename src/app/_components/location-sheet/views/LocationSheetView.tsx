@@ -18,7 +18,7 @@ import {
   type AreaSummary,
 } from "../imports/imports";
 import { type useLocationSheet } from "../hooks/useLocationSheet";
-import { copy } from "../copy/copy";
+import { useStrings } from "@/core/i18n";
 import "../styles/LocationSheet.css";
 
 export interface LocationSheetViewProps {
@@ -34,6 +34,9 @@ export function LocationSheetView({
   radiusKm,
   sheet,
 }: LocationSheetViewProps) {
+  // Zero-wiring module store (see @/core/i18n); replaces the deleted local
+  // copy module byte-for-byte in en.
+  const t = useStrings();
   const {
     browsingLocation,
     tree,
@@ -143,7 +146,7 @@ export function LocationSheetView({
           </IconOrb>
           <span className="min-w-0 flex-1">
             <span className="block truncate text-body text-text-primary">
-              {locating ? copy.locating : copy.useMyLocation}
+              {locating ? t["location.locating"] : t["location.use_my_location"]}
             </span>
           </span>
           {browsingLocation.provenance === "device" && (
@@ -165,7 +168,7 @@ export function LocationSheetView({
               onClick={handleUseMyLocation}
               className="min-h-tap text-subhead text-accent active:opacity-60"
             >
-              {copy.tryAgain}
+              {t["location.try_again"]}
             </button>
           )}
         </div>
@@ -176,7 +179,7 @@ export function LocationSheetView({
           <div className="flex items-center gap-2">
             <MapPin className="h-4 w-4 shrink-0 text-status-caution-fg" />
             <p className="text-subhead font-semibold text-status-caution-fg">
-              {copy.outsideTitle}
+              {t["location.outside_title"]}
             </p>
           </div>
           <p className="text-footnote text-text-secondary">
@@ -208,7 +211,7 @@ export function LocationSheetView({
             onClick={() => void loadTree()}
             className="min-h-tap text-subhead text-accent active:opacity-60"
           >
-            {copy.tryAgain}
+            {t["location.try_again"]}
           </button>
         </div>
       ) : tree === null ? (
@@ -219,7 +222,7 @@ export function LocationSheetView({
         </div>
       ) : tree.groups.length === 0 ? (
         <div className="mx-4 squircle-card bg-surface dark:bg-surface-elevated shadow-card p-5 text-center">
-          <p className="text-subhead font-semibold text-text-primary">{copy.noAreas}</p>
+          <p className="text-subhead font-semibold text-text-primary">{t["location.no_areas"]}</p>
         </div>
       ) : (
         <div className="space-y-6">
@@ -240,7 +243,7 @@ export function LocationSheetView({
   );
 
   return (
-    <ModalSheet open={open} onClose={onClose} title={copy.title} size="page">
+    <ModalSheet open={open} onClose={onClose} title={t["location.sheet_title"]} size="page">
       <NavigationStack
         listNode={listNode}
         detailNode={
@@ -252,7 +255,7 @@ export function LocationSheetView({
         }
         detailLabel={openGroup?.lgaName}
         onDetailBack={() => setLgaSlug(null)}
-        backLabel={copy.back}
+        backLabel={t["location.back"]}
       />
     </ModalSheet>
   );

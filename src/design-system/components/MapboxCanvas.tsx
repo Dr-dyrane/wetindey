@@ -814,7 +814,7 @@ export function MapRecenterControl({ onLocate, onError, className = "" }: MapRec
     <button
       type="button"
       onClick={locate}
-      aria-label="Recenter on my location"
+      aria-label={t["map.recenter_a11y"]}
       aria-busy={locating}
       className={`pointer-events-auto grid min-h-tap min-w-tap place-items-center squircle-full
                   material-thick shadow-raised text-accent

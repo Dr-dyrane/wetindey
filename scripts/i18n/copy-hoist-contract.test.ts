@@ -17,7 +17,7 @@
  *      copy, it does not invent translations.
  */
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 
 import { TABLES, UNTRANSLATED, en } from "../../src/core/i18n/strings";
@@ -203,6 +203,30 @@ for (const key of NEW_KEYS) {
 // The one interpolated key keeps its hole; useT() fills it, the dictionary
 // cannot, which is why HomeSheetResultsView reads it through useT().
 assert.equal(en["home.empty_prices_title"], "No prices within {km} km");
+
+// Copy riders (second hoist wave): the location sheet's local copy module is
+// gone, its consumers read the dictionary, and the home/map rider literals
+// no longer appear in source.
+assert.ok(
+  !existsSync(join(ROOT, "src/app/_components/location-sheet/copy/copy.ts")),
+  "the local copy module must stay deleted",
+);
+const riderSweeps: Array<[string, string[]]> = [
+  ["src/app/_components/home-page/views/HomePlaceDetailView.tsx", ['"Visit shop"', '"Visit market"', 'aria-label="Close"']],
+  ["src/app/_components/home-page/views/HomeSheetResultsView.tsx", ["} prices"]],
+  ["src/design-system/components/MapboxCanvas.tsx", ['aria-label="Recenter on my location"']],
+  ["src/app/_components/location-sheet/views/LocationSheetView.tsx", ['"Where are you?"', '"Use my location"', '"Back"']],
+  ["src/app/_components/location-sheet/hooks/useLocationSheet.ts", ['"We no fit load the areas right now."']],
+];
+let riderCount = 0;
+for (const [file, literals] of riderSweeps) {
+  const source = readFileSync(join(ROOT, file), "utf8");
+  for (const literal of literals) {
+    assert.ok(!source.includes(literal), `${file} still carries ${literal}`);
+    riderCount += 1;
+  }
+}
+console.log(`copy riders: ${riderCount} literal sweeps clean, copy module deleted.`);
 
 console.log(
   `copy-hoist contract: ${sweeps} literal sweeps, ${problemCalls.length} problem() sites, ` +

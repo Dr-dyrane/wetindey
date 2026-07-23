@@ -12,7 +12,6 @@ import {
   type AreaTree,
 } from "../imports/imports";
 import { useStrings } from "@/core/i18n";
-import { copy } from "../copy/copy";
 
 export type LocateState =
   | { kind: "idle" }
@@ -70,9 +69,9 @@ export function useLocationSheet({
       console.error("LocationSheet: failed to load the area tree", err);
       if (g !== generation.current) return;
       setTree(null);
-      setTreeError(copy.loadError);
+      setTreeError(t["location.load_error"]);
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     if (!open) return;
