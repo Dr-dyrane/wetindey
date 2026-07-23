@@ -171,6 +171,17 @@ Controller-directed, scout confirms exact paths and STOPS to the controller befo
 
 ## Active exact path locks
 
+#### ADR-031 acceptance record - ACTIVE
+
+Owner: Private Contractor, Maps Delivery `c9c17443-ef5e-4a7b-9b6e-c8f5381da30c`. Exact writable paths:
+
+- `docs/adr/031-farm-inputs-pillar.md`
+- `docs/operations/PORTFOLIO-AND-IDEA-REGISTER.md`
+
+Purpose: the Founder accepted ADR-031 in-session (answering approved against the gate list naming its acceptance). This lane records the acceptance: the ADR status moves to Accepted with the acceptance date and the ADR-008 amendment it carries (pillar set grows to seven, AGRICULTURE, inputs first, mapping rule intact); register WD-I-006 moves to Approved with the decision history appended. The ADR's four queued implementation lanes become claimable in their recorded order; the schema lane follows the fleet's generated-not-applied convention and routes through the controller. Exclusions: every other path.
+
+Completion: both edits refuted for record-accuracy; path-scoped commit pushed under the `0bbdb11` class; span-checked release; controller relayed for implementation sequencing.
+
 #### Maps loader retry resurrection - RELEASED / PATHLESS
 
 Complete at the resurrection commit, pushed under the `0bbdb11` class after NOT REFUTED on all five claims: defect reproduced at HEAD by stash round-trip, fix proven twice (blocked-state fetches bounded to 5, Try again ends ready with 60 markers), healthy path shows zero dead stamps ever, cooldown arithmetic and fail-open bounds verified. The adverse-states sweep is fully dispositioned: denied-location honesty PASS, offline degradation PASS, cold-blocked recovery FIXED. Path released.
