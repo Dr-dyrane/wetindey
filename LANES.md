@@ -195,6 +195,18 @@ Controller-directed, scout confirmed exact paths and stopped to the controller b
 
 ## Active exact path locks
 
+#### Offline shell honesty and shell-cache bound - ACTIVE
+
+Owner: Private Contractor, Maps Delivery `c9c17443-ef5e-4a7b-9b6e-c8f5381da30c`, self-claimed under the Founder's standing continuous-work directive. Exact writable paths:
+
+- `public/offline.html`
+- `public/sw.js`
+- new `scripts/pwa/offline-shell-contract.test.ts`
+
+Purpose: two proven PWA defects, both verified in-source before this claim. One: the offline page tells a user with queued reports "We go send dem once network come back - no need to enter dem again", but nothing in the codebase writes `pending_observations` and the contribution containment policy (useHomePage.ts) deliberately forbids any offline drain, so the promise is false for every user; the fix deletes the false sentence and the stale code comment claiming page.tsx writes the queue, keeping only the true existing copy ("Dem dey your phone."), inventing no new local-language copy. Two: `handleNavigate` writes every OK navigated document into SHELL_CACHE with a raw `cache.put` and LIMITS carries no SHELL_CACHE ceiling, so browsing many /item and /place pages grows the one cache the offline shell depends on without bound; the fix adds a document trim with a protected set (SHELL_ASSETS and the offline page are never evicted; a plain LIMITS entry would evict them first because install order makes them FIFO-oldest). The new contract asserts: no false-promise sentence in offline.html, no code path referencing an offline drain of the queue, SHELL_CACHE trim exists with the protected set, and LIMITS still caps STATIC/PHOTO/MAP. Exclusions: every other path, including useHomePage.ts (the no-drain policy stays exactly as recorded) and the report flow.
+
+Completion: contract green, gates green, a service-worker drive proving navigated documents trim while the offline shell survives, independent default-to-REFUTED refutation, path-scoped commit pushed under the `0bbdb11` class, span-checked release.
+
 #### CSP dev-environment resolution defect - RELEASED / PATHLESS
 
 Complete at `44f8027`, pushed under the `0bbdb11` class after NOT REFUTED on all five claims with independent reproduction: the 679-violation flood reproduced at HEAD by a stash round-trip and eliminated to 0 by the candidate; `'unsafe-eval'` served exactly once in the dev report-only header; deployed behavior proven unchanged by exhaustive 81-pair enumeration of old versus new `resolveCspEnvironment` (the only changed pairs are dev-server-with-pulled-VERCEL_ENV, which now correctly resolve development); posture untouched (Report-Only unchanged, no directive edits, middleware and the enforcing `vercel.json` header clean); gates green and the nine new contract assertions proven to fail against the old precedence. The Founder/Security-gated enforcing flip is untouched by this lane; the flip's Preview verification will now read clean dev evidence instead of 679 lines of noise per load. Paths released.
