@@ -390,3 +390,71 @@ Documentation-only; reverting removes evidence, not behavior.
 - Action: Record the Safari shell or iOS device evidence named in Unknown resolution action when host tooling arrives.
 - Target: `data-map-theme-snapshot` diagnostic and snapshot-overlay lifecycle evidence during theme swaps in the Safari application or on an iOS device.
 - Completion: The next lane-owned Maps entry records the scope with direct evidence and closes this entry's Unknown scope.
+
+### 2026-07-22 - ADR-031 lane 3 agri map surface
+
+#### Transfer coordinates
+
+- Evidence ID: `WD-MAPS-AGRISURFACE-20260722-5`
+- Base SHA: `770751564c1c8057da0e81f262c65c2021e69a69`
+- Candidate tree SHA-256: `28e38fafbd60781226003f4d4390c0e16d6b1cfa40f709bee9c37a893999b7c8`
+- Candidate hash algorithm: `wetindey-candidate-tree-v1`
+- Candidate paths (sorted):
+
+```text
+docs/operations/departments/maps-location.md
+```
+
+- Final commit SHA: Reported by the worker/controller after commit; not embedded in these bytes.
+
+#### Lane and path boundaries
+
+- Lane heading: `#### ADR-031 lane 3 agri map surface - ACTIVE`
+- Lane owner: Private Contractor, Maps Delivery `c9c17443-ef5e-4a7b-9b6e-c8f5381da30c`, controller-routed
+- Owned paths: Exactly the 1 paths in the preceding Candidate paths (sorted) block; no other path.
+- Excluded paths: Every repository path not listed in Candidate paths (sorted), including `src/config/pillars.ts` (lane 1, read-only source of truth), `src/integrations/maps/cartography.ts`, the spine, the POI budget, and `LANES.md`.
+- Concurrent dependencies: ADR-031 lane 2 (pillar surface, controller) has uncommitted work in `src/app/_components/category-selector-sheet/`; disjoint paths, one interaction noted under Known failures.
+
+#### Decisions and rationale
+
+ADR-031 (Accepted) names the map surface as lane 3: agro-dealers get a place symbol in the map's existing language, and the own-markets glow stays market-family only. The adapter therefore keys `PLACE_TYPE_SYMBOLS` and `PLACE_TYPE_LABELS` by `AGRO_DEALER_PLACE_TYPE` imported from `src/config/pillars.ts`, never by a hardcoded literal, so the place-type string keeps one source of truth with lane 1. The symbol is a sack with a sprout in the house 24x24 stroke idiom, reading farm inputs, not produce. Glow membership is NO at launch per the recorded controller agreement; `PLACES_GLOW_TYPES` is untouched. The contract test may pin the constant's literal value (it does, against silent lane-1 rename drift); the adapter may not.
+
+#### Implementation
+
+Code shipped at `7707515` under the code lane's own two-path manifest (`src/integrations/maps/MapboxAdapter.ts` and the new `scripts/agri/agri-map-surface-contract.test.ts`): two computed-key vocabulary entries plus the import in `src/integrations/maps/MapboxAdapter.ts`, and the executable contract `scripts/agri/agri-map-surface-contract.test.ts` asserting constant-keyed vocabularies with no hardcoded key, glow exclusion, `PILLAR_FLAGS.agri === false`, and the pinned constant value. Dormant by construction: the pillar flag is false and no live place carries the type, so runtime change is nil until lane 2 lands and the credential-gated activation seeds real agro-dealer places.
+
+#### Evidence and refutations
+
+- Refuter ID: `independent-claude-refuter-evidence-20260722-05`
+- Review binding: Full Base SHA, canonical Candidate tree SHA-256, and sorted Candidate paths.
+- Verdict location: External read-only refuter output keyed by Evidence ID and Refuter ID; not embedded because changing reviewed bytes invalidates it.
+- Runtime and external evidence: Independent default-to-REFUTED refuter, fresh context, read-only: NOT REFUTED on all five claims with its own measurements. One source of truth: import at adapter line 1, computed keys at the symbol and label tables, zero other agro-dealer references in the adapter. Contract teeth: a six-mutation harness run on adapter copies outside the repo (import dropped, bare literal keys, quoted literal keys, glow addition by literal, glow addition by constant, symbol entry removed) failed the contract on all six; baseline passes. Dormancy and regression: fresh-load census against the dev server at lifecycle ready read 60 markers, 0 agro-dealer, glow diagnostic count 47; the bridged theme toggle stayed clean (3 loading samples all overlay-bridged, 0 skeleton frames, final ready) and the post-toggle census was unchanged. The glow diagnostic on fresh load and post-rebuild reads `layer-added:47`, not `repainted:47`; `repainted` is same-style reconciliation only, and the Chromium measurement here is the corrected vocabulary for rebuild paths. Gates on the candidate manifest: contract test green, eslint clean on both files, token audit clean, location contract 20 of 20 unedited, lane 1 contract at `scripts/catalog/agri-catalog-foundation-p1-contract.test.ts` still green.
+- Checks not run: rendering with real agro-dealer places (none exist by construction until lane 4 and activation).
+
+#### Known failures
+
+`UNKNOWN` stands for `Agro-dealer rendering with real places`: no live place carries the type, so symbol legibility and operability with real data are unproven until lane 4 field truth and activation. Separately, whole-tree `tsc --noEmit` carries exactly one error at base, inside lane 2's uncommitted `src/app/_components/category-selector-sheet/views/CategorySelectorSheetView.tsx` edit (an array literal widened by the agri entry plus filter); outside this lane's manifest, owned by lane 2.
+
+- Unknown scope: `Agro-dealer rendering with real places`
+- Unknown owner: Maps/Location chief after ADR-031 lane 4 field truth and the credential-gated activation
+- Unknown resolution action: Record symbol legibility, keyboard operability, and zero POI-budget disturbance for `Agro-dealer rendering with real places` with a both-themes drive at z14.5 and z16 in the next lane-owned Maps entry, once real `agro_dealer` places exist in the pilot geography.
+
+#### External gates
+
+- External gate owner: Founder (activation key) and controller (lane 2 sequencing)
+- Gate state: No gate is inferred closed by this entry; `PILLAR_FLAGS.agri` remains false and no exposure exists.
+
+#### Integration order
+
+Append after concurrent LANES.md bursts; release with a span-checked burst immediately after this entry's path-scoped commit.
+
+#### Rollback or disable
+
+Reverting `7707515` removes the dormant vocabulary entries and the contract; no user-visible behavior changes either way until activation.
+
+#### Exact next action
+
+- Actor: Controller
+- Action: Complete ADR-031 lane 2 (pillar surface) including the CategorySelectorSheetView type repair, then route lane 4 field truth per the ADR.
+- Target: The lane 2 manifest in LANES.md: `CategoryPillar` gains `agri` behind the default-off flag with owner-supplied copy only.
+- Completion: Lane 2 released in LANES.md with whole-tree tsc silent again; the map surface above needs no further change for it.
