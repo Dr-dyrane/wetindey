@@ -146,6 +146,13 @@ export async function getCoverageForPoint(input: {
   lat: number;
   lng: number;
   radiusKm: number;
+  /**
+   * ADR-023: the caller names the location concept it is sending ("device" for
+   * a physical fix, "browsing" for the public search context). Validated at the
+   * parse boundary and deliberately unused beyond it: coverage math is the same
+   * either way, but an unnamed coordinate may not cross this boundary.
+   */
+  provenance: "device" | "browsing";
 }): Promise<PointCoverage> {
   input = parseCoverageForPoint(input);
   const point = toEwkt(input.lat, input.lng);

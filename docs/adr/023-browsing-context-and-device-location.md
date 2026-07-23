@@ -1,7 +1,7 @@
 # ADR-023: Browsing context and device location are separate
 
 **Date:** 2026-07-18
-**Status:** Accepted — governance architecture only; implementation unclaimed
+**Status:** Accepted - implemented at `95830d2`; conformance verified at `17c59b0` (see Conformance record, 2026-07-23)
 **Owners:** Dr Dyrane Alexander
 
 ## Context
@@ -177,3 +177,60 @@ The record defaults to **REFUTED** unless independent review can establish:
 - origin and destination egress are separately disclosed and validated;
 - anonymous reading remains intact; and
 - no implementation or rollout authority is implied by this ADR.
+
+## Conformance record (2026-07-23)
+
+A read-only audit at `17c59b0` verified the implementation that landed at `95830d2`
+(feat(location): separate browsing and device truth), with the store's problem copy
+moved to i18n keys at `bd01582` and its structure otherwise intact. Against the
+checklist above:
+
+- Concepts are distinct in every caller. `browsingLocation` and session-only
+  `deviceLocation` live in `src/core/state/locationStore.ts`; `cameraCenter` lives in
+  `src/core/state/globalStore.ts`; the selected place is task state in the home page
+  hook. Search, distance, and Nearest measure from browsing context only
+  (`src/app/_hooks/useLocationIdentity.ts`, `searchOrigin`).
+- Lagos and outside-Lagos fixes follow the same truth rules: the Location Sheet
+  records the fix via `recordDeviceLocation` before its coverage lookup, so a valid
+  outside-coverage fix is retained.
+- Default, manual, and simulated points cannot render personal identity. The self
+  marker is fed only by `useFreshDeviceLocation()` in
+  `src/design-system/components/MapboxCanvas.tsx`; browsing context never reaches
+  `setUserPosition`.
+- Accuracy and browser capture time are retained on `DeviceLocation`; stale and
+  out-of-order fixes are rejected (`newestDeviceLocation`, the stale check inside
+  `acquireDeviceLocation`); denial, timeout, unavailable, insecure, unsupported, and
+  invalid states produce typed, recoverable problems.
+- Freshness is bounded and named: `DEVICE_LOCATION_FRESH_MS` is five minutes for
+  personal identity, `ROUTE_ORIGIN_FRESH_MS` is sixty seconds for exact route origin,
+  both contract-tested in `scripts/location-default-contract.test.ts`.
+- Recenter acquires a fresh fix (`maximumAgeMs: 0`), records it, updates the self
+  marker, and moves the camera without touching browsing context or search results;
+  it never recenters continuously.
+- Get It origins are typed at the provider boundary: `RouteOrigin` in
+  `src/lib/directions.ts` is a discriminated union of `DisclosedRouteOrigin` (device,
+  disclosure-stamped, sixty-second admission re-checked before every provider
+  request and at external handoff) and `BrowsingRouteOrigin` (public search
+  context). Route preview on open uses the browsing origin; an exact device origin
+  leaves only after the explicit disclosure step, and destination-only handoff is
+  always available.
+- Persistence cannot restore a personal fix: `partialize` excludes `deviceLocation`
+  and `merge` nulls it on rehydration.
+- No precise fix reaches logs, analytics, share URLs, or Presence. Share payloads
+  carry the destination only; Presence remains inert (`sharedUsers` is hard-passed
+  as an empty array).
+- The one remaining unnamed-coordinate crossing found by the audit, the
+  `getCoverageForPoint` server action, is closed by this lane: its input now
+  requires `provenance: "device" | "browsing"` at the parse boundary
+  (`src/lib/validation.ts`, `src/app/_actions/place-actions.ts`), named "device" by
+  its sole caller in
+  `src/app/_components/location-sheet/hooks/useLocationSheet.ts`.
+
+Known cosmetic residual, recorded rather than fixed here: while a route preview is
+displayed, `src/design-system/components/MapboxCanvas.tsx` (the center effect near
+lines 570-573) skips camera updates in favor of route framing, so a recenter during
+an active route updates the self marker but does not move the camera. This does not
+affect any privacy, routing, or personal-marker boundary.
+
+This record verifies conformance of the named paths at the named commits. It grants
+no Presence activation, no new egress, and no rollout authority.

@@ -138,7 +138,13 @@ export function useLocationSheet({
       const coords = { lat: deviceLocation.lat, lng: deviceLocation.lng };
 
       try {
-        const coverage = await getCoverageForPoint({ ...coords, radiusKm });
+        // ADR-023: this coordinate is a physical device fix, and the server
+        // boundary requires the concept to be named rather than inferred.
+        const coverage = await getCoverageForPoint({
+          ...coords,
+          radiusKm,
+          provenance: "device",
+        });
         if (g !== generation.current) return;
 
         if (coverage.placesInRadius > 0) {

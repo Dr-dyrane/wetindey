@@ -406,6 +406,14 @@ const coverageForPointInput = z
     lat: latitude,
     lng: longitude,
     radiusKm,
+    /**
+     * ADR-023: a bare coordinate is not sufficient at a privacy boundary. The
+     * caller must name which location concept it is sending: a physical device
+     * fix ("device") or the public browsing context ("browsing"). The action
+     * validates the name and ignores it beyond parsing; the point is that an
+     * unnamed coordinate cannot cross this server boundary at all.
+     */
+    provenance: z.enum(["device", "browsing"]),
   })
   .strict()
   .refine((v) => !(v.lat === 0 && v.lng === 0), {

@@ -23,6 +23,7 @@ import {
   type MapCanvasStyleState,
 } from "../src/design-system/components/MapboxCanvas";
 import { disclosedRouteOrigin, isDisclosedRouteOriginAdmissible } from "../src/lib/directions";
+import { parseCoverageForPoint } from "../src/lib/validation";
 
 const testFilter = process.env.WETINDEY_CONTRACT_FILTER;
 
@@ -1668,4 +1669,32 @@ test("renderer readiness is render-bound, categorically diagnosed, epoch-bound a
     sources["src/design-system/components/MapboxCanvas.tsx"],
     /event\.adapterEpoch !== current\.adapterEpoch[\s\S]*reduceMapCanvasStyleState/
   );
+});
+
+test("coverage-point queries must name their location provenance at the parse boundary", () => {
+  // ADR-023 conformance closure: a bare coordinate cannot cross the coverage
+  // server boundary. The caller names "device" or "browsing"; anything else,
+  // including omission, is rejected at parse time.
+  const london = { lat: 51.5074, lng: -0.1278, radiusKm: 10 };
+  assert.equal(
+    parseCoverageForPoint({ ...london, provenance: "device" }).provenance,
+    "device"
+  );
+  assert.equal(
+    parseCoverageForPoint({ ...london, provenance: "browsing" }).provenance,
+    "browsing"
+  );
+  assert.throws(() => parseCoverageForPoint(london));
+  assert.throws(() => parseCoverageForPoint({ ...london, provenance: "camera" }));
+  assert.throws(() => parseCoverageForPoint({ ...london, provenance: "default" }));
+
+  // The sole live caller sends a freshly recorded physical fix and says so.
+  const locationSheet =
+    sources["src/app/_components/location-sheet/hooks/useLocationSheet.ts"];
+  assert.match(
+    locationSheet,
+    /getCoverageForPoint\(\{[\s\S]{0,80}provenance: "device"/
+  );
+  const placeActions = sources["src/app/_actions/place-actions.ts"];
+  assert.match(placeActions, /provenance: "device" \| "browsing"/);
 });
