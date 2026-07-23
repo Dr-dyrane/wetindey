@@ -26,7 +26,7 @@ const ORCHESTRATION_HOSTS = new Set(["presentation-host"]);
 // component actually reads @/core/i18n, which the contract verifies below.
 // The read may live in the view (location-sheet) or in the hook that resolves
 // the copy the view renders (confirm-visit-sheet), so both are swept.
-const CENTRALIZED_COPY = new Set(["location-sheet", "confirm-visit-sheet"]);
+const CENTRALIZED_COPY = new Set(["location-sheet", "confirm-visit-sheet", "profile-sheet"]);
 
 test("modular component subfolders adhere to the 6-file MVC slice contract", () => {
   if (!existsSync(componentsDir)) {
