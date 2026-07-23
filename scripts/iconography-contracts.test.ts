@@ -296,7 +296,11 @@ assert.doesNotMatch(sources.itemCard, /monogramInk|linear-gradient\(145deg/);
 // The orb never substitutes for the 44px interactive parent.
 assert.ok(sources.tailwind.includes('tap: "44px"'), "tap target token remains exactly 44px");
 assert.match(sources.listRow, /min-h-tap/);
-assert.match(sources.category, /className=\{`squircle grid h-12 w-full/);
+// The row's scoped class `category-selector-row` (its grid-template moved to
+// styles/CategorySelectorSheet.css in the 6-file MVC slice extraction) leads the
+// className now; the 44px-plus interactive parent guarantee is unchanged, still
+// h-12 (48px) full-width, never the 32px orb.
+assert.match(sources.category, /className=\{`category-selector-row squircle grid h-12 w-full/);
 assert.match(sources.about, /className="flex min-h-tap w-full/);
 assert.match(sources.about, /squircle-card flex min-h-tap items-center/);
 assert.equal(matches(sources.location, /className="flex min-h-tap w-full/g), 3);
