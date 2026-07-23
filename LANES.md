@@ -196,18 +196,9 @@ Controller-directed, scout confirmed exact paths and stopped to the controller b
 
 ## Active exact path locks
 
-#### Design-system control a11y repair - ACTIVE
+#### Design-system control a11y repair - RELEASED / PATHLESS
 
-Owner: Private Contractor, Maps Delivery `c9c17443-ef5e-4a7b-9b6e-c8f5381da30c`, self-claimed under the Founder's standing continuous-work directive. Exact writable paths:
-
-- `src/design-system/components/SheetPicker.tsx`
-- `src/design-system/components/Input.tsx`
-- `src/design-system/components/SearchField.tsx`
-- new `scripts/a11y/design-system-a11y-contract.test.ts`
-
-Purpose: three verified accessibility defects in shared controls. One: SheetPicker's trigger sets `aria-labelledby` to the label alone, so a screen reader hears "Market, button" and never the selected value; the accessible name gains the value span (label id plus value id), the label gains `htmlFor` to the trigger, and every live call site already passes a label. Two: Input renders its `error` as a bare paragraph with no id, no `aria-invalid`, no `aria-describedby`, and no announcement; the error becomes a `role="alert"` paragraph wired to the input, merging any consumer-provided `aria-describedby`. Three: SearchField's clear button lacks `type="button"`, latent form-submit hazard. No visual change, no copy change, no i18n change (hardcoded strings in these files are a separate recorded finding). Exclusions: every other path, including report-price and evidence-media surfaces.
-
-Completion: contract green, gates green, runtime accessible-name proof on the live report sheet, independent default-to-REFUTED refutation, path-scoped commit pushed under the `0bbdb11` class, span-checked release.
+Complete at `6cca659`, pushed under the `0bbdb11` class after NOT REFUTED on all five claims with the refuter's own render-level proof (9/9): SheetPicker triggers now compose label plus value in the accessible name ("Market Mile 12 Market", placeholder when empty) with the label wired htmlFor the trigger; Input errors are role="alert" paragraphs the input points at via aria-invalid and a merged aria-describedby proven to survive consumer-passed values (the spread-order clobber was caught by the worker's own render proof, fixed, and mutation-proven); SearchField's clear button carries type="button". className sets proven byte-identical at HEAD versus candidate, all six live picker call sites pass a label, 4/4 contract mutations killed, gates green. Recorded residuals for later lanes: hardcoded English strings in these components belong to the i18n hoist finding, and the report-price Banner role remains with its own vertical. Paths released.
 
 #### Offline shell honesty and shell-cache bound - RELEASED / PATHLESS
 
