@@ -1,0 +1,13 @@
+/* SettingsSheet scoped style.
+ *
+ * Every option inside the settings segmented controls (language, theme) renders
+ * its label at a fixed 13px, one step below the sheet body text so the compact
+ * pill row reads as a control rather than a paragraph. That size was an
+ * arbitrary Tailwind value (text-[13px]) living inline on the button, so it now
+ * lives here as one named class instead. The class is applied in
+ * views/SettingsSheetView.tsx alongside the layout utilities that keep the pill
+ * centered; no borders, per the house HIG rule.
+ */
+.settings-segment-label {
+  font-size: 13px;
+}

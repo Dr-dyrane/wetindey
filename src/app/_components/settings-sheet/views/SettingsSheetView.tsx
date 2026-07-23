@@ -1,3 +1,4 @@
+import "../styles/SettingsSheet.css";
 import {
   React,
   IconOrb,
@@ -34,7 +35,7 @@ function Segmented<T extends string>({
             aria-pressed={active}
             type="button"
             onClick={() => handleSegmentChange(o.id, value, onChange)}
-            className={`flex min-h-tap items-center justify-center gap-1.5 squircle py-1.5 text-[13px] font-medium transition duration-micro
+            className={`settings-segment-label flex min-h-tap items-center justify-center gap-1.5 squircle py-1.5 font-medium transition duration-micro
               ${active ? "bg-surface text-text-primary shadow-card" : "text-text-secondary active:opacity-60"}`}
           >
             {o.label}

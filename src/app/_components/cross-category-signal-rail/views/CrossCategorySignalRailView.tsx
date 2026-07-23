@@ -5,6 +5,7 @@ import {
 } from "../imports/imports";
 import type { CrossCategorySignalRailProps } from "../CrossCategorySignalRail";
 import type { useCrossCategorySignalRail } from "../hooks/useCrossCategorySignalRail";
+import "../styles/CrossCategorySignalRail.css";
 
 export interface CrossCategorySignalRailViewProps extends CrossCategorySignalRailProps {
   sheet: ReturnType<typeof useCrossCategorySignalRail>;
@@ -27,7 +28,7 @@ export function CrossCategorySignalRailView(p: CrossCategorySignalRailViewProps)
       onFocus={() => setPaused(true)}
       onBlur={() => setPaused(false)}
     >
-      <span className="relative flex h-[30px] w-full min-w-0 max-w-[220px] items-center justify-between overflow-hidden rounded-[18px] bg-fillSecondary px-2 shadow-sm transition-all hover:bg-fillTertiary">
+      <span className="cross-category-signal-pill relative flex w-full min-w-0 items-center justify-between overflow-hidden bg-fillSecondary px-2 shadow-sm transition-all hover:bg-fillTertiary">
         <span
           key={signal.id}
           className="cross-category-signal-enter flex min-w-0 items-center gap-1.5"

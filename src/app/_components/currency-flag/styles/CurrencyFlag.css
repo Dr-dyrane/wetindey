@@ -1,0 +1,16 @@
+/* CurrencyFlag custom scoped style overrides */
+
+/*
+ * The flag frame's structural geometry (its 1.75rem square, circular clip and
+ * non-shrinking inline-flex box) lifted off the outermost container's utility
+ * chain into one named class. The themed fill (bg-fillTertiary) stays a Tailwind
+ * utility so it keeps resolving through the shared color token surface.
+ */
+.currency-flag-frame {
+  display: inline-flex; /* inline-flex */
+  height: 1.75rem; /* h-7 */
+  width: 1.75rem; /* w-7 */
+  flex-shrink: 0; /* shrink-0 */
+  overflow: hidden; /* overflow-hidden */
+  border-radius: 9999px; /* rounded-full */
+}

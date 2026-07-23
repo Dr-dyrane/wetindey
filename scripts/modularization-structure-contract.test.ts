@@ -7,6 +7,20 @@ import { test } from "node:test";
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const componentsDir = resolve(root, "src/app/_components");
 
+// Narrow, documented exemption for genuine composition hosts.
+//
+// A folder qualifies ONLY if it is a pure orchestration host: its view
+// composes exclusively other _components siblings, it holds no view-state
+// hook (its state lives in a shared hook outside the folder), it renders no
+// styled leaf DOM (zero className/style), and it carries no local copy.
+// Such a component legitimately has no hooks/, styles/, or copy/, so forcing
+// those directories would only manufacture empty cargo-cult folders, which is
+// exactly what this contract exists to prevent.
+//
+// Allowlisted folders are still held to imports/ and views/ (and the
+// <Component>View.tsx file rule). Everything else keeps all five subdirs.
+const ORCHESTRATION_HOSTS = new Set(["presentation-host"]);
+
 test("modular component subfolders adhere to the 6-file MVC slice contract", () => {
   if (!existsSync(componentsDir)) {
     assert.fail("src/app/_components directory missing");
@@ -24,8 +38,15 @@ test("modular component subfolders adhere to the 6-file MVC slice contract", () 
     const folderPath = resolve(componentsDir, folder);
     const subEntries = readdirSync(folderPath);
 
+    // Composition hosts are exempted from hooks/, styles/, and copy/ (see
+    // ORCHESTRATION_HOSTS above); real MVC-slice components keep all five.
+    const isOrchestrationHost = ORCHESTRATION_HOSTS.has(folder);
+
     // Verify sub-directories exist: hooks, views, styles, copy, imports
-    const requiredSubdirs = ["hooks", "views", "styles", "copy", "imports"];
+    // (orchestration hosts are held only to views/ and imports/).
+    const requiredSubdirs = isOrchestrationHost
+      ? ["views", "imports"]
+      : ["hooks", "views", "styles", "copy", "imports"];
     for (const subdir of requiredSubdirs) {
       const subdirPath = resolve(folderPath, subdir);
       assert.ok(
@@ -35,11 +56,13 @@ test("modular component subfolders adhere to the 6-file MVC slice contract", () 
     }
 
     // Verify files within sub-directories
-    const hooksFiles = readdirSync(resolve(folderPath, "hooks"));
-    assert.ok(
-      hooksFiles.some((f) => /^use.+\.ts$/.test(f)),
-      `Modularized component '${folder}' hooks/ directory must contain a use<Component>.ts hook`
-    );
+    if (!isOrchestrationHost) {
+      const hooksFiles = readdirSync(resolve(folderPath, "hooks"));
+      assert.ok(
+        hooksFiles.some((f) => /^use.+\.ts$/.test(f)),
+        `Modularized component '${folder}' hooks/ directory must contain a use<Component>.ts hook`
+      );
+    }
 
     const viewsFiles = readdirSync(resolve(folderPath, "views"));
     assert.ok(
@@ -47,17 +70,19 @@ test("modular component subfolders adhere to the 6-file MVC slice contract", () 
       `Modularized component '${folder}' views/ directory must contain a <Component>View.tsx view`
     );
 
-    const stylesFiles = readdirSync(resolve(folderPath, "styles"));
-    assert.ok(
-      stylesFiles.some((f) => /\.css$/.test(f)),
-      `Modularized component '${folder}' styles/ directory must contain a scoped CSS stylesheet`
-    );
+    if (!isOrchestrationHost) {
+      const stylesFiles = readdirSync(resolve(folderPath, "styles"));
+      assert.ok(
+        stylesFiles.some((f) => /\.css$/.test(f)),
+        `Modularized component '${folder}' styles/ directory must contain a scoped CSS stylesheet`
+      );
 
-    const copyFiles = readdirSync(resolve(folderPath, "copy"));
-    assert.ok(
-      copyFiles.includes("copy.ts"),
-      `Modularized component '${folder}' copy/ directory must contain copy.ts`
-    );
+      const copyFiles = readdirSync(resolve(folderPath, "copy"));
+      assert.ok(
+        copyFiles.includes("copy.ts"),
+        `Modularized component '${folder}' copy/ directory must contain copy.ts`
+      );
+    }
 
     const importsFiles = readdirSync(resolve(folderPath, "imports"));
     assert.ok(

@@ -1,0 +1,14 @@
+/* CrossCategorySignalRail scoped style overrides */
+
+/*
+ * The signal pill's exact geometry, lifted verbatim out of the view's arbitrary
+ * Tailwind utilities (h-[30px], max-w-[220px], rounded-[18px]) so those magic
+ * pixel values live in one named, scoped place instead of being inlined on the
+ * element. The class carries only geometry; the pill keeps its flex, colour and
+ * spacing utilities in the JSX.
+ */
+.cross-category-signal-pill {
+  height: 30px;
+  max-width: 220px;
+  border-radius: 18px;
+}

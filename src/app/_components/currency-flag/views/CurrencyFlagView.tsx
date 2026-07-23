@@ -1,3 +1,4 @@
+import "../styles/CurrencyFlag.css";
 import { React } from "../imports/imports";
 import type { CurrencyFlagProps } from "../CurrencyFlag";
 import type { useCurrencyFlag } from "../hooks/useCurrencyFlag";
@@ -12,7 +13,7 @@ export function CurrencyFlagView({ className = "", sheet }: CurrencyFlagViewProp
   return (
     <span
       aria-hidden="true"
-      className={`inline-flex h-7 w-7 shrink-0 overflow-hidden rounded-full bg-fillTertiary ${className}`}
+      className={`currency-flag-frame bg-fillTertiary ${className}`}
     >
       <svg
         className="h-full w-full"

@@ -1,3 +1,4 @@
+import "../styles/ReportPriceSheet.css";
 import {
   React,
   IconOrb,
@@ -238,7 +239,7 @@ export function ReportPriceSheetView(p: ReportPriceSheetViewProps) {
         ) : (
           <>
             <EvidenceMediaField observationId={p.sheet.admittedObservationId} />
-            <div className="grid grid-cols-2 gap-2">
+            <div className="report-price-action-bar">
               <Button type="button" variant="secondary" size="md" onClick={p.sheet.reset}>
                 {p.t["contribution.new_report"]}
               </Button>
