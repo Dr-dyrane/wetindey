@@ -487,7 +487,9 @@ Released, completed, or closed lane records collapsed from the sections above; e
 - Food trust query extraction - read-side trust helpers moved to food-trust.ts, single use server boundary retained (`93bba80`)
 - Maps platform consolidation - cartography/theme-snapshot helpers extracted, dormant ADR-016 contact-popup construction removed (`03adfad`)
 - Maps three-scope evidence entry - first theme-transition Unknown narrowed to Safari/iOS capture and renderer-failure bridging (`8fb9b02`)
-- Developer Relations department worklog protocol - worklog reconciled to 21 exclusive paths, five focused contracts pass, canonical digest fixed literal (`350882e`)
+#### Developer Relations department worklog protocol — RELEASED / PATHLESS
+
+Worklog reconciled to 21 exclusive paths, five focused contracts pass, canonical digest fixed literal (`350882e`). This heading is the exact released-lane record scripts/department-worklog-contract.test.ts pins byte-for-byte (em dash included, a restored pinned literal, not new prose); the register compaction at `924d552` collapsed it into a bullet and regressed the enforced contract to 4/5 until this restoration.
 
 ## Recently released pointer
 
