@@ -140,13 +140,15 @@ export function GetItSheetView({
                   className="mx-4 space-y-3 squircle-card bg-fillSecondary px-4 py-3"
                 >
                   <div className="space-y-1">
-                    {/* The route-disclosure paragraph stays as literals here on
-                        purpose: location-default-contract.test.ts asserts the
-                        disclosure copy is auditable in this view, and it would be
-                        UNTRANSLATED (English) in every shippable locale anyway, so
-                        routing it through i18n gains nothing visible while breaking
-                        that privacy contract. The maps-app name is still i18n'd via
-                        `mapsName`. */}
+                    {/* The route-disclosure TITLE stays a literal on purpose:
+                        location-default-contract.test.ts greps this view for
+                        "Choose what leaves WetinDey" to assert the disclosure copy
+                        stays auditable in the component. The BODY sentences below
+                        now flow through i18n like the rest of the sheet, keyed as
+                        UNTRANSLATED get.* keys that render English in every
+                        shippable locale (a privacy/consent disclosure is not
+                        guessed at in Pidgin or Yorùbá). The maps-app name is the
+                        already-i18n'd `mapsName`, passed as the {maps} placeholder. */}
                     <p className="text-subhead font-semibold text-text-primary">
                       {originState.kind === "problem"
                         ? originState.title
@@ -158,8 +160,8 @@ export function GetItSheetView({
                       {originState.kind === "problem"
                         ? originState.message
                         : originState.kind === "ready"
-                          ? `Your refreshed location and this market were sent to Mapbox for this route. Open ${mapsName} within one minute to use the same origin.`
-                          : `Use current location refreshes and sends your exact location and this market to Mapbox for a route, then to ${mapsName}. Destination only sends the market, not your location.`}
+                          ? t("get.route_ready_body", { maps: mapsName })
+                          : t("get.route_disclosure_body", { maps: mapsName })}
                     </p>
                   </div>
                   <div className="flex flex-col gap-2 sm:flex-row">

@@ -163,6 +163,15 @@ export const en = {
      hardcoded in the shell, so translating it fixes every sheet at once. */
   close: "Close",
 
+  /* The rest of ModalSheet's navigation chrome, also behind every sheet: the
+     backdrop/scrim reads "Dismiss" for a top-level sheet and "Back to previous
+     step" when a contextual child is stacked over it, and the child header
+     carries a visible "Back" control. Keyed here so all three translate at once
+     rather than staying English behind every sheet the way `close` used to. */
+  dismiss: "Dismiss",
+  back: "Back",
+  back_to_previous_step: "Back to previous step",
+
   /* Settings, SettingsSheet.tsx:107,115 are hardcoded English today. */
   "settings.radius_label": "Search radius",
   "settings.radius_a11y": "Search radius in kilometres",
@@ -621,13 +630,16 @@ export const en = {
      finish routing that sheet through i18n. `{when}` is a relative-time string;
      get.maps_fallback is the maps-app name shown when the platform is unknown.
 
-     The route-disclosure paragraph (its titles and bodies) is deliberately NOT
-     keyed here and stays as literals in the view: location-default-contract
-     asserts that copy remains auditable in the component, and it renders English
-     in every shippable locale regardless, so routing it would gain nothing
-     visible while breaking that privacy contract. The reviews-preparation notes
-     speak to safety and moderation, a tone-sensitive register, so they are
-     UNTRANSLATED in Pidgin and Yorùbá. */
+     The route-disclosure TITLES stay literals in the view: location-default-
+     contract greps the component for "Choose what leaves WetinDey" to assert that
+     the disclosure copy remains auditable there. The two static BODY sentences
+     ("ready" and the default choose-origin paragraph) are keyed here so they flow
+     through i18n like the rest of the sheet, but they are UNTRANSLATED in Pidgin
+     and Yorùbá: this is a privacy/consent disclosure that renders English in every
+     shippable locale, so the key exists for routing, not for a vouched translation.
+     `{maps}` is the maps-app name (already i18n'd via get.maps_*). The reviews-
+     preparation notes speak to safety and moderation, a tone-sensitive register,
+     so they are UNTRANSLATED in Pidgin and Yorùbá too. */
   "get.last_seen": "Last seen {when}",
   "get.offer_per": " per {unit} · {item}",
   "get.more_details": "More details",
@@ -637,6 +649,10 @@ export const en = {
   "get.use_current_location": "Use current location",
   "get.refreshing_location": "Refreshing location…",
   "get.destination_only": "Destination only",
+  "get.route_ready_body":
+    "Your refreshed location and this market were sent to Mapbox for this route. Open {maps} within one minute to use the same origin.",
+  "get.route_disclosure_body":
+    "Use current location refreshes and sends your exact location and this market to Mapbox for a route, then to {maps}. Destination only sends the market, not your location.",
   "get.reviews_title": "Reviews",
   "get.reviews_prep_note": "New reviews are unavailable while we prepare safety and moderation safeguards.",
   "get.reviews_loading": "Loading reviews...",
@@ -644,6 +660,28 @@ export const en = {
   "get.reviews_unavailable_body": "We are preparing this feature with safety and moderation in mind.",
   "get.reviews_one": "review",
   "get.reviews_other": "reviews",
+
+  /* Currency picker, CurrencyPickerSheet + its content/view. This sheet bypassed
+     this file entirely and carried its own inline `copy` object; these keys are
+     that copy, plus the two aria-labels it hardcoded. It is a reference-currency
+     picker over an FX-rate table, so the group headers and the "Base"/"No trend"
+     row badges are FX register: Pidgin is written only for the plain UI action
+     (the sheet title) and the "Recent" group, and everything currency/FX-specific
+     is UNTRANSLATED (shows English) rather than guessed. `{name}` in the a11y
+     label is the selected currency's display name. */
+  "currency.title": "Choose currency",
+  "currency.search_placeholder": "Search currencies",
+  "currency.no_results": "No currencies found",
+  "currency.none": "No currencies available",
+  "currency.group_base": "Base currency",
+  "currency.group_recent": "Recent",
+  "currency.group_popular": "Popular",
+  "currency.group_all": "All currencies",
+  "currency.group_search": "Search results",
+  "currency.clear_search": "Clear currency search",
+  "currency.base_badge": "Base",
+  "currency.no_trend": "No trend",
+  "currency.selected_a11y": "Choose currency, {name} selected",
 
   /* Report price, ReportPriceSheet.tsx:88-166, hardcoded English today. */
   "report.choose_market": "Choose market",
@@ -799,6 +837,14 @@ const pidgin: LocaleTable = {
   // Verbatim English, the same class as "Done"/"Save"/"Settings" in this table:
   // a one-word UI control a Lagos speaker reads as-is.
   close: "Close",
+
+  // "Back" joins that verbatim class (a one-word nav control read as-is). The
+  // backdrop's "Dismiss" and the "Back to previous step" aria phrase are not
+  // one-word controls and are not obviously read as-is, so they stay UNTRANSLATED
+  // rather than guessed.
+  dismiss: UNTRANSLATED,
+  back: "Back",
+  back_to_previous_step: UNTRANSLATED,
 
   "settings.radius_label": "How far you wan look",
   "settings.radius_a11y": "How far you wan look, for kilometre",
@@ -1128,8 +1174,9 @@ const pidgin: LocaleTable = {
      NEEDS_NATIVE_REVIEW). Everything else is UNTRANSLATED and shows English:
      "Last seen" is a WhatsApp-familiar phrase a Lagos user reads as-is; the
      reviews safety/moderation notes are the careful register the header says not
-     to guess at. (The route-disclosure paragraph is not keyed at all; it stays a
-     literal in the view, see the English table's note.) */
+     to guess at. The two route-disclosure body sentences are now keyed (see the
+     English table's note) but stay UNTRANSLATED here: a privacy/consent
+     disclosure renders English in every shippable locale on purpose. */
   "get.last_seen": UNTRANSLATED,
   "get.offer_per": UNTRANSLATED,
   "get.more_details": UNTRANSLATED,
@@ -1139,6 +1186,8 @@ const pidgin: LocaleTable = {
   "get.use_current_location": UNTRANSLATED,
   "get.refreshing_location": "We dey refresh location…",
   "get.destination_only": UNTRANSLATED,
+  "get.route_ready_body": UNTRANSLATED,
+  "get.route_disclosure_body": UNTRANSLATED,
   "get.reviews_title": UNTRANSLATED,
   "get.reviews_prep_note": UNTRANSLATED,
   "get.reviews_loading": "We dey load reviews…",
@@ -1146,6 +1195,25 @@ const pidgin: LocaleTable = {
   "get.reviews_unavailable_body": UNTRANSLATED,
   "get.reviews_one": UNTRANSLATED,
   "get.reviews_other": UNTRANSLATED,
+
+  /* Currency picker. FX register: only the sheet's own action title ("Pick
+     currency", the same "Pick ___" construction as report.choose_* below) and the
+     "Recent" group (a one-word control read as-is, like `close`) are written. The
+     rest names currencies, FX groups and trend and is UNTRANSLATED (shows English)
+     rather than guessed. */
+  "currency.title": "Pick currency",
+  "currency.search_placeholder": UNTRANSLATED,
+  "currency.no_results": UNTRANSLATED,
+  "currency.none": UNTRANSLATED,
+  "currency.group_base": UNTRANSLATED,
+  "currency.group_recent": "Recent",
+  "currency.group_popular": UNTRANSLATED,
+  "currency.group_all": UNTRANSLATED,
+  "currency.group_search": UNTRANSLATED,
+  "currency.clear_search": UNTRANSLATED,
+  "currency.base_badge": UNTRANSLATED,
+  "currency.no_trend": UNTRANSLATED,
+  "currency.selected_a11y": UNTRANSLATED,
 
   "report.choose_market": "Pick market",
   "report.choose_item": "Pick food",
@@ -1291,6 +1359,11 @@ const yoruba: LocaleTable = {
 
   // LANES H2: Yorùbá withheld pending a native speaker.
   close: UNTRANSLATED,
+
+  // LANES H2: Yorùbá withheld pending a native speaker.
+  dismiss: UNTRANSLATED,
+  back: UNTRANSLATED,
+  back_to_previous_step: UNTRANSLATED,
 
   "settings.radius_label": UNTRANSLATED,
   "settings.radius_a11y": UNTRANSLATED,
@@ -1552,6 +1625,8 @@ const yoruba: LocaleTable = {
   "get.use_current_location": UNTRANSLATED,
   "get.refreshing_location": UNTRANSLATED,
   "get.destination_only": UNTRANSLATED,
+  "get.route_ready_body": UNTRANSLATED,
+  "get.route_disclosure_body": UNTRANSLATED,
   "get.reviews_title": UNTRANSLATED,
   "get.reviews_prep_note": UNTRANSLATED,
   "get.reviews_loading": UNTRANSLATED,
@@ -1559,6 +1634,21 @@ const yoruba: LocaleTable = {
   "get.reviews_unavailable_body": UNTRANSLATED,
   "get.reviews_one": UNTRANSLATED,
   "get.reviews_other": UNTRANSLATED,
+
+  // Currency picker. Yorùbá withheld pending a native speaker.
+  "currency.title": UNTRANSLATED,
+  "currency.search_placeholder": UNTRANSLATED,
+  "currency.no_results": UNTRANSLATED,
+  "currency.none": UNTRANSLATED,
+  "currency.group_base": UNTRANSLATED,
+  "currency.group_recent": UNTRANSLATED,
+  "currency.group_popular": UNTRANSLATED,
+  "currency.group_all": UNTRANSLATED,
+  "currency.group_search": UNTRANSLATED,
+  "currency.clear_search": UNTRANSLATED,
+  "currency.base_badge": UNTRANSLATED,
+  "currency.no_trend": UNTRANSLATED,
+  "currency.selected_a11y": UNTRANSLATED,
 
   "report.choose_market": UNTRANSLATED,
   "report.choose_item": UNTRANSLATED,
@@ -1702,6 +1792,11 @@ export const NEEDS_NATIVE_REVIEW: Readonly<Record<Exclude<Locale, "en">, readonl
     // still owed a Lagos speaker's read.
     "get.refreshing_location",
     "get.reviews_loading",
+    // "Pick currency" mirrors the report.choose_* "Pick ___" construction, which
+    // makes it consistent but not vouched: unlike those, a Lagos speaker has not
+    // read it. (currency.group_recent "Recent" is verbatim English like `close`
+    // and needs no review.)
+    "currency.title",
     "profile.report_problem",
     // "Tell us wetin spoil", the same phrase as `profile.report_problem` above,
     // carried onto the sheet's own title so the two agree. Genuine Pidgin, but it

@@ -600,7 +600,7 @@ export function ModalSheet({
     >
       <button
         type="button"
-        aria-label={child ? "Back to previous step" : "Dismiss"}
+        aria-label={child ? t("back_to_previous_step") : t("dismiss")}
         onClick={() => requestCloseRef.current()}
         data-motion-state={state}
         className={`absolute inset-0 ${transition.reveal} motion-modal-backdrop ${
@@ -701,7 +701,7 @@ export function ModalSheet({
                 className={`squircle inline-flex h-tap items-center gap-1 px-2 text-body text-accent ${transition.press}`}
               >
                 <ChevronLeft aria-hidden className="h-4 w-4" strokeWidth={2.5} />
-                Back
+                {t("back")}
               </button>
               <h2 className="min-w-0 flex-1 truncate text-headline text-text-primary">
                 {child.title}

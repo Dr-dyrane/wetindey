@@ -3,6 +3,7 @@ import { IconOrb } from "@/design-system/components/IconOrb";
 import { ModalSheet, useModalSheetNavigation } from "@/design-system/components/ModalSheet";
 import { SolidIcon } from "@/design-system/icons/SolidIcon";
 import { transition } from "@/design-system/motion";
+import { useT } from "@/core/i18n";
 import {
   POPULAR_REFERENCE_CURRENCIES,
   SUPPORTED_REFERENCE_CURRENCY_META,
@@ -22,6 +23,7 @@ export {
   useModalSheetNavigation,
   SolidIcon,
   transition,
+  useT,
   POPULAR_REFERENCE_CURRENCIES,
   SUPPORTED_REFERENCE_CURRENCY_META,
   isSupportedReferenceCurrencyCode,

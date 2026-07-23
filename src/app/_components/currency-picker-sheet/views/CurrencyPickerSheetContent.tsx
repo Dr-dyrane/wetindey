@@ -6,6 +6,7 @@ import {
   POPULAR_REFERENCE_CURRENCIES,
   SUPPORTED_REFERENCE_CURRENCY_META,
   CurrencyFlag,
+  useT,
   type SupportedReferenceCurrencyCode,
   type ReferenceCurrencyCatalogEntry,
 } from "../imports/imports";
@@ -14,7 +15,6 @@ import {
   searchScore,
   type useCurrencyPickerSheet,
 } from "../hooks/useCurrencyPickerSheet";
-import { copy } from "../copy/copy";
 
 export function CurrencyPickerSheetContent({
   available,
@@ -29,6 +29,7 @@ export function CurrencyPickerSheetContent({
   previews: readonly ReferenceCurrencyCatalogEntry[];
   sheet: ReturnType<typeof useCurrencyPickerSheet>;
 }) {
+  const t = useT();
   const { availableSet, query, setQuery, recents } = sheet;
   const normalizedQuery = query.trim().toLowerCase();
 
@@ -77,7 +78,7 @@ export function CurrencyPickerSheetContent({
       {normalizedQuery ? (
         searchResults.length > 0 ? (
           <CurrencyGroup
-            title="Search results"
+            title={t("currency.group_search")}
             currencies={searchResults}
             value={value}
             onSelect={onSelect}
@@ -85,34 +86,34 @@ export function CurrencyPickerSheetContent({
           />
         ) : (
           <p role="status" className="py-8 text-center text-body text-text-secondary">
-            {copy.noResults}
+            {t("currency.no_results")}
           </p>
         )
       ) : available.length > 0 ? (
         <>
           <CurrencyGroup
-            title={copy.baseGroup}
+            title={t("currency.group_base")}
             currencies={["NGN"]}
             value={value}
             onSelect={onSelect}
             previews={previews}
           />
           <CurrencyGroup
-            title={copy.recentGroup}
+            title={t("currency.group_recent")}
             currencies={recentCurrencies}
             value={value}
             onSelect={onSelect}
             previews={previews}
           />
           <CurrencyGroup
-            title={copy.popularGroup}
+            title={t("currency.group_popular")}
             currencies={popularCurrencies}
             value={value}
             onSelect={onSelect}
             previews={previews}
           />
           <CurrencyGroup
-            title={copy.allGroup}
+            title={t("currency.group_all")}
             currencies={allCurrencies}
             value={value}
             onSelect={onSelect}
@@ -121,7 +122,7 @@ export function CurrencyPickerSheetContent({
         </>
       ) : (
         <p role="status" className="py-8 text-center text-body text-text-secondary">
-          {copy.noCurrencies}
+          {t("currency.none")}
         </p>
       )}
     </div>
@@ -137,6 +138,7 @@ function CurrencySearchField({
   onChange: (value: string) => void;
   onClear: () => void;
 }) {
+  const t = useT();
   return (
     <div
       className={`squircle-full relative flex h-11 w-full items-center overflow-hidden bg-controlFill ${transition.focus} focus-within:bg-surface-card focus-within:outline focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-focusRing`}
@@ -147,8 +149,8 @@ function CurrencySearchField({
       <input
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        placeholder={copy.searchPlaceholder}
-        aria-label={copy.searchPlaceholder}
+        placeholder={t("currency.search_placeholder")}
+        aria-label={t("currency.search_placeholder")}
         enterKeyHint="search"
         className="h-full w-full bg-transparent pl-9 pr-11 text-body text-text-primary placeholder:text-text-tertiary"
       />
@@ -156,7 +158,7 @@ function CurrencySearchField({
         <button
           type="button"
           onClick={onClear}
-          aria-label="Clear currency search"
+          aria-label={t("currency.clear_search")}
           className={`absolute right-0 grid h-11 w-11 place-items-center text-text-tertiary ${transition.press}`}
         >
           <IconOrb tone="neutral">
@@ -179,6 +181,7 @@ function CurrencyRow({
   onSelect: (currency: SupportedReferenceCurrencyCode) => void;
   preview?: ReferenceCurrencyCatalogEntry;
 }) {
+  const t = useT();
   const meta = getMeta(code);
   if (!meta) return null;
 
@@ -217,9 +220,9 @@ function CurrencyRow({
               }`}
             >
               {code === "NGN"
-                ? "Base"
+                ? t("currency.base_badge")
                 : preview!.trendPercent === null
-                  ? "No trend"
+                  ? t("currency.no_trend")
                   : `${preview!.trendPercent >= 0 ? "▲ +" : "▼ -"}${Math.abs(preview!.trendPercent).toFixed(1)}%`}
             </span>
           </div>

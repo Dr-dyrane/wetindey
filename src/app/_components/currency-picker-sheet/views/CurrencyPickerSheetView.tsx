@@ -3,11 +3,11 @@ import {
   ModalSheet,
   SolidIcon,
   CurrencyFlag,
+  useT,
   type SupportedReferenceCurrencyCode,
   type ReferenceCurrencyCatalogEntry,
 } from "../imports/imports";
 import { type useCurrencyPickerSheet } from "../hooks/useCurrencyPickerSheet";
-import { copy } from "../copy/copy";
 import "../styles/CurrencyPickerSheet.css";
 import { CurrencyPickerSheetContent } from "./CurrencyPickerSheetContent";
 
@@ -28,6 +28,7 @@ export function CurrencyPickerSheetView({
   disabled,
   sheet,
 }: CurrencyPickerSheetViewProps) {
+  const t = useT();
   const {
     navigation,
     triggerRef,
@@ -46,7 +47,7 @@ export function CurrencyPickerSheetView({
     }
 
     const nextChildId = navigation.pushChild({
-      title: copy.title,
+      title: t("currency.title"),
       returnFocus: triggerRef.current,
       content: (
         <CurrencyPickerSheetContent
@@ -71,7 +72,9 @@ export function CurrencyPickerSheetView({
         aria-haspopup="dialog"
         aria-expanded={isOpen}
         aria-label={
-          selectedMeta ? `Choose currency, ${selectedMeta.name} selected` : copy.title
+          selectedMeta
+            ? t("currency.selected_a11y", { name: selectedMeta.name })
+            : t("currency.title")
         }
         className="flex h-[36px] shrink-0 items-center gap-1 rounded-[18px] bg-surface-card px-2 text-text-primary shadow-sm disabled:opacity-40 active:scale-[0.96] transition-all"
       >
@@ -86,7 +89,7 @@ export function CurrencyPickerSheetView({
         <ModalSheet
           open={fallbackOpen}
           onClose={() => setFallbackOpen(false)}
-          title={copy.title}
+          title={t("currency.title")}
           size="form"
         >
           <CurrencyPickerSheetContent
