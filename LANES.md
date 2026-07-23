@@ -177,15 +177,9 @@ Controller-directed, scout confirms exact paths and STOPS to the controller befo
 
 ## Active exact path locks
 
-#### ADR-031 lane 1 implementation note - ACTIVE
+#### ADR-031 lane 1 implementation note - RELEASED / PATHLESS
 
-Owner: Private Contractor, Maps Delivery `c9c17443-ef5e-4a7b-9b6e-c8f5381da30c`, as ADR-031 steward. Exact writable path:
-
-- `docs/adr/031-farm-inputs-pillar.md`
-
-Purpose: the controller's lane 1 scout found the schema already open (places.place_type and items.category are unconstrained varchars), so the ADR's assumption that lane 1 carries a migration has no DDL to carry; manufacturing one (a CHECK on Food's existing column) would be a real change to Food's table and drags contribution-domain contracts into an agri lane. This note appends an implementation clarification to the accepted ADR: lane 1 is app-layer only (default-off pillar registry entry, agro_dealer and agri constants, contract test, no migration), any future category CHECK is its own deliberate migration lane coordinated with the migration-tree owner, and agri migrations, if ever needed, sequence after the in-flight 0018/0019 work settles. The decision itself (pillar, place type, units, truth rules, default-off) is untouched. Exclusions: every other path.
-
-Completion: note appended without altering the accepted decision text; path-scoped commit pushed under the `0bbdb11` class; span-checked release; controller confirmed.
+Complete at the note commit, pushed under the `0bbdb11` class: Option B confirmed by the ADR steward and recorded on the accepted ADR itself; lane 1 is app-layer only with no migration, future CHECK hardening is its own coordinated lane, and agri migrations sequence after in-flight migration work settles. Path released.
 
 #### ADR-031 acceptance record - RELEASED / PATHLESS
 
