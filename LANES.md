@@ -178,16 +178,9 @@ Purpose: QA sweep finding D5: at the expanded detent on compact viewports the re
 
 Completion: a compact drive across all detents shows the control fully on-screen, never overlapping the top chrome, camera padding behavior unchanged; independent default-to-REFUTED refutation; gates green; path-scoped commit pushed under the `0bbdb11` class; span-checked release.
 
-#### Maps performance and operability pass - ACTIVE
+#### Maps performance and operability pass - RELEASED / PATHLESS
 
-Owner: Private Contractor, Maps Delivery `c9c17443-ef5e-4a7b-9b6e-c8f5381da30c`. Exact writable paths:
-
-- `src/design-system/components/MapboxCanvas.tsx`
-- `src/integrations/maps/MapboxAdapter.ts`
-
-Purpose: consolidates the controller-routed marker keyboard operability finding (previously claimed alone under this heading's predecessor) with the two controller-routed MED performance findings, all map-side: (1) markers gain role button, tabindex 0, and an Enter or Space keydown mirroring click; (2) pure selection changes restyle only the previously and newly selected markers instead of clear-and-rebuild-all, dropping selectedPlaceId from the rebuild trigger; (3) applyPlacesGlow hoists out of the per-marker path to run once per batch; (4) MapboxCanvas injects the mapbox-gl script and stylesheet on demand when the library is absent, making the canvas self-sufficient so the controller can afterwards remove the global tags from `src/app/layout.tsx` (that half stays with the controller by their offer; strict ordering, canvas self-sufficiency lands first). Edits remain held until the in-flight map QA sweep releases the dev server. Exclusions: every other path, including `src/app/layout.tsx`.
-
-Completion: keyboard drive proves Tab plus Enter and Space activate markers; a selection-change drive proves no full marker teardown and the glow diagnostic shows one batch application; a fresh profile shows mapbox-gl arriving via the canvas injector; independent default-to-REFUTED refutation; gates green; path-scoped commit pushed under the `0bbdb11` class; span-checked release.
+Complete at `5c9ba7d`, pushed under the `0bbdb11` class after a seven-claim NOT REFUTED with independent reproduction (keyboard operability both themes, leak flat at 60 across the QA repro, zero-teardown selection, batched glow at 2 writes per batch, injector proven in both worlds including hydration survival). The canvas is now self-sufficient for mapbox-gl: the controller's held layout.tsx global-tag removal is UNBLOCKED per the recorded ordering. The fog TypeError race is diagnosed upstream (unguarded mapbox-gl fog timer, present through v3.6.0) with mitigation options routed to the controller as a decision, not shipped. Path released.
 
 #### Maps WebKit capture evidence entry - RELEASED / PATHLESS
 
