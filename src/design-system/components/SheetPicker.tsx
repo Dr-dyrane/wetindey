@@ -90,6 +90,8 @@ export function SheetPicker({
   const [childId, setChildId] = useState<string | null>(null);
   const selected = options.find((option) => option.id === value) ?? null;
   const labelId = React.useId();
+  const valueId = React.useId();
+  const triggerId = React.useId();
   const isOpen = navigation ? navigation.childOpen && navigation.childId === childId : fallbackOpen;
 
   const commit = (id: string) => {
@@ -119,23 +121,32 @@ export function SheetPicker({
   return (
     <div>
       {label && (
-        <label id={labelId} className="mb-1.5 block text-footnote text-text-secondary">
+        <label
+          id={labelId}
+          htmlFor={triggerId}
+          className="mb-1.5 block text-footnote text-text-secondary"
+        >
           {label}
         </label>
       )}
 
+      {/* The accessible name must carry the CURRENT VALUE, not just the label:
+          `aria-labelledby` replaces content, so label-only meant a screen
+          reader heard "Market, button" and never what was chosen. Composing
+          label id + value span id reads "Market, Mile 12 Market". */}
       <button
         ref={triggerRef}
+        id={triggerId}
         type="button"
         disabled={disabled}
         onClick={openPicker}
         aria-haspopup="dialog"
         aria-expanded={isOpen}
-        aria-labelledby={label ? labelId : undefined}
-        aria-label={label ? undefined : title}
+        aria-labelledby={label ? `${labelId} ${valueId}` : valueId}
         className={`squircle flex min-h-tap w-full items-center justify-between gap-2 bg-controlFill px-4 text-left text-text-primary disabled:opacity-40 ${transition.press}`}
       >
         <span
+          id={valueId}
           className={`truncate text-body ${selected ? "text-text-primary" : "text-text-tertiary"}`}
         >
           {selected?.label ?? placeholder}

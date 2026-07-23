@@ -95,6 +95,7 @@ export function SearchField({
       />
       {value && (
         <button
+          type="button"
           onClick={onClear}
           aria-label={clearLabel}
           /* 44px target, 17px glyph — hit area centred on the visual mark. */

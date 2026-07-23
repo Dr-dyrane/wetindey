@@ -9,6 +9,16 @@ export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> 
 
 export const Input = React.forwardRef<HTMLInputElement, InputProps>(
   ({ className, type = "text", error, icon, ...props }, ref) => {
+    /**
+     * The error paragraph is invisible to assistive tech unless the input
+     * points at it: colour alone fails SC 3.3.1, and this is the price field,
+     * the app's only write path. `aria-describedby` merges with anything the
+     * caller passed rather than replacing it.
+     */
+    const errorId = React.useId();
+    const describedBy =
+      [error ? errorId : undefined, props["aria-describedby"]].filter(Boolean).join(" ") ||
+      undefined;
     return (
       <div className="w-full">
         <div className="relative flex items-center">
@@ -48,9 +58,18 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
               className
             )}
             {...props}
+            /* After the spread: the merged description must win over the raw
+               consumer value it already includes, and the invalid state must
+               not be spread away. */
+            aria-invalid={error ? true : props["aria-invalid"]}
+            aria-describedby={describedBy}
           />
         </div>
-        {error && <p className="mt-1 text-xs font-medium text-status-unavailable">{error}</p>}
+        {error && (
+          <p id={errorId} role="alert" className="mt-1 text-xs font-medium text-status-unavailable">
+            {error}
+          </p>
+        )}
       </div>
     );
   }
