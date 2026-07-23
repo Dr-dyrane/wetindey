@@ -177,6 +177,17 @@ Controller-directed, scout confirms exact paths and STOPS to the controller befo
 
 ## Active exact path locks
 
+#### ADR-031 lane 3 agri map surface - ACTIVE
+
+Owner: Private Contractor, Maps Delivery `c9c17443-ef5e-4a7b-9b6e-c8f5381da30c`, controller-routed. Exact writable paths:
+
+- `src/integrations/maps/MapboxAdapter.ts`
+- new `scripts/agri/agri-map-surface-contract.test.ts`
+
+Purpose: the map half of the accepted ADR-031, executing the staged plan: PLACE_TYPE_SYMBOLS and PLACE_TYPE_LABELS gain the agro-dealer entry keyed by AGRO_DEALER_PLACE_TYPE imported from src/config/pillars.ts (one source of truth, no hardcoded literal in the adapter), symbol in the house 24x24 stroke idiom reading inputs not produce. Glow membership: NO at launch, agreed with the controller; agro-dealers are not market-family and the own-markets glow signal stays undiluted. The lane owns the map-side contract test it introduces (symbol and label present and keyed by the imported constant, glow exclusion asserted). Dormant by construction: the pillar flag is false and no place carries the type until lane 2 and the credential-gated activation, so runtime proof is regression only (map boots and drives unchanged) plus the executable contract. Exclusions: every other path, including pillars.ts, cartography, spine, and the POI budget (assessed zero tile-side change; agro-dealers are our pins, not tile POIs).
+
+Completion: contract green, gates green, regression drive clean, independent default-to-REFUTED refutation, tuple-bound path-scoped commit pushed under the `0bbdb11` class, span-checked release, controller notified.
+
 #### ADR-031 lane 1 implementation note - RELEASED / PATHLESS
 
 Complete at the note commit, pushed under the `0bbdb11` class: Option B confirmed by the ADR steward and recorded on the accepted ADR itself; lane 1 is app-layer only with no migration, future CHECK hardening is its own coordinated lane, and agri migrations sequence after in-flight migration work settles. Path released.
