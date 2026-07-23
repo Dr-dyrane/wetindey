@@ -273,7 +273,7 @@ function focusInitial(panel: HTMLElement | null) {
     element.hasAttribute("data-autofocus")
   );
   const target = resolveInitialFocusTarget(preferredIndex, focusable.length);
-  (target === "panel" ? panel : focusable[target]!).focus();
+  (target === "panel" ? panel : focusable[target]!).focus({ preventScroll: true });
 }
 
 function trapTab(panel: HTMLElement, event: KeyboardEvent) {
@@ -287,8 +287,8 @@ function trapTab(panel: HTMLElement, event: KeyboardEvent) {
   });
 
   event.preventDefault();
-  if (target === "panel") panel.focus();
-  if (target !== "panel") focusable[target]!.focus();
+  if (target === "panel") panel.focus({ preventScroll: true });
+  if (target !== "panel") focusable[target]!.focus({ preventScroll: true });
 }
 
 /**
@@ -383,7 +383,7 @@ export function ModalSheet({
         const returnFocus = childReturnFocusRef.current;
         childReturnFocusRef.current = null;
         if (returnFocus?.isConnected) {
-          returnFocus.focus();
+          returnFocus.focus({ preventScroll: true });
         } else {
           focusInitial(panelRef.current);
         }
@@ -451,7 +451,7 @@ export function ModalSheet({
     return () => {
       const returnFocus = lastFocusedRef.current;
       requestAnimationFrame(() => {
-        if (returnFocus?.isConnected) returnFocus.focus();
+        if (returnFocus?.isConnected) returnFocus.focus({ preventScroll: true });
       });
     };
   }, [mounted]);
