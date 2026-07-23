@@ -1,3 +1,5 @@
+import { useState } from "react";
+import Image from "next/image";
 import {
   IconOrb,
   SolidIcon,
@@ -10,6 +12,42 @@ import {
 interface GetItReviewsViewProps {
   loading: boolean;
   reviews: ReviewData[];
+}
+
+/**
+ * One reviewer's 36px circle. A component, not markup inside the map, because
+ * every avatar needs its own broken-image state and hooks cannot live in a
+ * loop body.
+ *
+ * next/image, NOT a raw <img>. Avatar URLs live on
+ * *.public.blob.vercel-storage.com, and neither CSP's img-src lists that host,
+ * so a direct <img> is blocked in production — the circle rendered blank and
+ * the initials fallback in the ternary could never engage because the <img>
+ * had no onError. Routing through next/image serves the pixels from
+ * /_next/image on this origin ('self'), which both policies already allow;
+ * the host is in next.config.ts remotePatterns. Same idiom as
+ * profile-sheet/views/Avatar.tsx: `fill` + a fixed `sizes` for the circle.
+ * On error we fall back to the initials the ternary always promised.
+ */
+function ReviewerAvatar({ url, initials }: { url: string | null; initials: string }) {
+  const [broken, setBroken] = useState(false);
+
+  return (
+    <div className="relative flex h-9 w-9 items-center justify-center overflow-hidden rounded-full bg-fillPrimary text-footnote font-bold text-text-primary">
+      {url && !broken ? (
+        <Image
+          src={url}
+          alt=""
+          fill
+          sizes="36px"
+          className="w-full h-full rounded-full object-cover"
+          onError={() => setBroken(true)}
+        />
+      ) : (
+        initials
+      )}
+    </div>
+  );
 }
 
 export function GetItReviewAggregateView({
@@ -85,17 +123,7 @@ export function GetItReviewsView({ loading, reviews }: GetItReviewsViewProps) {
                 <div key={review.id} className="rounded-[20px] bg-fillSecondary p-3.5 space-y-2">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2.5">
-                      <div className="relative flex h-9 w-9 items-center justify-center overflow-hidden rounded-full bg-fillPrimary text-footnote font-bold text-text-primary">
-                        {review.reviewerAvatarUrl ? (
-                          <img
-                            src={review.reviewerAvatarUrl}
-                            alt=""
-                            className="w-full h-full rounded-full object-cover"
-                          />
-                        ) : (
-                          initials
-                        )}
-                      </div>
+                      <ReviewerAvatar url={review.reviewerAvatarUrl} initials={initials} />
                       <div>
                         <p className="text-footnote font-semibold text-text-primary leading-tight">
                           {review.reviewerName}

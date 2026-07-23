@@ -57,6 +57,10 @@ const stages = Object.freeze({
       ...tsxScript("scripts/deletion/deletion-saga-p1-contract.test.ts"),
     },
     { label: "iconography contracts", ...tsxScript("scripts/iconography-contracts.test.ts") },
+    {
+      label: "image delivery contract",
+      ...tsxScript("scripts/perf/image-delivery-contract.test.ts"),
+    },
     { label: "ingestion contracts", ...tsxScript("scripts/ingestion/ingestion-contract.test.ts") },
     { label: "live sheet inset contract", ...tsxScript("scripts/live-sheet-inset-contract.test.ts") },
     { label: "location default contract", ...tsxScript("scripts/location-default-contract.test.ts") },

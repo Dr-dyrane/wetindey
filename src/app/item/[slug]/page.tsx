@@ -147,6 +147,22 @@ export default async function ItemPage({ params }: { params: Promise<{ slug: str
               fill
               sizes="160px"
               className="object-cover"
+              /**
+               * Straight from Wikimedia's CDN, not /_next/image. The optimizer
+               * fetches every photo server-side from one IP, which
+               * upload.wikimedia.org answers with 429 and no image renders. This
+               * failure reaches production without ever showing up locally.
+               * (Same reasoning and wording as ItemCard, PlaceOfferRow and
+               * ItemDetailSheetView — this hero was the one Wikimedia image
+               * still on the optimizer path.)
+               */
+              unoptimized
+              /**
+               * The hero is above the fold on the one page built for Google:
+               * it is the LCP element, and without `priority` next/image
+               * lazy-loads it and logs the LCP console warning.
+               */
+              priority
             />
           </div>
         )}
