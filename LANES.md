@@ -177,16 +177,9 @@ Controller-directed, scout confirms exact paths and STOPS to the controller befo
 
 ## Active exact path locks
 
-#### ADR-031 lane 3 agri map surface - ACTIVE
+#### ADR-031 lane 3 agri map surface - RELEASED / PATHLESS
 
-Owner: Private Contractor, Maps Delivery `c9c17443-ef5e-4a7b-9b6e-c8f5381da30c`, controller-routed. Exact writable paths:
-
-- `src/integrations/maps/MapboxAdapter.ts`
-- new `scripts/agri/agri-map-surface-contract.test.ts`
-
-Purpose: the map half of the accepted ADR-031, executing the staged plan: PLACE_TYPE_SYMBOLS and PLACE_TYPE_LABELS gain the agro-dealer entry keyed by AGRO_DEALER_PLACE_TYPE imported from src/config/pillars.ts (one source of truth, no hardcoded literal in the adapter), symbol in the house 24x24 stroke idiom reading inputs not produce. Glow membership: NO at launch, agreed with the controller; agro-dealers are not market-family and the own-markets glow signal stays undiluted. The lane owns the map-side contract test it introduces (symbol and label present and keyed by the imported constant, glow exclusion asserted). Dormant by construction: the pillar flag is false and no place carries the type until lane 2 and the credential-gated activation, so runtime proof is regression only (map boots and drives unchanged) plus the executable contract. Exclusions: every other path, including pillars.ts, cartography, spine, and the POI budget (assessed zero tile-side change; agro-dealers are our pins, not tile POIs).
-
-Completion: contract green, gates green, regression drive clean, independent default-to-REFUTED refutation, tuple-bound path-scoped commit pushed under the `0bbdb11` class, span-checked release, controller notified.
+Complete at `7707515`, pushed under the `0bbdb11` class after NOT REFUTED on all five claims with independent measurement: one source of truth proven (adapter imports AGRO_DEALER_PLACE_TYPE and keys both vocabularies with the computed constant, zero hardcoded keys), glow exclusion holds in code (PLACES_GLOW_TYPES untouched, NO-at-launch ruling intact), contract teeth proven by a six-mutation harness (import dropped, bare and quoted literal keys, glow additions by literal and by constant, symbol removal: all caught), dormancy proven by census (60 markers, 0 agro-dealer, glow 47 on both sides of the bridged theme toggle), gates green on the candidate manifest. Two refuter corrections absorbed: the glow diagnostic on fresh load and post-rebuild reads `layer-added:47` not `repainted:47` (repainted is same-style reconciliation only), and the lane-1 contract lives at scripts/catalog/, not scripts/agri/. Note for lane 2: whole-tree tsc currently carries one error in the uncommitted CategorySelectorSheetView.tsx agri-selector edit (array literal widened to string tones), outside this lane's manifest. CONTROLLER: lane 3 is on origin; the map half of ADR-031 is complete and dormant behind PILLAR_FLAGS.agri; lane 4 field truth remains human-led per the ADR. Paths released.
 
 #### ADR-031 lane 1 implementation note - RELEASED / PATHLESS
 
