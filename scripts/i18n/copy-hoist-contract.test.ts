@@ -228,6 +228,83 @@ for (const [file, literals] of riderSweeps) {
 }
 console.log(`copy riders: ${riderCount} literal sweeps clean, copy module deleted.`);
 
+/* ── Confirm-visit fork merge (third wave) ────────────────────────────────── */
+
+// The sheet's forked COPY tables (en/pidgin/yoruba) were proven byte-identical
+// to the central confirm.* keys, per key and per locale, before the fork was
+// deleted. The properties that outlive the merge: the fork stays gone, no
+// consumer reaches for it, the hook resolves every one of the fork's thirteen
+// fields from the central dictionary, and the fork's sentences never reappear
+// as literals in the component. (The sentences themselves are NOT frozen here:
+// they live in strings.ts now, where a native-speaker review may amend them.)
+assert.ok(
+  !existsSync(join(ROOT, "src/app/_components/confirm-visit-sheet/copy")),
+  "confirm-visit-sheet's local copy/ fork must stay deleted",
+);
+
+const confirmHook = readFileSync(
+  join(ROOT, "src/app/_components/confirm-visit-sheet/hooks/useConfirmVisitSheet.ts"),
+  "utf8",
+);
+assert.match(
+  confirmHook,
+  /@\/core\/i18n/,
+  "useConfirmVisitSheet must read the central dictionary",
+);
+const CONFIRM_KEYS = [
+  "confirm.title",
+  "confirm.at",
+  "confirm.q_there",
+  "confirm.there_yes",
+  "confirm.there_no",
+  "confirm.q_price",
+  "confirm.price_yes",
+  "confirm.price_no",
+  "confirm.price_label",
+  "confirm.price_placeholder",
+  "confirm.q_buy",
+  "confirm.buy_yes",
+  "confirm.buy_no",
+] as const;
+for (const key of CONFIRM_KEYS) {
+  assert.ok(
+    confirmHook.includes(`"${key}"`),
+    `useConfirmVisitSheet no longer resolves ${key}`,
+  );
+  assert.equal(typeof en[key], "string", `${key} missing from the English table`);
+}
+
+const confirmFiles = [
+  "src/app/_components/confirm-visit-sheet/ConfirmVisitSheet.tsx",
+  "src/app/_components/confirm-visit-sheet/hooks/useConfirmVisitSheet.ts",
+  "src/app/_components/confirm-visit-sheet/views/ConfirmVisitSheetView.tsx",
+  "src/app/_components/confirm-visit-sheet/imports/imports.ts",
+];
+const confirmForkLiterals = [
+  // Import specifiers only: prose may name the deleted file, code may not.
+  'from "../copy/copy"',
+  'from "./copy/copy"',
+  "COPY[",
+  '"How did it go?"',
+  '"Was it there?"',
+  '"What did it cost?"',
+  '"How e go?"',
+  '"E dey there?"',
+  '"Báwo ni ó ṣe lọ?"',
+];
+let confirmSweeps = 0;
+for (const file of confirmFiles) {
+  const source = readFileSync(join(ROOT, file), "utf8");
+  for (const literal of confirmForkLiterals) {
+    assert.ok(!source.includes(literal), `${file} still carries ${literal}`);
+    confirmSweeps += 1;
+  }
+}
+console.log(
+  `confirm-visit merge: fork deleted, ${CONFIRM_KEYS.length} keys resolved centrally, ` +
+    `${confirmSweeps} literal sweeps clean.`,
+);
+
 console.log(
   `copy-hoist contract: ${sweeps} literal sweeps, ${problemCalls.length} problem() sites, ` +
     `${NEW_KEYS.length} new keys verified.`

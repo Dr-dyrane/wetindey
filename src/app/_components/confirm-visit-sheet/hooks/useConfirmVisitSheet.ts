@@ -1,5 +1,32 @@
-import { useEffect, useState, useT } from "../imports/imports";
-import { COPY, type Lang } from "../copy/copy";
+import { useEffect, useMemo, useState } from "../imports/imports";
+import { useT } from "@/core/i18n";
+
+/**
+ * The sheet's languages, 1:1 with the central store's locales. The local copy
+ * fork that used to define this (copy/copy.ts) is merged into
+ * src/core/i18n/strings.ts under the confirm.* keys; the merge lane proved all
+ * 39 fork values byte-identical to the central table before deleting the fork.
+ * The type survives because the sheet's public props still accept `lang`; see
+ * the note on UseConfirmVisitSheetOptions for what that prop now means.
+ */
+export type Lang = "en" | "pidgin" | "yoruba";
+
+/** The shape the view reads: the deleted fork's Copy interface, unchanged. */
+interface Copy {
+  title: string;
+  at: (place: string) => string;
+  qThere: string;
+  thereYes: string;
+  thereNo: string;
+  qPrice: (price: string) => string;
+  priceYes: string;
+  priceNo: string;
+  priceLabel: string;
+  pricePlaceholder: string;
+  qBuy: string;
+  buyYes: string;
+  buyNo: string;
+}
 
 /**
  * The visit being asked about.
@@ -102,16 +129,41 @@ export function takeDueVisit(now: number = Date.now()): VisitContext | null {
 export interface UseConfirmVisitSheetOptions {
   open: boolean;
   visit: VisitContext | null;
+  /**
+   * Retained for interface stability; the copy now comes from the central
+   * locale store. The only live call site (HomePageView) feeds this prop from
+   * `useLocaleControl()`, the same store `useT()` reads, so the two cannot
+   * disagree. Dropping the prop belongs to a lane that may edit that call
+   * site; this one may not.
+   */
   lang?: Lang;
 }
 
-export function useConfirmVisitSheet({
-  open,
-  visit,
-  lang = "en",
-}: UseConfirmVisitSheetOptions) {
-  const t = COPY[lang];
+export function useConfirmVisitSheet({ open, visit }: UseConfirmVisitSheetOptions) {
   const translate = useT();
+
+  /* The fork's Copy shape, resolved from the central dictionary. The words are
+     verbatim what the fork carried (byte-parity proven before its deletion),
+     so the view renders exactly what it always rendered. Memoised on the
+     translate identity, which changes exactly when the locale does. */
+  const t = useMemo<Copy>(
+    () => ({
+      title: translate("confirm.title"),
+      at: (place: string) => translate("confirm.at", { place }),
+      qThere: translate("confirm.q_there"),
+      thereYes: translate("confirm.there_yes"),
+      thereNo: translate("confirm.there_no"),
+      qPrice: (price: string) => translate("confirm.q_price", { price }),
+      priceYes: translate("confirm.price_yes"),
+      priceNo: translate("confirm.price_no"),
+      priceLabel: translate("confirm.price_label"),
+      pricePlaceholder: translate("confirm.price_placeholder"),
+      qBuy: translate("confirm.q_buy"),
+      buyYes: translate("confirm.buy_yes"),
+      buyNo: translate("confirm.buy_no"),
+    }),
+    [translate]
+  );
 
   const [wasThere, setWasThere] = useState<"yes" | "no" | null>(null);
   const [priceRight, setPriceRight] = useState<"yes" | "no" | null>(null);

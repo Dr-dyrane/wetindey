@@ -24,7 +24,9 @@ const ORCHESTRATION_HOSTS = new Set(["presentation-host"]);
 // Components whose user copy was hoisted into the central i18n dictionary
 // keep no local copy/ directory; the exemption is honest only while the
 // component actually reads @/core/i18n, which the contract verifies below.
-const CENTRALIZED_COPY = new Set(["location-sheet"]);
+// The read may live in the view (location-sheet) or in the hook that resolves
+// the copy the view renders (confirm-visit-sheet), so both are swept.
+const CENTRALIZED_COPY = new Set(["location-sheet", "confirm-visit-sheet"]);
 
 test("modular component subfolders adhere to the 6-file MVC slice contract", () => {
   if (!existsSync(componentsDir)) {
@@ -60,14 +62,18 @@ test("modular component subfolders adhere to the 6-file MVC slice contract", () 
         !existsSync(resolve(folderPath, "copy")),
         `'${folder}' claims centralized copy but still has a local copy/ directory`,
       );
-      const viewSources = readdirSync(resolve(folderPath, "views"))
-        .filter((name) => name.endsWith(".tsx"))
-        .map((name) => readFileSync(resolve(folderPath, "views", name), "utf8"))
+      const copyReaderSources = ["views", "hooks"]
+        .filter((dir) => existsSync(resolve(folderPath, dir)))
+        .flatMap((dir) =>
+          readdirSync(resolve(folderPath, dir))
+            .filter((name) => name.endsWith(".tsx") || name.endsWith(".ts"))
+            .map((name) => readFileSync(resolve(folderPath, dir, name), "utf8")),
+        )
         .join("\n");
       assert.match(
-        viewSources,
+        copyReaderSources,
         /@\/core\/i18n/,
-        `'${folder}' claims centralized copy but its views never read @/core/i18n`,
+        `'${folder}' claims centralized copy but neither its views nor its hooks read @/core/i18n`,
       );
     }
     for (const subdir of requiredSubdirs) {

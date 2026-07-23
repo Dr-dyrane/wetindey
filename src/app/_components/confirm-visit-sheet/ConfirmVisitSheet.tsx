@@ -1,8 +1,7 @@
 "use client";
 
-import { useConfirmVisitSheet, type VisitContext } from "./hooks/useConfirmVisitSheet";
+import { useConfirmVisitSheet, type Lang, type VisitContext } from "./hooks/useConfirmVisitSheet";
 import { ConfirmVisitSheetView } from "./views/ConfirmVisitSheetView";
-import type { Lang } from "./copy/copy";
 
 export type { VisitContext } from "./hooks/useConfirmVisitSheet";
 export { armVisit, disarmVisit, takeDueVisit } from "./hooks/useConfirmVisitSheet";
