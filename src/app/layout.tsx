@@ -253,13 +253,7 @@ export default async function RootLayout({
             }catch(e){}})();`,
           }}
         />
-        <link href="https://api.mapbox.com/mapbox-gl-js/v3.1.2/mapbox-gl.css" rel="stylesheet" />
-        <script
-          nonce={nonce}
-          suppressHydrationWarning
-          src="https://api.mapbox.com/mapbox-gl-js/v3.1.2/mapbox-gl.js"
-          defer
-        />
+        {/* mapbox-gl JS+CSS are injected on demand by MapboxCanvas (ensureMapboxLibrary) per the lazy-load split, so map-less routes download no map assets. */}
       </head>
       <body className="h-full min-h-screen selection:bg-accent selection:text-accent-contrast">
         {/* Site-wide structured data. Outside ThemeProvider's visibility gate on
