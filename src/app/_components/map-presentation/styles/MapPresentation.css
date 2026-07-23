@@ -32,5 +32,13 @@
   right: 1rem; /* right-4 */
   z-index: 10;
   pointer-events: none;
-  bottom: calc(var(--shell-bottom-inset, 0px) + env(safe-area-inset-bottom, 0px) + 16px);
+  /* The inset tracks the live detent, but at the expanded detent it exceeds
+     the viewport and carried the control to y -11, overlapping the theme
+     toggle (QA finding D5). The second min() arm caps the rise just below
+     the top chrome: safe-area-top + 12 chrome offset + 44 chrome height +
+     12 gap + 44 control height = safe-area-top + 112. */
+  bottom: min(
+    calc(var(--shell-bottom-inset, 0px) + env(safe-area-inset-bottom, 0px) + 16px),
+    calc(100% - var(--safe-area-top, 0px) - 112px)
+  );
 }
