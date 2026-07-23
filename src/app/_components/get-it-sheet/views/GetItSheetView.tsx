@@ -5,13 +5,13 @@ import {
   ListGroup,
   StatusBadge,
   SolidIcon,
+  useT,
 } from "../imports/imports";
 import {
   formatPriceRange,
   formatFreshness,
   whereabouts,
   contactCopy,
-  mapsAppName,
   type GetItSheetProps,
   type useGetItSheet,
 } from "../hooks/useGetItSheet";
@@ -29,6 +29,8 @@ export function GetItSheetView({
   target,
   sheet,
 }: GetItSheetViewProps) {
+  const t = useT();
+
   if (!target) return null;
 
   const {
@@ -53,11 +55,20 @@ export function GetItSheetView({
   const fresh = formatFreshness(target.offer?.observedAt);
   const freshLabel = target.offer?.freshnessLabel;
   const freshKind: StatusKind = target.offer?.freshnessKind ?? "info";
-  const contactText = contactCopy(contact);
-  const shareLabel = canShare ? "Share" : "Copy details";
+  const contactText = contactCopy(contact, t);
+  const shareLabel = canShare ? t("get.share") : t("get.copy_details");
+  const mapsName = !platform
+    ? t("get.maps_fallback")
+    : t(
+        platform === "apple"
+          ? "get.maps_apple"
+          : platform === "android"
+            ? "get.maps_android"
+            : "get.maps_google"
+      );
 
   return (
-    <ModalSheet open={open} onClose={onClose} title="Get it" size="form">
+    <ModalSheet open={open} onClose={onClose} title={t("get.title")} size="form">
       <div className="space-y-6 py-3">
         <>
           <div className="mx-4 squircle-card bg-surface dark:bg-surface-elevated px-4 py-3">
@@ -67,14 +78,14 @@ export function GetItSheetView({
             {target.offer && (
               <p className="mt-2 text-subhead text-text-secondary">
                 <span className="text-text-primary font-semibold">{formatPriceRange(target.offer)}</span>
-                {` per ${target.offer.unit} · ${target.offer.itemName}`}
+                {t("get.offer_per", { unit: target.offer.unit, item: target.offer.itemName })}
               </p>
             )}
 
             {(freshLabel || fresh) && (
               <div className="mt-2 flex items-center gap-2">
                 {freshLabel && <StatusBadge kind={freshKind}>{freshLabel}</StatusBadge>}
-                {fresh && <span className="text-caption-1 text-text-tertiary">Last seen {fresh}</span>}
+                {fresh && <span className="text-caption-1 text-text-tertiary">{t("get.last_seen", { when: fresh })}</span>}
               </div>
             )}
           </div>
@@ -83,8 +94,8 @@ export function GetItSheetView({
             <ListRow
               icon={<SolidIcon name="navigation" size={16} />}
               iconTone="context-navigation"
-              label="Go there"
-              detail={platform ? mapsAppName(platform) : undefined}
+              label={t("get.go_there")}
+              detail={platform ? mapsName : undefined}
               onClick={handleGoThere}
             />
           </ListGroup>
@@ -96,7 +107,7 @@ export function GetItSheetView({
             onClick={() => setDetailsOpen((prev) => !prev)}
             className="mx-4 min-h-tap flex w-[calc(100%-2rem)] items-center justify-between squircle px-3 text-subhead font-semibold text-text-secondary active:opacity-70"
           >
-            <span>{detailsOpen ? "Hide details" : "More details"}</span>
+            <span>{detailsOpen ? t("get.hide_details") : t("get.more_details")}</span>
             <span className={detailsOpen ? "rotate-180" : ""}>
               <SolidIcon name="chevron-down" size={16} />
             </span>
@@ -116,7 +127,7 @@ export function GetItSheetView({
                     )
                   }
                   label={shareLabel}
-                  detail={shareResult.kind === "copied" ? "Copied" : undefined}
+                  detail={shareResult.kind === "copied" ? t("get.copied") : undefined}
                   onClick={() => {
                     void handleShare();
                   }}
@@ -129,6 +140,13 @@ export function GetItSheetView({
                   className="mx-4 space-y-3 squircle-card bg-fillSecondary px-4 py-3"
                 >
                   <div className="space-y-1">
+                    {/* The route-disclosure paragraph stays as literals here on
+                        purpose: location-default-contract.test.ts asserts the
+                        disclosure copy is auditable in this view, and it would be
+                        UNTRANSLATED (English) in every shippable locale anyway, so
+                        routing it through i18n gains nothing visible while breaking
+                        that privacy contract. The maps-app name is still i18n'd via
+                        `mapsName`. */}
                     <p className="text-subhead font-semibold text-text-primary">
                       {originState.kind === "problem"
                         ? originState.title
@@ -140,12 +158,8 @@ export function GetItSheetView({
                       {originState.kind === "problem"
                         ? originState.message
                         : originState.kind === "ready"
-                          ? `Your refreshed location and this market were sent to Mapbox for this route. Open ${
-                              platform ? mapsAppName(platform) : "your maps app"
-                            } within one minute to use the same origin.`
-                          : `Use current location refreshes and sends your exact location and this market to Mapbox for a route, then to ${
-                              platform ? mapsAppName(platform) : "your maps app"
-                            }. Destination only sends the market, not your location.`}
+                          ? `Your refreshed location and this market were sent to Mapbox for this route. Open ${mapsName} within one minute to use the same origin.`
+                          : `Use current location refreshes and sends your exact location and this market to Mapbox for a route, then to ${mapsName}. Destination only sends the market, not your location.`}
                     </p>
                   </div>
                   <div className="flex flex-col gap-2 sm:flex-row">
@@ -156,7 +170,7 @@ export function GetItSheetView({
                         className="min-h-tap flex-1 squircle bg-accent px-3 text-subhead font-semibold
                                    text-text-on-accent active:opacity-70"
                       >
-                        Open with my location
+                        {t("get.open_with_location")}
                       </button>
                     ) : (originState.kind !== "problem" ||
                       originState.canRetry) && (
@@ -169,8 +183,8 @@ export function GetItSheetView({
                                    text-text-on-accent active:opacity-70 disabled:opacity-50"
                       >
                         {originState.kind === "locating"
-                          ? "Refreshing location…"
-                          : "Use current location"}
+                          ? t("get.refreshing_location")
+                          : t("get.use_current_location")}
                       </button>
                     )}
                     <button
@@ -179,7 +193,7 @@ export function GetItSheetView({
                       className="min-h-tap flex-1 squircle bg-fillPrimary px-3 text-subhead
                                  font-semibold text-text-primary active:opacity-70"
                     >
-                      Destination only
+                      {t("get.destination_only")}
                     </button>
                   </div>
                 </div>
@@ -188,7 +202,7 @@ export function GetItSheetView({
               {shareResult.kind === "manual" && (
                 <div className="mx-4 space-y-1.5">
                   <p className="text-footnote text-text-secondary">
-                    This browser will not let WetinDey copy for you. Select and copy:
+                    {t("get.manual_copy_hint")}
                   </p>
                   <p className="squircle bg-fillTertiary px-3 py-2.5 text-footnote text-text-primary select-all break-words">
                     {shareResult.text}
@@ -200,7 +214,7 @@ export function GetItSheetView({
                 <ListRow
                   icon={<SolidIcon name="phone" size={16} />}
                   iconTone="context-contact"
-                  label="Contact seller"
+                  label={t("get.contact_seller")}
                   detail={contactText.detail}
                   chevron={false}
                 />

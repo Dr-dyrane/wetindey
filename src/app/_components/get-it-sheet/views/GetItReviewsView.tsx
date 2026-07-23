@@ -2,6 +2,7 @@ import {
   IconOrb,
   SolidIcon,
   Star,
+  useT,
   type ReviewAggregateData,
   type ReviewData,
 } from "../imports/imports";
@@ -16,6 +17,8 @@ export function GetItReviewAggregateView({
 }: {
   aggregate: ReviewAggregateData | null;
 }) {
+  const t = useT();
+
   if (!aggregate || aggregate.ratingCount <= 0) return null;
 
   return (
@@ -34,25 +37,27 @@ export function GetItReviewAggregateView({
       </div>
       <span className="text-caption-1 font-semibold text-text-secondary">
         {aggregate.ratingAverage.toFixed(1)} ({aggregate.ratingCount}{" "}
-        {aggregate.ratingCount === 1 ? "review" : "reviews"})
+        {aggregate.ratingCount === 1 ? t("get.reviews_one") : t("get.reviews_other")})
       </span>
     </div>
   );
 }
 
 export function GetItReviewsView({ loading, reviews }: GetItReviewsViewProps) {
+  const t = useT();
+
   return (
     <>
       <div className="px-4 pt-5 space-y-4">
         <div>
-          <h3 className="text-headline text-text-primary font-bold">Reviews</h3>
+          <h3 className="text-headline text-text-primary font-bold">{t("get.reviews_title")}</h3>
           <p className="mt-1 text-footnote text-text-secondary">
-            New reviews are unavailable while we prepare safety and moderation safeguards.
+            {t("get.reviews_prep_note")}
           </p>
         </div>
 
         {loading ? (
-          <p className="text-footnote text-text-secondary py-2">Loading reviews...</p>
+          <p className="text-footnote text-text-secondary py-2">{t("get.reviews_loading")}</p>
         ) : reviews.length === 0 ? (
           <div className="rounded-[20px] bg-fillSecondary px-4 py-8 text-center">
             <div className="mb-2 flex justify-center">
@@ -60,9 +65,9 @@ export function GetItReviewsView({ loading, reviews }: GetItReviewsViewProps) {
                 <SolidIcon name="star" size={16} />
               </IconOrb>
             </div>
-            <p className="text-subhead font-semibold text-text-secondary">Reviews unavailable</p>
+            <p className="text-subhead font-semibold text-text-secondary">{t("get.reviews_unavailable_title")}</p>
             <p className="text-caption-1 text-text-tertiary mt-1 max-w-[240px] mx-auto leading-relaxed">
-              We are preparing this feature with safety and moderation in mind.
+              {t("get.reviews_unavailable_body")}
             </p>
           </div>
         ) : (

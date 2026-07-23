@@ -7,10 +7,10 @@ import {
   CurrencyPickerSheet,
   formatDistance,
   getHaversineDistance,
+  useT,
   type ReferenceRatePoint,
 } from "../imports/imports";
 import {
-  providerLabel,
   formatEffectiveDate,
   getCrossRate,
   type ExchangePanelProps,
@@ -30,6 +30,7 @@ export function ExchangePanelView({
   onSelectLocation,
   panel,
 }: ExchangePanelViewProps) {
+  const t = useT();
   const {
     amountId,
     foreignErrorId,
@@ -105,7 +106,7 @@ export function ExchangePanelView({
 
   const foreignInput = (
     <div className="exchange-slender-row">
-      <label htmlFor={amountId} className="sr-only">Foreign amount</label>
+      <label htmlFor={amountId} className="sr-only">{t("exchange.foreign_amount_label")}</label>
       <input
         id={amountId}
         value={amounts.foreign}
@@ -124,7 +125,7 @@ export function ExchangePanelView({
 
   const ngnInput = (
     <div className="exchange-slender-row">
-      <label htmlFor={ngnAmountId} className="sr-only">Naira amount</label>
+      <label htmlFor={ngnAmountId} className="sr-only">{t("exchange.naira_amount_label")}</label>
       <input
         id={ngnAmountId}
         value={amounts.ngn}
@@ -145,14 +146,16 @@ export function ExchangePanelView({
   return (
     <div className="space-y-3 px-3 pb-[calc(max(var(--sheet-hidden,0px),var(--safe-area-bottom))+20px)]">
       {/* 1. HERO RATE CARD (Slender  HIG Container) */}
-      <section aria-label="Reference Rate Answer" className="squircle-card bg-surface-card p-3.5 space-y-2">
+      <section aria-label={t("exchange.reference_rate_answer")} className="squircle-card bg-surface-card p-3.5 space-y-2">
         <div className="flex items-center justify-between gap-2">
           <span className="text-caption-1 font-semibold text-text-secondary">
-            {visibleRate ? providerLabel(visibleRate) : "Reference rate"}
+            {visibleRate
+              ? t(visibleRate.provider === "CBN" ? "exchange.provider_cbn" : "exchange.provider_frankfurter")
+              : t("exchange.reference_rate")}
           </span>
           {visibleRate && (
             <span className="text-caption-2 font-medium text-text-tertiary">
-              Effective {formatEffectiveDate(visibleRate.effectiveDate)}
+              {t("exchange.effective", { date: formatEffectiveDate(visibleRate.effectiveDate, t) })}
             </span>
           )}
         </div>
@@ -163,7 +166,7 @@ export function ExchangePanelView({
               1.00
             </span>
             <span className="squircle bg-fillSecondary px-2 py-0.5 text-caption-1 font-semibold tabular-nums text-text-secondary">
-              1:1 Same currency
+              {t("exchange.same_currency")}
             </span>
           </div>
         ) : (
@@ -194,7 +197,7 @@ export function ExchangePanelView({
       </section>
 
       {/* 2. DUAL CONVERTER RAIL (Slender Interactive Inputs with 180° Spring Swap) */}
-      <section aria-label="Interactive Currency Converter" className="squircle-card bg-surface-card p-3.5 space-y-2.5">
+      <section aria-label={t("exchange.converter_section")} className="squircle-card bg-surface-card p-3.5 space-y-2.5">
         <div className="space-y-2">
           {conversionReversed ? ngnInput : foreignInput}
 
@@ -203,7 +206,7 @@ export function ExchangePanelView({
               type="button"
               onClick={toggleConversionDirection}
               className={`exchange-swap-button ${transition.press}`}
-              aria-label="Swap conversion direction"
+              aria-label={t("exchange.swap_direction")}
             >
               <CoinsExchange size={18} />
             </button>
@@ -216,16 +219,16 @@ export function ExchangePanelView({
         {ngnError && <p id={ngnErrorId} role="alert" className="text-footnote text-status-danger-fg px-1">{ngnError}</p>}
 
         <p className="text-caption-1 text-text-tertiary text-center leading-snug">
-          Reference rate estimate · WetinDey does not exchange money.
+          {t("exchange.rate_disclaimer")}
         </p>
       </section>
 
       {/* 3. TIME-GATED TREND & STORY INSIGHT CARD */}
       {trendInsight && (
-        <section aria-label="Rate Movement Trend" className="squircle-card bg-surface-card p-3.5 space-y-3">
+        <section aria-label={t("exchange.trend_section")} className="squircle-card bg-surface-card p-3.5 space-y-3">
           <div className="flex items-center justify-between gap-2">
-            <h3 className="text-footnote font-semibold text-text-secondary">Rate Movement</h3>
-            <div className="flex gap-1 bg-fillTertiary p-0.5 squircle" role="radiogroup" aria-label="Trend Time Range">
+            <h3 className="text-footnote font-semibold text-text-secondary">{t("exchange.rate_movement")}</h3>
+            <div className="flex gap-1 bg-fillTertiary p-0.5 squircle" role="radiogroup" aria-label={t("exchange.trend_time_range")}>
               {(["7d", "14d", "30d"] as const).map((period) => (
                 <button
                   key={period}
@@ -246,8 +249,8 @@ export function ExchangePanelView({
           </div>
 
           <div className="flex items-center justify-between text-caption-1 font-medium text-text-secondary">
-            <span>High: <strong className="text-text-primary tabular-nums">{baseCurrency === "NGN" ? "₦" : ""}{trendInsight.high.toFixed(2)}</strong></span>
-            <span>Low: <strong className="text-text-primary tabular-nums">{baseCurrency === "NGN" ? "₦" : ""}{trendInsight.low.toFixed(2)}</strong></span>
+            <span>{t("exchange.high_label")} <strong className="text-text-primary tabular-nums">{baseCurrency === "NGN" ? "₦" : ""}{trendInsight.high.toFixed(2)}</strong></span>
+            <span>{t("exchange.low_label")} <strong className="text-text-primary tabular-nums">{baseCurrency === "NGN" ? "₦" : ""}{trendInsight.low.toFixed(2)}</strong></span>
           </div>
 
           <SparklineGraph points={trendInsight.points} />
@@ -259,13 +262,13 @@ export function ExchangePanelView({
       )}
 
       {/* 4. NEARBY MAP LISTINGS */}
-      <section aria-label="Nearby exchange points" className="space-y-2">
+      <section aria-label={t("exchange.nearby_title")} className="space-y-2">
         <div className="px-1 flex items-center justify-between">
-          <h3 className="text-footnote font-semibold text-text-secondary">Nearby exchange points</h3>
+          <h3 className="text-footnote font-semibold text-text-secondary">{t("exchange.nearby_title")}</h3>
           {locationDiscoveryStatus === "sample" ? (
-            <span className="text-caption-1 font-medium text-text-tertiary">Sample</span>
+            <span className="text-caption-1 font-medium text-text-tertiary">{t("exchange.sample")}</span>
           ) : nearestDist ? (
-            <span className="text-caption-1 text-text-tertiary">Nearest {nearestDist}</span>
+            <span className="text-caption-1 text-text-tertiary">{t("exchange.nearest", { dist: nearestDist })}</span>
           ) : null}
         </div>
 
@@ -308,27 +311,27 @@ export function ExchangePanelView({
 
           {locationDiscoveryStatus === "loading" && (
             <div className="p-4 text-center text-footnote text-text-secondary" role="status">
-              Finding nearby places…
+              {t("exchange.finding_nearby")}
             </div>
           )}
 
           {locationDiscoveryStatus === "ready" && sortedLocations.length === 0 && (
             <div className="p-4 text-center text-footnote text-text-secondary">
-              No nearby map listings found.
+              {t("exchange.no_listings")}
             </div>
           )}
 
           {locationDiscoveryStatus === "unavailable" && (
             <div className="p-4 text-center text-footnote text-text-secondary">
-              Nearby places unavailable.
+              {t("exchange.nearby_unavailable")}
             </div>
           )}
         </div>
 
         <p className="px-1 text-caption-1 text-text-tertiary">
           {locationDiscoveryStatus === "sample"
-            ? "Sample places · not real businesses or offered rates."
-            : "Map listings · rates, licence and opening status not verified."}
+            ? t("exchange.sample_disclaimer")
+            : t("exchange.listings_disclaimer")}
         </p>
       </section>
     </div>
@@ -336,6 +339,7 @@ export function ExchangePanelView({
 }
 
 function SparklineGraph({ points }: { points: ReferenceRatePoint[] }) {
+  const t = useT();
   if (points.length < 2) return null;
   const values = points.map((p) => p.rate);
   const min = Math.min(...values);
@@ -385,7 +389,7 @@ function SparklineGraph({ points }: { points: ReferenceRatePoint[] }) {
         preserveAspectRatio="none"
         className="h-full w-full"
         role="img"
-        aria-label={`Reference rate trend ${direction}`}
+        aria-label={t("exchange.trend_aria", { direction })}
       >
         <defs>
           <linearGradient id="sparkline-grad" x1="0" y1="0" x2="0" y2="1">

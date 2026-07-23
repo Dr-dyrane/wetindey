@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Star } from "lucide-react";
+import { useT } from "@/core/i18n";
 import { IconOrb } from "@/design-system/components/IconOrb";
 import { ModalSheet } from "@/design-system/components/ModalSheet";
 import { ListRow, ListGroup } from "@/design-system/components/ListRow";
@@ -32,6 +33,7 @@ export {
   useRef,
   useState,
   Star,
+  useT,
   IconOrb,
   ModalSheet,
   ListRow,

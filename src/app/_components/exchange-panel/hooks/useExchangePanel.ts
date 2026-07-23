@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
+import { useT } from "@/core/i18n";
 import {
   getReferenceCurrencyCatalog,
   getReferenceRate,
@@ -171,13 +172,18 @@ export function saveCachedRate(rate: ReferenceRate) {
   } catch {}
 }
 
-export function formatEffectiveDate(date: string): string {
-  if (!isIsoCalendarDate(date)) return "date unavailable";
-  return EFFECTIVE_DATE.format(new Date(`${date}T12:00:00Z`));
-}
+/**
+ * The translated function returned by `useT()`. `formatEffectiveDate` is pure
+ * and runs outside a component, so it takes `t` as a parameter for its one
+ * user-facing fallback rather than calling the hook itself; the view stays the
+ * single `useT()` caller. The provider label is resolved directly in the view
+ * (get.provider_* keys), so no helper is needed for it.
+ */
+type TFn = ReturnType<typeof useT>;
 
-export function providerLabel(rate: ReferenceRate): string {
-  return rate.provider === "CBN" ? "CBN reference" : "Frankfurter reference";
+export function formatEffectiveDate(date: string, t: TFn): string {
+  if (!isIsoCalendarDate(date)) return t("exchange.date_unavailable");
+  return EFFECTIVE_DATE.format(new Date(`${date}T12:00:00Z`));
 }
 
 export function parseAmount(value: string): { value: number | null; error: string | null } {

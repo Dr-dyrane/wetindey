@@ -617,6 +617,34 @@ export const en = {
   "get.contact_none_footer":
     "This seller allows contact, but WetinDey holds no phone number or handle for them yet. There is nothing to dial, and nothing is being withheld.",
 
+  /* Get it, second wave. The rest of GetItSheetView + GetItReviewsView, keyed to
+     finish routing that sheet through i18n. `{when}` is a relative-time string;
+     get.maps_fallback is the maps-app name shown when the platform is unknown.
+
+     The route-disclosure paragraph (its titles and bodies) is deliberately NOT
+     keyed here and stays as literals in the view: location-default-contract
+     asserts that copy remains auditable in the component, and it renders English
+     in every shippable locale regardless, so routing it would gain nothing
+     visible while breaking that privacy contract. The reviews-preparation notes
+     speak to safety and moderation, a tone-sensitive register, so they are
+     UNTRANSLATED in Pidgin and Yorùbá. */
+  "get.last_seen": "Last seen {when}",
+  "get.offer_per": " per {unit} · {item}",
+  "get.more_details": "More details",
+  "get.hide_details": "Hide details",
+  "get.maps_fallback": "your maps app",
+  "get.open_with_location": "Open with my location",
+  "get.use_current_location": "Use current location",
+  "get.refreshing_location": "Refreshing location…",
+  "get.destination_only": "Destination only",
+  "get.reviews_title": "Reviews",
+  "get.reviews_prep_note": "New reviews are unavailable while we prepare safety and moderation safeguards.",
+  "get.reviews_loading": "Loading reviews...",
+  "get.reviews_unavailable_title": "Reviews unavailable",
+  "get.reviews_unavailable_body": "We are preparing this feature with safety and moderation in mind.",
+  "get.reviews_one": "review",
+  "get.reviews_other": "reviews",
+
   /* Report price, ReportPriceSheet.tsx:88-166, hardcoded English today. */
   "report.choose_market": "Choose market",
   "report.choose_item": "Choose item",
@@ -664,6 +692,43 @@ export const en = {
   "confirm.queued": "Saved. We'll send it when you're back online.",
   "confirm.failed": "That didn't send. Try again.",
   "confirm.retry": "Try again",
+
+  /* FX & reference-rate panel, ExchangePanelView.tsx, hardcoded English today.
+   *
+   * This surface is about money end to end, so almost every line here is the
+   * register the header warns against guessing at: provider names, the "does not
+   * exchange money" disclaimer, the sample / listings disclaimers, the
+   * rate-movement labels. A wrong nuance about a rate is a false statement about
+   * a user's money. So the whole block is keyed for completeness and left
+   * UNTRANSLATED in Pidgin and Yorùbá, waiting on a speaker who also carries the
+   * FX register, not just the language. `{date}`/`{dist}`/`{direction}` are
+   * runtime values the view supplies. */
+  "exchange.foreign_amount_label": "Foreign amount",
+  "exchange.naira_amount_label": "Naira amount",
+  "exchange.reference_rate_answer": "Reference Rate Answer",
+  "exchange.converter_section": "Interactive Currency Converter",
+  "exchange.trend_section": "Rate Movement Trend",
+  "exchange.provider_cbn": "CBN reference",
+  "exchange.provider_frankfurter": "Frankfurter reference",
+  "exchange.reference_rate": "Reference rate",
+  "exchange.effective": "Effective {date}",
+  "exchange.date_unavailable": "date unavailable",
+  "exchange.same_currency": "1:1 Same currency",
+  "exchange.swap_direction": "Swap conversion direction",
+  "exchange.rate_disclaimer": "Reference rate estimate · WetinDey does not exchange money.",
+  "exchange.rate_movement": "Rate Movement",
+  "exchange.trend_time_range": "Trend Time Range",
+  "exchange.high_label": "High:",
+  "exchange.low_label": "Low:",
+  "exchange.nearby_title": "Nearby exchange points",
+  "exchange.sample": "Sample",
+  "exchange.nearest": "Nearest {dist}",
+  "exchange.finding_nearby": "Finding nearby places…",
+  "exchange.no_listings": "No nearby map listings found.",
+  "exchange.nearby_unavailable": "Nearby places unavailable.",
+  "exchange.sample_disclaimer": "Sample places · not real businesses or offered rates.",
+  "exchange.listings_disclaimer": "Map listings · rates, licence and opening status not verified.",
+  "exchange.trend_aria": "Reference rate trend {direction}",
 } as const;
 
 /** Every key in the product. Derived, never hand-maintained. */
@@ -1056,6 +1121,32 @@ const pidgin: LocaleTable = {
   "get.contact_none_footer":
     "This seller allow contact, but WetinDey never get phone number abi handle for dem. Nothing dey to call, and we no dey hide anything.",
 
+  /* Get it, second wave. Only the two progress lines are written: "We dey ___…"
+     is the construction this table already uses for `item.checking_prices`
+     ("We dey check price…") and `area.locating` ("We dey find you…"), so they
+     are consistent, though a Lagos speaker still owes them a read (both are in
+     NEEDS_NATIVE_REVIEW). Everything else is UNTRANSLATED and shows English:
+     "Last seen" is a WhatsApp-familiar phrase a Lagos user reads as-is; the
+     reviews safety/moderation notes are the careful register the header says not
+     to guess at. (The route-disclosure paragraph is not keyed at all; it stays a
+     literal in the view, see the English table's note.) */
+  "get.last_seen": UNTRANSLATED,
+  "get.offer_per": UNTRANSLATED,
+  "get.more_details": UNTRANSLATED,
+  "get.hide_details": UNTRANSLATED,
+  "get.maps_fallback": UNTRANSLATED,
+  "get.open_with_location": UNTRANSLATED,
+  "get.use_current_location": UNTRANSLATED,
+  "get.refreshing_location": "We dey refresh location…",
+  "get.destination_only": UNTRANSLATED,
+  "get.reviews_title": UNTRANSLATED,
+  "get.reviews_prep_note": UNTRANSLATED,
+  "get.reviews_loading": "We dey load reviews…",
+  "get.reviews_unavailable_title": UNTRANSLATED,
+  "get.reviews_unavailable_body": UNTRANSLATED,
+  "get.reviews_one": UNTRANSLATED,
+  "get.reviews_other": UNTRANSLATED,
+
   "report.choose_market": "Pick market",
   "report.choose_item": "Pick food",
   "report.choose_quality": "Pick quality",
@@ -1100,6 +1191,39 @@ const pidgin: LocaleTable = {
   "confirm.queued": "Network bad. We save am, we go send later.",
   "confirm.failed": "E no send. Try again.",
   "confirm.retry": "Try again",
+
+  /* FX & reference-rate panel. Every key UNTRANSLATED, and that is the doctrine,
+     not laziness: this is a money surface, and the header's rule is that Pidgin
+     is written only where the register is unambiguous. FX provider names, rate
+     disclaimers and rate-movement labels are exactly where a foreigner's guess
+     reads worst, and a wrong nuance here is a false statement about a rate.
+     English shows through until an FX-literate Pidgin speaker writes it. */
+  "exchange.foreign_amount_label": UNTRANSLATED,
+  "exchange.naira_amount_label": UNTRANSLATED,
+  "exchange.reference_rate_answer": UNTRANSLATED,
+  "exchange.converter_section": UNTRANSLATED,
+  "exchange.trend_section": UNTRANSLATED,
+  "exchange.provider_cbn": UNTRANSLATED,
+  "exchange.provider_frankfurter": UNTRANSLATED,
+  "exchange.reference_rate": UNTRANSLATED,
+  "exchange.effective": UNTRANSLATED,
+  "exchange.date_unavailable": UNTRANSLATED,
+  "exchange.same_currency": UNTRANSLATED,
+  "exchange.swap_direction": UNTRANSLATED,
+  "exchange.rate_disclaimer": UNTRANSLATED,
+  "exchange.rate_movement": UNTRANSLATED,
+  "exchange.trend_time_range": UNTRANSLATED,
+  "exchange.high_label": UNTRANSLATED,
+  "exchange.low_label": UNTRANSLATED,
+  "exchange.nearby_title": UNTRANSLATED,
+  "exchange.sample": UNTRANSLATED,
+  "exchange.nearest": UNTRANSLATED,
+  "exchange.finding_nearby": UNTRANSLATED,
+  "exchange.no_listings": UNTRANSLATED,
+  "exchange.nearby_unavailable": UNTRANSLATED,
+  "exchange.sample_disclaimer": UNTRANSLATED,
+  "exchange.listings_disclaimer": UNTRANSLATED,
+  "exchange.trend_aria": UNTRANSLATED,
 };
 
 /* ── Yorùbá ───────────────────────────────────────────────────────────────── */
@@ -1416,6 +1540,26 @@ const yoruba: LocaleTable = {
   "get.contact_none": UNTRANSLATED,
   "get.contact_none_footer": UNTRANSLATED,
 
+  /* Get it, second wave. Every key UNTRANSLATED, LANES H2: Yorùbá is withheld
+     pending a native speaker, and no agent may stand in for one. English shows
+     through, on purpose. */
+  "get.last_seen": UNTRANSLATED,
+  "get.offer_per": UNTRANSLATED,
+  "get.more_details": UNTRANSLATED,
+  "get.hide_details": UNTRANSLATED,
+  "get.maps_fallback": UNTRANSLATED,
+  "get.open_with_location": UNTRANSLATED,
+  "get.use_current_location": UNTRANSLATED,
+  "get.refreshing_location": UNTRANSLATED,
+  "get.destination_only": UNTRANSLATED,
+  "get.reviews_title": UNTRANSLATED,
+  "get.reviews_prep_note": UNTRANSLATED,
+  "get.reviews_loading": UNTRANSLATED,
+  "get.reviews_unavailable_title": UNTRANSLATED,
+  "get.reviews_unavailable_body": UNTRANSLATED,
+  "get.reviews_one": UNTRANSLATED,
+  "get.reviews_other": UNTRANSLATED,
+
   "report.choose_market": UNTRANSLATED,
   "report.choose_item": UNTRANSLATED,
   "report.choose_quality": UNTRANSLATED,
@@ -1460,6 +1604,36 @@ const yoruba: LocaleTable = {
   "confirm.queued": "A ti fipamọ́. A ó firanṣẹ́ nígbà tí netiwọọki bá dé.",
   "confirm.failed": "Kò lọ. Gbìyànjú lẹ́ẹ̀kansí.",
   "confirm.retry": "Gbìyànjú lẹ́ẹ̀kansí",
+
+  /* FX & reference-rate panel. Every key UNTRANSLATED, LANES H2: Yorùbá is
+     withheld pending a native speaker, and no agent may stand in for one, least
+     of all on a money surface. English shows through, on purpose. */
+  "exchange.foreign_amount_label": UNTRANSLATED,
+  "exchange.naira_amount_label": UNTRANSLATED,
+  "exchange.reference_rate_answer": UNTRANSLATED,
+  "exchange.converter_section": UNTRANSLATED,
+  "exchange.trend_section": UNTRANSLATED,
+  "exchange.provider_cbn": UNTRANSLATED,
+  "exchange.provider_frankfurter": UNTRANSLATED,
+  "exchange.reference_rate": UNTRANSLATED,
+  "exchange.effective": UNTRANSLATED,
+  "exchange.date_unavailable": UNTRANSLATED,
+  "exchange.same_currency": UNTRANSLATED,
+  "exchange.swap_direction": UNTRANSLATED,
+  "exchange.rate_disclaimer": UNTRANSLATED,
+  "exchange.rate_movement": UNTRANSLATED,
+  "exchange.trend_time_range": UNTRANSLATED,
+  "exchange.high_label": UNTRANSLATED,
+  "exchange.low_label": UNTRANSLATED,
+  "exchange.nearby_title": UNTRANSLATED,
+  "exchange.sample": UNTRANSLATED,
+  "exchange.nearest": UNTRANSLATED,
+  "exchange.finding_nearby": UNTRANSLATED,
+  "exchange.no_listings": UNTRANSLATED,
+  "exchange.nearby_unavailable": UNTRANSLATED,
+  "exchange.sample_disclaimer": UNTRANSLATED,
+  "exchange.listings_disclaimer": UNTRANSLATED,
+  "exchange.trend_aria": UNTRANSLATED,
 };
 
 /* ── The tables, and what is not vouched for ──────────────────────────────── */
@@ -1523,6 +1697,11 @@ export const NEEDS_NATIVE_REVIEW: Readonly<Record<Exclude<Locale, "en">, readonl
     "item.chip_closest",
     "get.title",
     "get.contact_seller",
+    // Get-it second wave. Both are the "We dey ___…" progress construction this
+    // table already uses (item.checking_prices, area.locating), consistent but
+    // still owed a Lagos speaker's read.
+    "get.refreshing_location",
+    "get.reviews_loading",
     "profile.report_problem",
     // "Tell us wetin spoil", the same phrase as `profile.report_problem` above,
     // carried onto the sheet's own title so the two agree. Genuine Pidgin, but it

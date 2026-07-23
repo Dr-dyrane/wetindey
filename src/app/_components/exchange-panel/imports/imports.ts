@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
+import { useT } from "@/core/i18n";
 import { IconOrb } from "@/design-system/components/IconOrb";
 import { Skeleton } from "@/design-system/components/Skeleton";
 import { SolidIcon } from "@/design-system/icons/SolidIcon";
@@ -32,6 +33,7 @@ export {
   useMemo,
   useRef,
   useState,
+  useT,
   IconOrb,
   Skeleton,
   SolidIcon,

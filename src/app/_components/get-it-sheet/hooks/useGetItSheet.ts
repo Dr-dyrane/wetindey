@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useT } from "@/core/i18n";
 import {
   getPlaceContactPolicy,
   getReviewsForEntity,
@@ -72,11 +73,12 @@ export function detectMapsPlatform(): MapsPlatform {
   return "web";
 }
 
-export function mapsAppName(platform: MapsPlatform): string {
-  if (platform === "apple") return "Apple Maps";
-  if (platform === "android") return "Maps app";
-  return "Google Maps";
-}
+/**
+ * The translated function returned by `useT()`. The display helpers below take
+ * it as a parameter (they are pure and run outside a component) rather than
+ * calling the hook themselves, so the view stays the single `useT()` caller.
+ */
+type TFn = ReturnType<typeof useT>;
 
 export function appleMapsUrl(t: GetItTarget, origin?: { lat: number; lng: number } | null): string {
   const p = new URLSearchParams();
@@ -193,15 +195,24 @@ export type ContactState =
   | { status: "error" }
   | { status: "ready"; policy: PlaceContactPolicy };
 
-export function contactCopy(state: ContactState): { detail: string; footer: string | null } {
-  if (state.status === "loading") return { detail: "Checking", footer: null };
+export function contactCopy(
+  state: ContactState,
+  t: TFn
+): { detail: string; footer: string | null } {
+  if (state.status === "loading") return { detail: t("get.contact_checking"), footer: null };
   if (state.status === "error") {
-    return { detail: "Unavailable", footer: "We couldn't read this seller's setting." };
+    // Only the error state renders a footer today. Its text is left as a literal
+    // on purpose: the existing get.contact_error_footer key carries a longer,
+    // richer wording from an unwired redesign, so pointing at it would CHANGE the
+    // displayed copy. This lane is strings + aria with no behaviour change, so the
+    // current sentence is preserved verbatim. Reconciling the two footer designs
+    // is a separate, deliberate decision.
+    return { detail: t("get.contact_error"), footer: "We couldn't read this seller's setting." };
   }
   if (state.policy.contactVisibility === "private") {
-    return { detail: "Not shared", footer: null };
+    return { detail: t("get.contact_private"), footer: null };
   }
-  return { detail: "None on file", footer: null };
+  return { detail: t("get.contact_none"), footer: null };
 }
 
 export type ShareResult = { kind: "idle" } | { kind: "copied" } | { kind: "manual"; text: string };
