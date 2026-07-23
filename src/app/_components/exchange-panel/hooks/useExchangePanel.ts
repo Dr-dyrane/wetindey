@@ -598,6 +598,25 @@ export function useExchangePanel({
     };
   }, [rateTrendState, trendPeriod, baseCurrency]);
 
+  // The hero badge shows the LATEST published movement, the change into the
+  // current rate, NOT the selected window's net. Over a volatile window the net
+  // round-trips: CBN USD sat at 1388.89 then printed 1369.86, a 1.4% drop, yet
+  // 7 points back is also ~1369.86 so the first-to-last net reads ~0.0% and the
+  // hero looked flat while the signal rail (an 8-day window that opened at the
+  // higher value) correctly read down 1.4%. This is the last two points of the
+  // full series, independent of trendPeriod, so the hero always states the move
+  // that just happened.
+  const latestMovementPercent = useMemo(() => {
+    const points = rateTrendState.kind === "ready" ? rateTrendState.points : [];
+    const clean = points
+      .filter((p) => Number.isFinite(p.rate) && Number.isFinite(Date.parse(p.date)))
+      .sort((a, b) => Date.parse(a.date) - Date.parse(b.date));
+    if (clean.length < 2) return null;
+    const prev = clean[clean.length - 2]!.rate;
+    const last = clean[clean.length - 1]!.rate;
+    return prev > 0 ? ((last - prev) / prev) * 100 : null;
+  }, [rateTrendState]);
+
   return {
     amountId,
     foreignErrorId,
@@ -615,6 +634,7 @@ export function useExchangePanel({
     trendPeriod,
     setTrendPeriod,
     trendInsight,
+    latestMovementPercent,
     setCatalogRetry,
     setRateRetry,
     offline,

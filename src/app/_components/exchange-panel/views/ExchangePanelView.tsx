@@ -44,6 +44,7 @@ export function ExchangePanelView({
     trendPeriod,
     setTrendPeriod,
     trendInsight,
+    latestMovementPercent,
     enterCurrency,
     editAmount,
     foreignError,
@@ -180,16 +181,16 @@ export function ExchangePanelView({
                     maximumFractionDigits: 2,
                   })}
             </span>
-            {trendInsight && (
+            {latestMovementPercent !== null && (
               <span
                 className={`squircle px-2 py-0.5 text-caption-1 font-semibold tabular-nums ${
-                  trendInsight.percentChange >= 0
+                  latestMovementPercent >= 0
                     ? "bg-status-confirmed-bg text-status-confirmed-fg"
                     : "bg-status-caution-bg text-status-caution-fg"
                 }`}
               >
-                {trendInsight.percentChange >= 0 ? "▲ +" : "▼ "}
-                {Math.abs(trendInsight.percentChange).toFixed(1)}%
+                {latestMovementPercent >= 0 ? "▲ +" : "▼ "}
+                {Math.abs(latestMovementPercent).toFixed(1)}%
               </span>
             )}
           </div>
