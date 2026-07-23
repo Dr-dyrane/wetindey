@@ -201,6 +201,20 @@ Controller-directed, scout confirmed exact paths and stopped to the controller b
 
 ## Active exact path locks
 
+#### ADR-023 conformance closure and coverage-point provenance - ACTIVE
+
+Owner: Private Contractor, Maps Delivery `c9c17443-ef5e-4a7b-9b6e-c8f5381da30c`, self-claimed under the Founder's standing continuous-work directive after a read-only conformance audit at `17c59b0`. The audit found every gap named in accepted ADR-023 closed on HEAD by `95830d2` (recenter updates the fresh-gated self marker without touching search context; device-fix freshness bounded at 5 minutes with a 60 second route-admission bound at every consumer, contract-tested; Get It origins are a typed provenance union and no undisclosed device fix can reach Directions or an external maps handoff; persistence can never resurrect a fix), while the ADR header still reads implementation unclaimed and exactly one bare-coordinate boundary survives: useLocationSheet sends the raw device fix as an untyped point to the getCoverageForPoint server action. This lane records the conformance closure on the ADR and types that last boundary with an explicit provenance field, no behavior change. The recenter-during-active-route camera skip is recorded as a known cosmetic residual, not fixed here.
+
+Exact paths:
+
+- `docs/adr/023-browsing-context-and-device-location.md`
+- `src/app/_actions/place-actions.ts`
+- `src/app/_components/location-sheet/hooks/useLocationSheet.ts`
+- `src/lib/validation.ts`
+- `scripts/location-default-contract.test.ts` (new provenance leg only; the existing 20 legs stay byte-intact)
+
+Completion: contract green with the new leg and all prior legs unedited; tsc silent; eslint clean; runtime drive of Use my location proving identical coverage behavior; independent default-to-REFUTED refutation; path-scoped commit pushed under the `0bbdb11` class; span-checked release.
+
 #### i18n hoist: hardcoded user-facing English into strings.ts - RELEASED / PATHLESS
 
 Complete at `bd01582`, pushed under the `0bbdb11` class after NOT REFUTED on all five claims: 50 literal-to-key pairs proven byte-equal against HEAD (including both "We no fit ..." occurrences and all 18 locationStore pairs); the only en-table deltas are the three dormant geo title alignments whose keys had zero consumers at HEAD; all 42 new keys UNTRANSLATED in pidgin and yoruba with every pre-existing local entry byte-unchanged; type-only StringKey import proven to pull zero i18n modules into the node contract environment; eight runtime innerText captures byte-identical across a full HEAD stash round-trip including a blocked-search error and a denied-geolocation flow; contract toothy on three mutations. Residuals recorded: yoruba is withheld by isShippable so pidgin is the UNTRANSLATED-shows-English runtime proof; the {km} empty state is statically proven only (no reachable empty category); the contract byte-pins 7 of 42 en values, the rest existence-pinned. Copy riders left for a future lane: share title/body in useHomePage, Visit shop/Visit market and Close aria-label in HomePlaceDetailView, the prices count suffix in HomeSheetResultsView, location-sheet copy.ts, MapRecenterControl's aria-label. Paths released; strings.ts hotspot held for under two hours.
