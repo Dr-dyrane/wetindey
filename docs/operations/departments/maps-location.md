@@ -458,3 +458,71 @@ Reverting `7707515` removes the dormant vocabulary entries and the contract; no 
 - Action: Complete ADR-031 lane 2 (pillar surface) including the CategorySelectorSheetView type repair, then route lane 4 field truth per the ADR.
 - Target: The lane 2 manifest in LANES.md: `CategoryPillar` gains `agri` behind the default-off flag with owner-supplied copy only.
 - Completion: Lane 2 released in LANES.md with whole-tree tsc silent again; the map surface above needs no further change for it.
+
+### 2026-07-23 - ADR-031 lanes closeout record
+
+#### Transfer coordinates
+
+- Evidence ID: `WD-MAPS-ADR031-CLOSEOUT-20260723-6`
+- Base SHA: `d846fee5a3bb98242982003baf062458735ae5ce`
+- Candidate tree SHA-256: `974cc813217be769d48955b1be1e313922626c97575207694e95eac0de35b3b7`
+- Candidate hash algorithm: `wetindey-candidate-tree-v1`
+- Candidate paths (sorted):
+
+```text
+docs/operations/departments/maps-location.md
+```
+
+- Final commit SHA: Reported by the worker/controller after commit; not embedded in these bytes.
+
+#### Lane and path boundaries
+
+- Lane heading: `#### ADR-031 lane 3 agri map surface - ACTIVE`
+- Lane owner: Private Contractor, Maps Delivery `c9c17443-ef5e-4a7b-9b6e-c8f5381da30c`
+- Owned paths: Exactly the 1 paths in the preceding Candidate paths (sorted) block; no other path.
+- Excluded paths: Every repository path not listed in Candidate paths (sorted), including `LANES.md`, all ADR paths, and every source path this entry cites.
+- Concurrent dependencies: None active; the registry's ADR-031 lanes are all released.
+
+#### Decisions and rationale
+
+The previous entry's Exact next action asked the controller to complete ADR-031 lane 2 including the CategorySelectorSheetView type repair. That happened at `ad58368` the same night: the agri entry ships in the category selector behind `PILLAR_FLAGS.agri` (default false) with the type repair included, and whole-tree tsc has been silent since. This forward entry records the closure and narrows the department's open action to the one remaining lane. The two routed worklog-contract wording residuals for this file (the plural owned-paths sentence and the evidence noun in an Action field) were verified already conformant at this entry's base; the focused contract runs five of five.
+
+#### Implementation
+
+Documentation-only. The cited behavior ships at `ad58368` (lane 2), `7707515` (lane 3 map surface), and `cba07e1` (lane 1 constants); ADR-031's four-lane order now stands at three delivered, one human-led remaining.
+
+#### Evidence and refutations
+
+- Refuter ID: `independent-claude-refuter-evidence-20260723-06`
+- Review binding: Full Base SHA, canonical Candidate tree SHA-256, and sorted Candidate paths.
+- Verdict location: External read-only refuter output keyed by Evidence ID and Refuter ID; not embedded because changing reviewed bytes invalidates it.
+- Runtime and external evidence: Lane 2 verified in source at base: CategorySelectorSheetView carries the agri entry gated on PILLAR_FLAGS.agri and the array-literal type repair; tsc silent at base. Lane 3's own evidence stands in the prior entry (WD-MAPS-AGRISURFACE-20260722-5). The department worklog contract runs five of five at base.
+- Checks not run: no runtime drive in this entry; the dormant pillar renders nothing until activation, exactly as the prior entry's census proved.
+
+#### Known failures
+
+`UNKNOWN` stands for `Agro-dealer rendering with real places`: unchanged from the prior entry, no live place carries the type until ADR-031 lane 4 field truth and the credential-gated activation.
+
+- Unknown scope: `Agro-dealer rendering with real places`
+- Unknown owner: Maps/Location chief after ADR-031 lane 4 field truth and the credential-gated activation
+- Unknown resolution action: Record symbol legibility, keyboard operability, and zero POI-budget disturbance for `Agro-dealer rendering with real places` with a both-themes drive at z14.5 and z16 in the next lane-owned Maps entry, once real `agro_dealer` places exist in the pilot geography.
+
+#### External gates
+
+- External gate owner: Founder (activation key) and controller (lane 4 routing)
+- Gate state: No gate is inferred closed by this entry; `PILLAR_FLAGS.agri` remains false.
+
+#### Integration order
+
+Append after concurrent LANES.md bursts; this entry's path-scoped commit follows immediately.
+
+#### Rollback or disable
+
+Documentation-only; reverting removes the closeout record, not behavior.
+
+#### Exact next action
+
+- Actor: Controller
+- Action: Route ADR-031 lane 4 field truth per the ADR's recorded order and evidence standards.
+- Target: The lane 4 entry in LANES.md granting the bounded field-truth manifest.
+- Completion: LANES.md records the lane 4 grant and the next lane-owned Maps entry cites its evidence.
