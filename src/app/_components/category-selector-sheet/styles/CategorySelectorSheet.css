@@ -1,0 +1,13 @@
+/* CategorySelectorSheet scoped style.
+ *
+ * Each single-select category row is a fixed 2rem icon orb, a flexible
+ * truncating label, and a trailing affordance (a check when active, a "Soon"
+ * tag when unsupported). That three-column contract is the row's structural
+ * identity, so it lives here as one named class rather than as an inline
+ * grid-cols-[2rem_minmax(0,1fr)_auto] arbitrary value repeated in the JSX.
+ * The class is applied in views/CategorySelectorSheetView.tsx alongside the
+ * `grid` utility that sets display:grid; no borders, per the house HIG rule.
+ */
+.category-selector-row {
+  grid-template-columns: 2rem minmax(0, 1fr) auto;
+}

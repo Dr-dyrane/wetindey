@@ -14,6 +14,7 @@ import {
 } from "../imports/imports";
 import type { CategorySelectorSheetProps, SelectorCategory } from "../CategorySelectorSheet";
 import type { useCategorySelectorSheet } from "../hooks/useCategorySelectorSheet";
+import "../styles/CategorySelectorSheet.css";
 
 export interface CategorySelectorSheetViewProps extends CategorySelectorSheetProps {
   sheet: ReturnType<typeof useCategorySelectorSheet>;
@@ -97,7 +98,7 @@ export function CategorySelectorSheetView(p: CategorySelectorSheetViewProps) {
                     handleSelect(category.id);
                   }
                 }}
-                className={`squircle grid h-12 w-full grid-cols-[2rem_minmax(0,1fr)_auto] items-center gap-3 px-2.5 text-left
+                className={`category-selector-row squircle grid h-12 w-full items-center gap-3 px-2.5 text-left
                             transition-colors duration-instant focus-visible:outline-2
                             focus-visible:outline-offset-[-2px] focus-visible:outline-accent disabled:cursor-not-allowed disabled:opacity-100 ${
                               active
