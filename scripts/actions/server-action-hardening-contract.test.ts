@@ -21,6 +21,16 @@
  * is governance-owned, so M4 is routed rather than self-resolved. When the
  * ruling lands, the guards and their pins belong here.
  *
+ * Read-hygiene riders from the same sweep, pinned below alongside:
+ *
+ *   M7   robots.ts carries no rule for the deleted /zzboom route.
+ *   M8   The sitemap's evidence probes run through a bounded-concurrency,
+ *        order-preserving map instead of one awaited row at a time.
+ *   M11  The trust read stays UNWINDOWED, by recorded ruling: rows past the
+ *        144h evidence horizon still drive the expired display, the ADR-015
+ *        Sample origin, and the rendered report/source counts (evidence in
+ *        the comment on getOfferTrustBatchImpl). The pin is the ruling.
+ *
  * Source pins read the files; behavioural pins import the real parsers from
  * src/lib/validation (a plain module, importable under tsx).
  */
@@ -42,6 +52,8 @@ const foodActions = read("src/app/_actions/food-actions.ts");
 const barrel = read("src/app/_actions/actions.ts");
 const foodTrust = read("src/lib/food-trust.ts");
 const reviewActions = read("src/app/_actions/review-actions.ts");
+const robots = read("src/app/robots.ts");
+const sitemap = read("src/app/sitemap.ts");
 
 /** The body of one exported async function, from its header to the next export. */
 function slice(source: string, fn: string): string {
@@ -163,4 +175,56 @@ test("M5: searchItems' category is parsed at the boundary", () => {
   assert.throws(() => parseItemCategory(""));
   assert.throws(() => parseItemCategory("x".repeat(41)));
   assert.throws(() => parseItemCategory(42));
+});
+
+test("M7: robots carries no rule for the deleted /zzboom route", () => {
+  // The route is gone from src/app, so any mention here is a rule for a 404.
+  assert.doesNotMatch(robots, /zzboom/);
+  // The ONLY disallow KEY left is the non-production blanket "/": the
+  // production branch allows everything and advertises the sitemap. A second
+  // key appearing means a new rule snuck in without a route to justify it.
+  // (Key form with the colon, because the file's prose legitimately says
+  // "disallows" when explaining the non-production default.)
+  assert.equal((robots.match(/disallow:/g) ?? []).length, 1);
+  assert.match(robots, /disallow: "\/"/);
+  assert.match(robots, /allow: "\/"/);
+  assert.match(robots, /sitemap: `\$\{origin\}\/sitemap\.xml`/);
+});
+
+test("M8: sitemap evidence probes are batched, capped, and order-preserving", () => {
+  // The serial one-awaited-row-at-a-time gate is gone.
+  assert.doesNotMatch(sitemap, /if \(!\(await family\.hasObservedEvidence/);
+
+  // The bounded map exists, its cap is the named constant at 8, and the
+  // probes actually run through it.
+  assert.match(sitemap, /const EVIDENCE_PROBE_CONCURRENCY = 8/);
+  assert.match(sitemap, /async function mapWithConcurrency/);
+  assert.match(sitemap, /mapWithConcurrency\(\s*rows,\s*EVIDENCE_PROBE_CONCURRENCY,/);
+
+  // Order preservation is structural, not incidental: each worker writes to
+  // the index it claimed, and emission walks rows by position reading the
+  // verdict at the same index. Byte-identity of the emitted sitemap was
+  // additionally proven against the dev database (before/after render diff)
+  // and the extracted function was driven with randomised delays: output
+  // ordered, peak in-flight exactly 8, every row probed once.
+  assert.match(sitemap, /results\[index\] = await fn\(items\[index\]\)/);
+  assert.match(sitemap, /rows\.forEach\(\(row, index\)/);
+  assert.match(sitemap, /if \(!verdicts\[index\]\) return;/);
+});
+
+test("M11: the trust read stays unwindowed, and the ruling is on the query", () => {
+  const impl = slice(foodTrust, "getOfferTrustBatchImpl");
+
+  // No time predicate reaches the observations read: rows past the 144h
+  // evidence horizon still carry the expired display, the ADR-015 Sample
+  // origin, and the rendered counts. Anyone adding a window must first
+  // delete the recorded refutation beside the query, and this pin.
+  assert.doesNotMatch(impl, /observedAt, ['"<>=]|gte\(observations\.observedAt/);
+  assert.doesNotMatch(impl, /now\(\) - |make_interval|interval '/);
+
+  // The ruling text itself, anchored on its three load-bearing citations.
+  assert.match(impl, /DELIBERATELY NO `observed_at` WINDOW/);
+  assert.match(impl, /expirationHours \* 2/);
+  assert.match(impl, /ADR-015/);
+  assert.match(impl, /distinctSourceCount/);
 });

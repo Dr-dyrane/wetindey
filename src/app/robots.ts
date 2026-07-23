@@ -54,19 +54,10 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: "*",
         allow: "/",
-        /**
-         * `/zzboom` throws a synthetic `geographyPoint.fromDriver` error on
-         * mount — it exists to exercise the error boundary (zzboom/page.tsx:6).
-         * It is a real, reachable, crawlable route that returns a stack trace,
-         * and it is the last thing that should be indexed under this domain.
-         *
-         * This is a request, not a control: a crawler chooses to honour it, and
-         * a disallowed URL can still be indexed if something links to it. Nothing
-         * links to this one, so robots.txt is proportionate. If it ever needs to
-         * be genuinely unreachable, that is a `notFound()` in the route, not a
-         * line here.
-         */
-        disallow: ["/zzboom"],
+        // No blocked paths. The only entry this rule ever held pointed at the
+        // error-boundary exercise route, which no longer exists in src/app; a
+        // rule for a 404 is dead weight that reads as coverage. The hardening
+        // contract pins the absence.
       },
     ],
     sitemap: `${origin}/sitemap.xml`,

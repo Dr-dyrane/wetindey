@@ -126,6 +126,42 @@ type UrlFamily = {
   readonly hasObservedEvidence: (id: string) => Promise<boolean>;
 };
 
+/**
+ * How many evidence probes run at once. Build-time only, so the ceiling is a
+ * courtesy to the database, not a latency target: 8 keeps the pool well under
+ * pg's default of 10 while cutting the former one-row-at-a-time walk (each
+ * `hasObservedEvidence` is a real query; serially that was O(catalog) awaited
+ * round trips).
+ */
+const EVIDENCE_PROBE_CONCURRENCY = 8;
+
+/**
+ * Map with a concurrency ceiling, ORDER-PRESERVING by construction: each
+ * worker claims the next index and writes its result to that same index, so
+ * the output array is ordered by input position regardless of which promise
+ * settles first. No dependency; the sitemap's ordering is part of its bytes.
+ */
+async function mapWithConcurrency<T, R>(
+  items: readonly T[],
+  limit: number,
+  fn: (item: T) => Promise<R>,
+): Promise<R[]> {
+  const results = new Array<R>(items.length);
+  let nextIndex = 0;
+  const workers = Array.from(
+    { length: Math.min(limit, items.length) },
+    async () => {
+      while (true) {
+        const index = nextIndex++;
+        if (index >= items.length) return;
+        results[index] = await fn(items[index]);
+      }
+    },
+  );
+  await Promise.all(workers);
+  return results;
+}
+
 const FAMILIES: readonly UrlFamily[] = [
   {
     segment: "item/[slug]",
@@ -210,17 +246,26 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
    */
   for (const family of FAMILIES) {
     if (!routeExists(family.segment)) continue;
-    for (const row of await family.rows()) {
-      // Provenance gate: a slug is submitted to crawlers only while its page is
-      // indexable (observed evidence). A synthetic-only or catalog-only slug is
-      // omitted here exactly as its page carries `noindex`, one policy, two
-      // surfaces, read from the same seo-query.
-      if (!(await family.hasObservedEvidence(row.id))) continue;
+    const rows = await family.rows();
+    // Provenance gate: a slug is submitted to crawlers only while its page is
+    // indexable (observed evidence). A synthetic-only or catalog-only slug is
+    // omitted here exactly as its page carries `noindex`, one policy, two
+    // surfaces, read from the same seo-query. The probes used to run one
+    // awaited row at a time; they now run through the bounded map above, and
+    // the verdict array is indexed by row position so the emitted order (and
+    // therefore the bytes) cannot change.
+    const verdicts = await mapWithConcurrency(
+      rows,
+      EVIDENCE_PROBE_CONCURRENCY,
+      (row) => family.hasObservedEvidence(row.id),
+    );
+    rows.forEach((row, index) => {
+      if (!verdicts[index]) return;
       entries.push({
         url: `${origin}/${family.prefix}/${encodeURIComponent(row.slug)}`,
         lastModified: row.updatedAt,
       });
-    }
+    });
   }
 
   return entries;

@@ -134,6 +134,40 @@ export async function getOfferTrustBatchImpl(
 ): Promise<Record<string, TrustAssessment>> {
   if (keys.length === 0) return {};
 
+  /*
+   * DELIBERATELY NO `observed_at` WINDOW ON THIS READ. This was proposed as a
+   * freshness-window predicate (grow-bounded read) and REFUTED against the
+   * model and the live data; the ruling is recorded here so the next person
+   * who reaches for `observed_at >=` has to argue with it, and the hardening
+   * contract pins it.
+   *
+   * The only branch of `assessTrust` with a finite horizon is the evidence
+   * sum: `ageDecay` (trust.ts) reaches ZERO at policy.expirationHours * 2,
+   * 144h, so rows past 144h cannot move `confidenceScore`. Every other branch
+   * legitimately reads older rows:
+   *
+   *   1. The newest admitted row, at ANY age, drives freshness, availability,
+   *      ageHours and the expired copy ("Last seen N days ago, too old to
+   *      stand behind", trust.ts `describe`). Windowed out, those keys would
+   *      claim "Nobody has reported this yet", which is false.
+   *   2. `provenanceSummary` feeds `toReadTrust`'s `origin` above, which is
+   *      how an aged synthetic row keeps its ADR-015 "Sample" label. Measured
+   *      on the dev database on 2026-07-23: 965 approved observations, all
+   *      synthetic, roughly 95 percent already older than 144h (the exact
+   *      count grows hourly as rows cross the boundary). A freshness-scale
+   *      window flips that majority from "Sample" to "No observed reports"
+   *      the day it ships; an oversized constant flips nothing at first and
+   *      then silently breaks as rows age past it, so no constant is safe.
+   *   3. `observationCount` / `distinctSourceCount` tally every admitted row
+   *      and are RENDERED ("N reports · M sources",
+   *      itemDetailSheetPresentation.ts), so a window deflates visible
+   *      numbers on any key with mixed-age history.
+   *
+   * So the growth bound cannot come from a read predicate without changing
+   * displayed semantics; it belongs to a retention/archival decision (routed
+   * to the controller from sweep two). The read stays bounded per key by the
+   * `(item_variant_id, unit_id, place_id)` composite index instead.
+   */
   const rows = await db
     .select({
       itemVariantId: observations.itemVariantId,
