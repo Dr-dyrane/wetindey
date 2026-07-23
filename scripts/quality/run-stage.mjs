@@ -29,6 +29,10 @@ function tsxScript(path) {
 const stages = Object.freeze({
   static: Object.freeze([
     { label: "token audit", ...nodeScript("scripts/audit-tokens.mjs") },
+    {
+      label: "agri pillar foundation P1 contract",
+      ...tsxScript("scripts/catalog/agri-catalog-foundation-p1-contract.test.ts"),
+    },
     { label: "auth email contracts", ...tsxScript("scripts/auth-email-contracts.test.ts") },
     {
       label: "contribution action contracts",
