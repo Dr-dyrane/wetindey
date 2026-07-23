@@ -11,10 +11,11 @@
  *      since-deleted AreaPickerSheet, ProfileSheet, was hardcoded English
  *      regardless of the language the user picked. That is history now: the
  *      sheets consume this dictionary.
- *   2. It forked. The confirm-visit sheet carries its OWN `COPY` record
- *      (src/app/_components/confirm-visit-sheet/copy/copy.ts) in the same
- *      three languages. Its Yorùbá is markedly better than page.tsx's
- *      (properly toned: "Ṣé ó wà níbẹ̀?"). Two dictionaries, one product.
+ *   2. It forked. The confirm-visit sheet carried its OWN `COPY` record
+ *      (the since-merged fork, deleted at b4fdb31) in the same three
+ *      languages. Its Yorùbá was markedly better than page.tsx's
+ *      (properly toned: "Ṣé ó wà níbẹ̀?"). Two dictionaries, one product,
+ *      until the sheet was repointed here and the fork removed.
  *
  * This file is the merge. `ConfirmVisitSheet`'s strings are reproduced verbatim
  * under `confirm.*` rather than re-translated, it is the better of the two
@@ -785,10 +786,10 @@ export const en = {
   "contribution.transport": "Couldn't confirm that report. Try again.",
   "contribution.new_report": "New report",
 
-  /* Confirm visit, lifted verbatim from the confirm-visit COPY fork (now at
-     src/app/_components/confirm-visit-sheet/copy/copy.ts), which
-     already ships all three languages. The `at`/`qPrice` closures become
-     `{place}`/`{price}` interpolation; the words are untouched. */
+  /* Confirm visit, lifted verbatim from the confirm-visit COPY fork (merged
+     here and deleted at b4fdb31), which already shipped all three languages.
+     The `at`/`qPrice` closures become `{place}`/`{price}` interpolation; the
+     words are untouched. */
   "confirm.title": "How did it go?",
   "confirm.at": "At {place}",
   "confirm.q_there": "Was it there?",
@@ -1387,7 +1388,7 @@ const pidgin: LocaleTable = {
   "contribution.new_report": UNTRANSLATED,
 
   // Verbatim from the confirm-visit COPY fork's pidgin table
-  // (src/app/_components/confirm-visit-sheet/copy/copy.ts).
+  // (the fork was merged here and deleted at b4fdb31).
   "confirm.title": "How e go?",
   "confirm.at": "For {place}",
   "confirm.q_there": "E dey there?",
@@ -1884,7 +1885,7 @@ const yoruba: LocaleTable = {
   "contribution.new_report": UNTRANSLATED,
 
   // Verbatim from the confirm-visit COPY fork's yoruba table
-  // (src/app/_components/confirm-visit-sheet/copy/copy.ts), the good Yorùbá in this repo.
+  // (merged here, fork deleted at b4fdb31), the good Yorùbá in this repo.
   "confirm.title": "Báwo ni ó ṣe lọ?",
   "confirm.at": "Ní {place}",
   "confirm.q_there": "Ṣé ó wà níbẹ̀?",
