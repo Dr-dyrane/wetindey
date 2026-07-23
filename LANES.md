@@ -201,19 +201,9 @@ Controller-directed, scout confirmed exact paths and stopped to the controller b
 
 ## Active exact path locks
 
-#### ADR-023 conformance closure and coverage-point provenance - ACTIVE
+#### ADR-023 conformance closure and coverage-point provenance - RELEASED / PATHLESS
 
-Owner: Private Contractor, Maps Delivery `c9c17443-ef5e-4a7b-9b6e-c8f5381da30c`, self-claimed under the Founder's standing continuous-work directive after a read-only conformance audit at `17c59b0`. The audit found every gap named in accepted ADR-023 closed on HEAD by `95830d2` (recenter updates the fresh-gated self marker without touching search context; device-fix freshness bounded at 5 minutes with a 60 second route-admission bound at every consumer, contract-tested; Get It origins are a typed provenance union and no undisclosed device fix can reach Directions or an external maps handoff; persistence can never resurrect a fix), while the ADR header still reads implementation unclaimed and exactly one bare-coordinate boundary survives: useLocationSheet sends the raw device fix as an untyped point to the getCoverageForPoint server action. This lane records the conformance closure on the ADR and types that last boundary with an explicit provenance field, no behavior change. The recenter-during-active-route camera skip is recorded as a known cosmetic residual, not fixed here.
-
-Exact paths:
-
-- `docs/adr/023-browsing-context-and-device-location.md`
-- `src/app/_actions/place-actions.ts`
-- `src/app/_components/location-sheet/hooks/useLocationSheet.ts`
-- `src/lib/validation.ts`
-- `scripts/location-default-contract.test.ts` (new provenance leg only; the existing 20 legs stay byte-intact)
-
-Completion: contract green with the new leg and all prior legs unedited; tsc silent; eslint clean; runtime drive of Use my location proving identical coverage behavior; independent default-to-REFUTED refutation; path-scoped commit pushed under the `0bbdb11` class; span-checked release.
+Complete at `bdbfd17`, pushed under the `0bbdb11` class after all five claims were upheld by an independent refuter that spot-verified the conformance record against code rather than the audit: recenter chain end to end with maximumAge 0 and the freshness-gated marker read, the 5 minute and 60 second bounds with per-profile re-validation in fetchRoute, no undisclosed device coordinate reaching any external handoff including the Android fallback's re-check at fire time, persistence exclusion, and zero em dashes in added lines with the ADR decision text byte-untouched. parseCoverageForPoint proven against seven cases; both contract teeth bite; location contract 21/21 with the 20 prior legs byte-intact; the Use-my-location drive commits and closes identically at HEAD and candidate. ADR-023 now reads implemented and conformance-verified; the recenter-during-active-route camera skip is the recorded cosmetic residual. Paths released.
 
 #### i18n hoist: hardcoded user-facing English into strings.ts - RELEASED / PATHLESS
 
