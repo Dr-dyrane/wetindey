@@ -34,6 +34,15 @@ ALTER ROLE wetindey_deletion_worker NOLOGIN NOBYPASSRLS;
 GRANT wetindey_deletion_owner TO SESSION_USER WITH INHERIT FALSE;
 GRANT wetindey_deletion_owner TO SESSION_USER WITH SET TRUE;
 GRANT CREATE ON SCHEMA public TO wetindey_deletion_owner;
+
+-- Transfer ownership while SESSION_USER still owns the generated objects.
+-- Only then assume the dedicated owner role to install its RLS boundary.
+ALTER TABLE public.deletion_requests OWNER TO wetindey_deletion_owner;
+ALTER TABLE public.deletion_audit OWNER TO wetindey_deletion_owner;
+
+ALTER TYPE public.deletion_phase OWNER TO wetindey_deletion_owner;
+ALTER TYPE public.deletion_outcome OWNER TO wetindey_deletion_owner;
+
 SET LOCAL ROLE wetindey_deletion_owner;
 
 ALTER TABLE public.deletion_requests ENABLE ROW LEVEL SECURITY;
@@ -68,15 +77,6 @@ GRANT USAGE ON TYPE
   public.deletion_phase,
   public.deletion_outcome
 TO wetindey_deletion_runtime, wetindey_deletion_worker;
-
--- Transfer ownership last. The migration role creates the policies while it
--- still owns the objects; runtime and worker never acquire direct table
--- privileges or ownership.
-ALTER TABLE public.deletion_requests OWNER TO wetindey_deletion_owner;
-ALTER TABLE public.deletion_audit OWNER TO wetindey_deletion_owner;
-
-ALTER TYPE public.deletion_phase OWNER TO wetindey_deletion_owner;
-ALTER TYPE public.deletion_outcome OWNER TO wetindey_deletion_owner;
 
 RESET ROLE;
 REVOKE CREATE ON SCHEMA public FROM wetindey_deletion_owner;

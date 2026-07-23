@@ -6,6 +6,10 @@ ledger reconciliation.
 
 Use these audience-specific guides:
 
+- [MIGRATION-RULEBOOK.md](MIGRATION-RULEBOOK.md): mandatory end-to-end rollout,
+  privilege, failure-recovery, activation, and Production-promotion rules.
+- [DATA-LAYER-HANDOFF-RULEBOOK.md](DATA-LAYER-HANDOFF-RULEBOOK.md): defect
+  classification, backend repair recipes, blocker packets, and branch/session handoffs.
 - [SCHEMA.md](SCHEMA.md): canonical desired-state pillars and dependencies.
 - [MIGRATIONS.md](MIGRATIONS.md): contributor workflow and release-delta lifecycle.
 - [NEON.md](NEON.md): exact-target rollout, verification, failure, and restore.
@@ -14,13 +18,15 @@ Use these audience-specific guides:
 
 ## Rollout evidence status
 
-**Status timestamp: 2026-07-21. Shared-target migration PASS; product controls remain
+**Status timestamp: 2026-07-22. Shared-target migration PASS; product controls remain
 fail closed.** Independent operational evidence proves Production `main`
 (`br-flat-band-aui9waf5`) and Preview `preview/wetindey-presence`
 (`br-steep-dust-auhcmjk8`) in project `wild-rain-23091788`, database `neondb`, role
-`neondb_owner`, have the exact immutable `0000`-`0014` ledger and migration hashes.
+`neondb_owner`, have the exact immutable `0000`-`0019` ledger and migration hashes. No
+`0020` release was included. Reporting and moderation controls remain false; database
+application does not authorize runtime activation.
 
-Both targets have result fingerprint
+The earlier `0014` Presence release remains independently proven on both targets with result fingerprint
 `a0126839bc0671fff9b9ad3bc4954e3dfb2286fccdbb352651a199f74b23ab03`.
 Migration `0014` has SHA-256
 `ed532eab5f7941245cfebb66463a2194ab9df235b30f9fd678e1c0e1065008bf`.

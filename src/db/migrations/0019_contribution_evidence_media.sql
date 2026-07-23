@@ -22,7 +22,38 @@ CREATE TABLE "contribution_evidence_media" (
 );
 --> statement-breakpoint
 ALTER TABLE "contribution_evidence_media" ADD CONSTRAINT "contribution_evidence_media_observation_id_observations_id_fk" FOREIGN KEY ("observation_id") REFERENCES "public"."observations"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+-- contribution_moderation_decisions is deliberately owned by the isolated
+-- contribution owner. Borrow REFERENCES only for this foreign-key statement,
+-- then remove both the privilege and the transaction-scoped SET path.
+GRANT wetindey_contribution_owner TO SESSION_USER WITH SET TRUE;
+SET LOCAL ROLE wetindey_contribution_owner;
+GRANT REFERENCES ON TABLE public.contribution_moderation_decisions TO SESSION_USER;
+RESET ROLE;
+--> statement-breakpoint
 ALTER TABLE "contribution_evidence_media" ADD CONSTRAINT "contribution_evidence_media_decision_id_contribution_moderation_decisions_id_fk" FOREIGN KEY ("decision_id") REFERENCES "public"."contribution_moderation_decisions"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+SET LOCAL ROLE wetindey_contribution_owner;
+REVOKE REFERENCES ON TABLE public.contribution_moderation_decisions FROM SESSION_USER;
+RESET ROLE;
+REVOKE wetindey_contribution_owner FROM SESSION_USER
+  GRANTED BY SESSION_USER;
+
+DO $$
+BEGIN
+  IF pg_has_role(session_user, 'wetindey_contribution_owner', 'SET') THEN
+    RAISE EXCEPTION '0019 migration principal retains a SET path to contribution owner'
+      USING ERRCODE = '42501';
+  END IF;
+  IF has_table_privilege(
+    session_user,
+    'public.contribution_moderation_decisions',
+    'REFERENCES'
+  ) THEN
+    RAISE EXCEPTION '0019 migration principal retains REFERENCES on moderation decisions'
+      USING ERRCODE = '42501';
+  END IF;
+END;
+$$;
+--> statement-breakpoint
 CREATE UNIQUE INDEX "contribution_evidence_media_object_key" ON "contribution_evidence_media" USING btree ("observation_id","media_id");--> statement-breakpoint
 CREATE INDEX "contribution_evidence_media_report_state_idx" ON "contribution_evidence_media" USING btree ("observation_id","state");--> statement-breakpoint
 CREATE INDEX "contribution_evidence_media_decision_idx" ON "contribution_evidence_media" USING btree ("decision_id");
@@ -65,6 +96,12 @@ ALTER ROLE wetindey_evidence_media_worker NOLOGIN NOBYPASSRLS;
 GRANT wetindey_evidence_media_owner TO SESSION_USER WITH INHERIT FALSE;
 GRANT wetindey_evidence_media_owner TO SESSION_USER WITH SET TRUE;
 GRANT CREATE ON SCHEMA public TO wetindey_evidence_media_owner;
+
+-- Transfer ownership while SESSION_USER still owns the generated objects.
+-- Only then assume the dedicated owner role to install its RLS boundary.
+ALTER TABLE public.contribution_evidence_media OWNER TO wetindey_evidence_media_owner;
+ALTER TYPE public.evidence_media_state OWNER TO wetindey_evidence_media_owner;
+
 SET LOCAL ROLE wetindey_evidence_media_owner;
 
 ALTER TABLE public.contribution_evidence_media ENABLE ROW LEVEL SECURITY;
@@ -92,13 +129,6 @@ GRANT USAGE ON SCHEMA public
 GRANT USAGE ON TYPE
   public.evidence_media_state
 TO wetindey_evidence_media_runtime, wetindey_evidence_media_worker;
-
--- Transfer ownership last. The migration role creates the policy while it still
--- owns the objects; runtime and worker never acquire direct table privileges or
--- ownership.
-ALTER TABLE public.contribution_evidence_media OWNER TO wetindey_evidence_media_owner;
-
-ALTER TYPE public.evidence_media_state OWNER TO wetindey_evidence_media_owner;
 
 RESET ROLE;
 REVOKE CREATE ON SCHEMA public FROM wetindey_evidence_media_owner;

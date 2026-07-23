@@ -1,9 +1,9 @@
 {
   "kind": "release_manifest",
   "release": "0016_contribution_review_acl_repair",
-  "status": "candidate_unapplied",
-  "shared_database_applied": false,
-  "first_shared_application_frozen": false,
+  "status": "shared_applied_immutable",
+  "shared_database_applied": true,
+  "first_shared_application_frozen": true,
   "parent_release": "0015_contribution_moderation_operations",
   "parent_snapshot_id": "463a649f-a760-529a-b1c9-b62eb0221749",
   "result_snapshot_id": "c85fd31e-0793-5ded-8c66-9fbcf12d1f4c",
@@ -25,12 +25,45 @@
   },
   "source_sha256": {
     "src/db/pillars/90-contribution-security.sql": "f94f1a94f47af1e262d1edfe4c39ea826afbc4add50663c1a489881592368df5",
-    "scripts/contributions/contribution-moderation-acl-repair-contract.test.ts": "c40dde17855794b3dbe7897d44444b8c8cc98a598483eeb5078e9e6237154be6"
+    "scripts/contributions/archive/contribution-moderation-acl-repair-contract.archived.ts": "c40dde17855794b3dbe7897d44444b8c8cc98a598483eeb5078e9e6237154be6"
   },
   "generator": {
     "drizzle_kit": "0.31.10",
     "drizzle_orm": "0.45.2",
     "journal_version": "7"
+  },
+  "application_evidence": {
+    "verified_on": "2026-07-22",
+    "release_index": 16,
+    "ledger_sha256": "669864c8a532b2b941dcd30258b2cb7a1e1c9a7406e4f5d6ddf4a5a3bbb6d6ec",
+    "targets": {
+      "preview": {
+        "project_id": "wild-rain-23091788",
+        "branch_id": "br-steep-dust-auhcmjk8",
+        "database": "neondb",
+        "migration_role": "neondb_owner",
+        "endpoint_hostname_sha256": "b47f36e8b9349d0e686b0468c2d41c0b3209911576abaa3af8fb2f14d344beaf",
+        "ledger_row_id": 17,
+        "postgresql_version_num": "170010",
+        "result": "PASS"
+      },
+      "production": {
+        "project_id": "wild-rain-23091788",
+        "branch_id": "br-flat-band-aui9waf5",
+        "database": "neondb",
+        "migration_role": "neondb_owner",
+        "endpoint_hostname_sha256": "49e9bfbdb1d253190391c88980d8b293eb8da2eaae1af606defecb4bb3542804",
+        "ledger_row_id": 17,
+        "postgresql_version_num": "170010",
+        "result": "PASS"
+      }
+    },
+    "postconditions": {
+      "exact_ordered_ledger_through_0019": true,
+      "runtime_controls_enabled": false,
+      "duplicate_execution_allowed": false,
+      "temporary_privileges_removed": true
+    }
   },
   "scope": {
     "adds": [],
@@ -42,8 +75,8 @@
     ]
   },
   "authorization": {
-    "shared_migration_execution": false,
-    "preview_activation": false,
-    "production_activation": false
+    "duplicate_migration_execution": false,
+    "runtime_activation": false,
+    "production_rollout": false
   }
 }

@@ -102,7 +102,7 @@ const frozenMigrationHashes: Record<string, string> = {
   "0015_contribution_moderation_operations.sql": "d4d452a4e7f3dba7fdd68ce63c2b447e974c97b727d12dbd2c8e8261334559a2",
   "0016_contribution_review_acl_repair.sql": "669864c8a532b2b941dcd30258b2cb7a1e1c9a7406e4f5d6ddf4a5a3bbb6d6ec",
   "0017_contribution_pending_queue_shape_repair.sql": "a864a63b8fa782e0af1be9a01329857a303e874d57799d7b74517cc70909f34a",
-  "0018_deletion_saga_persistence.sql": "6926ee24bc266538c98f1fc1c3e26841cb99b361210e33b3d1f6161b469c3dfc",
+  "0018_deletion_saga_persistence.sql": "d93b2d547a4c08fd034ad76a4b68b395e2f8aec56cca701434de5876c286e615",
 };
 
 const PARENT_SNAPSHOT_ID = "ed1e3683-c202-457d-ab34-d5a9273fdadb";
@@ -217,6 +217,28 @@ test("0019 migration carries the generated DDL then the merged pillar", () => {
   assert.match(sql, /ALTER TABLE public\.contribution_evidence_media FORCE ROW LEVEL SECURITY/);
   assert.match(sql, /CREATE POLICY contribution_evidence_media_owner_policy/);
   assert.match(sql, /REVOKE ALL ON TABLE/);
+  const grantReferences = sql.indexOf(
+    "GRANT REFERENCES ON TABLE public.contribution_moderation_decisions TO SESSION_USER",
+  );
+  const decisionForeignKey = sql.indexOf(
+    "contribution_evidence_media_decision_id_contribution_moderation_decisions_id_fk",
+  );
+  const revokeReferences = sql.indexOf(
+    "REVOKE REFERENCES ON TABLE public.contribution_moderation_decisions FROM SESSION_USER",
+  );
+  assert.ok(grantReferences >= 0, "temporary REFERENCES grant missing");
+  assert.ok(decisionForeignKey > grantReferences, "REFERENCES must precede the decision foreign key");
+  assert.ok(revokeReferences > decisionForeignKey, "REFERENCES must be revoked after the foreign key");
+  const transferOwnership = sql.indexOf(
+    "ALTER TABLE public.contribution_evidence_media OWNER TO wetindey_evidence_media_owner",
+  );
+  const assumeOwner = sql.indexOf("SET LOCAL ROLE wetindey_evidence_media_owner");
+  const installRls = sql.indexOf(
+    "ALTER TABLE public.contribution_evidence_media ENABLE ROW LEVEL SECURITY",
+  );
+  assert.ok(transferOwnership >= 0, "evidence-media ownership transfer missing");
+  assert.ok(assumeOwner > transferOwnership, "owner role must be assumed after ownership transfer");
+  assert.ok(installRls > assumeOwner, "RLS must be installed while acting as the table owner");
   assert.doesNotMatch(
     sql,
     /GRANT (SELECT|INSERT|UPDATE|DELETE) ON TABLE[\s\S]*wetindey_evidence_media_(runtime|worker)/,
@@ -234,7 +256,7 @@ test("the pillar owns no tables or types and stays fail-closed", () => {
   assert.match(pillar, /ALTER TABLE public\.contribution_evidence_media OWNER TO wetindey_evidence_media_owner/);
 });
 
-test("0019 release manifest marks the candidate present but UNAPPLIED", () => {
+test("0019 release manifest freezes the shared application while activation stays off", () => {
   const manifest = JSON.parse(read("src/db/migrations/meta/0019_release_manifest.json")) as {
     kind: string;
     release: string;
@@ -250,14 +272,14 @@ test("0019 release manifest marks the candidate present but UNAPPLIED", () => {
   };
   assert.equal(manifest.kind, "release_manifest");
   assert.equal(manifest.release, "0019_contribution_evidence_media");
-  assert.equal(manifest.status, "candidate_unapplied");
-  assert.equal(manifest.shared_database_applied, false);
-  assert.equal(manifest.first_shared_application_frozen, false);
+  assert.equal(manifest.status, "shared_applied_immutable");
+  assert.equal(manifest.shared_database_applied, true);
+  assert.equal(manifest.first_shared_application_frozen, true);
   assert.equal(manifest.parent_snapshot_id, PARENT_SNAPSHOT_ID);
   assert.equal(manifest.result_snapshot_id, RESULT_SNAPSHOT_ID);
   assert.equal(manifest.scope.direct_table_grants, false);
 
-  // Every authorization flag is false: nothing is cleared to run anywhere.
+  // Application is complete, but duplicate execution and runtime activation stay forbidden.
   const authValues = Object.values(manifest.authorization);
   assert.ok(authValues.length >= 3, "authorization must enumerate the activation flags");
   for (const [flag, value] of Object.entries(manifest.authorization)) {

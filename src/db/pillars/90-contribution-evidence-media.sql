@@ -36,6 +36,12 @@ ALTER ROLE wetindey_evidence_media_worker NOLOGIN NOBYPASSRLS;
 GRANT wetindey_evidence_media_owner TO SESSION_USER WITH INHERIT FALSE;
 GRANT wetindey_evidence_media_owner TO SESSION_USER WITH SET TRUE;
 GRANT CREATE ON SCHEMA public TO wetindey_evidence_media_owner;
+
+-- Transfer ownership while SESSION_USER still owns the generated objects.
+-- Only then assume the dedicated owner role to install its RLS boundary.
+ALTER TABLE public.contribution_evidence_media OWNER TO wetindey_evidence_media_owner;
+ALTER TYPE public.evidence_media_state OWNER TO wetindey_evidence_media_owner;
+
 SET LOCAL ROLE wetindey_evidence_media_owner;
 
 ALTER TABLE public.contribution_evidence_media ENABLE ROW LEVEL SECURITY;
@@ -63,13 +69,6 @@ GRANT USAGE ON SCHEMA public
 GRANT USAGE ON TYPE
   public.evidence_media_state
 TO wetindey_evidence_media_runtime, wetindey_evidence_media_worker;
-
--- Transfer ownership last. The migration role creates the policy while it still
--- owns the objects; runtime and worker never acquire direct table privileges or
--- ownership.
-ALTER TABLE public.contribution_evidence_media OWNER TO wetindey_evidence_media_owner;
-
-ALTER TYPE public.evidence_media_state OWNER TO wetindey_evidence_media_owner;
 
 RESET ROLE;
 REVOKE CREATE ON SCHEMA public FROM wetindey_evidence_media_owner;

@@ -1,9 +1,9 @@
 {
   "kind": "release_manifest",
   "release": "0017_contribution_pending_queue_shape_repair",
-  "status": "candidate_unapplied",
-  "shared_database_applied": false,
-  "first_shared_application_frozen": false,
+  "status": "shared_applied_immutable",
+  "shared_database_applied": true,
+  "first_shared_application_frozen": true,
   "parent_release": "0016_contribution_review_acl_repair",
   "parent_snapshot_id": "c85fd31e-0793-5ded-8c66-9fbcf12d1f4c",
   "result_snapshot_id": "6f49b946-260e-5ed7-b740-189bad171017",
@@ -24,13 +24,45 @@
     }
   },
   "source_sha256": {
-    "src/db/pillars/80-contribution-services.sql": "1395c8361fc43612685b9c13325674e73f797d3de2aa278d9aad0809683bf50f",
-    "scripts/contributions/contribution-pending-queue-shape-repair-contract.test.ts": "9e3deeea6ab31b21d6b164a63ffa415f835091bfe5a17e3cb2429ba82fe2cb8e"
+    "src/db/pillars/80-contribution-services.sql": "1395c8361fc43612685b9c13325674e73f797d3de2aa278d9aad0809683bf50f"
   },
   "generator": {
     "drizzle_kit": "0.31.10",
     "drizzle_orm": "0.45.2",
     "journal_version": "7"
+  },
+  "application_evidence": {
+    "verified_on": "2026-07-22",
+    "release_index": 17,
+    "ledger_sha256": "a864a63b8fa782e0af1be9a01329857a303e874d57799d7b74517cc70909f34a",
+    "targets": {
+      "preview": {
+        "project_id": "wild-rain-23091788",
+        "branch_id": "br-steep-dust-auhcmjk8",
+        "database": "neondb",
+        "migration_role": "neondb_owner",
+        "endpoint_hostname_sha256": "b47f36e8b9349d0e686b0468c2d41c0b3209911576abaa3af8fb2f14d344beaf",
+        "ledger_row_id": 23,
+        "postgresql_version_num": "170010",
+        "result": "PASS"
+      },
+      "production": {
+        "project_id": "wild-rain-23091788",
+        "branch_id": "br-flat-band-aui9waf5",
+        "database": "neondb",
+        "migration_role": "neondb_owner",
+        "endpoint_hostname_sha256": "49e9bfbdb1d253190391c88980d8b293eb8da2eaae1af606defecb4bb3542804",
+        "ledger_row_id": 18,
+        "postgresql_version_num": "170010",
+        "result": "PASS"
+      }
+    },
+    "postconditions": {
+      "exact_ordered_ledger_through_0019": true,
+      "runtime_controls_enabled": false,
+      "duplicate_execution_allowed": false,
+      "temporary_privileges_removed": true
+    }
   },
   "scope": {
     "adds": [],
@@ -42,8 +74,8 @@
     ]
   },
   "authorization": {
-    "shared_migration_execution": false,
-    "preview_activation": false,
-    "production_activation": false
+    "duplicate_migration_execution": false,
+    "runtime_activation": false,
+    "production_rollout": false
   }
 }

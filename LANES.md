@@ -4,7 +4,7 @@
 
 **Reading order.** Read current root `LANES.md` before editing. For completed evidence and branch reconstruction, use [the current-cycle lane history index](docs/operations/lanes/history/README.md) and the [legacy historical archive](docs/operations/lanes/LANES-HISTORICAL-ARCHIVE.md).
 
-**Last updated:** 2026-07-21
+**Last updated:** 2026-07-22
 
 ## Current controller and release policy
 
@@ -17,7 +17,8 @@ The currently recorded controller evidence is indexed in [2026-07 release and go
 ### Shared-database `0015`-`0019` completion and evidence lane — ACTIVE
 
 Controller-owned exact paths: `LANES.md`, `docs/database/README.md`,
-`docs/database/MIGRATION-RULEBOOK.md`, `src/db/migrations/meta/0013_release_manifest.json`,
+`docs/database/MIGRATION-RULEBOOK.md`, `docs/database/DATA-LAYER-HANDOFF-RULEBOOK.md`,
+`src/db/migrations/meta/0013_release_manifest.json`,
 `src/db/migrations/meta/0015_release_manifest.json`,
 `src/db/migrations/meta/0016_release_manifest.json`,
 `src/db/migrations/meta/0017_release_manifest.json`,
@@ -45,7 +46,7 @@ to idle rather than creating a replacement task.
 |---|---|---|
 | Nearby Presence Platform Engineer | Production `0012` operational PASS; exact source paths released | Ledger/fingerprint/idempotence, least-privilege scheduler, cleanup/retention, default-off containment, and independent operational refutation passed; remain persistent for a later bounded assignment |
 | Program Management & Functional Organization Lead | Idle | Reconcile portfolio proposals into CEO-reviewable lane candidates without editing product paths |
-| Contribution Integrity & Moderation Engineer `019f75a3-f50d-7180-8e92-0a7aabd8a98c` | `0013` operational activation COMPLETE / PASS, default-off; all paths released | Preview `dpl_2UC8gEPJ4V5sZvRd4M74fMoqFvBm` and Production `dpl_8fZpUNgRi3zebGqy75DGt9qAQ4Kq` passed identity, ledger/schema/RPC/grants, smoke, rollback, and independent refutation; admission/reporting/moderation remain false |
+| Contribution Integrity & Moderation Engineer `019f75a3-f50d-7180-8e92-0a7aabd8a98c` | Database release applied / PASS; runtime activation remains fail-closed | Preview and Production passed identity, ledger/schema/RPC/grants, rollback, and independent database refutation through `0019`; admission/reporting/moderation remain false |
 | Human Interface Design Engineer `019f75a5-0fc6-7f40-9a0f-8097ead3b45d` | Market source paths released; runtime residual pathless | `14ece5b`/`4b56d95` released `src/app/page.tsx` and `src/design-system/components/PlaceOfferRow.tsx`; regular runtime and compact AX passed, while compact visible pixels remain unverified; no source reopen without fresh product evidence |
 | HI Quality & Regression Lead | Two-document acceptance governance COMPLETE / PASS; paths released | `d263fba` reconciles source-complete facts, runtime-unverified residuals, and bounded future ownership without reopening Maps, Presence, or ADR-locked paths |
 | Food Evidence Provenance & Source Governance Lead | Standing review authorization | Classify recurring NBS/current Food evidence; no live promotion or shared migration |
@@ -88,9 +89,9 @@ The Founder directed full-company activation: every department takes a lane of t
 
 The Founder confirmed 2026-07-22 that a requested feature is itself the decision; nothing already asked for returns as pending. Recorded as decided, now under execution:
 
-1. Contribution evidence-media (image CRUD, #25): ADR-028 ACCEPTED at the ADR (Founder words "it is already decided, I asked for it"). The image feature is a claimable, buildable lane, fail-closed behind moderation per ADR-019; the shared-database apply remains the only external gate (owner credential).
+1. Contribution evidence-media (image CRUD, #25): ADR-028 ACCEPTED at the ADR (Founder words "it is already decided, I asked for it"). The image feature is built and its `0019` database release is applied; it remains fail-closed behind moderation per ADR-019 until the separate runtime activation lane passes.
 2. App Store distribution: DECIDED, stay PWA and build the app native-incorporation-ready (Capacitor-ready structure) without leaving the PWA. Under execution as the native-readiness lane; Apple 5.1.1(v) deletion is covered by the ADR-021 saga continuing to P2/P3.
-3. One-tap outcome and contribution reactivation: PREPARE toward it. The only thing standing between prepared and live is the ADR-019 fail-closed activation, which is the shared-database owner credential, not a Founder decision.
+3. One-tap outcome and contribution reactivation: PREPARE toward it. Database application is complete; the remaining boundary is ADR-019 fail-closed runtime activation through the restricted control principal and approved actors, not the migration owner.
 
 The shared-database migration-owner credential gate is RESOLVED. Preview and Production now hold the exact ordered `0000`-`0019` ledger with controls still false. Runtime activation remains a separate least-privilege control-credential, named-actor, environment-flag, and lifecycle-proof gate; migration-owner access is never a substitute.
 
@@ -101,21 +102,21 @@ Two security-depth findings the controller will NOT act on autonomously because 
 1. CSP is not actually enforcing script protection. The browser-enforced header (`vercel.json` script-src) still permits `'unsafe-inline'`; the strong nonce + `strict-dynamic` policy exists but is emitted only as `Content-Security-Policy-Report-Only` (`middleware.ts`). So today the enforced CSP gives near-zero script-injection defense (a latent XSS-mitigation gap; no live sink exists, React auto-escapes, JSON-LD escapes). Flipping to enforcing must be verified on a PREVIEW deploy first (confirm Next's inline bootstrap/Flight scripts carry the middleware nonce with zero report-only violations); a blind flip on production risks a blank page. Recommend: verify on Preview, then switch middleware to enforcing and drop `'unsafe-inline'` from `vercel.json` before the real-user pilot.
 2. `submitProblemReport` (`src/app/_actions/problem-report-actions.ts`) is a public, anonymous-reachable Server Action with a body length cap but NO per-caller rate limit (acknowledged in-code per ADR-003, deferred to a Phase-2 throttle). An anonymous script can insert unbounded `problem_reports` rows (storage + moderation-queue spam the owner reads directly). A pilot launch is exactly when this gets abused. Recommend weighing pulling the planned throttle forward before the pilot; this is an accepted ADR deferral, so it is a Founder/Security call, not a defect.
 
-### Migration-governance decisions awaiting Founder (from the 16-department audit, 2026-07-22)
+### Migration-governance resolution record (from the 16-department audit, 2026-07-22)
 
-The controller fixed every feasible thing (ADR-019 pending-leak fully closed at `0b2a807`/`8b87ca5`; dark-mode AA at `428e54a`; forward-compat `0017`+`presence-0014` contracts and CI immutability coverage at `5362089`). Three items are genuine governance decisions the controller will NOT act on autonomously:
+The controller fixed every feasible thing (ADR-019 pending-leak fully closed at `0b2a807`/`8b87ca5`; dark-mode AA at `428e54a`; forward-compat `0017`+`presence-0014` contracts and CI immutability coverage at `5362089`). The migration-governance items are resolved as follows:
 
 1. RESOLVED, Founder-approved and EXECUTED at `ac22567`: the sealed `0013`/`0015`/`0016` contracts were archived byte-identical to `scripts/contributions/archive/*.archived.ts` (history preserved, out of both CI runners) with a documented README, and `presence-0012` was fixed properly to 8/8 (kept every valid guarantee, removed only the two impossible cross-checks `0014` superseded). All migration contracts green (79/79); immutability still guaranteed by ADR-014 + the applied manifests + the forward-compat contracts in the CI gate. Original finding: the contracts were structurally unmaintainable: each self-hashes its own test file inside its APPLIED, immutable manifest and pins shared pillars that later applied migrations legitimately superseded, so they must rot as the schema evolves and cannot be fixed without re-pinning an immutable manifest (forbidden by ADR-014) or reverting real applied state. Recommendation: RETIRE them to a historical archive (applied-migration immutability is guaranteed by ADR-014 plus the applied manifests, not by tests that re-hash evolving files); alternatively a narrow re-pin exception. They are ungated, so main CI is green regardless.
-2. Manifest-accuracy inconsistency: `0013`/`0015`/`0016` release manifests declare `shared_database_applied: false` / `candidate_unapplied`, but the evidence trail says they were applied (`0013` to Production and Preview; `0015`/`0016` to Preview). Either the manifests are stale or `shared_database_applied` tracks Production-only with Preview recorded elsewhere; the semantic needs a Founder ruling before anyone reconciles it.
-3. Stale PRODUCTION catalog data (user-visible): production is missing the `small_market_bowl` unit, so pepper and tomatoes render wholesale basket/paint-bucket prices, roughly 3x the intended consumer price. Source code already fixes it; production was never re-seeded. Fix needs the shared-database owner credential (re-seed or a data migration).
+2. RESOLVED 2026-07-22: `0013` and `0015`-`0019` manifests now record the exact shared-applied immutable state for Preview and Production, while runtime authorization remains false. Applied SQL is frozen and duplicate execution is forbidden.
+3. OPEN SEPARATE DATA-CORRECTION LANE: Production is missing the `small_market_bowl` catalog unit, so pepper and tomatoes may render wholesale basket/paint-bucket prices. The migration credential is no longer the blocker. Correction requires a reviewed forward data migration with provenance and rollback; shared re-seeding remains prohibited.
 
 #### ADR-021 P1 deletion saga: persistence and provider boundary (DELIVERED 4d7038c, wave 1)
 
-DELIVERED and Luna-refuted-then-fixed: schema/migration/adapter/primitives landed on the 9-path set, tsc clean, deletion P1 contract 17/17, worklog contract still 5/5, `0018` candidate_unapplied with all authorization flags false, immutables 0000-0017 byte-frozen, no DB contacted. EXTERNAL EXIT GATE before any shared application: the disposable PGlite fresh-and-upgrade reconstruction proof (the contract ran static-only because `@electric-sql/pglite` is absent from this host; installing the disposable dep is an owner/host tooling step) plus P2 cleanup adapters. P1 owns no UI, Blob, Presence UI, or public action; no account is deletable from this code.
+DELIVERED and Luna-refuted-then-fixed: schema/migration/adapter/primitives landed on the 9-path set, tsc clean, deletion P1 contract 17/17, and worklog contract 5/5. `0018` is now shared-applied and immutable on Preview and Production with all runtime authorization flags false. P1 owns no UI, Blob, Presence UI, or public action; database persistence alone does not make an account deletable.
 
 
 
-Owner: controller-directed Terra under Presence-Safety `019f759f-3521-7ee1-90a3-5af3539d757e` and Security-Privacy seats. Exact writable paths (widened 2026-07-22 after the scout proved the original six were ADR-014-noncompliant; the controller approved exactly this additive set, no silent widening): new `src/db/schema/deletion.ts` (Drizzle desired-state tables and enums, because ADR-014 forbids a pillar owning tables and hand-editing a snapshot), new `src/db/pillars/90-deletion-saga.sql` (roles/grants/RLS only, no tables), new `src/db/migrations/0018_deletion_saga_persistence.sql` (generated), new `src/db/migrations/meta/0018_snapshot.json` (generated), new `src/db/migrations/meta/0018_release_manifest.json` (records candidate_unapplied and all authorization flags false), `src/db/migrations/meta/_journal.json` (append 0018 only), one appended `export * from "./deletion"` line in `src/db/schema/index.ts`, new `src/lib/deletion/` (types, guards, inert adapter, compare-and-set phase and idempotency primitives), and new `scripts/deletion/deletion-saga-p1-contract.test.ts`. NO department worklog edit (protect the 5/5 contract). Contract: exactly ADR-021 P1 (deletion-request/phase/audit schema, server-only Neon branch administrative auth adapter with exact-target fail-closed guards, phase transition and idempotency worker primitives). P1 owns NO UI, Blob deletion, Presence UI, or public action; exit requires disposable PGlite fresh and upgrade migration proof and a pure-unit provider-capability fail-closed refutation WITHOUT any real destructive provider call or real account. NO shared-database apply: `0018` stays candidate_unapplied with all authorization flags false; immutables 0000-0017 stay byte-unchanged.
+Owner: controller-directed Terra under Presence-Safety `019f759f-3521-7ee1-90a3-5af3539d757e` and Security-Privacy seats. Exact writable paths (widened 2026-07-22 after the scout proved the original six were ADR-014-noncompliant; the controller approved exactly this additive set, no silent widening): new `src/db/schema/deletion.ts` (Drizzle desired-state tables and enums, because ADR-014 forbids a pillar owning tables and hand-editing a snapshot), new `src/db/pillars/90-deletion-saga.sql` (roles/grants/RLS only, no tables), new `src/db/migrations/0018_deletion_saga_persistence.sql` (generated), new `src/db/migrations/meta/0018_snapshot.json` (generated), new `src/db/migrations/meta/0018_release_manifest.json`, `src/db/migrations/meta/_journal.json` (append 0018 only), one appended `export * from "./deletion"` line in `src/db/schema/index.ts`, new `src/lib/deletion/` (types, guards, inert adapter, compare-and-set phase and idempotency primitives), and new `scripts/deletion/deletion-saga-p1-contract.test.ts`. NO department worklog edit (protect the 5/5 contract). Contract: exactly ADR-021 P1 (deletion-request/phase/audit schema, server-only Neon branch administrative auth adapter with exact-target fail-closed guards, phase transition and idempotency worker primitives). P1 owns NO UI, Blob deletion, Presence UI, or public action. This paragraph records the original source lane; the current application state is the shared-applied immutable checkpoint above, with runtime activation still false.
 
 #### WD-I-002 coverage daily packet (DELIVERED 7833a11, wave 1)
 
@@ -133,24 +134,24 @@ Owner: controller-directed Terra under Human-Interface and Executive-Product. Ex
 
 Owner: controller-directed Terra under Executive-Product. Exact writable path: new `docs/operations/decisions/app-store-distribution-packet.md` only. Contract: a Founder decision packet for issue #24 (WetinDey is a PWA; Apple cannot ingest a PWA). Lay out the real options (stay PWA, TWA/Play, a native wrapper such as Capacitor, or a thin native shell), each option's cost, review-guideline exposure (including Apple 5.1.1(v) in-app account deletion, which the ADR-021 saga is the groundwork for), maintenance, and pilot-phase fit, ending in a clear recommendation and the exact decision the Founder must make. Authorizes nothing; opens no lane.
 
-## Wave 3 execution (prepare all features, remove all blockers)
+## Historical Wave 3 source plan (completed)
 
 Controller-directed Terra + Luna arms, each scout-confirms its exact paths and STOPS to the controller before crossing into another arm's area (no silent widening). Non-overlapping by construction.
 
 - Blocker #22, dev LAN boot crash: `crypto.randomUUID` throws in a non-secure LAN context so the PWA cannot open on a phone. Arm area: the exact source that calls `crypto.randomUUID` at boot plus a safe fallback; no unrelated file.
 - Blocker H40, search shows no price: the search read path in `src/app/actions.ts` returns results without a price. Arm area: that search action only.
 - App Store native-readiness (decided: stay PWA, build native-incorporation-ready): a readiness assessment plus inert non-breaking scaffolding so a later Capacitor wrap is a small step. Arm area: new `docs/operations/decisions/native-readiness.md` and a new inert `capacitor.config.ts` only; no dependency install, no `next.config` change, the live PWA build must stay green.
-- Feature #25 contribution evidence-media (ADR-028 Accepted): a full buildable lane, migration generated-not-applied, fail-closed behind moderation, default-off. Launches after H40 lands to avoid an actions collision; scout confirms the exact schema/adapter/server-action/UI/contract path set.
+- Feature #25 contribution evidence-media (ADR-028 Accepted): the full lane is built, `0019` is shared-applied and immutable, and runtime remains fail-closed behind moderation and default-off.
 
 Database apply is complete through `0019` on Preview and Production. Activation remains default-off until the dedicated control credential, approved actor identities, environment flags, and signed-in lifecycle evidence are independently proved.
 
 ## Full Founder release program (all documented proposals and blockers unlocked)
 
-Founder instruction 2026-07-22: release every documented proposal and unlock every blocked pathway into workflows; the proposals are the Founder's and are hereby lanes. The controller releases the whole register and blocker set to bounded Terra + Luna arms, each following the accepted ADRs (build safely, not skip safety), each path-scoped and independently refuted, migrations generated-not-applied and features default-off/fail-closed. The single remaining external key is the shared-database migration-owner credential; every buildable pathway is unlocked up to it.
+Founder instruction 2026-07-22: release every documented proposal and unlock every blocked pathway into workflows; the proposals are the Founder's and are hereby lanes. The controller releases the whole register and blocker set to bounded Terra + Luna arms, each following the accepted ADRs (build safely, not skip safety), each path-scoped and independently refuted. Database application is complete through `0019`; features remain default-off/fail-closed until their dedicated runtime activation evidence passes.
 
 | Register proposal / blocker | Release lane | State |
 |---|---|---|
-| WD-I-001 one-tap outcome (#audit cf9deb5) | prepare reactivation + one-tap ahead of ADR-019 activation | prepared; activation on the DB key |
+| WD-I-001 one-tap outcome (#audit cf9deb5) | prepare reactivation + one-tap ahead of ADR-019 activation | prepared; activation on restricted control/lifecycle proof |
 | WD-I-002 coverage cockpit | packet delivered 7833a11; run is an operator step | delivered |
 | WD-I-003 user-facing decision receipt | Discovery deliverable doc | batch 3 |
 | WD-I-004 seller correction link | Discovery deliverable doc | batch 3 |
@@ -161,7 +162,7 @@ Founder instruction 2026-07-22: release every documented proposal and unlock eve
 | #22 crypto.randomUUID LAN crash | code fix | batch 1 running |
 | H40 search shows no price | code fix | batch 1 running |
 | #24 App Store | native-readiness + deletion saga | batch 1 running + saga |
-| #25 image evidence-media | full feature to ADR-028, generated-not-applied, default-off | batch 2 |
+| #25 image evidence-media | full feature to ADR-028, database applied, runtime default-off | batch 2 |
 | #16 account deletion | saga P1 delivered 4d7038c; P2/P3 continue | batch 2 |
 
 ### Batch 3 release arms (design and ADR, disjoint new-file paths, ACTIVE)
@@ -327,71 +328,61 @@ refutation. Paths released.
 
 #### Contribution pending-queue row-shape repair `0017` — SHARED APPLIED / IMMUTABLE
 
-- **Owner:** database service worker; independent Database/Quality refuter required before any apply.
-- **Exclusive paths:** `src/db/pillars/80-contribution-services.sql`, new
+- **Historical owner:** database service worker; independent Database/Quality refutation passed before shared application.
+- **Historical exclusive paths:** `src/db/pillars/80-contribution-services.sql`, new
   `src/db/migrations/0017_contribution_pending_queue_shape_repair.sql`, new
   `src/db/migrations/meta/0017_snapshot.json`, new
   `src/db/migrations/meta/0017_release_manifest.json`,
   `src/db/migrations/meta/_journal.json`, new
   `scripts/contributions/contribution-pending-queue-shape-repair-contract.test.ts`, and
   `docs/operations/departments/contribution-integrity.md` only.
-- **Contract:** preserve immutable applied `0000`-`0016`. Repair only
+- **Historical contract:** preserve immutable applied `0000`-`0016`. Repair only
   `public.contribution_pending_queue(uuid, integer)` so its two declared `text` columns explicitly
   return `availability_state::text` and `collection_method::text`; preserve signature, assignment
   enforcement, ordering, limits, admission/effective-decision predicates, ownership, ACLs, and all
-  other service behavior. Prove blank/upgrade/idempotence/injected-failure rollback on PostgreSQL 17,
-  then independently refute before exact-target Preview application. Production and report activation
-  remain separately gated.
+  other service behavior. It proved blank/upgrade/idempotence/injected-failure rollback on PostgreSQL 17
+  and passed independent refutation before exact-target shared application. Runtime report activation remains
+  separately gated.
 
 The exact seven-path candidate passes its five focused contracts, scoped diff hygiene, and independent
 source refutation with no P1/P2/P3. The strengthened PostgreSQL 17 evidence bundle at
 `/var/folders/n9/d2z6ybln5vb34xvzpqrwj4wr0000gn/T/wetindey-0017-runtime-1784717772800-508629ffd3`
 passes blank `0000`-`0017`, staged `0000`-`0016` predecessor reproduction, real `0017` upgrade,
 injected rollback, second Drizzle migration, manual idempotence, exact owner/ACL/baseline restoration,
-and zero disposable-database residue; Luna's follow-up verdict is **PASS**. The lane stays claimed only
-through commit and guarded exact-target Preview application. Production migration and report activation
-remain separate later gates.
+  and zero disposable-database residue; Luna's follow-up verdict is **PASS**. Preview and Production
+  application later completed under the shared-applied immutable checkpoint above. Runtime report
+  activation remains a separate gate.
 
-**Controller checkpoint 2026-07-22 (source landed; Preview execution is an EXTERNAL GATE).** The
-source checkpoint is on `origin/main` at `f5e8318` and byte-verified: `0017` SQL sha256
-`a864a63b…` matches the committed manifest, the focused contract is 5/5 PASS at HEAD, scoped diff is
-clean, and immutable `0000`-`0016` are untouched. Read-only Preview identity was confirmed on the exact
-target: `current_setting('neon.branch_id')` = `br-steep-dust-auhcmjk8`, PostgreSQL `170010`,
-`rolsuper=false`. Preview APPLICATION cannot proceed from this controller seat: the only Preview
-credentials handed to it are the runtime principals `wetindey_moderator_preview_login` and
-`wetindey_control_preview_login`, both denied on `drizzle.__drizzle_migrations` and
-`public.contribution_control` (SQLSTATE `42501`); `.env.local` resolves to the base branch, not Preview,
-so it must not be used. Applying the guarded `0017` bytes requires the migration-owner DSN for
-`br-steep-dust-auhcmjk8`, which was not provided. Per the fail-closed operating rules no target was
-fabricated, derived, or substituted. External handoff: the owner-credentialed executor performs the
-guarded apply and then the ledger-hash / owner-and-execute-ACL / ADMIN-only-baseline / no-residue /
-moderator-queue-RPC verification and Luna exact-target refutation; contribution reporting and moderation
-controls remain disabled throughout (their state is also unreadable from these principals). Not waiting
-indefinitely; recorded and released to the external gate.
+**Historical pre-application checkpoint, superseded 2026-07-22.** Source landed at `f5e8318`;
+`0017` SQL sha256 `a864a63b...` and its 5/5 focused contract passed before shared execution. At that
+time only runtime principals were available and correctly rejected migration access. The later
+credentialed Preview and Production applications completed with exact ledger, ACL, ownership, and
+no-residue proof. This historical credential gap is closed; reporting and moderation controls remain
+disabled behind the separate runtime activation lane.
 
-#### Contribution moderation service `0015` / ACL repair `0016` — PREVIEW APPLIED / SOURCE + RUNTIME PASS / RELEASED
+#### Contribution moderation service `0015` / ACL repair `0016` — SHARED APPLIED / IMMUTABLE
 
 Preview applied immutable `0015`, then direct ACL evidence proved its post-`RESET ROLE`
 `REVOKE`/`GRANT` statements were no-ops: `PUBLIC` retained `EXECUTE` and the intended
-moderator grant was absent. `0015` and its metadata are now read-only. The forward repair
-owns exactly `src/db/pillars/90-contribution-security.sql`, new
+moderator grant was absent. The forward `0016` repair
+owned exactly `src/db/pillars/90-contribution-security.sql`, new
 `src/db/migrations/0016_contribution_review_acl_repair.sql`, new
 `src/db/migrations/meta/0016_snapshot.json`, new
 `src/db/migrations/meta/0016_release_manifest.json`,
 `src/db/migrations/meta/_journal.json`, new
 `scripts/contributions/contribution-moderation-acl-repair-contract.test.ts`, and
-`docs/operations/departments/contribution-integrity.md`. It must repair the ACL while
+`docs/operations/departments/contribution-integrity.md`. It repaired the ACL while
 `wetindey_contribution_owner` is the active role, leave only owner plus
 `wetindey_contribution_moderator` execution, revoke all temporary membership/schema
-capabilities, prove rollback/idempotence on PostgreSQL 17, and be independently refuted
-before Preview revalidation. No Production migration or runtime enablement is authorized
-by this claim.
+capabilities, proved rollback/idempotence on PostgreSQL 17, and passed independent
+refutation. Preview and Production now contain immutable `0015` and `0016`; runtime
+enablement remains unauthorized by database application.
 
-Owner: database service worker. Add only the protected review-detail service needed for a
+Historical owner: database service worker. The lane added only the protected review-detail service needed for a
 second moderator to inspect a decided claim and reverse it without broad table access.
-Preserve immutable `0000`-`0014`; this is a forward release delta and matching desired-state
-pillar repair. No app UI, environment, role login, shared-target migration, flag, deployment,
-or report activation is authorized by this source lane.
+It preserved immutable `0000`-`0014` as a forward release delta and matching desired-state
+pillar repair. No app UI, environment, role login, flag, deployment, or report activation
+is authorized by this historical source lane.
 
 Exact writable paths:
 

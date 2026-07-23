@@ -251,6 +251,16 @@ test("0018 migration carries the generated DDL then the merged pillar", () => {
   assert.match(sql, /ALTER TABLE public\.deletion_requests FORCE ROW LEVEL SECURITY/);
   assert.match(sql, /ALTER TABLE public\.deletion_audit FORCE ROW LEVEL SECURITY/);
   assert.match(sql, /REVOKE ALL ON TABLE/);
+  const transferOwnership = sql.indexOf(
+    "ALTER TABLE public.deletion_requests OWNER TO wetindey_deletion_owner",
+  );
+  const assumeOwner = sql.indexOf("SET LOCAL ROLE wetindey_deletion_owner");
+  const installRls = sql.indexOf(
+    "ALTER TABLE public.deletion_requests ENABLE ROW LEVEL SECURITY",
+  );
+  assert.ok(transferOwnership >= 0, "deletion_requests ownership transfer missing");
+  assert.ok(assumeOwner > transferOwnership, "owner role must be assumed after ownership transfer");
+  assert.ok(installRls > assumeOwner, "RLS must be installed while acting as the table owner");
   assert.doesNotMatch(
     sql,
     /GRANT (SELECT|INSERT|UPDATE|DELETE) ON TABLE[\s\S]*wetindey_deletion_(runtime|worker)/,
@@ -266,7 +276,7 @@ test("the pillar owns no tables or types", () => {
   assert.match(pillar, /ALTER TABLE public\.deletion_requests OWNER TO wetindey_deletion_owner/);
 });
 
-test("0018 release manifest marks the candidate present but UNAPPLIED", () => {
+test("0018 release manifest freezes the shared application while activation stays off", () => {
   const manifest = JSON.parse(
     read("src/db/migrations/meta/0018_release_manifest.json"),
   ) as {
@@ -284,13 +294,13 @@ test("0018 release manifest marks the candidate present but UNAPPLIED", () => {
   };
   assert.equal(manifest.kind, "release_manifest");
   assert.equal(manifest.release, "0018_deletion_saga_persistence");
-  assert.equal(manifest.status, "candidate_unapplied");
-  assert.equal(manifest.shared_database_applied, false);
-  assert.equal(manifest.first_shared_application_frozen, false);
+  assert.equal(manifest.status, "shared_applied_immutable");
+  assert.equal(manifest.shared_database_applied, true);
+  assert.equal(manifest.first_shared_application_frozen, true);
   assert.equal(manifest.parent_snapshot_id, PARENT_SNAPSHOT_ID);
   assert.equal(manifest.result_snapshot_id, RESULT_SNAPSHOT_ID);
 
-  // Every authorization flag is false: nothing is cleared to run anywhere.
+  // Application is complete, but duplicate execution and runtime activation stay forbidden.
   const authValues = Object.values(manifest.authorization);
   assert.ok(authValues.length >= 3, "authorization must enumerate the activation flags");
   for (const [flag, value] of Object.entries(manifest.authorization)) {

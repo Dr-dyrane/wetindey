@@ -16,6 +16,8 @@
     "tables": {}
   },
   "kind": "release_manifest",
+  "status": "shared_applied_immutable",
+  "first_shared_application_frozen": true,
   "drizzle_compatibility": "Detached metadata envelope: prevId is not in the migration snapshot chain.",
   "release": "0013_contribution_integrity",
   "parent_commit": "1b86e81705982f0b1d8336d2ad4dc6fe6ac90b80",
@@ -32,7 +34,7 @@
     "src/db/pillars/80-contribution-services.sql": "c7708a2941f5b93ad70eb4399c5e9f2a65f78bb2ee069666870f47fdf93ae5f7",
     "src/db/pillars/90-contribution-security.sql": "80e89d652b2be013ae023c2ee24ad4b82c761c85f6eed552e21e31517a5766ba",
     "src/db/migrations/meta/_journal.json": "8b2e9842adcc18fcef5654d95a1d567cba3aac0218a858f1e8e883909aec6a92",
-    "scripts/contributions/contribution-migration-contract.test.ts": "b8a67994539a2133c7b9d54b186419e11dfeabf2f4e6f345936ef551a6fd7bb7"
+    "scripts/contributions/archive/contribution-migration-contract.archived.ts": "b8a67994539a2133c7b9d54b186419e11dfeabf2f4e6f345936ef551a6fd7bb7"
   },
   "generator": {
     "drizzle_kit": "0.31.10",
@@ -45,5 +47,43 @@
     "pglite": "0.4.6",
     "pglite_postgis": "0.0.8"
   },
-  "shared_database_applied": false
+  "shared_database_applied": true,
+  "application_evidence": {
+    "verified_on": "2026-07-22",
+    "release_index": 13,
+    "ledger_sha256": "052769850c3d633230d9ec109c2b09067b73a686cadb7c139a613622184f0f0a",
+    "targets": {
+      "preview": {
+        "project_id": "wild-rain-23091788",
+        "branch_id": "br-steep-dust-auhcmjk8",
+        "database": "neondb",
+        "migration_role": "neondb_owner",
+        "endpoint_hostname_sha256": "b47f36e8b9349d0e686b0468c2d41c0b3209911576abaa3af8fb2f14d344beaf",
+        "ledger_row_id": 14,
+        "postgresql_version_num": "170010",
+        "result": "PASS"
+      },
+      "production": {
+        "project_id": "wild-rain-23091788",
+        "branch_id": "br-flat-band-aui9waf5",
+        "database": "neondb",
+        "migration_role": "neondb_owner",
+        "endpoint_hostname_sha256": "49e9bfbdb1d253190391c88980d8b293eb8da2eaae1af606defecb4bb3542804",
+        "ledger_row_id": 14,
+        "postgresql_version_num": "170010",
+        "result": "PASS"
+      }
+    },
+    "postconditions": {
+      "exact_ordered_ledger_through_0019": true,
+      "runtime_controls_enabled": false,
+      "duplicate_execution_allowed": false,
+      "temporary_privileges_removed": true
+    }
+  },
+  "authorization": {
+    "duplicate_migration_execution": false,
+    "runtime_activation": false,
+    "production_rollout": false
+  }
 }

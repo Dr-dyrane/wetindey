@@ -1,16 +1,16 @@
 {
   "kind": "release_manifest",
   "release": "0019_contribution_evidence_media",
-  "status": "candidate_unapplied",
-  "shared_database_applied": false,
-  "first_shared_application_frozen": false,
+  "status": "shared_applied_immutable",
+  "shared_database_applied": true,
+  "first_shared_application_frozen": true,
   "parent_release": "0018_deletion_saga_persistence",
   "parent_snapshot_id": "ed1e3683-c202-457d-ab34-d5a9273fdadb",
   "result_snapshot_id": "95019bd1-72ea-41ad-adc5-c0a037860eea",
   "artifacts": {
     "migration": {
       "path": "src/db/migrations/0019_contribution_evidence_media.sql",
-      "sha256": "02bea482462f093deb8666efcddcc377521d308899be48e46fe664bcf1e2e6a5"
+      "sha256": "5db176db5902afa61ce0a86c09ea3f9ad99fa3cac87d56e7757f2e5cfc823237"
     },
     "snapshot": {
       "path": "src/db/migrations/meta/0019_snapshot.json",
@@ -25,7 +25,7 @@
   },
   "source_sha256": {
     "src/db/schema/evidence-media.ts": "4139ac79946ff0b10003e2505f96444aa366a6bfb3b26f8f558c807f0e409483",
-    "src/db/pillars/90-contribution-evidence-media.sql": "628ad5389c5db28c10ea56f0c8aec1b656a760ebf6011f57d0a51a4c5844a4cb",
+    "src/db/pillars/90-contribution-evidence-media.sql": "492b2cf429c95012b92318be6db0d1a421e58d70ba67b9c390203f28d58f6dd7",
     "src/lib/evidence-media/types.ts": "5e7986c3fca024a07266b9daf0b2c380c2e4ad98992f5e8e1ef81ca08b84750a",
     "src/lib/evidence-media/keys.ts": "fc6d92fd4ee1539ffff196c5dce9ec7ab42110854d1472271747e24901ede55f",
     "src/lib/evidence-media/sanitize.ts": "68525b3b94b0ea4c88fb17fd462206a993d2824390af0471135741b15e9de3cf",
@@ -33,13 +33,45 @@
     "src/lib/evidence-media/admission.ts": "34dc78e516a81ec3c39caa571478a8aca56515024d1e20c097234a5b6ec614a2",
     "src/lib/evidence-media/flag.ts": "e1c848bb1f5386e8a8ab03e6ecd5d152de30d3a8a625456cc2b33f361d06e176",
     "src/app/_actions/evidence-media-actions.ts": "7826d1eb220ecd9d0366157ee7469581a8c4a7e840756685c6d32f1787702bd2",
-    "src/app/_components/report-price-sheet/EvidenceMediaField.tsx": "dd1e95f98757ecfb1c12c5a764daeabea71591c222788dd5b7c5c0eae6d87f8b",
-    "scripts/contributions/contribution-evidence-media-p1-contract.test.ts": "24268fb3ea0e49145e799e344c934d6745c480fd9de96b723e7fdaf1d6e0fd49"
+    "src/app/_components/report-price-sheet/EvidenceMediaField.tsx": "dd1e95f98757ecfb1c12c5a764daeabea71591c222788dd5b7c5c0eae6d87f8b"
   },
   "generator": {
     "drizzle_kit": "0.31.10",
     "drizzle_orm": "0.45.2",
     "journal_version": "7"
+  },
+  "application_evidence": {
+    "verified_on": "2026-07-22",
+    "release_index": 19,
+    "ledger_sha256": "5db176db5902afa61ce0a86c09ea3f9ad99fa3cac87d56e7757f2e5cfc823237",
+    "targets": {
+      "preview": {
+        "project_id": "wild-rain-23091788",
+        "branch_id": "br-steep-dust-auhcmjk8",
+        "database": "neondb",
+        "migration_role": "neondb_owner",
+        "endpoint_hostname_sha256": "b47f36e8b9349d0e686b0468c2d41c0b3209911576abaa3af8fb2f14d344beaf",
+        "ledger_row_id": 25,
+        "postgresql_version_num": "170010",
+        "result": "PASS"
+      },
+      "production": {
+        "project_id": "wild-rain-23091788",
+        "branch_id": "br-flat-band-aui9waf5",
+        "database": "neondb",
+        "migration_role": "neondb_owner",
+        "endpoint_hostname_sha256": "49e9bfbdb1d253190391c88980d8b293eb8da2eaae1af606defecb4bb3542804",
+        "ledger_row_id": 20,
+        "postgresql_version_num": "170010",
+        "result": "PASS"
+      }
+    },
+    "postconditions": {
+      "exact_ordered_ledger_through_0019": true,
+      "runtime_controls_enabled": false,
+      "duplicate_execution_allowed": false,
+      "temporary_privileges_removed": true
+    }
   },
   "scope": {
     "adds": [
@@ -52,8 +84,8 @@
     "function_or_acl_changes": []
   },
   "authorization": {
-    "shared_migration_execution": false,
-    "preview_activation": false,
-    "production_activation": false
+    "duplicate_migration_execution": false,
+    "runtime_activation": false,
+    "production_rollout": false
   }
 }

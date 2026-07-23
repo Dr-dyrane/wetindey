@@ -29,10 +29,14 @@ const immutableLineage = [
   { idx: 15, tag: "0015_contribution_moderation_operations", sqlSha256: "d4d452a4e7f3dba7fdd68ce63c2b447e974c97b727d12dbd2c8e8261334559a2", snapshotId: "463a649f-a760-529a-b1c9-b62eb0221749", snapshotPrevId: "667de345-b0c2-43f5-9e37-a7c00e30ea50" },
   { idx: 16, tag: "0016_contribution_review_acl_repair", sqlSha256: "669864c8a532b2b941dcd30258b2cb7a1e1c9a7406e4f5d6ddf4a5a3bbb6d6ec", snapshotId: "c85fd31e-0793-5ded-8c66-9fbcf12d1f4c", snapshotPrevId: "463a649f-a760-529a-b1c9-b62eb0221749" },
 ] as const;
-const immutable0016Manifest = {
-  path: "src/db/migrations/meta/0016_release_manifest.json",
-  sha256: "48829525ef879034cc2ebd74b2480e609f0af5099001f9db62b0bc75728be5dd",
-} as const;
+const applied0016Manifest = JSON.parse(
+  read("src/db/migrations/meta/0016_release_manifest.json"),
+) as {
+  status: string;
+  shared_database_applied: boolean;
+  first_shared_application_frozen: boolean;
+  artifacts: { migration: { sha256: string } };
+};
 const immutablePillarOutsideQueue = {
   base: "4b937260b21ddd7ad94663454626b33441de1976",
   sha256: "e7b35a3ced3c2f1131a9a2515075b9c5fcb376f3e69604132720e8620c6f8d6f",
@@ -58,6 +62,7 @@ const manifest = JSON.parse(read("src/db/migrations/meta/0017_release_manifest.j
   result_snapshot_id: string;
   artifacts: Record<string, { path: string; sha256: string; entry_index?: number; entry_when?: string }>;
   source_sha256: Record<string, string>;
+  authorization: Record<string, boolean>;
 };
 
 function queueFunction(source: string) {
@@ -126,10 +131,13 @@ test("0017 freezes the exact ordered 0000-0016 SQL, journal, and snapshot lineag
       );
     }
   }
-  assert.equal(sha256(read(immutable0016Manifest.path)), immutable0016Manifest.sha256);
+  assert.equal(applied0016Manifest.status, "shared_applied_immutable");
+  assert.equal(applied0016Manifest.shared_database_applied, true);
+  assert.equal(applied0016Manifest.first_shared_application_frozen, true);
+  assert.equal(applied0016Manifest.artifacts.migration.sha256, immutableLineage[16].sqlSha256);
 });
 
-test("0017 advances detached metadata without claiming runtime application", () => {
+test("0017 freezes applied detached metadata without claiming runtime activation", () => {
   // The journal is append-only: it only grows as later migrations land, so an
   // exact length is wrong. Require entries 0..17 to be present, idx-aligned, and
   // strictly monotonic through the frozen 0017 prefix without forbidding later
@@ -166,9 +174,16 @@ test("0017 advances detached metadata without claiming runtime application", () 
 
   assert.equal(manifest.kind, "release_manifest");
   assert.equal(manifest.release, "0017_contribution_pending_queue_shape_repair");
-  assert.equal(manifest.status, "candidate_unapplied");
-  assert.equal(manifest.shared_database_applied, false);
-  assert.equal(manifest.first_shared_application_frozen, false);
+  assert.equal(manifest.status, "shared_applied_immutable");
+  assert.equal(manifest.shared_database_applied, true);
+  assert.equal(manifest.first_shared_application_frozen, true);
+  assert.ok(
+    Object.keys(manifest.authorization).length >= 3,
+    "authorization must enumerate duplicate-execution and runtime gates",
+  );
+  for (const [flag, value] of Object.entries(manifest.authorization)) {
+    assert.equal(value, false, `authorization.${flag} must remain false`);
+  }
   assert.equal(manifest.parent_release, "0016_contribution_review_acl_repair");
   assert.equal(manifest.parent_snapshot_id, snapshot.prevId);
   assert.equal(manifest.result_snapshot_id, snapshot.id);
