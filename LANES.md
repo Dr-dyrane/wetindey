@@ -207,18 +207,9 @@ Requested by: Private Contractor, Maps Delivery `c9c17443-ef5e-4a7b-9b6e-c8f5381
 
 Scouted shape on approval, the deletion-P1 house pattern: new src/db/schema/roles.ts plus its generated `0020` candidate as ONE unit (the drizzle schema glob makes a schema file without its migration poison every other seat's next generate), candidate_unapplied with every authorization flag false, journal append of idx 20 only, `0000`-`0019` byte-frozen; new src/db/pillars/90-role-security.sql (roles, grants, RLS only); new src/lib/roles/ (seller_owner, seller_manager, seller_staff templates only; deny-by-default resolver; lifecycle and separation-of-duties guards; no live caller); new scripts/roles/role-authorization-p1-contract.test.ts including disposable blank and 0019-to-0020 upgrade proof. contribution_moderator_assignments remains the sole moderator truth; P1 creates no second moderator store, no onboarding UI, no verification, no contact publication, no badge, no live caller, no shared application, no department worklog edit.
 
-#### ADR-022 P1 app-layer half: roles vocabulary and guards - ACTIVE
+#### ADR-022 P1 app-layer half: roles vocabulary and guards - RELEASED / PATHLESS
 
-Owner: Private Contractor, Maps Delivery `c9c17443-ef5e-4a7b-9b6e-c8f5381da30c`, self-claimed under the Founder's standing directive to always take the next lane. This is the UNGATED half of the scouted ADR-022 P1: pure application code with no live caller, no file under src/db/schema (the drizzle glob makes any schema file without its generated migration poison other seats' generates), no migration, no journal touch, no pillar SQL. The schema and `0020` half remains a separate lane blocked on the two controller rulings recorded above and is NOT started here; when granted, its pgEnums get cross-checked against these tuples by that lane's contract.
-
-Exact writable paths:
-
-- new `src/lib/roles/types.ts` (const tuples: seller_owner, seller_manager, seller_staff templates only; assignment lifecycle; the eight claim states; permission names from the ADR matrix)
-- new `src/lib/roles/authorize.ts` (deny-by-default resolver: unknown role, permission, resource, subject, state, or environment denies; exact scope match; suspension and revocation defeat cached claims)
-- new `src/lib/roles/lifecycle.ts` (legal-transition table; separation-of-duties guards, claimant not reviewer, issuer not reviewer not subject; compare-and-set primitive in the deletion phases idiom)
-- new `scripts/roles/role-authorization-p1-contract.test.ts` (cross-scope denial, stale-session defeat, self-approval denial, transition legality, absence assertions: no verification tables, no contact fields, no badge fields, no moderator template, no live caller imports these modules)
-
-contribution_moderator_assignments remains the sole moderator truth; this lane creates no moderator, field_operator, support, or community anything. Completion: contract green, gates green, independent default-to-REFUTED refutation, path-scoped commit under the `0bbdb11` class, span-checked release.
+Complete at `bcf6028`, pushed under the `0bbdb11` class after a refutation that earned its keep: the refuter independently re-derived the permission vocabulary and transition table from the ADR and matched them, ran its own 21-case adversarial deny suite with zero allows and Proxy proof the stale claim is never read, then genuinely REFUTED the first candidate on appeal-flag wear (an ordinary transition defaulted appealUsed to false and re-armed the single bounded appeal) and flagged a mutating-getter TOCTOU residual; both were fixed in the refuter's prescribed shapes (ordinary patches never carry appealUsed; scope refs parsed read-once into locals) and delta-confirmed twice, all four mutation teeth still biting, contract 27 of 27. The schema and `0020` half remains the separate CLAIM REQUEST above, still awaiting the two controller rulings; its pgEnums will cross-check these tuples when granted. No live caller imports src/lib/roles. Paths released.
 
 #### i18n copy riders: remaining hoist residuals - RELEASED / PATHLESS
 
