@@ -187,6 +187,12 @@ export const en = {
   "sheet.position_half": "Sheet half open. Activate to change.",
   "sheet.position_expanded": "Sheet expanded. Activate to change.",
 
+  /* BottomSheet map-retry strip, shown when the map behind the sheet failed to
+     load. Copy hoisted verbatim from BottomSheet.tsx. */
+  "sheet.map_unavailable": "Map unavailable",
+  "sheet.map_retry": "Try again",
+  "sheet.map_retry_a11y": "Try loading map again",
+
   /* Profile, ProfileSheet.tsx. No line numbers: they rot, and a comment that
      points at the wrong line is worse than no comment.
 
@@ -491,13 +497,37 @@ export const en = {
   /* Geolocation problem titles. Shared verbatim between AreaPickerSheet and
      LocationSheet; only the remedy (the body) differs, so only the body forks.
      These stay five distinct titles, never collapsed into "Couldn't get your
-     location", five causes with five different fixes. */
+     location", five causes with five different fixes.
+
+     Now also the titles for `acquireDeviceLocation` in locationStore.ts, which
+     returns i18n keys instead of English sentences. Three titles below were
+     aligned to that store's live copy (cannot / could not / did not); the keys
+     had never shipped, so the words a user sees are unchanged. The `_body` keys
+     that follow are the store's remedies, hoisted verbatim. `geo.err_device_*`
+     is the no-navigator variant of "unsupported": a device with no location
+     machinery at all, as opposed to a browser without the geolocation API. */
   "geo.err_insecure_title": "Location needs a secure connection",
-  "geo.err_unsupported_title": "This browser can't share location",
+  "geo.err_unsupported_title": "This browser cannot share location",
   "geo.err_denied_title": "Location is blocked",
-  "geo.err_unavailable_title": "Your device couldn't get a fix",
+  "geo.err_unavailable_title": "Your device could not get a fix",
   "geo.err_timeout_title": "Finding you took too long",
-  "geo.err_unknown_title": "Location didn't work",
+  "geo.err_unknown_title": "Location did not work",
+  "geo.err_device_title": "Location is unavailable",
+  "geo.err_invalid_title": "Your device returned an unusable location",
+  "geo.err_stale_title": "Your location is out of date",
+  "geo.err_device_body": "This device cannot share its location. Pick an area instead.",
+  "geo.err_insecure_body": "Open WetinDey on its secure address, or pick an area instead.",
+  "geo.err_unsupported_body": "Location is not supported here. Pick an area instead.",
+  "geo.err_invalid_body": "The location response was incomplete. Try again, or pick an area.",
+  "geo.err_stale_body":
+    "The device returned an old fix. Try again to refresh it, or continue with your browsing area.",
+  "geo.err_denied_body":
+    "Allow location for WetinDey in your browser settings, or pick an area.",
+  "geo.err_unavailable_body": "Try again near a window, or continue with your browsing area.",
+  "geo.err_timeout_body": "Try again, or continue with your browsing area.",
+  /* Same remedy as timeout on purpose; an unknown failure has no better advice.
+     Two keys, one sentence, same precedent as auth.retry / confirm.retry. */
+  "geo.err_unknown_body": "Try again, or continue with your browsing area.",
 
   /* Area picker, AreaPickerSheet.tsx:117-227. Remedy is "pick an area below". */
   "area.title": "Choose area",
@@ -539,6 +569,16 @@ export const en = {
     "The location request timed out before your device answered. Try again, or simulate a position above.",
   "location.err_unknown_body":
     "Your browser refused the request without saying why. Simulate a position above instead.",
+
+  /* Location sheet notices from useLocationSheet.ts, hoisted verbatim. The
+     superseded pair fires when a location response loses the freshness race;
+     the coverage pair fires when the fix landed but the coverage check did not. */
+  "location.superseded_title": "A newer location is already active",
+  "location.superseded_body":
+    "This older response was ignored. Try again if you want another refresh.",
+  "location.coverage_check_failed_title": "We found you, but not our data",
+  "location.coverage_check_failed_body":
+    "Your current location is saved for this session, but we couldn't check nearby price coverage. Try again.",
 
   /* Item detail, ItemDetailSheet.tsx:143-500, hardcoded English today. */
   "item.title_fallback": "Prices",
@@ -662,6 +702,15 @@ export const en = {
   "get.reviews_one": "review",
   "get.reviews_other": "reviews",
 
+  /* Get it, route-origin notices from useGetItSheet.ts, hoisted verbatim. The
+     superseded pair mirrors location.superseded_* but carries this sheet's own
+     remedy (open the market only); origin_stale fires when a fresh fix aged out
+     before the route disclosure could use it. */
+  "get.superseded_title": "A newer location is already active",
+  "get.superseded_body": "This older response was ignored. Refresh again, or open the market only.",
+  "get.origin_stale_title": "Your location is already out of date",
+  "get.origin_stale_body": "Refresh it again, or open directions with the market only.",
+
   /* Currency picker, CurrencyPickerSheet + its content/view. This sheet bypassed
      this file entirely and carried its own inline `copy` object; these keys are
      that copy, plus the two aria-labels it hardcoded. It is a reference-currency
@@ -770,6 +819,38 @@ export const en = {
   "exchange.sample_disclaimer": "Sample places · not real businesses or offered rates.",
   "exchange.listings_disclaimer": "Map listings · rates, licence and opening status not verified.",
   "exchange.trend_aria": "Reference rate trend {direction}",
+
+  /* SheetPicker, design-system. The empty row and the default trigger
+     placeholder; every live call site passes its own translated placeholder, so
+     picker.placeholder is the fallback for a call site that forgets. */
+  "picker.empty": "Nothing available",
+  "picker.placeholder": "Choose",
+
+  /* AsyncList, design-system. The four-state list's own fallback copy: callers
+     usually pass errorState/empty overrides, these are what renders when they
+     do not. The two _a11y keys are screen-reader-only status text. */
+  "list.err_load_title": "Could not load",
+  "list.err_refresh_title": "Could not refresh",
+  "list.retry": "Try again",
+  "list.loading_a11y": "Loading",
+  "list.updating_a11y": "Updating",
+
+  /* Home page, useHomePage.ts and its results/place-detail views. The "We no
+     fit ..." lines are this app's English on purpose, same register as
+     profile.save_error and reports.err_load above; they are not Pidgin leaks
+     and they take no invented Pidgin entry. */
+  "home.err_prices_unreachable": "We no fit reach the price data right now.",
+  "home.err_search_too_long": "That search is too long. Try something shorter.",
+  "home.err_search_network": "Couldn't search. Check your connection.",
+  "home.err_market_load": "We no fit load this market right now.",
+  "home.empty_prices_title": "No prices within {km} km",
+  "home.empty_prices_body": "Be the first to report one.",
+  "home.err_load_title": "Could not load",
+  "home.err_network_body": "Check your network and try again.",
+  "home.retry": "Try again",
+  "home.search_empty_body": "Try a local name like “ewa” or “dodo”.",
+  "home.place_empty_title": "No prices here yet",
+  "home.place_empty_body": "Nobody has reported a price at this market.",
 } as const;
 
 /** Every key in the product. Derived, never hand-maintained. */
@@ -860,6 +941,9 @@ const pidgin: LocaleTable = {
   "sheet.position_collapsed": UNTRANSLATED,
   "sheet.position_half": UNTRANSLATED,
   "sheet.position_expanded": UNTRANSLATED,
+  "sheet.map_unavailable": UNTRANSLATED,
+  "sheet.map_retry": UNTRANSLATED,
+  "sheet.map_retry_a11y": UNTRANSLATED,
 
   "profile.title_signed_in": "Profile",
   "profile.title_signed_out": "You",
@@ -1065,6 +1149,18 @@ const pidgin: LocaleTable = {
   "geo.err_unavailable_title": "Your phone no fit find you",
   "geo.err_timeout_title": "E take too long to find you",
   "geo.err_unknown_title": "Location no work",
+  "geo.err_device_title": UNTRANSLATED,
+  "geo.err_invalid_title": UNTRANSLATED,
+  "geo.err_stale_title": UNTRANSLATED,
+  "geo.err_device_body": UNTRANSLATED,
+  "geo.err_insecure_body": UNTRANSLATED,
+  "geo.err_unsupported_body": UNTRANSLATED,
+  "geo.err_invalid_body": UNTRANSLATED,
+  "geo.err_stale_body": UNTRANSLATED,
+  "geo.err_denied_body": UNTRANSLATED,
+  "geo.err_unavailable_body": UNTRANSLATED,
+  "geo.err_timeout_body": UNTRANSLATED,
+  "geo.err_unknown_body": UNTRANSLATED,
 
   "area.title": "Pick area",
   "area.use_my_location": "Use my location",
@@ -1103,6 +1199,10 @@ const pidgin: LocaleTable = {
     "The location request tire before your phone answer. Try again, abi put yourself for one place for up.",
   "location.err_unknown_body":
     "Your browser refuse the request and e no talk why. Put yourself for one place for up instead.",
+  "location.superseded_title": UNTRANSLATED,
+  "location.superseded_body": UNTRANSLATED,
+  "location.coverage_check_failed_title": UNTRANSLATED,
+  "location.coverage_check_failed_body": UNTRANSLATED,
 
   "item.title_fallback": "Prices",
   "item.choose": "Pick",
@@ -1199,6 +1299,10 @@ const pidgin: LocaleTable = {
   "get.reviews_unavailable_body": UNTRANSLATED,
   "get.reviews_one": UNTRANSLATED,
   "get.reviews_other": UNTRANSLATED,
+  "get.superseded_title": UNTRANSLATED,
+  "get.superseded_body": UNTRANSLATED,
+  "get.origin_stale_title": UNTRANSLATED,
+  "get.origin_stale_body": UNTRANSLATED,
 
   /* Currency picker. FX register: only the sheet's own action title ("Pick
      currency", the same "Pick ___" construction as report.choose_* below) and the
@@ -1298,6 +1402,30 @@ const pidgin: LocaleTable = {
   "exchange.sample_disclaimer": UNTRANSLATED,
   "exchange.listings_disclaimer": UNTRANSLATED,
   "exchange.trend_aria": UNTRANSLATED,
+
+  /* SheetPicker / AsyncList fallbacks and the home page's hoisted copy. The
+     "We no fit ..." home keys are already this app's English (see the en
+     table); writing a second Pidgin sentence for them would fork the voice,
+     so they answer UNTRANSLATED and the English register shows through. */
+  "picker.empty": UNTRANSLATED,
+  "picker.placeholder": UNTRANSLATED,
+  "list.err_load_title": UNTRANSLATED,
+  "list.err_refresh_title": UNTRANSLATED,
+  "list.retry": UNTRANSLATED,
+  "list.loading_a11y": UNTRANSLATED,
+  "list.updating_a11y": UNTRANSLATED,
+  "home.err_prices_unreachable": UNTRANSLATED,
+  "home.err_search_too_long": UNTRANSLATED,
+  "home.err_search_network": UNTRANSLATED,
+  "home.err_market_load": UNTRANSLATED,
+  "home.empty_prices_title": UNTRANSLATED,
+  "home.empty_prices_body": UNTRANSLATED,
+  "home.err_load_title": UNTRANSLATED,
+  "home.err_network_body": UNTRANSLATED,
+  "home.retry": UNTRANSLATED,
+  "home.search_empty_body": UNTRANSLATED,
+  "home.place_empty_title": UNTRANSLATED,
+  "home.place_empty_body": UNTRANSLATED,
 };
 
 /* ── Yorùbá ───────────────────────────────────────────────────────────────── */
@@ -1380,6 +1508,9 @@ const yoruba: LocaleTable = {
   "sheet.position_collapsed": UNTRANSLATED,
   "sheet.position_half": UNTRANSLATED,
   "sheet.position_expanded": UNTRANSLATED,
+  "sheet.map_unavailable": UNTRANSLATED,
+  "sheet.map_retry": UNTRANSLATED,
+  "sheet.map_retry_a11y": UNTRANSLATED,
 
   "profile.title_signed_in": UNTRANSLATED,
   "profile.title_signed_out": UNTRANSLATED,
@@ -1545,6 +1676,18 @@ const yoruba: LocaleTable = {
   "geo.err_unavailable_title": UNTRANSLATED,
   "geo.err_timeout_title": UNTRANSLATED,
   "geo.err_unknown_title": UNTRANSLATED,
+  "geo.err_device_title": UNTRANSLATED,
+  "geo.err_invalid_title": UNTRANSLATED,
+  "geo.err_stale_title": UNTRANSLATED,
+  "geo.err_device_body": UNTRANSLATED,
+  "geo.err_insecure_body": UNTRANSLATED,
+  "geo.err_unsupported_body": UNTRANSLATED,
+  "geo.err_invalid_body": UNTRANSLATED,
+  "geo.err_stale_body": UNTRANSLATED,
+  "geo.err_denied_body": UNTRANSLATED,
+  "geo.err_unavailable_body": UNTRANSLATED,
+  "geo.err_timeout_body": UNTRANSLATED,
+  "geo.err_unknown_body": UNTRANSLATED,
 
   "area.title": UNTRANSLATED,
   "area.use_my_location": UNTRANSLATED,
@@ -1570,6 +1713,10 @@ const yoruba: LocaleTable = {
   "location.err_unavailable_body": UNTRANSLATED,
   "location.err_timeout_body": UNTRANSLATED,
   "location.err_unknown_body": UNTRANSLATED,
+  "location.superseded_title": UNTRANSLATED,
+  "location.superseded_body": UNTRANSLATED,
+  "location.coverage_check_failed_title": UNTRANSLATED,
+  "location.coverage_check_failed_body": UNTRANSLATED,
 
   "item.title_fallback": UNTRANSLATED,
   "item.choose": UNTRANSLATED,
@@ -1641,6 +1788,10 @@ const yoruba: LocaleTable = {
   "get.reviews_unavailable_body": UNTRANSLATED,
   "get.reviews_one": UNTRANSLATED,
   "get.reviews_other": UNTRANSLATED,
+  "get.superseded_title": UNTRANSLATED,
+  "get.superseded_body": UNTRANSLATED,
+  "get.origin_stale_title": UNTRANSLATED,
+  "get.origin_stale_body": UNTRANSLATED,
 
   // Currency picker. Yorùbá withheld pending a native speaker.
   "currency.title": UNTRANSLATED,
@@ -1733,6 +1884,26 @@ const yoruba: LocaleTable = {
   "exchange.sample_disclaimer": UNTRANSLATED,
   "exchange.listings_disclaimer": UNTRANSLATED,
   "exchange.trend_aria": UNTRANSLATED,
+
+  "picker.empty": UNTRANSLATED,
+  "picker.placeholder": UNTRANSLATED,
+  "list.err_load_title": UNTRANSLATED,
+  "list.err_refresh_title": UNTRANSLATED,
+  "list.retry": UNTRANSLATED,
+  "list.loading_a11y": UNTRANSLATED,
+  "list.updating_a11y": UNTRANSLATED,
+  "home.err_prices_unreachable": UNTRANSLATED,
+  "home.err_search_too_long": UNTRANSLATED,
+  "home.err_search_network": UNTRANSLATED,
+  "home.err_market_load": UNTRANSLATED,
+  "home.empty_prices_title": UNTRANSLATED,
+  "home.empty_prices_body": UNTRANSLATED,
+  "home.err_load_title": UNTRANSLATED,
+  "home.err_network_body": UNTRANSLATED,
+  "home.retry": UNTRANSLATED,
+  "home.search_empty_body": UNTRANSLATED,
+  "home.place_empty_title": UNTRANSLATED,
+  "home.place_empty_body": UNTRANSLATED,
 };
 
 /* ── The tables, and what is not vouched for ──────────────────────────────── */

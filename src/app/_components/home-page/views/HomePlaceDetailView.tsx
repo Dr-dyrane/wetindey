@@ -9,6 +9,7 @@ import {
   formatDistance,
   getHaversineDistance
 } from "../imports/imports";
+import { useT } from "@/core/i18n";
 import type { useHomePage } from "../hooks/useHomePage";
 
 type HomePageState = ReturnType<typeof useHomePage>;
@@ -42,6 +43,8 @@ export function HomePlaceDetailView({
   setGetItTarget,
   setPlaceOffersRetry
 }: HomePlaceDetailViewProps) {
+  // Zero-wiring module store (see @/core/i18n): no provider, no prop threading.
+  const t = useT();
   const visitLabel = /kiosk|shop|supermarket/.test(detailPlace.placeType.toLowerCase())
     ? "Visit shop"
     : "Visit market";
@@ -135,13 +138,13 @@ export function HomePlaceDetailView({
             skeleton={<PlaceOfferRowSkeleton layout={isRegular ? "regular" : "compact"} />}
             empty={{
               icon: <MapPin className="h-6 w-6" />,
-              title: "No prices here yet",
-              description: "Nobody has reported a price at this market."
+              title: t("home.place_empty_title"),
+              description: t("home.place_empty_body")
             }}
             errorState={{
-              title: placeOffersError ?? "Could not load",
-              description: "Check your network and try again.",
-              retryLabel: "Try again"
+              title: placeOffersError ?? t("home.err_load_title"),
+              description: t("home.err_network_body"),
+              retryLabel: t("home.retry")
             }}
           />
         </div>

@@ -377,10 +377,10 @@ export function useHomePage() {
         // Previously this effect had no catch, so a database that was down
         // produced an empty map and an empty sheet with no explanation.
         console.error("Failed to load initial data:", err);
-        setLoadError("We no fit reach the price data right now.");
+        setLoadError(t["home.err_prices_unreachable"]);
       }
     });
-  }, []);
+  }, [t]);
 
   /**
    * The report form's vocabulary (every place, item, variant, unit), fetched
@@ -451,7 +451,7 @@ export function useHomePage() {
         // Settled, and we know nothing, NOT "never fetched". Without this the
         // list stays undefined and skeletons spin forever behind the error.
         setPopularItems([]);
-        setPopularError("We no fit reach the price data right now.");
+        setPopularError(t["home.err_prices_unreachable"]);
       }
     });
   }, [
@@ -459,6 +459,7 @@ export function useHomePage() {
     searchOrigin.lng,
     activeRadiusKm,
     activeCategory,
+    t,
   ]);
 
   useEffect(() => {
@@ -496,7 +497,7 @@ export function useHomePage() {
       // Never leave the previous query's rows standing under a rejection: they
       // are tappable and would read as this query's answer (ADR-015).
       setSearchResults([]);
-      setSearchError("That search is too long. Try something shorter.");
+      setSearchError(t["home.err_search_too_long"]);
       return;
     }
 
@@ -517,7 +518,7 @@ export function useHomePage() {
           // Drop the previous query's rows: a failed NEW query must not
           // re-surface the OLD answer as if it were this one (ADR-015).
           setSearchResults([]);
-          setSearchError("Couldn't search. Check your connection.");
+          setSearchError(t["home.err_search_network"]);
         }
       } finally {
         if (!cancelled) setIsSearching(false);
@@ -533,7 +534,8 @@ export function useHomePage() {
     searchOrigin.lat,
     searchOrigin.lng,
     activeRadiusKm,
-    searchRetryNonce
+    searchRetryNonce,
+    t
   ]);
 
   useEffect(() => {
@@ -638,7 +640,7 @@ export function useHomePage() {
         // and an empty panel that read as "this market sells nothing".
         console.error("Failed to load offers for place:", err);
         setPlaceOffers([]);
-        setPlaceOffersError("We no fit load this market right now.");
+        setPlaceOffersError(t["home.err_market_load"]);
       })
       .finally(() => {
         if (!cancelled) setIsPlaceOffersLoading(false);
@@ -647,7 +649,7 @@ export function useHomePage() {
     return () => {
       cancelled = true;
     };
-  }, [detailPlaceId, placeOffersRetry]);
+  }, [detailPlaceId, placeOffersRetry, t]);
 
   /**
    * Snapshot the claim, on the way OUT.

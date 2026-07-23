@@ -177,7 +177,6 @@ export function HomePageView({
       />
 
       <HomeSheetResultsView
-        t={t}
         activeCategory={activeCategory}
         activeRadiusKm={activeRadiusKm}
         searchOrigin={searchOrigin}

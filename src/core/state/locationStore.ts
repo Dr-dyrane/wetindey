@@ -3,6 +3,10 @@ import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 
 import { PRIMARY_LOCATION, SW_LAGOS_AREAS } from "@/db/lagosSouthWest";
+/* Type-only on purpose: this store runs outside React (and inside node contract
+   tests), so it may carry i18n KEYS but must not pull in the i18n runtime. The
+   consumer that renders a problem translates the keys with useT()/useStrings(). */
+import type { StringKey } from "@/core/i18n";
 
 export const DEVICE_LOCATION_FRESH_MS = 5 * 60 * 1000;
 export const ROUTE_ORIGIN_FRESH_MS = 60 * 1000;
@@ -43,8 +47,12 @@ export type DeviceLocationProblemCode =
 
 export interface DeviceLocationProblem {
   code: DeviceLocationProblemCode;
-  title: string;
-  message: string;
+  /* i18n keys, not sentences: the store cannot know the user's language. Every
+     consumer translates at its render (or set) site. Keys are per call site
+     rather than derived from `code`, because "unsupported" has two distinct
+     copies (no device machinery at all vs a browser without the API). */
+  titleKey: StringKey;
+  messageKey: StringKey;
   canRetry: boolean;
 }
 
@@ -183,11 +191,11 @@ export function newestDeviceLocation(
 
 function problem(
   code: DeviceLocationProblemCode,
-  title: string,
-  message: string,
+  titleKey: StringKey,
+  messageKey: StringKey,
   canRetry: boolean
 ): DeviceLocationResult {
-  return { ok: false, problem: { code, title, message, canRetry } };
+  return { ok: false, problem: { code, titleKey, messageKey, canRetry } };
 }
 
 export interface AcquireDeviceLocationOptions {
@@ -204,28 +212,13 @@ export async function acquireDeviceLocation(
   options: AcquireDeviceLocationOptions = {}
 ): Promise<DeviceLocationResult> {
   if (typeof window === "undefined" || typeof navigator === "undefined") {
-    return problem(
-      "unsupported",
-      "Location is unavailable",
-      "This device cannot share its location. Pick an area instead.",
-      false
-    );
+    return problem("unsupported", "geo.err_device_title", "geo.err_device_body", false);
   }
   if (!window.isSecureContext) {
-    return problem(
-      "insecure",
-      "Location needs a secure connection",
-      "Open WetinDey on its secure address, or pick an area instead.",
-      false
-    );
+    return problem("insecure", "geo.err_insecure_title", "geo.err_insecure_body", false);
   }
   if (!navigator.geolocation) {
-    return problem(
-      "unsupported",
-      "This browser cannot share location",
-      "Location is not supported here. Pick an area instead.",
-      false
-    );
+    return problem("unsupported", "geo.err_unsupported_title", "geo.err_unsupported_body", false);
   }
 
   return new Promise<DeviceLocationResult>((resolve) => {
@@ -247,14 +240,7 @@ export async function acquireDeviceLocation(
           !Number.isFinite(accuracy) ||
           accuracy < 0
         ) {
-          resolve(
-            problem(
-              "invalid",
-              "Your device returned an unusable location",
-              "The location response was incomplete. Try again, or pick an area.",
-              true
-            )
-          );
+          resolve(problem("invalid", "geo.err_invalid_title", "geo.err_invalid_body", true));
           return;
         }
 
@@ -267,14 +253,7 @@ export async function acquireDeviceLocation(
           provenance: "device",
         };
         if (!isDeviceLocationFresh(location, DEVICE_LOCATION_FRESH_MS, receivedAt)) {
-          resolve(
-            problem(
-              "stale",
-              "Your location is out of date",
-              "The device returned an old fix. Try again to refresh it, or continue with your browsing area.",
-              true
-            )
-          );
+          resolve(problem("stale", "geo.err_stale_title", "geo.err_stale_body", true));
           return;
         }
         resolve({ ok: true, location });
@@ -282,45 +261,23 @@ export async function acquireDeviceLocation(
       (error) => {
         if (error.code === error.PERMISSION_DENIED) {
           resolve(
-            problem(
-              "permission-denied",
-              "Location is blocked",
-              "Allow location for WetinDey in your browser settings, or pick an area.",
-              false
-            )
+            problem("permission-denied", "geo.err_denied_title", "geo.err_denied_body", false)
           );
           return;
         }
         if (error.code === error.POSITION_UNAVAILABLE) {
           resolve(
-            problem(
-              "unavailable",
-              "Your device could not get a fix",
-              "Try again near a window, or continue with your browsing area.",
-              true
-            )
+            problem("unavailable", "geo.err_unavailable_title", "geo.err_unavailable_body", true)
           );
           return;
         }
         if (error.code === error.TIMEOUT) {
           resolve(
-            problem(
-              "timeout",
-              "Finding you took too long",
-              "Try again, or continue with your browsing area.",
-              true
-            )
+            problem("timeout", "geo.err_timeout_title", "geo.err_timeout_body", true)
           );
           return;
         }
-        resolve(
-          problem(
-            "unknown",
-            "Location did not work",
-            "Try again, or continue with your browsing area.",
-            true
-          )
-        );
+        resolve(problem("unknown", "geo.err_unknown_title", "geo.err_unknown_body", true));
       },
       {
         enableHighAccuracy: options.enableHighAccuracy ?? false,

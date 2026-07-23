@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useT } from "@/core/i18n";
+import { useStrings, useT } from "@/core/i18n";
 import {
   getPlaceContactPolicy,
   getReviewsForEntity,
@@ -76,7 +76,11 @@ export function detectMapsPlatform(): MapsPlatform {
 /**
  * The translated function returned by `useT()`. The display helpers below take
  * it as a parameter (they are pure and run outside a component) rather than
- * calling the hook themselves, so the view stays the single `useT()` caller.
+ * calling the hook themselves, so the view stays the single `useT()` caller
+ * for rendered copy. The hook itself holds a `useStrings()` dictionary for the
+ * origin notices it sets from event handlers: acquireDeviceLocation returns
+ * i18n KEYS at runtime, and the dictionary is the lookup for keys that are
+ * not literals.
  */
 type TFn = ReturnType<typeof useT>;
 
@@ -225,6 +229,9 @@ export type OriginState =
 
 export function useGetItSheet(props: GetItSheetProps) {
   const { open, onClose, target, onOriginDisclosed, onGoThere } = props;
+  // See the TFn note above: dictionary lookup for the runtime keys the
+  // location store returns, translated at the moment the notice is set.
+  const t = useStrings();
   const [platform, setPlatform] = useState<MapsPlatform | null>(null);
   const [canShare, setCanShare] = useState(false);
   const [shareResult, setShareResult] = useState<ShareResult>({ kind: "idle" });
@@ -365,8 +372,8 @@ export function useGetItSheet(props: GetItSheetProps) {
       if (!result.ok) {
         setOriginState({
           kind: "problem",
-          title: result.problem.title,
-          message: result.problem.message,
+          title: t[result.problem.titleKey],
+          message: t[result.problem.messageKey],
           canRetry: result.problem.canRetry,
         });
         return;
@@ -375,8 +382,8 @@ export function useGetItSheet(props: GetItSheetProps) {
       if (!recordDeviceLocation(result.location)) {
         setOriginState({
           kind: "problem",
-          title: "A newer location is already active",
-          message: "This older response was ignored. Refresh again, or open the market only.",
+          title: t["get.superseded_title"],
+          message: t["get.superseded_body"],
           canRetry: true,
         });
         return;
@@ -385,8 +392,8 @@ export function useGetItSheet(props: GetItSheetProps) {
       if (!origin) {
         setOriginState({
           kind: "problem",
-          title: "Your location is already out of date",
-          message: "Refresh it again, or open directions with the market only.",
+          title: t["get.origin_stale_title"],
+          message: t["get.origin_stale_body"],
           canRetry: true,
         });
         return;
@@ -399,6 +406,7 @@ export function useGetItSheet(props: GetItSheetProps) {
     originState.kind,
     recordDeviceLocation,
     target?.placeId,
+    t,
   ]);
 
   const handleOpenWithLocation = useCallback(() => {

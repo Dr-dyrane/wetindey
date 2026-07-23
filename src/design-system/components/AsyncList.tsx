@@ -4,6 +4,8 @@ import React, { useEffect, useState } from "react";
 import { clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 
+import { useT } from "@/core/i18n";
+
 import { Button } from "./Button";
 import { StatusDot } from "./StatusBadge";
 import { ItemCardListSkeleton } from "./Skeleton";
@@ -109,8 +111,12 @@ export function AsyncList<T>({
   errorState,
   footer,
   className,
-  busyLabel = "Updating",
+  busyLabel,
 }: AsyncListProps<T>) {
+  // Zero-wiring module store (see @/core/i18n): no provider, no prop threading.
+  const t = useT();
+  // Not a default parameter: the fallback needs the hook above.
+  const resolvedBusyLabel = busyLabel ?? t("list.updating_a11y");
   /**
    * Remember the array that belonged to the OLD subject at the moment the
    * subject changed. While the caller is still handing us that same array
@@ -206,12 +212,12 @@ export function AsyncList<T>({
           <div className="flex flex-col items-center gap-2">
             <StatusDot kind="unavailable" />
             <p className="text-subhead font-semibold text-text-primary">
-              {errorState?.title ?? "Could not load"}
+              {errorState?.title ?? t("list.err_load_title")}
             </p>
             <p className="text-caption-1 text-text-secondary">{errorState?.description ?? error}</p>
             {onRetry && (
               <Button variant="secondary" size="sm" onClick={onRetry} className="mt-1 min-h-tap">
-                {errorState?.retryLabel ?? "Try again"}
+                {errorState?.retryLabel ?? t("list.retry")}
               </Button>
             )}
           </div>
@@ -224,7 +230,7 @@ export function AsyncList<T>({
   if (!hasData && (isLoading || data === undefined)) {
     return (
       <div role="status" aria-busy="true" aria-live="polite">
-        <span className="sr-only">Loading</span>
+        <span className="sr-only">{t("list.loading_a11y")}</span>
         {skeleton ?? <ItemCardListSkeleton count={skeletonCount} />}
       </div>
     );
@@ -264,7 +270,7 @@ export function AsyncList<T>({
         <div role="alert" className="squircle bg-status-unavailable-bg px-3 py-2">
           <div className="flex items-center justify-between gap-2">
             <p className="min-w-0 text-caption-1 text-status-unavailable-fg">
-              {errorState?.title ?? "Could not refresh"}
+              {errorState?.title ?? t("list.err_refresh_title")}
             </p>
             {onRetry && (
               <Button
@@ -273,7 +279,7 @@ export function AsyncList<T>({
                 onClick={onRetry}
                 className="h-8 shrink-0 px-2 text-caption-1 text-status-unavailable-fg"
               >
-                {errorState?.retryLabel ?? "Try again"}
+                {errorState?.retryLabel ?? t("list.retry")}
               </Button>
             )}
           </div>
@@ -296,7 +302,7 @@ export function AsyncList<T>({
           className
         )}
       >
-        {isLoading && <span className="sr-only">{busyLabel}</span>}
+        {isLoading && <span className="sr-only">{resolvedBusyLabel}</span>}
         {data.map((item, i) => (
           <React.Fragment key={keyExtractor(item, i)}>{renderItem(item, i)}</React.Fragment>
         ))}

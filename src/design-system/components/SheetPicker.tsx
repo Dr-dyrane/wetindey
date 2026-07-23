@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useRef, useState } from "react";
+import { useT } from "@/core/i18n";
 import { SolidIcon } from "@/design-system/icons/SolidIcon";
 import { IconOrb } from "./IconOrb";
 import { ModalSheet, useModalSheetNavigation } from "./ModalSheet";
@@ -32,11 +33,13 @@ function PickerOptions({
   value?: string | null;
   onSelect: (id: string) => void;
 }) {
+  // Zero-wiring module store (see @/core/i18n): no provider, no prop threading.
+  const t = useT();
   return (
     <div className="px-4 py-2">
       <div className="squircle-card overflow-hidden bg-surface-card">
         {options.length === 0 && (
-          <p className="px-4 py-3 text-body text-text-tertiary">Nothing available</p>
+          <p className="px-4 py-3 text-body text-text-tertiary">{t("picker.empty")}</p>
         )}
         {options.map((option) => {
           const selected = option.id === value;
@@ -81,9 +84,13 @@ export function SheetPicker({
   onSelect,
   title,
   label,
-  placeholder = "Choose",
+  placeholder,
   disabled,
 }: SheetPickerProps) {
+  const t = useT();
+  // Not a default parameter: the fallback needs the hook above. Every live call
+  // site passes its own translated placeholder; this covers the one that forgets.
+  const resolvedPlaceholder = placeholder ?? t("picker.placeholder");
   const navigation = useModalSheetNavigation();
   const triggerRef = useRef<HTMLButtonElement>(null);
   const [fallbackOpen, setFallbackOpen] = useState(false);
@@ -149,7 +156,7 @@ export function SheetPicker({
           id={valueId}
           className={`truncate text-body ${selected ? "text-text-primary" : "text-text-tertiary"}`}
         >
-          {selected?.label ?? placeholder}
+          {selected?.label ?? resolvedPlaceholder}
         </span>
         <span className="shrink-0 text-text-tertiary">
           <SolidIcon name="chevron-down" size={16} />

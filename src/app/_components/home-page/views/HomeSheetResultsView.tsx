@@ -5,13 +5,13 @@ import {
   PhotoCredits,
   AlertTriangle
 } from "../imports/imports";
+import { useT } from "@/core/i18n";
 import type { useHomePage } from "../hooks/useHomePage";
 
 type HomePageState = ReturnType<typeof useHomePage>;
 
 type HomeSheetResultsViewProps = Pick<
   HomePageState,
-  | "t"
   | "activeCategory"
   | "activeRadiusKm"
   | "searchOrigin"
@@ -36,7 +36,6 @@ type HomeSheetResultsViewProps = Pick<
 >;
 
 export function HomeSheetResultsView({
-  t,
   activeCategory,
   activeRadiusKm,
   searchOrigin,
@@ -59,6 +58,9 @@ export function HomeSheetResultsView({
   searchError,
   setSearchRetryNonce
 }: HomeSheetResultsViewProps) {
+  // useT(), not the t dictionary prop the hook still exports for older views:
+  // home.empty_prices_title interpolates {km}, which only useT() fills.
+  const t = useT();
   return (
     /* The app's level-0 scroller, sibling to NavigationStack's level-1
        scroller inside the same sheet; the two reserve their bottom strip the
@@ -106,7 +108,7 @@ export function HomeSheetResultsView({
             <div className="space-y-2.5">
               <div className="flex items-baseline justify-between px-0.5">
                 <h4 className="text-footnote font-semibold text-text-primary">
-                  {t.popular_items} {location.label}
+                  {t("popular_items")} {location.label}
                 </h4>
                 {popularItems && popularItems.length > 0 && (
                   <span className="text-caption-1 text-text-secondary tabular-nums">
@@ -132,13 +134,13 @@ export function HomeSheetResultsView({
                 renderItem={(item) => <ItemCard item={item} onSelect={handleSelectItem} />}
                 skeletonCount={4}
                 empty={{
-                  title: `No prices within ${activeRadiusKm} km`,
-                  description: "Be the first to report one."
+                  title: t("home.empty_prices_title", { km: activeRadiusKm }),
+                  description: t("home.empty_prices_body")
                 }}
                 errorState={{
-                  title: anyLoadError ?? "Could not load",
-                  description: "Check your network and try again.",
-                  retryLabel: "Try again"
+                  title: anyLoadError ?? t("home.err_load_title"),
+                  description: t("home.err_network_body"),
+                  retryLabel: t("home.retry")
                 }}
                 footer={popularItems && <PhotoCredits items={popularItems} />}
               />
@@ -159,8 +161,8 @@ export function HomeSheetResultsView({
               skeletonCount={3}
               empty={{
                 icon: <AlertTriangle className="h-7 w-7" />,
-                title: t.no_results,
-                description: "Try a local name like “ewa” or “dodo”."
+                title: t("no_results"),
+                description: t("home.search_empty_body")
               }}
             />
           )}

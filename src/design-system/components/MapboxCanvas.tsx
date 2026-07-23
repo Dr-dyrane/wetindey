@@ -29,6 +29,7 @@ import {
 } from "./BottomSheet";
 import type { SharedUserLocation } from "@/app/_actions/actions";
 import { useTheme } from "@/core/context/ThemeContext";
+import { useStrings } from "@/core/i18n";
 import {
   acquireDeviceLocation,
   useFreshDeviceLocation,
@@ -776,6 +777,11 @@ interface MapRecenterControlProps {
  * user), so the fix is `onLocate` rather than a map reference held in here.
  */
 export function MapRecenterControl({ onLocate, onError, className = "" }: MapRecenterControlProps) {
+  // locationStore returns i18n keys, not sentences; this control translates at
+  // the moment it hands the problem to onError. The flattened dictionary, not
+  // useT(): the key arrives as a runtime value, and the dictionary is the
+  // lookup for keys that are not literals. None of these keys interpolate.
+  const t = useStrings();
   const [locating, setLocating] = useState(false);
   const mounted = useRef(true);
   useEffect(() => {
@@ -797,12 +803,12 @@ export function MapRecenterControl({ onLocate, onError, className = "" }: MapRec
       if (!mounted.current) return;
       setLocating(false);
       if (!result.ok) {
-        onError?.(`${result.problem.title}. ${result.problem.message}`);
+        onError?.(`${t[result.problem.titleKey]}. ${t[result.problem.messageKey]}`);
         return;
       }
       onLocate(result.location);
     });
-  }, [locating, onLocate, onError]);
+  }, [locating, onLocate, onError, t]);
 
   return (
     <button

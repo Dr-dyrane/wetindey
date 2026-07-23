@@ -1305,18 +1305,18 @@ export function BottomSheet({
           {mapRetryCapability ? (
             <div className="flex min-h-11 shrink-0 items-center justify-between gap-3 px-4 pb-2">
               <span role="status" className="text-footnote font-medium text-text-secondary">
-                Map unavailable
+                {t["sheet.map_unavailable"]}
               </span>
               <button
                 type="button"
-                aria-label="Try loading map again"
+                aria-label={t["sheet.map_retry_a11y"]}
                 onClick={() => {
                   mapRetryCapability.onRetry();
                   handleRef.current?.focus({ preventScroll: true });
                 }}
                 className={`flex min-h-tap min-w-tap shrink-0 items-center justify-center squircle px-3 text-footnote font-semibold text-accent ${transition.press}`}
               >
-                Try again
+                {t["sheet.map_retry"]}
               </button>
             </div>
           ) : null}

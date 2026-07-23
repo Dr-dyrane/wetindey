@@ -64,6 +64,12 @@ import {
   type StringKey,
 } from "./strings";
 
+/* The key union, for modules that carry keys without rendering them. The one
+   consumer today is locationStore.ts, which returns `titleKey`/`messageKey`
+   instead of English sentences; the import there is type-only, so no runtime
+   dependency on this module leaks into non-React callers. */
+export type { StringKey } from "./strings";
+
 /* ── Typed interpolation ──────────────────────────────────────────────────── */
 
 /**

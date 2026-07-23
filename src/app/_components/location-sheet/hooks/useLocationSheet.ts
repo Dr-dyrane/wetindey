@@ -11,6 +11,7 @@ import {
   type AreaSummary,
   type AreaTree,
 } from "../imports/imports";
+import { useStrings } from "@/core/i18n";
 import { copy } from "../copy/copy";
 
 export type LocateState =
@@ -44,6 +45,11 @@ export function useLocationSheet({
     (s) => s.setDeviceBrowsingLocation
   );
   const recordDeviceLocation = useLocationStore((s) => s.recordDeviceLocation);
+
+  // The flattened dictionary, not useT(): acquireDeviceLocation returns i18n
+  // KEYS at runtime, and the dictionary is the lookup for keys that are not
+  // literals. Translation happens at set time, the same trade as useHomePage.
+  const t = useStrings();
 
   const [tree, setTree] = useState<AreaTree | null>(null);
   const [treeError, setTreeError] = useState<string | null>(null);
@@ -112,8 +118,8 @@ export function useLocationSheet({
       if (!result.ok) {
         setLocate({
           kind: "problem",
-          title: result.problem.title,
-          body: result.problem.message,
+          title: t[result.problem.titleKey],
+          body: t[result.problem.messageKey],
           canRetry: result.problem.canRetry,
         });
         return;
@@ -123,8 +129,8 @@ export function useLocationSheet({
       if (!recordDeviceLocation(deviceLocation)) {
         setLocate({
           kind: "problem",
-          title: "A newer location is already active",
-          body: "This older response was ignored. Try again if you want another refresh.",
+          title: t["location.superseded_title"],
+          body: t["location.superseded_body"],
           canRetry: true,
         });
         return;
@@ -153,8 +159,8 @@ export function useLocationSheet({
         if (g !== generation.current) return;
         setLocate({
           kind: "problem",
-          title: "We found you, but not our data",
-          body: "Your current location is saved for this session, but we couldn't check nearby price coverage. Try again.",
+          title: t["location.coverage_check_failed_title"],
+          body: t["location.coverage_check_failed_body"],
           canRetry: true,
         });
       }
@@ -164,6 +170,7 @@ export function useLocationSheet({
     recordDeviceLocation,
     setDeviceBrowsingLocation,
     commit,
+    t,
   ]);
 
   const measureFrom = freshDeviceLocation ?? {
