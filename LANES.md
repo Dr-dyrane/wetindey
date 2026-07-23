@@ -201,24 +201,9 @@ Controller-directed, scout confirmed exact paths and stopped to the controller b
 
 ## Active exact path locks
 
-#### Home first-load code split, rarely-opened sheets to on-demand chunks - ACTIVE
+#### Home first-load code split, rarely-opened sheets to on-demand chunks - RELEASED / PATHLESS
 
-Owner: Private Contractor, Maps Delivery `c9c17443-ef5e-4a7b-9b6e-c8f5381da30c`, self-claimed under the Founder's standing continuous-work directive, scout-verified against the one-controller architecture and ModalSheet's self-managed presence. Exact writable paths:
-
-- `src/app/_components/home-page/views/HomePageView.tsx`
-- `src/app/_components/home-page/views/HomeSheetResultsView.tsx`
-- `src/app/_components/home-page/imports/imports.ts`
-- new `src/app/_components/home-page/hooks/useEverPresented.ts`
-- `src/app/_components/presentation-host/views/PresentationHostView.tsx`
-- `src/app/_components/presentation-host/imports/imports.ts`
-- `src/app/_components/profile-sheet/ProfileSheet.tsx`
-- `src/app/_components/profile-sheet/views/ProfileSheetView.tsx`
-- new `src/app/_components/profile-sheet/views/Avatar.tsx`
-- new `scripts/perf/home-code-split-contract.test.ts`
-
-Contract: behavior-preserving code split only. Nine surfaces (Location, MyReports, ManageProfile, ReportProblem, About, Settings, Profile, ReportPrice, and ExchangePanel with its currency children) move to next/dynamic with ssr false and null loading, each behind a once-opened latch (ExchangePanel behind its existing money-category gate); latched components never unmount, so every ModalSheet exit animation is preserved, and chunks are fetched only on first open, never at boot. Avatar extracts from ProfileSheetView to its own module because the always-visible header uses it. EXPLICITLY OUT: `src/app/page.tsx` (queued Presence serialized path, zero edits), ItemDetailSheet, GetItSheet, ConfirmVisitSheet (boot takeDueVisit consume plus offline-return chunk risk; its arm/consume statics stay untouched), CategorySelectorSheet, all design-system paths, all server actions. About 200 KB of exclusive source moves out of first load, roughly 50 to 70 KB gzipped on a Lagos first paint; the service worker makes each chunk offline-permanent after first open.
-
-Completion: static and typecheck green; a next build chunk-manifest proof that the nine subtrees left the first-load group; browser drives of every split sheet's open and exit animation, the /#privacy and /#report-problem deep links, and a money-category switch; independent default-to-REFUTED refutation; path-scoped commit pushed under the `0bbdb11` class; span-checked release.
+Complete at `1a56c15`, pushed under the `0bbdb11` class after a five-claim refutation in which claims 1 to 4 were NOT REFUTED with independent measurement and claim 5 was genuinely REFUTED then repaired and delta-confirmed: the contract originally could not catch a reset path added to the once-opened latch; it now pins exactly one setEver call, true only, and the refuter's own mutation fails. Prod-build proof from the react-loadable and app-build manifests: all nine subtrees plus the 20 KB ITEM_IMAGES table absent from the / first-load group and mapped to nine disjoint on-demand chunks. Runtime: zero split chunks fetched at boot, chunk fetch order matched interaction order exactly, exit animations intact (dialog alive at +120ms, gone at +1320ms), /#privacy and /#report-problem deep links working, exchange panel renders on money switch. ManageProfile is sign-in gated and was verified statically byte-parallel to the driven four. Residuals recorded: manage-profile-sheet's own barrel imports Avatar via profile-sheet/ProfileSheet (inside split subtrees, no first-load impact, but couples chunks 2427 and 8370; a future lane may repoint it to views/Avatar), and refuter drives rebuilt .next mid-verification so the dev server was restarted (environment, not source). Paths released.
 
 #### Report-sheet vocabulary lazy load - RELEASED / PATHLESS
 
