@@ -335,8 +335,41 @@ const searchQueryInput = z.string().max(80, "search query is too long");
 const placeIdInput = uuidField("placeId");
 const offerIdInput = uuidField("offerId");
 
-/** `getPopularItems`. The landing grid asks for 8; nothing needs more than a screen. */
-const popularItemsLimitInput = limitField(48);
+/**
+ * `items.category` and every future pillar slug. Lowercase slug shape, capped
+ * at the width no seeded value ("food", "home", "health") comes near.
+ *
+ * Deliberately a SHAPE, not an enum: ADR-031 keeps pillar categories an open
+ * varchar so a new pillar needs no schema change, and this parser must not
+ * close what the column leaves open. The cap and charset are the guard, the
+ * same reasoning as `searchQueryInput`: the value is parameterised so it was
+ * never an injection, but uncapped it was a free payload on a public action.
+ */
+const itemCategoryInput = z
+  .string({ required_error: "category is required", invalid_type_error: "category must be a string" })
+  .max(40, "category is too long")
+  .regex(/^[a-z][a-z0-9_-]*$/, "category must be a lowercase slug");
+
+/**
+ * `getPopularItems`. The landing grid asks for 8; nothing needs more than a
+ * screen, so the limit cap stays at 48.
+ *
+ * The coordinate is required: the positional no-coords form used to reach the
+ * cohort-trend query with an EMPTY origin fragment, which is invalid SQL and a
+ * reachable 500 (see the action's docstring). World coordinate, not the
+ * Nigeria box, and (0, 0) admitted, exact parity with the hand-rolled checks
+ * this schema replaces: the browsing centre is a map camera, not a device fix,
+ * and tightening it here would change behaviour for a panned-out caller.
+ */
+const popularItemsInput = z
+  .object({
+    lat: latitude,
+    lng: longitude,
+    radiusKm,
+    category: itemCategoryInput.optional(),
+    limit: limitField(48).optional(),
+  })
+  .strict();
 
 /** `getItemNarrowingOptions`. */
 const itemNarrowingOptionsInput = z
@@ -513,6 +546,28 @@ const updateMyProfileInput = z
 
 type UpdateMyProfileInput = z.infer<typeof updateMyProfileInput>;
 
+/**
+ * `getReviewsForEntity` / `getReviewAggregate`, the review READ pair.
+ *
+ * Both used to take raw strings: `reviewableId` was cast `::uuid` inside the
+ * SQL, so a garbage id was a driver error after a round trip, the exact 500
+ * `uuidField` exists to prevent (see its comment). `reviewableType` is capped
+ * at the column width (varchar(100)), mirroring `submitReviewInput` above so
+ * the write shape and the read shape cannot drift apart.
+ */
+const reviewsQueryInput = z
+  .object({
+    reviewableType: z
+      .string({ required_error: "reviewableType is required", invalid_type_error: "reviewableType must be a string" })
+      .trim()
+      .min(1, "reviewableType is required")
+      .max(100, "reviewableType must be under 100 characters"),
+    reviewableId: uuidField("reviewableId"),
+  })
+  .strict();
+
+type ReviewsQueryInput = z.infer<typeof reviewsQueryInput>;
+
 const submitReviewInput = z.object({
   reviewableType: z.string().trim().min(1, "reviewableType is required").max(100),
   reviewableId: z.string().uuid("reviewableId must be a valid UUID"),
@@ -572,8 +627,16 @@ export function parseSearchQuery(query: unknown): string {
   return assertValid(searchQueryInput, query, "searchFoodItems");
 }
 
-export function parsePopularItemsLimit(limit: unknown): number {
-  return assertValid(popularItemsLimitInput, limit, "getPopularItems");
+export function parseItemCategory(category: unknown): string {
+  return assertValid(itemCategoryInput, category, "searchItems");
+}
+
+export function parsePopularItems(data: unknown): z.infer<typeof popularItemsInput> {
+  return assertValid(popularItemsInput, data, "getPopularItems");
+}
+
+export function parseReviewsQuery(data: unknown): ReviewsQueryInput {
+  return assertValid(reviewsQueryInput, data, "getReviewsForEntity");
 }
 
 export function parsePlaceOffersPlaceId(placeId: unknown): string {

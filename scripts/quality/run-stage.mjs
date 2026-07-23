@@ -37,6 +37,7 @@ const stages = Object.freeze({
     {
       label: "contribution action contracts",
       ...tsxScript("scripts/contributions/contribution-actions-contract.test.ts"),
+      ...tsxScript("scripts/actions/server-action-hardening-contract.test.ts"),
     },
     {
       label: "contribution evidence media P1 contract",

@@ -1,3 +1,21 @@
+/**
+ * Batched trust reads for the food read paths. INTERNAL, on purpose.
+ *
+ * This module used to live beside the actions as `_actions/food-trust.ts`,
+ * and `food-actions.ts` wrapped `getOfferTrustBatchImpl` in two exported
+ * `use server` functions. Those wrappers made a public HTTP endpoint out of
+ * a helper with no parse boundary: an unbounded `keys` array, no UUID check,
+ * no LIMIT, and zero callers outside the actions module (ADR-002 records the
+ * orphaning; ADR-006 names the in-module read paths as the consumers; the
+ * service architecture doc calls it "one consumer, this app"). Nothing in any
+ * ADR asks for a public trust RPC, so the surface is gone rather than gated:
+ * the read paths call `getOfferTrustBatchImpl` directly, in process, and a
+ * future wiring that truly needs a client-callable action must add one WITH a
+ * parsed schema, not resurrect the bare wrapper.
+ *
+ * NOT `use server`: a directive here would re-export every async function as
+ * an endpoint again. The `db` import keeps it server-bound in practice.
+ */
 import { db } from "@/db";
 import { observations, sources } from "@/db/schema";
 import { and, asc, eq, or, sql } from "drizzle-orm";

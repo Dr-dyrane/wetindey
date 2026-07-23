@@ -9,8 +9,6 @@ import {
   submitVisitConfirmation,
   getItemNarrowingOptions,
   getOffersNarrowed,
-  getOfferTrustBatch,
-  getOfferTrust,
 } from "./food-actions";
 
 import {
@@ -52,8 +50,6 @@ export {
   submitVisitConfirmation,
   getItemNarrowingOptions,
   getOffersNarrowed,
-  getOfferTrustBatch,
-  getOfferTrust,
   getPlaces,
   getPlacesNear,
   getAreaTree,

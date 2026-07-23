@@ -2,38 +2,35 @@
 
 import { db } from "@/db";
 import { items, itemAliases, itemVariants, places, offersCurrent, units, observations } from "@/db/schema";
-import { eq, or, and, sql, asc } from "drizzle-orm";
+import { eq, and, sql, asc } from "drizzle-orm";
 import {
   parseSearchQuery,
-  parsePopularItemsLimit,
+  parseItemCategory,
+  parsePopularItems,
   parsePlaceOffersPlaceId,
   parseOfferId,
   parseItemNarrowingOptions,
   parseOffersNarrowed,
 } from "@/lib/validation";
-import { FRESHNESS_POLICY, type TrustAssessment } from "@/lib/trust";
+import { FRESHNESS_POLICY } from "@/lib/trust";
 import { calculateCohortFoodPriceTrend, type CohortObservationPoint } from "@/core/food-trend";
 import {
   getOfferTrustBatchImpl,
   nullableOfferKey,
-  offerKeyOf,
   readTrustForKey,
   type OfferKey,
   type ReadTrust,
-} from "./food-trust";
+} from "@/lib/food-trust";
 
-export type { OfferKey, ReadTrust } from "./food-trust";
+export type { OfferKey, ReadTrust } from "@/lib/food-trust";
 
-export async function getOfferTrustBatch(
-  keys: OfferKey[]
-): Promise<Record<string, TrustAssessment>> {
-  return getOfferTrustBatchImpl(keys);
-}
-
-export async function getOfferTrust(key: OfferKey): Promise<TrustAssessment> {
-  const batch = await getOfferTrustBatch([key]);
-  return batch[offerKeyOf(key)];
-}
+/*
+ * `getOfferTrustBatch` / `getOfferTrust` are deliberately NOT here any more.
+ * They were thin `"use server"` wrappers over `getOfferTrustBatchImpl` with no
+ * parse boundary (unbounded key array, no UUID check, no LIMIT) and no caller
+ * outside this module. The read paths below call the impl directly, in
+ * process; the reasoning lives on `src/lib/food-trust.ts`.
+ */
 
 function searchOrigin(center: { lat: number; lng: number }) {
   if (
@@ -66,6 +63,11 @@ export async function searchItems(
   category: string = "food",
   coords?: { lat: number; lng: number; radiusKm: number }
 ) {
+  // Parameterised, so never an injection; uncapped, it was still a free
+  // payload. The parser pins it to the slug shape every seeded category
+  // ("food", "home", "health") already has, without hardcoding the pillar
+  // list ADR-031 keeps open.
+  category = parseItemCategory(category);
   if (coords !== undefined) {
     const candidate = coords as unknown;
     if (
@@ -290,7 +292,7 @@ export async function searchItems(
   const trustKeys = cardRows
     .map((row) => nullableOfferKey(row))
     .filter((key): key is OfferKey => key !== null);
-  const trustByKey = await getOfferTrustBatch(trustKeys);
+  const trustByKey = await getOfferTrustBatchImpl(trustKeys);
 
   return cardRows.map((r) => {
     const trustKey = nullableOfferKey(r);
@@ -314,56 +316,32 @@ export async function searchItems(
   });
 }
 
-export async function getPopularItems(
-  limitOrOptions: number | { lat: number; lng: number; radiusKm: number; category?: string; limit?: number } = 8,
-  category: string = "food",
-  coords?: { lat: number; lng: number; radiusKm: number }
-) {
-  let limit = 8;
-  if (typeof limitOrOptions === "object" && limitOrOptions !== null) {
-    coords = { lat: limitOrOptions.lat, lng: limitOrOptions.lng, radiusKm: limitOrOptions.radiusKm };
-    category = limitOrOptions.category ?? "food";
-    limit = parsePopularItemsLimit(limitOrOptions.limit ?? 8);
-  } else {
-    limit = parsePopularItemsLimit(limitOrOptions);
-  }
+/**
+ * The landing grid. OBJECT SIGNATURE ONLY, a deliberate narrowing.
+ *
+ * The old positional form, `getPopularItems(8)` with optional coords, was
+ * called by nothing (the one caller, useHomePage, has passed the object since
+ * the location work landed) and it was broken at the cohort query below: with
+ * no coords, `origin` was an EMPTY sql fragment interpolated into
+ * `ST_DWithin(pl.location, ::geography, 0)`, a Postgres syntax error and a
+ * reachable 500 on a public action. Requiring the coordinate removes the
+ * empty-fragment state outright instead of guarding it: there is no longer
+ * any code path in this function that builds SQL without a real origin.
+ */
+export async function getPopularItems(options: {
+  lat: number;
+  lng: number;
+  radiusKm: number;
+  category?: string;
+  limit?: number;
+}) {
+  const input = parsePopularItems(options);
+  const category = input.category ?? "food";
+  const limit = input.limit ?? 8;
+  const coords = { lat: input.lat, lng: input.lng, radiusKm: input.radiusKm };
 
-  if (coords !== undefined) {
-    const candidate = coords as unknown;
-    if (
-      candidate === null ||
-      typeof candidate !== "object" ||
-      !Object.prototype.hasOwnProperty.call(candidate, "lat") ||
-      !Object.prototype.hasOwnProperty.call(candidate, "lng") ||
-      !Object.prototype.hasOwnProperty.call(candidate, "radiusKm")
-    ) {
-      throw new Error("getPopularItems: coordinates must include own lat, lng, and radiusKm values");
-    }
-
-    const { lat, lng, radiusKm } = candidate as {
-      lat: unknown;
-      lng: unknown;
-      radiusKm: unknown;
-    };
-    if (
-      typeof lat !== "number" ||
-      typeof lng !== "number" ||
-      typeof radiusKm !== "number" ||
-      !Number.isFinite(lat) ||
-      !Number.isFinite(lng) ||
-      !Number.isFinite(radiusKm) ||
-      Math.abs(lat) > 90 ||
-      Math.abs(lng) > 180
-    ) {
-      throw new Error("getPopularItems: coordinates are invalid");
-    }
-
-    coords = { lat, lng, radiusKm };
-  }
-
-  const useLocation = coords !== undefined;
-  const origin = coords === undefined ? sql`` : searchOrigin(coords);
-  const radiusM = coords === undefined ? 0 : searchRadiusMetres(coords.radiusKm);
+  const origin = searchOrigin(coords);
+  const radiusM = searchRadiusMetres(coords.radiusKm);
 
   const rows = await db.execute(sql`
     WITH nearby AS (
@@ -374,7 +352,7 @@ export async function getPopularItems(
       JOIN ${itemVariants} v ON v.id = o.item_variant_id
       JOIN ${places} pl ON pl.id = o.place_id
       WHERE o.expires_at > now()
-        ${useLocation ? sql`AND ST_DWithin(pl.location, ${origin}::geography, ${radiusM})` : sql``}
+        AND ST_DWithin(pl.location, ${origin}::geography, ${radiusM})
     ),
     offer_units AS (
       SELECT
@@ -449,7 +427,7 @@ export async function getPopularItems(
   const trustKeys = cardRows
     .map((row) => nullableOfferKey(row))
     .filter((key): key is OfferKey => key !== null);
-  const trustByKey = await getOfferTrustBatch(trustKeys);
+  const trustByKey = await getOfferTrustBatchImpl(trustKeys);
 
   const cohortTuples = cardRows
     .filter((r) => r.trustVariantId && r.trustUnitId)
@@ -572,7 +550,7 @@ export async function getPlaceOffers(placeId: string): Promise<PlaceOffer[]> {
       asc(units.displayName)
     );
 
-  const trustByKey = await getOfferTrustBatch(
+  const trustByKey = await getOfferTrustBatchImpl(
     results.map((result) => ({
       itemVariantId: result.offer.itemVariantId,
       unitId: result.offer.unitId,
@@ -818,7 +796,7 @@ export async function getOffersNarrowed(input: NarrowingInput): Promise<Narrowed
     unitId: r.unitId,
     placeId: r.placeId,
   }));
-  const trustByKey = await getOfferTrustBatch(trustKeys);
+  const trustByKey = await getOfferTrustBatchImpl(trustKeys);
 
   return rows.map((r) => {
     if (!Number.isFinite(r.distanceM)) {

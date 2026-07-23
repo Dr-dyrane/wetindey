@@ -3,6 +3,17 @@
 import { db } from "@/db";
 import { reviewAggregates } from "@/db/schema";
 import { eq, and, sql } from "drizzle-orm";
+import { parseReviewsQuery } from "@/lib/validation";
+
+/**
+ * The most reviews one call will return. The one consumer (the get-it sheet)
+ * renders the whole list unpaginated, and no place is anywhere near this
+ * count, so the cap changes nothing visible; what it removes is the unbounded
+ * select a public action was offering the open internet as the table grows.
+ * `ORDER BY created_at DESC` below makes this "the 200 newest", not a random
+ * 200.
+ */
+const REVIEWS_LIMIT = 200;
 
 export interface ReviewData {
   id: string;
@@ -23,6 +34,10 @@ export async function getReviewsForEntity(
   reviewableType: string,
   reviewableId: string
 ): Promise<ReviewData[]> {
+  // Parse before SQL: the `::uuid` cast below would otherwise turn a garbage
+  // id into a driver error after a round trip, a 500 where this should be a
+  // clean reject (validation.ts, `uuidField`).
+  ({ reviewableType, reviewableId } = parseReviewsQuery({ reviewableType, reviewableId }));
   const result = await db.execute<{
     id: string;
     reviewer_name: string | null;
@@ -47,6 +62,7 @@ export async function getReviewsForEntity(
       AND r.reviewable_id = ${reviewableId}::uuid
       AND r.moderation_status = 'approved'
     ORDER BY r.created_at DESC
+    LIMIT ${REVIEWS_LIMIT}
   `);
 
   return result.rows.map((row) => ({
@@ -64,6 +80,9 @@ export async function getReviewAggregate(
   reviewableType: string,
   reviewableId: string
 ): Promise<ReviewAggregateData | null> {
+  // Same boundary as getReviewsForEntity: `reviewableId` meets a uuid column,
+  // so it must be a uuid before the query is built.
+  ({ reviewableType, reviewableId } = parseReviewsQuery({ reviewableType, reviewableId }));
   const result = await db
     .select({
       ratingAverage: reviewAggregates.ratingAverage,
