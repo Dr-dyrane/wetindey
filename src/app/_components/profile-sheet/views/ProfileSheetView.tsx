@@ -10,48 +10,16 @@ import {
   ModalSheet,
   ListRow,
   ListGroup,
-  Image,
 } from "../imports/imports";
 import type { ProfileSheetProps, useProfileSheet } from "../hooks/useProfileSheet";
 import { ProfileSignInView } from "./ProfileSignInView";
+import { Avatar } from "./Avatar";
+
+export { Avatar };
 import "../styles/ProfileSheet.css";
 
 export interface ProfileSheetViewProps extends ProfileSheetProps {
   sheet: ReturnType<typeof useProfileSheet>;
-}
-
-export function Avatar({ name, url, size = 32 }: { name?: string; url?: string | null; size?: number }) {
-  const initials = (name ?? "")
-    .split(" ")
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((w) => w[0]?.toUpperCase())
-    .join("");
-
-  return (
-    <span
-      aria-hidden
-      className="relative grid shrink-0 place-items-center squircle-full bg-fillPrimary text-text-primary overflow-hidden"
-      style={{ width: size, height: size }}
-    >
-      {url ? (
-        <Image
-          src={url}
-          alt={name ?? "Avatar"}
-          fill
-          sizes={`${size}px`}
-          className="object-cover"
-        />
-      ) : initials ? (
-        <span className="text-subhead font-semibold">{initials}</span>
-      ) : (
-        <svg viewBox="0 0 24 24" fill="none" className="h-1/2 w-1/2" aria-hidden>
-          <circle cx="12" cy="8" r="3.5" fill="currentColor" opacity="0.55" />
-          <path d="M4.5 20a7.5 7.5 0 0 1 15 0" fill="currentColor" opacity="0.55" />
-        </svg>
-      )}
-    </span>
-  );
 }
 
 export function ProfileSheetView({

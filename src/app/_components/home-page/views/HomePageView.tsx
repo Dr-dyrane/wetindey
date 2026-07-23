@@ -11,6 +11,7 @@ import {
   MapPresentation
 } from "../imports/imports";
 import { useHomePage } from "../hooks/useHomePage";
+import { useEverPresented } from "../hooks/useEverPresented";
 import { HomePlaceDetailView } from "./HomePlaceDetailView";
 import { HomeSheetHeaderView } from "./HomeSheetHeaderView";
 import { HomeSheetResultsView } from "./HomeSheetResultsView";
@@ -122,6 +123,13 @@ export function HomePageView({
   setLocateError,
   dismissLocateError
 }: HomePageViewProps) {
+  // Once-opened latches for the code-split sheets: not rendered until first
+  // open (their chunks must not download at boot), never un-rendered after
+  // (ModalSheet's exit animation needs the component alive through it).
+  const settingsEver = useEverPresented(isSettingsOpen);
+  const profileEver = useEverPresented(isProfileOpen);
+  const reportEver = useEverPresented(activeCategory === "food" && isReportOpen);
+
   // 1. Map node (base layer)
   const mapNode = (
     <MapPresentation
@@ -293,6 +301,7 @@ export function HomePageView({
         onSessionChange={handleSessionChange}
       />
 
+      {settingsEver && (
       <SettingsSheet
         open={isSettingsOpen}
         onClose={closeSettings}
@@ -304,7 +313,9 @@ export function HomePageView({
         onRadiusChange={setActiveRadiusKm}
         t={t}
       />
+      )}
 
+      {profileEver && (
       <ProfileSheet
         open={isProfileOpen}
         onClose={closeProfile}
@@ -318,7 +329,9 @@ export function HomePageView({
         user={sessionUser}
         onSessionChange={handleSessionChange}
       />
+      )}
 
+      {reportEver && (
       <ReportPriceSheet
         open={activeCategory === "food" && isReportOpen}
         onClose={closeReport}
@@ -342,6 +355,7 @@ export function HomePageView({
         onPrice={setFormPrice}
         onAvailable={setFormAvailable}
       />
+      )}
 
       <CategorySelectorSheet
         open={isCategoryOpen}

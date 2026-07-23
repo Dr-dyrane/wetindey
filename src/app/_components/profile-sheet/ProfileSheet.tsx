@@ -2,7 +2,8 @@
 
 import React from "react";
 import { useProfileSheet, type ProfileSheetProps } from "./hooks/useProfileSheet";
-import { ProfileSheetView, Avatar } from "./views/ProfileSheetView";
+import { ProfileSheetView } from "./views/ProfileSheetView";
+import { Avatar } from "./views/Avatar";
 
 export { Avatar, type ProfileSheetProps };
 

@@ -25,15 +25,34 @@ import {
   PlaceOfferRow,
   PlaceOfferRowSkeleton
 } from "@/design-system/components/PlaceOfferRow";
-import { SettingsSheet } from "@/app/_components/settings-sheet/SettingsSheet";
-import { ReportPriceSheet } from "@/app/_components/report-price-sheet/ReportPriceSheet";
-import { ProfileSheet, Avatar } from "@/app/_components/profile-sheet/ProfileSheet";
+import dynamic from "next/dynamic";
+import { Avatar } from "@/app/_components/profile-sheet/views/Avatar";
 import { CategorySelectorSheet, type CategoryPillar } from "@/app/_components/category-selector-sheet/CategorySelectorSheet";
 import { useLocationIdentity } from "@/app/_hooks/useLocationIdentity";
-import {
-  ExchangePanel,
-  type ExchangeLocationFilter
-} from "@/app/_components/exchange-panel/ExchangePanel";
+import type { ExchangeLocationFilter } from "@/app/_components/exchange-panel/ExchangePanel";
+
+// Code-split surfaces: rarely opened, so their chunks load on first render
+// (which the view gates behind a once-opened latch, see useEverPresented).
+// ssr:false + null loading emits nothing on either side of hydration; the
+// closed sheets rendered null before, so nothing visual changes. Avatar is
+// imported from its own module above precisely so the always-visible header
+// does not drag the profile sheet back into first load.
+const SettingsSheet = dynamic(
+  () => import("@/app/_components/settings-sheet/SettingsSheet").then((m) => m.SettingsSheet),
+  { ssr: false, loading: () => null }
+);
+const ReportPriceSheet = dynamic(
+  () => import("@/app/_components/report-price-sheet/ReportPriceSheet").then((m) => m.ReportPriceSheet),
+  { ssr: false, loading: () => null }
+);
+const ProfileSheet = dynamic(
+  () => import("@/app/_components/profile-sheet/ProfileSheet").then((m) => m.ProfileSheet),
+  { ssr: false, loading: () => null }
+);
+const ExchangePanel = dynamic(
+  () => import("@/app/_components/exchange-panel/ExchangePanel").then((m) => m.ExchangePanel),
+  { ssr: false, loading: () => null }
+);
 import { CrossCategorySignalRail } from "@/app/_components/cross-category-signal-rail/CrossCategorySignalRail";
 import {
   ItemDetailSheet,
