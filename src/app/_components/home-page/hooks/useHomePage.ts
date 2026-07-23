@@ -367,24 +367,12 @@ export function useHomePage() {
       try {
         setLoadError(null);
 
-        // In parallel, these don't depend on each other, and doing them in
-        // series stacked round-trips before anything rendered.
-        const [placesList, metadata] = await Promise.all([
-          getPlaces(),
-          getInitialSubmissionData()
-        ]);
-
-        setAllPlaces(placesList);
-
-        setSubmitPlaces(metadata.places);
-        setSubmitItems(metadata.items);
-        setSubmitVariants(metadata.variants);
-        setSubmitUnits(metadata.units);
-
-        // Baseline form defaults
-        if (metadata.places.length > 0) setFormPlaceId(metadata.places[0].id);
-        if (metadata.items.length > 0) setFormItemId(metadata.items[0].id);
-        if (metadata.units.length > 0) setFormUnitId(metadata.units[0].id);
+        // Map places only. The report form's vocabulary used to ride in a
+        // Promise.all here, which made every visitor download the full
+        // catalog at boot and made the first pin render wait on it; it now
+        // loads on the sheet's first open below. loadError therefore means
+        // exactly one thing: the map's places failed.
+        setAllPlaces(await getPlaces());
       } catch (err) {
         // Previously this effect had no catch, so a database that was down
         // produced an empty map and an empty sheet with no explanation.
@@ -392,6 +380,48 @@ export function useHomePage() {
         setLoadError("We no fit reach the price data right now.");
       }
     });
+  }, []);
+
+  /**
+   * The report form's vocabulary (every place, item, variant, unit), fetched
+   * on the sheet's FIRST open instead of at boot: the payload is unbounded
+   * (it grows with the catalog) and most visitors never open the form.
+   *
+   * The status guard makes reopen and strict-mode double-effects a no-op and
+   * keeps an error from refetch-looping; retry is an explicit handle the
+   * sheet renders. Deliberately its own async path, not the shared
+   * startTransition, and deliberately NOT routed into loadError: the home
+   * list's error affordance must not speak for the report sheet.
+   */
+  const [submitVocabStatus, setSubmitVocabStatus] = useState<
+    "idle" | "loading" | "ready" | "error"
+  >("idle");
+  // A ref, not the status, is the re-entry guard: state reads are stale
+  // inside a double-fired effect, and two concurrent fetches is exactly the
+  // bug this exists to prevent. It stays latched after success (ready is
+  // terminal) and unlatches only on error so retry works.
+  const submitVocabInFlight = useRef(false);
+  const loadSubmissionVocabulary = useCallback(async () => {
+    if (submitVocabInFlight.current) return;
+    submitVocabInFlight.current = true;
+    setSubmitVocabStatus("loading");
+    try {
+      const metadata = await getInitialSubmissionData();
+      setSubmitPlaces(metadata.places);
+      setSubmitItems(metadata.items);
+      setSubmitVariants(metadata.variants);
+      setSubmitUnits(metadata.units);
+
+      // Seed defaults only into fields the user has not already set.
+      if (metadata.places.length > 0) setFormPlaceId((v) => v || metadata.places[0].id);
+      if (metadata.items.length > 0) setFormItemId((v) => v || metadata.items[0].id);
+      if (metadata.units.length > 0) setFormUnitId((v) => v || metadata.units[0].id);
+      setSubmitVocabStatus("ready");
+    } catch (err) {
+      console.error("Failed to load submission vocabulary:", err);
+      submitVocabInFlight.current = false;
+      setSubmitVocabStatus("error");
+    }
   }, []);
 
   /**
@@ -438,6 +468,14 @@ export function useHomePage() {
   useEffect(() => {
     loadPopular();
   }, [loadPopular]);
+
+  // First open of the report sheet pulls the vocabulary; the ref guard in
+  // the callback makes strict-mode double-fires and reopens no-ops.
+  useEffect(() => {
+    if (isReportOpen && submitVocabStatus === "idle") {
+      void loadSubmissionVocabulary();
+    }
+  }, [isReportOpen, submitVocabStatus, loadSubmissionVocabulary]);
 
   useEffect(() => {
     if (activeCategory !== "food" || searchQuery.trim() === "") {
@@ -1174,6 +1212,8 @@ export function useHomePage() {
     submitItems,
     submitVariants,
     submitUnits,
+    submitVocabStatus,
+    retrySubmissionVocabulary: loadSubmissionVocabulary,
     formPlaceId,
     setFormPlaceId,
     formItemId,

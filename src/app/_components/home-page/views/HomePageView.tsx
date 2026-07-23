@@ -81,6 +81,8 @@ export function HomePageView({
   submitItems,
   submitVariants,
   submitUnits,
+  submitVocabStatus,
+  retrySubmissionVocabulary,
   formPlaceId,
   formItemId,
   formVariantId,
@@ -325,6 +327,8 @@ export function HomePageView({
         items={submitItems}
         variants={submitVariants}
         units={submitUnits}
+        vocabStatus={submitVocabStatus}
+        onRetryVocab={retrySubmissionVocabulary}
         placeId={formPlaceId}
         itemId={formItemId}
         variantId={formVariantId}

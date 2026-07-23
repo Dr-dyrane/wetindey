@@ -26,6 +26,10 @@ export interface ReportPriceSheetProps {
   variants: { id: string; itemId: string; displayName: string }[];
   units: { id: string; displayName: string }[];
 
+  /** The vocabulary above loads on first open, not at boot. */
+  vocabStatus: "idle" | "loading" | "ready" | "error";
+  onRetryVocab: () => void;
+
   placeId: string;
   itemId: string;
   variantId: string;
@@ -88,7 +92,11 @@ function errorCopy(
 
 export function ReportPriceSheetView(p: ReportPriceSheetViewProps) {
   const { variantsForItem, submission } = p.sheet;
-  const locked = submission.phase === "submitting" || submission.phase === "success";
+  // Until the vocabulary is ready the pickers have nothing honest to offer,
+  // so they lock alongside the submit button; the banner below says why.
+  const vocabPending = p.vocabStatus !== "ready";
+  const locked =
+    submission.phase === "submitting" || submission.phase === "success" || vocabPending;
   const status =
     submission.phase === "success"
       ? {
@@ -141,6 +149,36 @@ export function ReportPriceSheetView(p: ReportPriceSheetViewProps) {
             </span>
           </Banner>
         )}
+
+        {p.vocabStatus === "loading" || p.vocabStatus === "idle" ? (
+          <Banner
+            kind="neutral"
+            icon={
+              <IconOrb size={32} tone="neutral">
+                <SolidIcon name="refresh" size={18} />
+              </IconOrb>
+            }
+          >
+            {p.t["report.options_loading"]}
+          </Banner>
+        ) : null}
+        {p.vocabStatus === "error" ? (
+          <div className="space-y-3">
+            <Banner
+              kind="caution"
+              icon={
+                <IconOrb size={32} tone="status-caution">
+                  <SolidIcon name="warning" size={18} />
+                </IconOrb>
+              }
+            >
+              {p.t["report.options_failed"]}
+            </Banner>
+            <Button type="button" variant="secondary" size="md" className="w-full" onClick={p.onRetryVocab}>
+              {p.t["contribution.try_again_title"]}
+            </Button>
+          </div>
+        ) : null}
 
         {submission.phase !== "success" ? (
           <>
