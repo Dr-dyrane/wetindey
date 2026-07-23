@@ -3368,19 +3368,28 @@ Operations access requires role-based authorization and audit logging.
 > the ten. There is no `/api/v1` anything.
 >
 > **Every piece of product data flows through Server Actions in `src/app/actions.ts`,
-> and that is correct.** Seventeen exported actions are the read and write contract:
+> and that is correct.** *[AMENDED 2026-07-23: `src/app/actions.ts` no longer exists.
+> The actions live in the domain modules under `src/app/_actions/`, with
+> `src/app/_actions/actions.ts` as a "use server" re-export barrel, and
+> `getFoodItemCandidates` is deleted. Current truth is the SERVICE-ARCHITECTURE
+> amendment block of 2026-07-23.]* Seventeen exported actions are the read and write contract:
 > `searchFoodItems`, `getPopularItems`, `getFoodItemCandidates`, `getPlaces`,
 > `getPlaceOffers`, `submitObservation`, `getInitialSubmissionData`, `getVisitContext`,
 > `submitVisitConfirmation`, `getItemNarrowingOptions`, `getOffersNarrowed`,
 > `getAreaTree`, `getPlacesNear`, `getCoverageForPoint`, `getPlaceContactPolicy`,
 > `getOfferTrustBatch`, `getOfferTrust`. There is one consumer — this app — and a
 > function call typed end-to-end is a better contract for it than a hand-versioned
-> HTTP surface with no second client to serve.
+> HTTP surface with no second client to serve. *[AMENDED 2026-07-23:
+> `getOfferTrustBatch` and `getOfferTrust` are no longer exported at all; the logic
+> is internal as `getOfferTrustBatchImpl` in `src/lib/food-trust.ts` since `8fbd259`.
+> See the SERVICE-ARCHITECTURE amendment block of 2026-07-23.]*
 >
 > **This chapter is kept as a design for an API that has no consumer yet.** It becomes
 > real the day a partner or a second client exists, and not before. Until then: do not
 > build these, do not test against them, and do not cite this chapter as a description
-> of the system. `src/app/actions.ts` is the contract.
+> of the system. `src/app/actions.ts` is the contract. *[AMENDED 2026-07-23: the
+> contract surface is the action modules under `src/app/_actions/`; see the
+> SERVICE-ARCHITECTURE amendment block of 2026-07-23.]*
 
 ## 28.1 API versioning — future
 

@@ -50,7 +50,7 @@ document and an ADR disagree about policy, the ADR wins.
 | Surface or boundary | Code truth | What it proves |
 |---|---|---|
 | Optional recognition | Neon Auth sessions drive the profile surface. Signed-out browsing remains available. | An account can be recognized; identity continuity does not prove accuracy or grant publication. |
-| Owner profile | `src/app/actions.ts` exposes argument-free, session-resolved `getMyProfile`; `src/app/_components/ManageProfileSheet.tsx` lets the owner edit Auth display name, private profile contact, and avatar. | An owner-scoped profile exists. It is not a public trust profile and its contact is not seller-publication consent. |
+| Owner profile | `getMyProfile` (src/app/_actions/profile-actions.ts) is argument-free and session-resolved; `src/app/_components/manage-profile-sheet/ManageProfileSheet.tsx` lets the owner edit Auth display name, private profile contact, and avatar. | An owner-scoped profile exists. It is not a public trust profile and its contact is not seller-publication consent. |
 | Avatar storage | Owner-scoped upload/removal writes the signed-in user's `user_profiles.avatar_url` and exact `avatars/{userId}.` Blob family. | A chosen avatar exists for account UI. It does not authorize public trust-profile or Presence-profile display. |
 | Personal report history | `getMyReports` resolves the current session server-side, returns `[]` signed out, and reads attributed observations newest first. `MyReportsSheet` renders informational receipts. | The application can safely read attributed historical assertions back to their owner. It does not know whether those assertions changed a public result. |
 | Contribution admission machinery | `submitObservation` delegates to `src/lib/contributions/runtime.ts`, which requires an exact release fingerprint, enabled environment, dedicated database capability, trusted network header, HMAC material, durable idempotency, and an ADR-019 admission result. | A fail-closed server seam and truthful result vocabulary exist in code. Repository presence does not prove environment capability, database application, or public activation. |
@@ -751,16 +751,16 @@ claim must take the complete vertical it activates and preserve concurrent work.
 
 | Concern | Proposed path |
 |---|---|
-| Existing public action seam | `src/app/actions.ts` |
+| Existing public action seam | the action modules under `src/app/_actions/` [path refreshed: the former `src/app/actions.ts` was split at 95cf692] |
 | Existing contribution runtime | `src/lib/contributions/runtime.ts` |
 | Receipt/outcome validation types | `src/lib/validation.ts` |
 | Existing contribution desired state | `src/db/pillars/40-contribution-integrity.sql` |
 | Existing moderation desired state | `src/db/pillars/60-contribution-moderation.sql` |
 | Existing contribution services/security | `src/db/pillars/80-contribution-services.sql`, `src/db/pillars/90-contribution-security.sql` |
 | Receipt UI | new `src/app/_components/ContributionReceiptSheet.tsx` |
-| Owner history integration | `src/app/_components/MyReportsSheet.tsx` |
-| Report flow integration | `src/app/_components/ReportPriceSheet.tsx`, `src/app/page.tsx` |
-| Visit flow only when ADR-019 expands to it | `src/app/_components/ConfirmVisitSheet.tsx`, `src/app/actions.ts` |
+| Owner history integration | `src/app/_components/my-reports-sheet/MyReportsSheet.tsx` |
+| Report flow integration | `src/app/_components/report-price-sheet/ReportPriceSheet.tsx`, `src/app/page.tsx` |
+| Visit flow only when ADR-019 expands to it | `src/app/_components/confirm-visit-sheet/ConfirmVisitSheet.tsx`, `submitVisitConfirmation` (src/app/_actions/food-actions.ts, currently disabled and throwing) [path refreshed; the sheet's separate COPY fork was merged into src/core/i18n/strings.ts at b4fdb31] |
 | Copy | `src/core/i18n/strings.ts` |
 | Pure receipt presenter | new `src/lib/contributions/receipt.ts` |
 
@@ -785,9 +785,9 @@ value, reputation weight, or badge.
 
 | Concern | Proposed path |
 |---|---|
-| Public review DTO/query | `src/app/actions.ts` |
+| Public review DTO/query | `getReviewsForEntity` (src/app/_actions/review-actions.ts) |
 | Review schema correction, if needed | `src/db/schema/reviews.ts` |
-| Review presentation | `src/app/_components/GetItSheet.tsx` |
+| Review presentation | `src/app/_components/get-it-sheet/GetItSheet.tsx` |
 | Public DTO parser | `src/lib/validation.ts` |
 
 The first correction removes `userId` and email fallback from the public DTO. It does not
@@ -837,11 +837,11 @@ proved.
 | Review/helpful integrity desired state | new `src/db/pillars/52-review-integrity.sql` |
 | Effective-state and ordering functions | new `src/db/pillars/72-review-services.sql` |
 | RLS, purpose roles, grants, and default privileges | new `src/db/pillars/95-review-security.sql` |
-| Server Action and public ordering read | `src/app/actions.ts` |
+| Server Action and public ordering read | `src/app/_actions/review-actions.ts` |
 | Input/output validation | `src/lib/validation.ts` |
 | Attributed review composer | new `src/app/_components/ReviewComposerSheet.tsx` |
 | Assigned moderation queue | new `src/app/_components/ReviewModerationSheet.tsx` |
-| Review/Helpful controls and ordered public list | `src/app/_components/GetItSheet.tsx` |
+| Review/Helpful controls and ordered public list | `src/app/_components/get-it-sheet/GetItSheet.tsx` |
 | Copy | `src/core/i18n/strings.ts` |
 
 The proposed APIs are `submitReview(input)`, `getReviewsForEntity(type, id)`,
@@ -864,15 +864,15 @@ accuracy.
 | Desired-state event/projection tables | new `src/db/pillars/50-community-trust.sql` |
 | Single authoritative reputation/recognition projection functions | new `src/db/pillars/70-community-trust-services.sql` |
 | RLS, grants, default privileges, and purpose roles | new `src/db/pillars/95-community-trust-security.sql` |
-| Live Server Action port | `src/app/actions.ts` |
+| Live Server Action port | the action modules under `src/app/_actions/` |
 | Public DTO parser and explanation presenter; no policy calculation | new `src/lib/community-trust/presentation.ts` |
 | Public profile route and metadata | new `src/app/community/[slug]/page.tsx` |
 | Public-avatar projection/copy/purge | new `src/lib/community-trust/public-avatar.ts` |
 | Public profile sheet | new `src/app/_components/CommunityTrustProfileSheet.tsx` |
 | Owner-only Thank receipt | new `src/app/_components/ContributorWorkspaceSheet.tsx` |
-| Profile consent management | `src/app/_components/ManageProfileSheet.tsx` |
+| Profile consent management | `src/app/_components/manage-profile-sheet/ManageProfileSheet.tsx` |
 | Structured action sheet | new `src/app/_components/CommunityActionSheet.tsx` |
-| Existing surface entry links | `src/app/_components/GetItSheet.tsx`, `src/app/_components/MyReportsSheet.tsx`, `src/app/page.tsx` |
+| Existing surface entry links | `src/app/_components/get-it-sheet/GetItSheet.tsx`, `src/app/_components/my-reports-sheet/MyReportsSheet.tsx`, `src/app/page.tsx` |
 | Search indexing only for separately searchable profiles | `src/app/sitemap.ts`, `src/app/robots.ts` |
 | Copy | `src/core/i18n/strings.ts` |
 
@@ -926,10 +926,10 @@ after reconciling the applied lineage.
 | Concern | Proposed path |
 |---|---|
 | Follow schema and RLS | extend the claimed community-trust schema/service/security pillar paths above |
-| Server Action port | `src/app/actions.ts` |
+| Server Action port | the action modules under `src/app/_actions/` |
 | Owner list UI | new `src/app/_components/FollowedContextsSheet.tsx` |
-| Area/place/item controls | `src/app/page.tsx`, `src/app/place/[slug]/page.tsx`, `src/app/_components/ItemDetailSheet.tsx` |
-| Profile navigation entry | `src/app/_components/ProfileSheet.tsx` |
+| Area/place/item controls | `src/app/page.tsx`, `src/app/place/[slug]/page.tsx`, `src/app/_components/item-detail-sheet/ItemDetailSheet.tsx` |
+| Profile navigation entry | `src/app/_components/profile-sheet/ProfileSheet.tsx` |
 | Notification adapter | no path until one provider and one live consented vertical are accepted |
 
 The proposed action-level API names are `followSubject(input)`, `unfollowSubject(input)`,
@@ -944,8 +944,8 @@ report, and deletion vertical rather than inheriting these paths.
 
 | Concern | Proposed path |
 |---|---|
-| Capability resolution port | `src/app/actions.ts` |
-| Deny-by-default role resolution | new `src/lib/authorization/runtime.ts` |
+| Capability resolution port | the action modules under `src/app/_actions/` |
+| Deny-by-default role resolution | new `src/lib/authorization/runtime.ts` [resolved at bcf6028: a deny-by-default resolver now exists at `src/lib/roles/authorize.ts`, ADR-022 P1] |
 | Capability/role workspace launcher | new `src/app/_components/TaskWorkspaceSheet.tsx` |
 | Explorer entry | `src/app/page.tsx` |
 | Contributor workspace | new `src/app/_components/ContributorWorkspaceSheet.tsx` |
@@ -955,7 +955,7 @@ report, and deletion vertical rather than inheriting these paths.
 | Moderator workspace | new `src/app/_components/ModeratorWorkspaceSheet.tsx` |
 | Field Operator workspace | new `src/app/_components/FieldOperatorWorkspaceSheet.tsx` |
 | Community Guide workspace | new `src/app/_components/CommunityGuideWorkspaceSheet.tsx` |
-| Account navigation entry | `src/app/_components/ProfileSheet.tsx` |
+| Account navigation entry | `src/app/_components/profile-sheet/ProfileSheet.tsx` |
 | Copy | `src/core/i18n/strings.ts` |
 
 The proposed API is `getMyTaskWorkspaces()`. Signed out, it may return only the anonymous
@@ -979,8 +979,8 @@ files as empty shells would violate the no-dead-service rule.
 | Contributor request entry | new `src/app/_components/CatalogRequestSheet.tsx` |
 | Owner request history | new `src/app/_components/MyCatalogRequestsSheet.tsx` |
 | Authorized triage workspace | new `src/app/_components/CatalogTriageSheet.tsx` |
-| Existing report-form handoff | `src/app/_components/ReportPriceSheet.tsx` |
-| Server Action port | `src/app/actions.ts` |
+| Existing report-form handoff | `src/app/_components/report-price-sheet/ReportPriceSheet.tsx` |
+| Server Action port | the action modules under `src/app/_actions/` |
 | Request and triage validation | `src/lib/validation.ts` |
 | Copy | `src/core/i18n/strings.ts` |
 
