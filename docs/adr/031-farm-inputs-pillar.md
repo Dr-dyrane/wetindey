@@ -89,6 +89,20 @@ adulteration is a trust problem food does not have in the same form (fake agroch
 are endemic): verified-seller signals for Agri must not be conflated with price
 freshness, flagged for Trust & Safety before any Agri trust surface ships.
 
+## Implementation note (2026-07-23, steward confirmation, decision unchanged)
+
+Lane 1's scout found the live schema already open: `places.place_type` and
+`items.category` are unconstrained varchars, so `agro_dealer` and `agri` are
+accepted at the database layer today and ADR-014 already forbids the pillar
+owning duplicate item/variant/unit tables. Lane 1 therefore ships APP-LAYER
+ONLY: the default-off pillar registry entry, the `agro_dealer` and `agri`
+constants, and a contract test. No migration exists because no DDL exists;
+this corrects the consequence section's assumption above, not the decision.
+If a category CHECK is ever wanted as data-integrity hardening, it is a
+separate, deliberate migration lane coordinated with the migration-tree
+owner, never bundled into a pillar lane; and any agri migration sequences
+after in-flight migration work settles so it appends to a stable journal.
+
 ## Register linkage
 
 Register entry WD-I-006 records the same decision with review cadence; the register
