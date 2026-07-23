@@ -576,6 +576,59 @@ interface WindowWithMapboxgl extends Window {
 
 type MapboxGL = NonNullable<WindowWithMapboxgl["mapboxgl"]>;
 
+/**
+ * UPSTREAM WORKAROUND, mapbox-gl v3.1.2: DELETE this whole function when the
+ * pinned library moves past the race. A static read of the v3.6.0 bundle
+ * suggests its Fog constructor initializes `properties`, likely closing the
+ * gap there (unverified at runtime); the controller ruled against a bump
+ * regardless, because a full-library change reprices the whole map surface
+ * for a defect this guard already contains.
+ *
+ * `Marker._update` arms a 60ms fade timer whenever the style has fog.
+ * `setStyle` swaps in a new Style whose Fog OBJECT exists at parse time but
+ * whose `properties` field is only assigned by the first recalculate render
+ * pass. A timer landing in that gap passes the `style.fog` truthiness guard
+ * and throws `TypeError: Cannot read properties of undefined (reading 'get')`
+ * in `Fog.state` via `_queryFogOpacity` — uncaught, up to dozens per rapid
+ * interaction burst, and each throw leaves that marker's `_fadeTimer` truthy,
+ * permanently disabling its fog-fade evaluation. Controller ruling: guard
+ * here rather than bump the library (the bump does not fix it and repriced
+ * the whole map surface for nothing).
+ *
+ * Fail-safe by construction: applied once (symbol-marked), only when the
+ * internal shape matches expectations, and the wrapper swallows exactly the
+ * TypeError class this race produces, rethrowing everything else. If mapbox
+ * ever renames the method or fixes the race, this becomes a no-op.
+ */
+const FOG_GUARD_APPLIED = Symbol.for("wetindey.fogOpacityGuard");
+function guardMarkerFogOpacity(mapboxgl: MapboxGL): void {
+  try {
+    const marker = (mapboxgl as unknown as { Marker?: { prototype?: Record<PropertyKey, unknown> } })
+      .Marker;
+    const proto = marker?.prototype;
+    if (!proto) return;
+    if ((proto as Record<PropertyKey, unknown>)[FOG_GUARD_APPLIED]) return;
+    const original = proto["_evaluateOpacity"];
+    if (typeof original !== "function") return;
+    proto["_evaluateOpacity"] = function guardedEvaluateOpacity(
+      this: unknown,
+      ...args: unknown[]
+    ) {
+      try {
+        return (original as (...a: unknown[]) => unknown).apply(this, args);
+      } catch (error) {
+        // Only the fog-gap TypeError is survivable-by-design; anything else
+        // is real and must surface.
+        if (error instanceof TypeError) return undefined;
+        throw error;
+      }
+    };
+    (proto as Record<PropertyKey, unknown>)[FOG_GUARD_APPLIED] = true;
+  } catch {
+    // The guard itself must never take the map down.
+  }
+}
+
 interface MapRecoverySnapshot {
   camera: {
     center: MapboxLngLat;
@@ -771,6 +824,7 @@ export class MapboxAdapter implements MapProviderAdapter {
     }
 
     mapboxgl.accessToken = this.accessToken;
+    guardMarkerFogOpacity(mapboxgl);
     this.mapboxgl = mapboxgl;
     this.mapContainer = container;
     this.currentTheme = theme;
