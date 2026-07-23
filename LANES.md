@@ -196,6 +196,19 @@ Controller-directed, scout confirmed exact paths and stopped to the controller b
 
 ## Active exact path locks
 
+#### Design-system control a11y repair - ACTIVE
+
+Owner: Private Contractor, Maps Delivery `c9c17443-ef5e-4a7b-9b6e-c8f5381da30c`, self-claimed under the Founder's standing continuous-work directive. Exact writable paths:
+
+- `src/design-system/components/SheetPicker.tsx`
+- `src/design-system/components/Input.tsx`
+- `src/design-system/components/SearchField.tsx`
+- new `scripts/a11y/design-system-a11y-contract.test.ts`
+
+Purpose: three verified accessibility defects in shared controls. One: SheetPicker's trigger sets `aria-labelledby` to the label alone, so a screen reader hears "Market, button" and never the selected value; the accessible name gains the value span (label id plus value id), the label gains `htmlFor` to the trigger, and every live call site already passes a label. Two: Input renders its `error` as a bare paragraph with no id, no `aria-invalid`, no `aria-describedby`, and no announcement; the error becomes a `role="alert"` paragraph wired to the input, merging any consumer-provided `aria-describedby`. Three: SearchField's clear button lacks `type="button"`, latent form-submit hazard. No visual change, no copy change, no i18n change (hardcoded strings in these files are a separate recorded finding). Exclusions: every other path, including report-price and evidence-media surfaces.
+
+Completion: contract green, gates green, runtime accessible-name proof on the live report sheet, independent default-to-REFUTED refutation, path-scoped commit pushed under the `0bbdb11` class, span-checked release.
+
 #### Offline shell honesty and shell-cache bound - RELEASED / PATHLESS
 
 Complete at `0f24e41`, pushed under the `0bbdb11` class after NOT REFUTED plus a delta re-refutation. Honesty: the refuter independently proved no writer of `pending_observations` exists anywhere and that the diff deletes only the false auto-send promise, byte-preserving all truthful existing copy with no new local-language strings. Bound: the refuter's own six-scenario harness on the real sw.js bytes confirmed navigated documents pin at the ceiling oldest-first while the installed shell and boot document survive any flood, then caught one residual (query variants of protected paths escaped the bound), which was fixed to exact query-less protection and re-proven in a delta pass (130 query-variant documents pin at exactly 24). All five contract-teeth mutations killed. VERSION v5 to v6 per the d5cdc89 convention; photos/map/lib caches survive the bump. Shared-tree note of record: concurrent commit `e9fc38c` swept this lane's staged contract test into its own db-domain commit before the lane's path-scoped commit; content is byte-identical at HEAD, so the code commit carries the two public files only. Paths released.
