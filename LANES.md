@@ -158,6 +158,10 @@ Every documented proposal and blocker the Founder released is now built to ready
 
 THE ONE REMAINING GATE (not a decision, a missing physical key): live activation of contribution reporting (0013), image evidence-media (0019), and account deletion (0018), plus one-tap reactivation and the 0017 Preview repair, all require the shared-database migration-owner credential to apply the migrations to Preview then Production and flip the fail-closed flags. The controller has prepared everything up to that key. When the owner provides the credential or names the executor, the P3/activation lanes run under the usual disposable-then-Preview-then-Production proof with independent refutation.
 
+### Founder activation approvals addendum (2026-07-22, in-session, recorded by the Maps seat)
+
+The Founder reviewed the three-track activation summary (reviews and comments; location sharing and presence; contextual community) and answered approved to all three, in the Founder's own session. This satisfies in direction: the Stage-4 Founder review the Reviews squad was parked on; the Founder's explicit authorization for the presence two-account Festac allowlist pilot (still contingent on manifest convergence across Presence Platform, Security and Privacy, and Client Reliability plus the QE evidence manifest and ADR-016 card constraints); and contextual community proceeding in sequence after both trust surfaces land. Direction, not operational shortcut: every migration apply and flag flip still runs the recorded disposable-then-Preview-then-Production proof with independent refutation, and the one remaining physical key above (the shared-database migration-owner credential, or the Founder naming its executor) is unchanged by this addendum.
+
 ### Batch 2 feature builds (DELIVERED: image #25 250fee8, deletion P2 f775459)
 
 Controller-directed, scout confirms exact paths and STOPS to the controller before any widening; migrations generated-not-applied; features default-off and fail-closed; independent Luna default-to-refuted before commit. Two disjoint lanes:
