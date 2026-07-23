@@ -277,7 +277,6 @@ export function HomePageView({
         open={activeCategory === "food" && Boolean(pendingVisit)}
         visit={pendingVisit}
         onClose={() => setPendingVisit(null)}
-        lang={locale}
       />
 
       {/* The presentation spine: the four controller surfaces (location, my

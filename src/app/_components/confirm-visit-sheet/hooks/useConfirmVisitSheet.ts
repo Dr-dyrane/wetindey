@@ -1,16 +1,6 @@
 import { useEffect, useMemo, useState } from "../imports/imports";
 import { useT } from "@/core/i18n";
 
-/**
- * The sheet's languages, 1:1 with the central store's locales. The local copy
- * fork that used to define this (copy/copy.ts) is merged into
- * src/core/i18n/strings.ts under the confirm.* keys; the merge lane proved all
- * 39 fork values byte-identical to the central table before deleting the fork.
- * The type survives because the sheet's public props still accept `lang`; see
- * the note on UseConfirmVisitSheetOptions for what that prop now means.
- */
-export type Lang = "en" | "pidgin" | "yoruba";
-
 /** The shape the view reads: the deleted fork's Copy interface, unchanged. */
 interface Copy {
   title: string;
@@ -129,14 +119,6 @@ export function takeDueVisit(now: number = Date.now()): VisitContext | null {
 export interface UseConfirmVisitSheetOptions {
   open: boolean;
   visit: VisitContext | null;
-  /**
-   * Retained for interface stability; the copy now comes from the central
-   * locale store. The only live call site (HomePageView) feeds this prop from
-   * `useLocaleControl()`, the same store `useT()` reads, so the two cannot
-   * disagree. Dropping the prop belongs to a lane that may edit that call
-   * site; this one may not.
-   */
-  lang?: Lang;
 }
 
 export function useConfirmVisitSheet({ open, visit }: UseConfirmVisitSheetOptions) {
