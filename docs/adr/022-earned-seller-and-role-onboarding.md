@@ -1,7 +1,7 @@
 # ADR-022: Earned seller stewardship and extensible role onboarding
 
 **Date:** 2026-07-18
-**Status:** Accepted — product, authorization, and governance architecture; implementation unclaimed
+**Status:** Accepted - P1 app-layer half implemented at `bcf6028` (`src/lib/roles/` vocabulary, resolver, and lifecycle; no live caller); the schema half stays a separate lane gated on the two recorded controller rulings
 **Decision owner:** WetinDey Founder
 
 ## Context

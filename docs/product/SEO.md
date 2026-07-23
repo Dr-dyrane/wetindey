@@ -7,7 +7,7 @@ Console (GSC). Domain: **https://wetindey.live**.
 
 | Surface | File | Notes |
 |---|---|---|
-| Robots policy | `src/app/robots.ts` | Production indexes `/`; every preview deploy is `Disallow: /`. Blocks `/zzboom`. |
+| Robots policy | `src/app/robots.ts` | Production indexes `/`; every preview deploy is `Disallow: /`. |
 | Sitemap | `src/app/sitemap.ts` | Auto-includes `/`, and every `/item/[slug]` and `/place/[slug]` once those routes exist (they now do). Slugs come from the DB, so it never drifts. |
 | Root metadata | `src/app/layout.tsx` | `metadataBase`, canonical, title template, OpenGraph, Twitter, and the GSC verification tag. |
 | Site JSON-LD | `src/app/layout.tsx` via `src/lib/seo.tsx` | `WebSite` + `Organization` on every page. |

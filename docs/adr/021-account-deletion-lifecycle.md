@@ -1,7 +1,7 @@
 # ADR-021: Account deletion lifecycle
 
 **Date:** 2026-07-18
-**Status:** Accepted — product and data policy; implementation unclaimed
+**Status:** Accepted - P1 implemented at `4d7038c` (deletion-saga persistence and provider boundary) and P2 at `f775459` (cleanup adapters and orchestration, inert; `src/lib/deletion/`); P3 self-delete exposure unclaimed
 **Decision owner:** WetinDey Founder
 
 ## Context

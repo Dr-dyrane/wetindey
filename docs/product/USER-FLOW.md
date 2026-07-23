@@ -2,8 +2,9 @@
 
 > Status: **re-audited against the live call graph on 2026-07-18.**
 > This is a current-behaviour record, not an implementation promise. Accepted
-> [ADR-023](adr/023-browsing-context-and-device-location.md) corrects the
-> location architecture but claims no runtime work. Proposed
+> [ADR-023](adr/023-browsing-context-and-device-location.md) corrected the
+> location architecture; it is implemented at `95830d2` and conformance-verified
+> at `17c59b0`, so browsing context and device location are now separate. Proposed
 > [ADR-024](adr/024-progressive-information-to-action-seams.md) authorizes
 > nothing; ADR-001 remains binding.
 
@@ -15,9 +16,6 @@
 User opens WetinDey
         ↓
 Map loads around a persisted/default browsing point
-        ↓
-That same point currently also renders as Me/avatar and route origin
-        ← AUDIT DEFECT: browsing context is not physical location
         ↓
 Location is changeable from:
     • Location pill on map chrome

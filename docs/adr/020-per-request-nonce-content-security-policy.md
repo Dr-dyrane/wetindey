@@ -1,7 +1,7 @@
 # ADR-020: Per-request nonce Content Security Policy
 
 **Date:** 2026-07-18
-**Status:** Accepted — security architecture only; implementation unclaimed
+**Status:** Accepted - implemented at `1384a53` and `cc3b858` (per-request nonce report-only boundary in `src/middleware.ts` and `src/lib/security/csp-policy.ts`; dev-environment resolution at `44f8027`); the static enforcing policy in `vercel.json` remains in place while the nonce boundary reports
 **Decision owner:** WetinDey Founder
 
 ## Context

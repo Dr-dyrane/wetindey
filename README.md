@@ -20,7 +20,7 @@ Five commands, in this order. Read the PostGIS note before the last one.
 ```bash
 git clone <this-repo> && cd wetindey
 npm install
-cp .env.example .env.local     # then fill in the two required keys
+cp .env.example .env.local     # then fill in the four required keys
 npm run db:seed                # creates PostGIS, migrates, then seeds
 npm run dev                    # http://localhost:3000
 ```
@@ -34,15 +34,22 @@ npm run dev                    # http://localhost:3000
 | **A Postgres database** | Neon is what this targets. **You must be able to `CREATE EXTENSION postgis` on it** — see below. Neon allows this on the free tier. |
 | **A Mapbox account** | For a free public token (`pk.…`). Without it the map is blank and says nothing about why. |
 
-### The two keys you actually need
+### The four keys you actually need
 
-`.env.local` needs exactly two variables set for the app to work:
+`.env.local` needs exactly four variables set:
 
-- `DATABASE_URL` — your Neon connection string
-- `NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN` — a Mapbox public token
+- `DATABASE_URL`: your Neon connection string.
+- `NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN`: a Mapbox public token.
+- `NEON_AUTH_BASE_URL`: the Neon Auth server endpoint, from the Neon Auth
+  console. Without it the app still browses anonymously, but nobody can sign in.
+- `NEON_AUTH_COOKIE_SECRET`: a strong random secret of your own. **Required even
+  to build**: its absence fails `next build` while it collects the `/api/auth`
+  route, not just at runtime.
 
-Everything else in `.env.example` is optional (Sentry, `APP_ENV`) and the app
-runs correctly without it. `.env.example` documents which file reads each key.
+Everything else in `.env.example` is optional or feature-scoped (Sentry,
+`APP_ENV`, canonical URL, GSC verification, the private CSP report collector,
+the Presence retention scheduler) and the app runs without it. `.env.example`
+documents which file reads each key.
 
 > **If your map is blank, this is why.** The Mapbox token is read in
 > `MapboxAdapter.ts` (the constructor) and `MapboxCanvas.tsx`, and both fall back to `""`
@@ -117,10 +124,19 @@ DATABASE_URL="$(grep '^DATABASE_URL=' .env.local | cut -d= -f2-)" npm run db:mig
 | `npm run db:generate` | `drizzle-kit generate` — diffs `src/db/schema/index.ts` against the last snapshot and writes a new SQL migration into `src/db/migrations/`. Does **not** touch the database. | After editing the schema. Commit the generated SQL *and* the `meta/` snapshot. |
 | `npm run db:migrate` | `drizzle-kit migrate` — applies pending migrations. **Fails on a fresh database** (see PostGIS gotcha) and does not read `.env.local`. | Applying a migration to a database that already has PostGIS. |
 | `npm run db:seed` | Creates PostGIS → migrates → **truncates everything** → seeds. The only command that bootstraps a database from nothing. | First run, and whenever you want a clean known dataset. |
+| `npm run db:recompute-bands` | Recomputes stored price bands over existing rows via `scripts/recompute-bands.mjs`. Reads `.env.local`. | After changing band policy against a database you keep. |
 | `npm run audit:tokens` | Fails on hardcoded colours and on any border/ring/hairline. **This gates the build.** | Before every commit. See `docs/CONTRIBUTING.md` for why it exists. |
+| `npm run typecheck` | `tsc --noEmit` over the whole tree. | Before every commit. |
+| `npm run test:auth-email` | Runs the auth email contract test via `tsx`. | When touching auth email delivery. |
+| `npm run quality:stage:static` | The CI static stage: the token audit plus the contract-test battery under `scripts/` (CSP, deletion saga, roles, presence, ingestion, evidence media, and more), each run with `tsx`. | Before every commit. This and `typecheck` are the enforced green gates. |
+| `npm run quality:stage:typecheck` | The CI typecheck stage. | CI parity for `typecheck`. |
+| `npm run quality:stage:dependencies` | Knip, via the CI dependencies stage. | Rarely. Known-red by recorded posture: its findings are noisy false positives, not a regression signal. |
+| `npm run knip` | Knip directly, outside the stage runner. | Same caveat as the dependencies stage. |
 
-There is no test script. There are no tests. Do not read `npm run build`
-passing as "it works".
+There is no `npm run test`; the test suite is the contract tests under
+`scripts/` (`*-contract.test.ts` and friends), run individually with
+`npx tsx <path>` or in bulk through `quality:stage:static`. Do not read
+`npm run build` passing as "it works".
 
 ---
 

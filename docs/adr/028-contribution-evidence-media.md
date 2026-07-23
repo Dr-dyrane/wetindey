@@ -1,6 +1,6 @@
 # ADR-028: Contribution evidence-media is optional, moderated, and fail-closed
 
-**Status:** Accepted
+**Status:** Accepted - implemented at `250fee8` (image CRUD on the price-update flow, default-off)
 **Date:** 2026-07-22
 **Decision owner:** Founder
 **Decision:** Accepted by the Founder on 2026-07-22 ("it is already decided, I asked for it"),
