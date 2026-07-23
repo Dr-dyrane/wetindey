@@ -44,11 +44,16 @@ export function resolveCspEnvironment(
   vercelEnvironment: string | undefined,
   nodeEnvironment: string | undefined,
 ): CspEnvironment {
+  // NODE_ENV=development means the dev server is physically running, and
+  // `vercel env pull` stamps .env.local with the VERCEL_ENV of the pulled
+  // target (typically "preview"), so the pulled value must not outrank it:
+  // without 'unsafe-eval' the dev bundler's eval source maps emit hundreds
+  // of report-only violations per page load. Deployed builds always run
+  // NODE_ENV=production, so they never take this branch.
+  if (nodeEnvironment === "development") return "development";
   if (vercelEnvironment === "preview") return "preview";
   if (vercelEnvironment === "production") return "production";
-  if (vercelEnvironment === "development" || nodeEnvironment === "development") {
-    return "development";
-  }
+  if (vercelEnvironment === "development") return "development";
   return "production";
 }
 

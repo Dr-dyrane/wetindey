@@ -14,6 +14,7 @@ import {
   CSP_REPORT_ONLY_HEADER,
   isCspNonce,
   resolveAuthorizedHttpsOrigins,
+  resolveCspEnvironment,
 } from "../src/lib/security/csp-policy";
 
 const ROOT = process.cwd();
@@ -384,5 +385,19 @@ const reportOnlyVercelHeaders = vercelConfig.headers
 assert.equal(enforcingCspHeaders.length, 1);
 assert.match(enforcingCspHeaders[0].value, /script-src 'self' 'unsafe-inline'/);
 assert.equal(reportOnlyVercelHeaders.length, 0);
+
+// Environment resolution: a running dev server (NODE_ENV=development) is
+// development as a physical fact, and a VERCEL_ENV pulled into .env.local
+// must not outrank it; deployed builds always run NODE_ENV=production, so
+// their resolution is decided by VERCEL_ENV alone and fails closed.
+assert.equal(resolveCspEnvironment("preview", "development"), "development");
+assert.equal(resolveCspEnvironment("production", "development"), "development");
+assert.equal(resolveCspEnvironment(undefined, "development"), "development");
+assert.equal(resolveCspEnvironment("development", undefined), "development");
+assert.equal(resolveCspEnvironment("preview", "production"), "preview");
+assert.equal(resolveCspEnvironment("production", "production"), "production");
+assert.equal(resolveCspEnvironment(undefined, "production"), "production");
+assert.equal(resolveCspEnvironment(undefined, undefined), "production");
+assert.equal(resolveCspEnvironment("unrecognized", "test"), "production");
 
 console.log("Nonce CSP report-only contracts satisfied.");
