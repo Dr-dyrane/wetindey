@@ -4,6 +4,11 @@ import type { MetadataRoute } from "next";
 import { and, asc, eq, gte, lte, max, ne } from "drizzle-orm";
 import { db, items, observations, places } from "@/db";
 import { FRESHNESS_POLICY } from "@/lib/trust";
+import {
+  getItemOffers,
+  getPlaceOffersForSeo,
+  isObservedOffers,
+} from "@/lib/seo-queries";
 
 /**
  * Pins this route to build-time generation.
@@ -104,7 +109,21 @@ type UrlFamily = {
   readonly segment: string;
   /** URL prefix, which is `segment` minus the `[slug]` placeholder. */
   readonly prefix: string;
-  readonly rows: () => Promise<Array<{ slug: string; updatedAt: Date }>>;
+  readonly rows: () => Promise<
+    Array<{ id: string; slug: string; updatedAt: Date }>
+  >;
+  /**
+   * Provenance gate: does this row currently carry OBSERVED evidence, i.e.
+   * would its page be indexable? This is the exact same seo-query the page
+   * itself runs (`getItemOffers` / `getPlaceOffersForSeo`) reduced through the
+   * shared `isObservedOffers` predicate, so the sitemap lists precisely the
+   * slugs whose pages are indexable and no others. With the catalogue 100%
+   * synthetic today every row returns false, so no item/place URL is emitted;
+   * the day an approved observed observation lands for a slug, it appears here
+   * with no edit, the same self-healing seam the root entry and `routeExists`
+   * already follow (ADR-015: Sample is never live coverage).
+   */
+  readonly hasObservedEvidence: (id: string) => Promise<boolean>;
 };
 
 const FAMILIES: readonly UrlFamily[] = [
@@ -118,10 +137,11 @@ const FAMILIES: readonly UrlFamily[] = [
      */
     rows: () =>
       db
-        .select({ slug: items.slug, updatedAt: items.updatedAt })
+        .select({ id: items.id, slug: items.slug, updatedAt: items.updatedAt })
         .from(items)
         .where(eq(items.active, true))
         .orderBy(asc(items.slug)),
+    hasObservedEvidence: async (id) => isObservedOffers(await getItemOffers(id)),
   },
   {
     segment: "place/[slug]",
@@ -135,9 +155,11 @@ const FAMILIES: readonly UrlFamily[] = [
      */
     rows: () =>
       db
-        .select({ slug: places.slug, updatedAt: places.updatedAt })
+        .select({ id: places.id, slug: places.slug, updatedAt: places.updatedAt })
         .from(places)
         .orderBy(asc(places.slug)),
+    hasObservedEvidence: async (id) =>
+      isObservedOffers(await getPlaceOffersForSeo(id)),
   },
 ];
 
@@ -189,6 +211,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   for (const family of FAMILIES) {
     if (!routeExists(family.segment)) continue;
     for (const row of await family.rows()) {
+      // Provenance gate: a slug is submitted to crawlers only while its page is
+      // indexable (observed evidence). A synthetic-only or catalog-only slug is
+      // omitted here exactly as its page carries `noindex`, one policy, two
+      // surfaces, read from the same seo-query.
+      if (!(await family.hasObservedEvidence(row.id))) continue;
       entries.push({
         url: `${origin}/${family.prefix}/${encodeURIComponent(row.slug)}`,
         lastModified: row.updatedAt,

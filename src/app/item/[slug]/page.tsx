@@ -13,7 +13,12 @@ import {
   productJsonLd,
   seenLabel,
 } from "@/lib/seo";
-import { getItemBySlug, getItemOffers, allItemSlugs } from "@/lib/seo-queries";
+import {
+  getItemBySlug,
+  getItemOffers,
+  allItemSlugs,
+  isObservedOffers,
+} from "@/lib/seo-queries";
 
 /**
  * The item page is one half of the two indexable routes the sitemap has always
@@ -70,6 +75,17 @@ export async function generateMetadata({
     title,
     description,
     alternates: { canonical },
+    /**
+     * Index only while the offers are OBSERVED. Synthetic (`sample`), catalog,
+     * and fail-closed pages render and keep their Sample labels, but carry
+     * `noindex` so a crawler that reaches them outside the (already gated)
+     * sitemap does not index thin synthetic-only content. `follow` stays true so
+     * their outbound links still pass. Flips to indexable automatically when
+     * observed data lands, same predicate the sitemap gate reads.
+     */
+    ...(isObservedOffers(result)
+      ? {}
+      : { robots: { index: false, follow: true } }),
     openGraph: {
       title: `${title} · WetinDey`,
       description,

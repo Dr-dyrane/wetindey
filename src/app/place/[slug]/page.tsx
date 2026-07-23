@@ -13,7 +13,12 @@ import {
   placeTypeLabel,
   seenLabel,
 } from "@/lib/seo";
-import { getPlaceBySlug, getPlaceOffersForSeo, allPlaceSlugs } from "@/lib/seo-queries";
+import {
+  getPlaceBySlug,
+  getPlaceOffersForSeo,
+  allPlaceSlugs,
+  isObservedOffers,
+} from "@/lib/seo-queries";
 
 /**
  * The place page is the second indexable route the sitemap probes for, and the
@@ -58,6 +63,16 @@ export async function generateMetadata({
     title,
     description,
     alternates: { canonical },
+    /**
+     * Index only while the offers are OBSERVED. A synthetic (`sample`) or
+     * catalog place page renders with its Sample labels intact but carries
+     * `noindex` so a crawler reaching it outside the gated sitemap does not
+     * index synthetic-only content; `follow` stays true. Flips to indexable
+     * automatically when observed data lands, same predicate the sitemap reads.
+     */
+    ...(isObservedOffers(result)
+      ? {}
+      : { robots: { index: false, follow: true } }),
     openGraph: {
       title: `${title} · WetinDey`,
       description,

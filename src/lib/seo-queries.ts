@@ -587,6 +587,24 @@ export async function getPlaceOffersForSeo(
 }
 
 /**
+ * Index policy, in one predicate, read by every surface that decides it.
+ *
+ * A route is indexable exactly when its public offers resolve to OBSERVED
+ * evidence. `sample` (wholly synthetic), `catalog`, and every fail-closed case
+ * are non-indexable: the page still renders and still carries its Sample labels
+ * and JSON-LD gating untouched, it is only kept out of the index while its
+ * sole data is not observed. The sitemap's family gate and each page's `robots`
+ * directive both call this, so the two surfaces cannot disagree about which
+ * slugs are indexable, and both flip automatically the moment observed data
+ * lands (ADR-015: Sample is never live coverage).
+ */
+export function isObservedOffers(
+  result: SeoItemOffersResult | SeoPlaceOffersResult,
+): boolean {
+  return result.kind === "observed";
+}
+
+/**
  * Slugs for `generateStaticParams`. These run at BUILD time, where the database
  * is reachable (the sitemap already queries it there). `active = true` for items
  * keeps the pre-rendered set in step with `getItemBySlug`; places have no active
