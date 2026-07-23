@@ -18,7 +18,7 @@
  *   /api/, non-GET   never touched  (server actions must reach the server)
  */
 
-const VERSION = "v5";
+const VERSION = "v6";
 
 // Everything we create is namespaced, because Cache Storage is shared per
 // origin and mapbox-gl-js keeps its own bucket here. The activate sweep uses
@@ -111,6 +111,33 @@ self.addEventListener("activate", (event) => {
 // -----------------------------------------------------------------------------
 // Helpers
 // -----------------------------------------------------------------------------
+
+// Navigated documents in SHELL_CACHE get their own ceiling and their own
+// trimmer instead of a LIMITS entry: install puts SHELL_ASSETS in first, so
+// FIFO over raw keys would evict the offline page and the icons before any
+// /item or /place document. The protected set is never evicted; "/" is the
+// boot shell handleNavigate caches on first visit and losing it would cost
+// the exact offline start the shell cache exists for.
+const SHELL_DOCUMENT_LIMIT = 24;
+const SHELL_PROTECTED_PATHS = new Set(SHELL_ASSETS.concat("/"));
+
+async function trimShellDocuments(cache) {
+  const keys = await cache.keys();
+  const evictable = keys.filter((request) => {
+    try {
+      // Exact, query-less matches only: "/?utm=x" arriving from a shared link
+      // is an ordinary navigated document and must count against the ceiling,
+      // or a family of query variants could grow the cache without bound.
+      const url = new URL(request.url);
+      return !(SHELL_PROTECTED_PATHS.has(url.pathname) && url.search === "");
+    } catch (_e) {
+      return true;
+    }
+  });
+  const excess = evictable.length - SHELL_DOCUMENT_LIMIT;
+  if (excess <= 0) return;
+  await Promise.all(evictable.slice(0, excess).map((request) => cache.delete(request)));
+}
 
 /**
  * Keep a cache under its ceiling, oldest-inserted first.
@@ -415,7 +442,9 @@ async function handleNavigate(event) {
     Promise.all([cachePromise, network])
       .then(([cache, response]) =>
         response && response.ok
-          ? cache.put(event.request, response.clone())
+          ? cache
+              .put(event.request, response.clone())
+              .then(() => trimShellDocuments(cache))
           : undefined
       )
       .catch(() => undefined)

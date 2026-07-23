@@ -160,7 +160,7 @@
 
     <div class="pending" id="pending">
       <strong id="pending-count"></strong>
-      <span>Dem dey your phone. We go send dem once network come back — no need to enter dem again.</span>
+      <span>Dem dey your phone.</span>
     </div>
 
     <button id="retry" type="button">Try again</button>
@@ -171,12 +171,12 @@
       /*
         The one piece of real state this page can honestly show.
 
-        `pending_observations` is written by the report flow in page.tsx when a
-        submission is made with no connection. It is same-origin localStorage,
-        so it is readable from here, and telling someone their report survived
-        is the difference between "the app ate it" and "the app is holding it".
-        Nothing here mutates the queue — sending is the app's job, and racing it
-        would be a way to double-submit.
+        `pending_observations` is a legacy same-origin localStorage queue. No
+        current code writes it, and the app's contribution containment policy
+        deliberately has no offline drain, so this page may only state the one
+        thing that is true: the bytes are still on the phone. It must not
+        promise sending. Nothing here mutates the queue either; those bytes
+        stay untouched until durable server idempotency exists.
       */
       try {
         var raw = localStorage.getItem('pending_observations');
