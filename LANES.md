@@ -167,6 +167,16 @@ Controller-directed, scout confirms exact paths and STOPS to the controller befo
 
 ## Active exact path locks
 
+#### Maps loader retry resurrection - ACTIVE
+
+Owner: Private Contractor, Maps Delivery `c9c17443-ef5e-4a7b-9b6e-c8f5381da30c`. Exact writable path:
+
+- `src/design-system/components/MapboxCanvas.tsx`
+
+Purpose: adverse-states sweep finding, mechanism proven: after a cold load with the map provider unreachable, the injected mapbox-gl script tag dies in place, and the injector's URL dedup then treats the corpse as satisfied forever, so Try again can never re-fetch the library even after the network returns; the failure card is permanent until a full reload. Fix: the injector marks its script's error settlement and, on ensure, removes settled-dead marked tags before the dedup check so retry re-injects fresh. Exclusions: every other path.
+
+Completion: the cold-blocked, unblock, Try again drive ends lifecycle ready with markers present (currently mapboxgl undefined and the card stuck); healthy-path injection still single-tag; independent default-to-REFUTED refutation; gates green; path-scoped commit pushed under the `0bbdb11` class; span-checked release.
+
 #### Maps fog opacity guard - RELEASED / PATHLESS
 
 Complete at the guard commit, pushed under the `0bbdb11` class after NOT REFUTED on all five claims: unguarded baseline reproduced by the refuter, five guarded runs at zero errors, idempotence proven through strict-mode double-mount, TypeError-only swallow verified by unit legs, FakeMap suite intact. One correction absorbed from the refuter: the claim that v3.6.0 leaves the race unfixed was overstated (static read suggests 3.6.0 closes it); the ruling's repricing rationale stands regardless and is now what the source comment says. Path released.
