@@ -354,17 +354,41 @@ const MAPBOX_LOADER_ATTRIBUTE = "data-wetindey-mapbox-loader";
  */
 function ensureMapboxLibrary(): void {
   if (typeof document === "undefined" || !document.head) return;
+  // A dead tag must not satisfy the dedup. When the provider is unreachable
+  // on a cold load, the injected script settles as an error and stays in the
+  // head; treating that corpse as "already injected" made Try again
+  // permanently unable to re-fetch the library after the network returned
+  // (adverse-states sweep, mechanism proven: mapboxgl undefined, card stuck,
+  // same two tags, forever). Error settlement stamps the tag with its death
+  // time, and ensure removes settled-dead loader tags before the existence
+  // checks - but only after a cooldown, because ensure runs on every 60ms
+  // poll tick and immediate removal would hammer the provider with a
+  // re-fetch per tick while it is unreachable. Two seconds bounds that to a
+  // handful per boot window while Try again still resurrects promptly. Only
+  // OUR marked tags are ever removed.
+  for (const dead of document.head.querySelectorAll(
+    `[${MAPBOX_LOADER_ATTRIBUTE}][data-wetindey-mapbox-dead]`
+  )) {
+    const diedAt = Number(dead.getAttribute("data-wetindey-mapbox-dead"));
+    if (!Number.isFinite(diedAt) || Date.now() - diedAt >= 2000) dead.remove();
+  }
   if (!document.head.querySelector(`link[href="${MAPBOX_GL_CSS_URL}"]`)) {
     const link = document.createElement("link");
     link.rel = "stylesheet";
     link.href = MAPBOX_GL_CSS_URL;
     link.setAttribute(MAPBOX_LOADER_ATTRIBUTE, "css");
+    link.addEventListener("error", () => {
+      link.setAttribute("data-wetindey-mapbox-dead", String(Date.now()));
+    });
     document.head.appendChild(link);
   }
   if (!document.head.querySelector(`script[src="${MAPBOX_GL_JS_URL}"]`)) {
     const script = document.createElement("script");
     script.src = MAPBOX_GL_JS_URL;
     script.setAttribute(MAPBOX_LOADER_ATTRIBUTE, "js");
+    script.addEventListener("error", () => {
+      script.setAttribute("data-wetindey-mapbox-dead", String(Date.now()));
+    });
     document.head.appendChild(script);
   }
 }
