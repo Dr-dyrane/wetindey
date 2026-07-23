@@ -58,7 +58,6 @@ export function HomePageView({
   selectedExchangeLocationId,
   setSelectedExchangeLocationId,
   detailItem,
-  setDetailItem,
   getItTarget,
   setGetItTarget,
   pendingVisit,
@@ -102,6 +101,7 @@ export function HomePageView({
   handleSelectPlaceOffer,
   handleItemOffersChange,
   handleSelectOffer,
+  handleDismissItemDetail,
   filteredExchangeLocations,
   exchangeLocationDiscoveryStatus,
   crossCategorySignals,
@@ -244,7 +244,7 @@ export function HomePageView({
       {/* rice → long-grain → 50 kg bag → ranked offers. */}
       <ItemDetailSheet
         open={activeCategory === "food" && Boolean(detailItem)}
-        onClose={() => setDetailItem(null)}
+        onClose={handleDismissItemDetail}
         item={detailItem}
         center={searchOrigin}
         radiusKm={activeRadiusKm}

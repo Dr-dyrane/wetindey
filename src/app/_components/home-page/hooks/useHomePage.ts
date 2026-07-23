@@ -753,6 +753,26 @@ export function useHomePage() {
     });
   });
 
+  /**
+   * Plain dismiss reverts the map to every place. This is the ONLY reset path.
+   *
+   * Backdrop, swipe or Escape closes ItemDetailSheet without picking anything,
+   * so the narrowed pins must go: the results sheet is back to the full list and
+   * a map still showing one item's offers would silently disagree with it. The
+   * sheet's own publish effect cannot do this, f7425f6 guards it to skip the
+   * teardown emit so an offer-tap keeps its pins, and that guard suppresses this
+   * reset too, so the parent owns it.
+   *
+   * handleSelectOffer is deliberately NOT this: picking a row centres on it and
+   * leaves `itemOffers` standing as the geometry behind the Get it sheet. A
+   * row-tap routes through onSelectOffer, a dismiss through onClose, so the two
+   * paths never cross and only the dismiss clears the pins.
+   */
+  const handleDismissItemDetail = useEventCallback(() => {
+    setDetailItem(null);
+    setItemOffers([]);
+  });
+
   useEffect(() => {
     if (activeCategory !== "money") return;
     let cancelled = false;
@@ -1177,6 +1197,7 @@ export function useHomePage() {
     handleSelectPlaceOffer,
     handleItemOffersChange,
     handleSelectOffer,
+    handleDismissItemDetail,
     filteredExchangeLocations,
     exchangeLocationDiscoveryStatus,
     crossCategorySignals,
