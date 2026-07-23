@@ -1,3 +1,5 @@
+import { AGRO_DEALER_PLACE_TYPE } from "@/config/pillars";
+
 import type { SharedUserLocation } from "@/app/_actions/actions";
 import { applyCartography as applyCartographyToStyle } from "./cartography";
 import { ThemeSnapshotOverlay, captureThemeSnapshot, duration } from "./theme-transition";
@@ -323,6 +325,13 @@ const PLACE_TYPE_SYMBOLS: Record<string, string> = {
   kiosk: '<path d="M5 10h14v9H5z"/><path d="M4 10 6 5h12l2 5M8 14h3M13 14h3"/>',
   bank: '<path d="m3 9 9-5 9 5"/><path d="M5 10v7M9 10v7M15 10v7M19 10v7M3 19h18"/>',
   bureau_de_change: '<path d="M7 5h10v14H7z"/><path d="M10 9h4M10 12h4M10 15h4"/>',
+  // ADR-031 lane 3: a sack with a sprout, reading "farm inputs", not produce.
+  // Keyed by the lane-1 constant so the place-type string has one source of
+  // truth (src/config/pillars.ts). Dormant until the pillar flag flips and
+  // activation seeds real agro-dealer places; the own-markets glow deliberately
+  // excludes this type, agro-dealers are not market-family.
+  [AGRO_DEALER_PLACE_TYPE]:
+    '<path d="M8 8c0-2 1.5-3 4-3s4 1 4 3l1 9c0 2-2 3-5 3s-5-1-5-3l1-9Z"/><path d="M12 5V3"/><path d="M12 3c-1.5 0-2-1-2-1s2-.5 2 1c0-1.5 2-1 2-1s-.5 1-2 1"/>',
 };
 
 const PLACE_TYPE_LABELS: Record<string, string> = {
@@ -331,6 +340,7 @@ const PLACE_TYPE_LABELS: Record<string, string> = {
   kiosk: "kiosk",
   bank: "bank",
   bureau_de_change: "bureau de change",
+  [AGRO_DEALER_PLACE_TYPE]: "agro-dealer",
 };
 
 /**
