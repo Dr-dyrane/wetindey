@@ -328,6 +328,48 @@ export interface MapCameraHandle {
 }
 
 /**
+ * The exact pinned build layout.tsx ships globally today. Duplicated here ON
+ * PURPOSE, version and all: the global tags are scheduled for removal (the
+ * canvas is the only consumer), and this component must boot the map whether
+ * they exist or not. If the pin moves, it moves in both places or the
+ * injector fights the global tag over which build owns `window.mapboxgl`.
+ */
+const MAPBOX_GL_JS_URL = "https://api.mapbox.com/mapbox-gl-js/v3.1.2/mapbox-gl.js";
+const MAPBOX_GL_CSS_URL = "https://api.mapbox.com/mapbox-gl-js/v3.1.2/mapbox-gl.css";
+/** Marks injected tags so remounts, HMR and sibling canvases can never double-inject. */
+const MAPBOX_LOADER_ATTRIBUTE = "data-wetindey-mapbox-loader";
+
+/**
+ * Put the Mapbox GL tags in the head if nobody else has.
+ *
+ * Deduplicated by URL, not only by the loader attribute: the global tags in
+ * layout.tsx (while they still exist) carry the same URLs, and a second
+ * <script> for a build that is merely still downloading would execute the
+ * library twice. CSP holds on both sides of the seam — the script is
+ * non-parser-inserted from the app's own nonced bundle ('strict-dynamic'),
+ * and style-src already allowlists api.mapbox.com (csp-policy.ts).
+ *
+ * No `defer` on the script: a dynamically inserted script ignores it and
+ * loads async regardless, which is exactly what the poll below expects.
+ */
+function ensureMapboxLibrary(): void {
+  if (typeof document === "undefined" || !document.head) return;
+  if (!document.head.querySelector(`link[href="${MAPBOX_GL_CSS_URL}"]`)) {
+    const link = document.createElement("link");
+    link.rel = "stylesheet";
+    link.href = MAPBOX_GL_CSS_URL;
+    link.setAttribute(MAPBOX_LOADER_ATTRIBUTE, "css");
+    document.head.appendChild(link);
+  }
+  if (!document.head.querySelector(`script[src="${MAPBOX_GL_JS_URL}"]`)) {
+    const script = document.createElement("script");
+    script.src = MAPBOX_GL_JS_URL;
+    script.setAttribute(MAPBOX_LOADER_ATTRIBUTE, "js");
+    document.head.appendChild(script);
+  }
+}
+
+/**
  * Resolve the Mapbox GL global, waiting for it if it has not arrived yet.
  *
  * Mapbox GL is loaded from a CDN with `defer` (layout.tsx). A deferred script is
@@ -339,6 +381,12 @@ export interface MapCameraHandle {
  *
  * Polled rather than hooked to the script's onload: we don't own the tag, and a
  * load listener attached after the script already ran would never fire.
+ *
+ * Self-sufficient since the on-demand loader landed: if the global is absent
+ * the canvas injects the tags itself (ensureMapboxLibrary) and then polls
+ * exactly as before. With the layout tags present the injector no-ops — the
+ * URL dedupe sees them — so both worlds, global-tag and injected, run the
+ * same wait.
  */
 function whenMapboxReady(timeoutMs = 10_000): Promise<unknown | null> {
   const w = window as unknown as { mapboxgl?: unknown };
@@ -349,6 +397,11 @@ function whenMapboxReady(timeoutMs = 10_000): Promise<unknown | null> {
     const tick = () => {
       if (w.mapboxgl) return resolve(w.mapboxgl);
       if (Date.now() - started > timeoutMs) return resolve(null);
+      // Re-asserted on every tick, not once up front: head tags are not
+      // durable during startup — hydration replaces head children, so a tag
+      // seen at the first check can be gone by the next — and the URL dedupe
+      // makes re-assertion idempotent, so a tag mid-download is never doubled.
+      ensureMapboxLibrary();
       window.setTimeout(tick, 60);
     };
     tick();
@@ -502,7 +555,19 @@ export const MapboxCanvas = forwardRef<MapCameraHandle, MapboxCanvasProps>(funct
     adapterRef.current?.setTheme(theme === "dark" ? "dark" : "light");
   }, [theme, ready]);
 
-  // Update pins on the map whenever candidate details change
+  /**
+   * Read by the rebuild effect below, whose deps deliberately exclude the
+   * selection: assigned during render, so the closure always sees the value
+   * the current commit rendered with, without re-running the rebuild for it.
+   */
+  const selectedPlaceIdRef = useRef(selectedPlaceId);
+  selectedPlaceIdRef.current = selectedPlaceId;
+
+  // Update pins on the map whenever candidate details change. ONLY then:
+  // selectedPlaceId used to sit in these deps, so every selection change
+  // cleared and re-added all N markers — DOM, listeners, glow records — to
+  // restyle at most two of them. Selection now applies through the cheap
+  // effect below; `selected` here is just the initial state of a fresh build.
   useEffect(() => {
     const adapter = adapterRef.current;
     if (!adapter) return;
@@ -516,7 +581,7 @@ export const MapboxCanvas = forwardRef<MapCameraHandle, MapboxCanvasProps>(funct
         lng: candidate.lng,
         label: candidate.placeName,
         placeType: candidate.placeType,
-        selected: candidate.placeId === selectedPlaceId,
+        selected: candidate.placeId === selectedPlaceIdRef.current,
         status: candidate.detail
           ? (candidate.detail.confidenceLevel === "confirmed"
               ? "confirmed"
@@ -527,7 +592,18 @@ export const MapboxCanvas = forwardRef<MapCameraHandle, MapboxCanvasProps>(funct
         onClick: () => onMarkerClick(candidate.placeId)
       });
     });
-  }, [candidates, onMarkerClick, ready, selectedPlaceId]);
+    // One glow reconciliation for the whole batch, not one per add — the
+    // adapter only records during addMarker (see markersBatchComplete).
+    adapter.markersBatchComplete();
+  }, [candidates, onMarkerClick, ready]);
+
+  // Selection restyles in place. The adapter no-ops when the id is unchanged,
+  // including right after a rebuild that already applied the same selection
+  // via addMarker's `selected` — the rebuild effect runs first (declared
+  // first), so this can never observe a stale marker set.
+  useEffect(() => {
+    adapterRef.current?.setMarkerSelected(selectedPlaceId);
+  }, [selectedPlaceId, ready]);
 
   /** Personal identity belongs only to a fresh physical device fix. Browsing
    * context remains visible in location chrome and must never masquerade as Me. */

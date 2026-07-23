@@ -334,6 +334,17 @@ const PLACE_TYPE_LABELS: Record<string, string> = {
 };
 
 /**
+ * Keyboard focus ring for a pin. Needed because the selection path clears
+ * the outline with an inline "none", and an inline style beats the app-wide
+ * `:focus-visible` rule (globals.css) — without this, a Tab landing on an
+ * unselected marker would be invisible. Same 2px `--color-focus-ring` as
+ * that global rule, deliberately: focus stays one colour everywhere, and it
+ * stays tellable apart from the 3px accent SELECTION outline the QA sweep
+ * asserts verbatim.
+ */
+const MARKER_FOCUS_OUTLINE = "2px solid var(--color-focus-ring)";
+
+/**
  * A Mapbox style value: a literal, or an expression tree of them.
  *
  * Deliberately structural rather than a union of every property's real type.
@@ -587,6 +598,25 @@ export class MapboxAdapter implements MapProviderAdapter {
   private mapContextLostListener: (() => void) | null = null;
   private mapContextRestoredListener: (() => void) | null = null;
   private markersMap: Map<string, MapboxMarker> = new Map();
+  /**
+   * The marker DOM elements and their base accessible labels, keyed like
+   * markersMap. Exists so setMarkerSelected can restyle a pin in place: the
+   * MapboxMarker interface exposes no element accessor, and reading the label
+   * back off the node would stack the ", selected" suffix on repeat
+   * selections. Cleared with markersMap, always — the two describe the same
+   * markers or they describe nothing.
+   */
+  private markerEls: Map<string, { el: HTMLDivElement; label: string }> = new Map();
+  /**
+   * The pin the adapter currently styles as selected. Adapter-held rather
+   * than read from the DOM so setMarkerSelected can find the outgoing pin
+   * without scanning every element, and so a rebuild that re-adds the same
+   * selection (addMarker's `selected` option) leaves a later identical
+   * setMarkerSelected call a no-op. Survives clearMarkers deliberately: it
+   * records the caller's intent, and the rebuild that follows a clear re-adds
+   * the selected pin from that same intent.
+   */
+  private selectedMarkerId: string | null = null;
   /**
    * Coordinates of the CURRENT glow-eligible markers, keyed like markersMap.
    * A parallel map rather than a widened markersMap value because the two
@@ -1847,12 +1877,24 @@ export class MapboxAdapter implements MapProviderAdapter {
     const mapboxgl = (window as unknown as WindowWithMapboxgl).mapboxgl;
     if (!mapboxgl) return;
 
+    // A second add under an id this map already holds used to overwrite the
+    // markersMap entry and orphan the prior Marker's DOM node — reproduced as
+    // 60 → 72 pin elements across five search cycles (QA sweep D1). Upstream
+    // can legitimately publish duplicate ids (multi-offer places out of
+    // useHomePage — that root belongs to another lane), so the adapter must
+    // stay leak-free regardless of what arrives: retire the whole prior
+    // identity, parallel-state entries included, before installing the new one.
+    const duplicate = this.markersMap.get(options.id);
+    if (duplicate) {
+      duplicate.remove();
+      this.markersMap.delete(options.id);
+      this.markerEls.delete(options.id);
+      this.markerPlaces.delete(options.id);
+    }
+
     // Create custom borderless marker element following Apple HIG
     const el = document.createElement("div");
     el.className = `h-9 w-9 rounded-full shadow-md flex items-center justify-center cursor-pointer transition-transform hover:scale-105 active:scale-95 duration-micro`;
-    el.setAttribute("aria-current", options.selected ? "true" : "false");
-    el.style.transform = options.selected ? "scale(1.16)" : "scale(1)";
-    el.style.outline = options.selected ? "3px solid var(--color-accent)" : "none";
     el.style.outlineOffset = "3px";
 
     // Status colors conforming to Section 17.3 (Borderless)
@@ -1878,14 +1920,39 @@ export class MapboxAdapter implements MapProviderAdapter {
       </svg>
     `;
     const accessibleLabel = symbolLabel ? `${options.label}, ${symbolLabel}` : options.label;
-    el.setAttribute(
-      "aria-label",
-      options.selected ? `${accessibleLabel}, selected` : accessibleLabel
-    );
+    MapboxAdapter.applyMarkerSelection(el, accessibleLabel, options.selected === true);
 
     if (options.onClick) {
-      el.addEventListener("click", () => {
+      const activate = () => {
         options.onClick?.();
+      };
+      el.addEventListener("click", activate);
+      // A pointer-only pin fails WCAG 2.1.1: a plain div is not focusable and
+      // claims no key semantics. role/tabIndex arrive only WITH a handler —
+      // an inert "button" would be a worse lie than a plain div. Enter and
+      // Space run the exact click body; only Space needs its default stopped,
+      // because Space scrolls the page and Enter does nothing on a div.
+      el.setAttribute("role", "button");
+      el.tabIndex = 0;
+      el.addEventListener("keydown", (event) => {
+        if (event.key !== "Enter" && event.key !== " ") return;
+        if (event.key === " ") event.preventDefault();
+        activate();
+      });
+      // Focus visibility is managed by hand for the same reason the ring
+      // constant exists: the selection path writes inline outlines, and an
+      // inline "none" also erases the UA's :focus-visible indicator.
+      el.addEventListener("focus", () => {
+        el.style.outline = MapboxAdapter.markerOutlineFor(
+          el.getAttribute("aria-current") === "true",
+          true
+        );
+      });
+      el.addEventListener("blur", () => {
+        el.style.outline = MapboxAdapter.markerOutlineFor(
+          el.getAttribute("aria-current") === "true",
+          false
+        );
       });
     }
 
@@ -1894,16 +1961,102 @@ export class MapboxAdapter implements MapProviderAdapter {
       .addTo(this.mapInstance);
 
     this.markersMap.set(options.id, markerInstance);
+    this.markerEls.set(options.id, { el, label: accessibleLabel });
+    if (options.selected === true) this.selectedMarkerId = options.id;
 
     if (PLACES_GLOW_TYPES.has(placeType)) {
+      // Recorded only. The glow reconciliation is deliberately NOT run per
+      // add — that made a batch of N adds O(N²), each one re-serialising the
+      // whole collection through setData. The canvas signals the end of its
+      // loop via markersBatchComplete, and the style-swap replay in
+      // completeUsableFrame reads this same map, so nothing recorded here is
+      // ever dropped.
       this.markerPlaces.set(options.id, { lng: options.lng, lat: options.lat });
-      this.applyPlacesGlow();
     }
+  }
+
+  /**
+   * The ONE selected-pin treatment, shared by addMarker (initial state) and
+   * setMarkerSelected (in-place restyle) so the two paths cannot drift: the
+   * QA sweep asserts the 3px accent outline, scale 1.16, aria-current and the
+   * ", selected" label suffix verbatim, and a second copy of any of those is
+   * how one path silently stops matching. The base label is a parameter
+   * rather than read back off the element so the suffix can never stack.
+   */
+  private static applyMarkerSelection(
+    el: HTMLDivElement,
+    baseLabel: string,
+    selected: boolean
+  ): void {
+    el.setAttribute("aria-current", selected ? "true" : "false");
+    // The scale is written only while the element is still ours. A custom
+    // element handed to mapboxgl.Marker has its inline transform OWNED by
+    // mapbox from addTo onwards — positioning writes translate(...) into it
+    // on every camera render, which is also why the 1.16 has never visibly
+    // survived on a mounted pin (measured: the selected pin renders at the
+    // same 36px as its neighbours, before and after this refactor). Writing
+    // transform on a LIVE marker would teleport the pin to the canvas origin
+    // until the next camera render; skipping it preserves the exact terminal
+    // state the old clear-and-rebuild path produced.
+    if (!el.style.transform.includes("translate")) {
+      el.style.transform = selected ? "scale(1.16)" : "scale(1)";
+    }
+    el.setAttribute("aria-label", selected ? `${baseLabel}, selected` : baseLabel);
+    const focused = typeof document !== "undefined" && document.activeElement === el;
+    el.style.outline = MapboxAdapter.markerOutlineFor(selected, focused);
+  }
+
+  /**
+   * Selection beats focus: a selected pin shows the 3px outline whether or
+   * not it holds focus (the states coincide the moment Enter activates a
+   * pin), and an unselected focused pin keeps a visible ring — see
+   * MARKER_FOCUS_OUTLINE for why the UA's own indicator cannot survive here.
+   */
+  private static markerOutlineFor(selected: boolean, focused: boolean): string {
+    if (selected) return "3px solid var(--color-accent)";
+    return focused ? MARKER_FOCUS_OUTLINE : "none";
+  }
+
+  /**
+   * Restyle the selection in place, tearing nothing down.
+   *
+   * MapboxCanvas used to carry selectedPlaceId in its marker effect's deps,
+   * so every selection change cleared and re-added all N markers — DOM,
+   * listeners, glow records — to change the styling of at most two of them.
+   * The rebuild now belongs to the candidate list alone; selection travels
+   * through here and touches only the outgoing and the incoming pin, through
+   * the same private addMarker uses, so the two paths render identically.
+   *
+   * An id with no live element is recorded, not rejected: the canvas may set
+   * a selection the next rebuild will materialise (addMarker's `selected`
+   * option reads the same intent), and recording it keeps the repeat call
+   * after that rebuild an honest no-op.
+   */
+  public setMarkerSelected(id: string | null): void {
+    if (id === this.selectedMarkerId) return;
+    const previous =
+      this.selectedMarkerId !== null ? this.markerEls.get(this.selectedMarkerId) : undefined;
+    if (previous) MapboxAdapter.applyMarkerSelection(previous.el, previous.label, false);
+    this.selectedMarkerId = id;
+    const next = id !== null ? this.markerEls.get(id) : undefined;
+    if (next) MapboxAdapter.applyMarkerSelection(next.el, next.label, true);
+  }
+
+  /**
+   * The end-of-batch signal for the canvas's add loop: one glow
+   * reconciliation for the whole collection, instead of one per addMarker
+   * (see the note in addMarker for the O(N²) this retires). Safe to call
+   * before the style is usable — applyPlacesGlow defers exactly as it always
+   * has, and the completeUsableFrame replay covers the deferred case.
+   */
+  public markersBatchComplete(): void {
+    this.applyPlacesGlow();
   }
 
   public clearMarkers(): void {
     this.markersMap.forEach((marker) => marker.remove());
     this.markersMap.clear();
+    this.markerEls.clear();
     // Only touch the style when there is something to retract: clearMarkers
     // also runs during destroy, where an idle glow must not become a style
     // mutation on the way out.
@@ -2050,10 +2203,31 @@ export class MapboxAdapter implements MapProviderAdapter {
         // built here; the MapboxPopup plumbing (activeUserPopup,
         // MapRecoverySnapshot.popup) remains only so renderer recovery can
         // re-add a popup that survives reconstruction.
-        el.addEventListener("click", (e) => {
+        const activate = (e: Event) => {
           e.stopPropagation(); // Avoid triggering map clicks
 
           this.recenterTo(user.latitude, user.longitude, 14.5);
+        };
+        el.addEventListener("click", activate);
+        // Same WCAG 2.1.1 treatment as addMarker: the click above is a real
+        // action (ADR-016 reduced it to recenter, it did not remove it), so
+        // the keyboard mirrors it. Presence markers never carry the place
+        // pins' selection outline, so the plain focus ring needs no
+        // selected-state arbitration here.
+        el.setAttribute("role", "button");
+        el.setAttribute("aria-label", `Recenter on ${user.name}`);
+        el.tabIndex = 0;
+        el.addEventListener("keydown", (event) => {
+          if (event.key !== "Enter" && event.key !== " ") return;
+          if (event.key === " ") event.preventDefault();
+          activate(event);
+        });
+        el.addEventListener("focus", () => {
+          el.style.outline = MARKER_FOCUS_OUTLINE;
+          el.style.outlineOffset = "3px";
+        });
+        el.addEventListener("blur", () => {
+          el.style.outline = "none";
         });
 
         const markerInstance = new mapboxgl.Marker(el)
@@ -2477,5 +2651,7 @@ export class MapboxAdapter implements MapProviderAdapter {
     this.routeCoords = null;
     this.routeTint = "accent";
     this.markerPlaces.clear();
+    this.markerEls.clear();
+    this.selectedMarkerId = null;
   }
 }
