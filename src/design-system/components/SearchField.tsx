@@ -18,6 +18,13 @@ interface SearchFieldProps {
    * connection" error that never clears. Callers may override for other uses.
    */
   maxLength?: number;
+  /**
+   * Accessible name for the clear button. Defaults to the English "Clear search"
+   * so the component stands alone; callers with i18n pass their translated
+   * `clear_search` (Pidgin deliberately differs, "Comot Search") so the label
+   * follows the selected language.
+   */
+  clearLabel?: string;
 }
 
 /**
@@ -60,6 +67,7 @@ export function SearchField({
   onBlur,
   placeholder = "Search",
   maxLength = 80,
+  clearLabel = "Clear search",
 }: SearchFieldProps) {
   // The ring is on the WRAPPER, not the input, and that is not a style choice:
   // this div is `overflow-hidden` (it clips the fill to the squircle), and an
@@ -88,7 +96,7 @@ export function SearchField({
       {value && (
         <button
           onClick={onClear}
-          aria-label="Clear search"
+          aria-label={clearLabel}
           /* 44px target, 17px glyph — hit area centred on the visual mark. */
           className={`absolute right-0 grid h-tap w-tap place-items-center text-text-tertiary active:opacity-50 ${transition.press}`}
         >

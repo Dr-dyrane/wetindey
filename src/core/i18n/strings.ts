@@ -144,11 +144,24 @@ export const en = {
   light_mode: "Light Mode",
   dark_mode: "Dark Mode",
 
-  /* Category chip, the home header's domain switcher. "Aboki FX" (money) is a
-     proper noun and stays literal in the view; "Food" is the label that
-     translates, so it is the one that gets a key. Used by HomeSheetHeaderView
-     and, out of this lane, CategorySelectorSheet. */
+  /* Category chip + selector sheet. "Aboki FX" (money) and "Fuel prices" stay
+     literal in CategorySelectorSheetView (a proper noun and an out-of-scope
+     placeholder); every label that translates gets a key here. `select_category`
+     is the selector sheet's title AND its group aria-label. Used by
+     HomeSheetHeaderView and CategorySelectorSheet. The latter referenced these
+     keys through `|| "…"` fallbacks before they existed, so English rendered even
+     in Pidgin; the keys make the labels real. */
   category_food: "Food",
+  select_category: "Select Category",
+  category_home: "Home & Living",
+  category_health: "Health & Beauty",
+  category_transport: "Transport",
+  category_community: "Community",
+
+  /* Shared modal chrome. ModalSheet's close control (the X) is the one button
+     behind every sheet in the app; its label is keyed once here rather than
+     hardcoded in the shell, so translating it fixes every sheet at once. */
+  close: "Close",
 
   /* Settings, SettingsSheet.tsx:107,115 are hardcoded English today. */
   "settings.radius_label": "Search radius",
@@ -706,8 +719,21 @@ const pidgin: LocaleTable = {
   light_mode: "Day time style",
   dark_mode: "Night time style",
 
-  // "Food" is standard in Lagos Pidgin and unambiguous as a category label.
+  // "Food", "Transport" and "Community" are standard in Lagos Pidgin and
+  // unambiguous as category labels, the same treatment English one-word labels
+  // get across this table. "Home & Living" and "Health & Beauty" are compound
+  // marketing labels with no unambiguous Pidgin, so they show English rather than
+  // a guess. `select_category` mirrors this table's "Pick ___" verb (report.choose_*).
   category_food: "Food",
+  select_category: "Pick category",
+  category_home: UNTRANSLATED,
+  category_health: UNTRANSLATED,
+  category_transport: "Transport",
+  category_community: "Community",
+
+  // Verbatim English, the same class as "Done"/"Save"/"Settings" in this table:
+  // a one-word UI control a Lagos speaker reads as-is.
+  close: "Close",
 
   "settings.radius_label": "How far you wan look",
   "settings.radius_a11y": "How far you wan look, for kilometre",
@@ -1133,6 +1159,14 @@ const yoruba: LocaleTable = {
 
   // LANES H2: Yorùbá withheld pending a native speaker; no agent stands in.
   category_food: UNTRANSLATED,
+  select_category: UNTRANSLATED,
+  category_home: UNTRANSLATED,
+  category_health: UNTRANSLATED,
+  category_transport: UNTRANSLATED,
+  category_community: UNTRANSLATED,
+
+  // LANES H2: Yorùbá withheld pending a native speaker.
+  close: UNTRANSLATED,
 
   "settings.radius_label": UNTRANSLATED,
   "settings.radius_a11y": UNTRANSLATED,

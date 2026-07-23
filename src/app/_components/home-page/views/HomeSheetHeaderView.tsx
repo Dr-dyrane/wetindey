@@ -86,7 +86,7 @@ export function HomeSheetHeaderView({
             onClick={openProfile}
             className="grid h-11 w-11 place-items-center squircle-full
                        active:scale-90 transition-transform duration-instant"
-            aria-label="Profile"
+            aria-label={t["profile.title_signed_in"]}
           >
             {/* The one piece of persistent recognition chrome in the app.
                 Without a name it drew the anonymous silhouette forever, so
@@ -108,6 +108,7 @@ export function HomeSheetHeaderView({
           onChange={handleSearchChange}
           onClear={clearSearch}
           placeholder={t.search_placeholder}
+          clearLabel={t.clear_search}
         />
       )}
     </div>

@@ -31,7 +31,7 @@ export function CategorySelectorSheetView(p: CategorySelectorSheetViewProps) {
   }[] = [
     {
       id: "food",
-      label: p.t.category_food || "Food",
+      label: p.t.category_food,
       icon: Utensils,
       supported: true,
       tone: "domain-food",
@@ -39,14 +39,14 @@ export function CategorySelectorSheetView(p: CategorySelectorSheetViewProps) {
     { id: "fuel", label: "Fuel prices", icon: Fuel, supported: false, tone: "neutral" },
     {
       id: "home",
-      label: p.t.category_home || "Home & Living",
+      label: p.t.category_home,
       icon: House,
       supported: false,
       tone: "neutral",
     },
     {
       id: "health",
-      label: p.t.category_health || "Health & Beauty",
+      label: p.t.category_health,
       icon: HeartPulse,
       supported: false,
       tone: "neutral",
@@ -60,14 +60,14 @@ export function CategorySelectorSheetView(p: CategorySelectorSheetViewProps) {
     },
     {
       id: "transport",
-      label: p.t.category_transport || "Transport",
+      label: p.t.category_transport,
       icon: Bus,
       supported: false,
       tone: "neutral",
     },
     {
       id: "community",
-      label: p.t.category_community || "Community",
+      label: p.t.category_community,
       icon: Users,
       supported: false,
       tone: "neutral",
@@ -75,12 +75,12 @@ export function CategorySelectorSheetView(p: CategorySelectorSheetViewProps) {
   ];
 
   return (
-    <ModalSheet open={p.open} onClose={p.onClose} title={p.t.select_category || "Select Category"} size="form">
+    <ModalSheet open={p.open} onClose={p.onClose} title={p.t.select_category} size="form">
       <div className="py-2">
         <div
           className="squircle-card bg-fillTertiary p-1"
           role="group"
-          aria-label={p.t.select_category || "Select Category"}
+          aria-label={p.t.select_category}
         >
           {categories.map((category) => {
             const active = category.id === p.activeCategory;

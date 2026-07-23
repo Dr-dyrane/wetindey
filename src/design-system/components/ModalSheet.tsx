@@ -15,6 +15,7 @@ import { createPortal } from "react-dom";
 import { ChevronLeft, X } from "lucide-react";
 import { SHEET_RADIUS } from "./BottomSheet";
 import { useMediaQuery } from "@/core/hooks/useMediaQuery";
+import { useT } from "@/core/i18n";
 import { motion, transition, useReducedMotion } from "@/design-system/motion";
 
 interface PresentedChild {
@@ -320,6 +321,10 @@ export function ModalSheet({
   const isRegular = useMediaQuery("(min-width: 768px)") === true;
   const reducedMotion = useReducedMotion();
   const isTop = useModalIsTop(modalId);
+  // Zero-wiring module store (see @/core/i18n): no provider, no prop threading.
+  // This shell is behind every sheet, so keying its close label here translates
+  // the control in all of them at once.
+  const t = useT();
 
   onCloseRef.current = onClose;
 
@@ -638,7 +643,7 @@ export function ModalSheet({
                 <button
                   type="button"
                   onClick={() => requestCloseRef.current()}
-                  aria-label="Close"
+                  aria-label={t("close")}
                   className={`grid h-11 w-11 place-items-center text-text-secondary hover:text-text-primary ${transition.press}`}
                 >
                   <span className="grid h-7 w-7 place-items-center rounded-full bg-controlFill">
@@ -662,7 +667,7 @@ export function ModalSheet({
                   <button
                     type="button"
                     onClick={() => requestCloseRef.current()}
-                    aria-label="Close"
+                    aria-label={t("close")}
                     className={`grid h-11 w-11 place-items-center text-text-secondary ${transition.press}`}
                   >
                     <span className="grid h-7 w-7 place-items-center rounded-full bg-controlFill">
@@ -704,7 +709,7 @@ export function ModalSheet({
               <button
                 type="button"
                 onClick={closeRoot}
-                aria-label="Close"
+                aria-label={t("close")}
                 className={`grid h-11 w-11 shrink-0 place-items-center text-text-secondary ${transition.press}`}
               >
                 <span className="grid h-7 w-7 place-items-center rounded-full bg-controlFill">
