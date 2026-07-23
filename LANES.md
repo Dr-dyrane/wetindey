@@ -196,20 +196,9 @@ Controller-directed, scout confirmed exact paths and stopped to the controller b
 
 ## Active exact path locks
 
-#### Report-sheet vocabulary lazy load - ACTIVE
+#### Report-sheet vocabulary lazy load - RELEASED / PATHLESS
 
-Owner: Private Contractor, Maps Delivery `c9c17443-ef5e-4a7b-9b6e-c8f5381da30c`, self-claimed under the Founder's standing continuous-work directive, scout-verified collision-free. Stop fetching the full submission vocabulary (getInitialSubmissionData: all places/items/variants/units, about 196 rows at seed scale, unbounded growth with catalog) at app boot for every visitor. The fetch moves behind the report-price sheet's first open (isReportOpen) with an idle/loading/ready/error status, an explicit in-sheet retry, and form defaults seeded only into empty fields. loadBaseline becomes getPlaces()-only, so loadError means exactly "map places failed" and first pin render no longer waits on the vocabulary query behind the shared Promise.all. The server action, its name, and its file position are untouched (contribution-actions-contract.test.ts uses the export line as a slice boundary). Declared behavior change: opening the sheet offline after a successful boot now shows an honest error with retry instead of a fillable form whose submit would fail; contributions have no offline drain by standing decision. New i18n keys ship English-only with pidgin/yoruba left untranslated per the recorded agri precedent; no agent-invented local-language copy.
-
-Exact writable paths:
-
-- `src/app/_components/home-page/hooks/useHomePage.ts`
-- `src/app/_components/home-page/views/HomePageView.tsx`
-- `src/app/_components/report-price-sheet/ReportPriceSheet.tsx`
-- `src/app/_components/report-price-sheet/views/ReportPriceSheetView.tsx`
-- `src/core/i18n/strings.ts`
-- new `scripts/contributions/report-vocab-lazy-load-contract.test.ts`
-
-Completion: no vocabulary call before first sheet open and a single fetch across reopen and strict mode, proven by a network-level browser drive; error state offers retry and never routes into the home list's anyLoadError; map pins unchanged from getPlaces; gates green; independent default-to-REFUTED refutation; path-scoped commit pushed under the `0bbdb11` class; span-checked release.
+Complete at `f2b7aa0`, pushed under the `0bbdb11` class after NOT REFUTED on all five claims with the refuter's own network drives: boot now makes 3 server-action calls versus 4 at HEAD (the removed one is byte-identically the vocabulary action, proven by stash round-trip on the hook alone); first sheet open adds exactly one call under confirmed reactStrictMode (the ref guard absorbing the double-fire is live evidence), reopen adds zero; pickers populate with real options (60 markets) and commit; the blocked-route drive proved the error banner, a retry that refires exactly once per tap without loops, recovery to enabled pickers, and zero leakage into the home list's error affordance. Declared behavior change stands as claimed (offline-after-boot opens show honest error plus retry). Two English-only i18n keys, pidgin/yoruba UNTRANSLATED. ReportPriceSheet.tsx was claimed but needed no edit ({...props} passes the new props through). First-pin render no longer waits on the vocabulary fetch. Housekeeping of record: the stale .git/rebase-merge autostash residue (this seat's earlier interrupted pull) was verified superseded by `0f24e41` and cleared. Paths released.
 
 #### Design-system control a11y repair - RELEASED / PATHLESS
 
