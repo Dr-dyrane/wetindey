@@ -4,7 +4,7 @@ import React from "react";
 import { useCategorySelectorSheet } from "./hooks/useCategorySelectorSheet";
 import { CategorySelectorSheetView } from "./views/CategorySelectorSheetView";
 
-export type CategoryPillar = "food" | "home" | "health" | "money" | "transport" | "community";
+export type CategoryPillar = "food" | "home" | "health" | "money" | "transport" | "community" | "agri";
 export type SelectorCategory = CategoryPillar | "fuel";
 
 export interface CategorySelectorSheetProps {

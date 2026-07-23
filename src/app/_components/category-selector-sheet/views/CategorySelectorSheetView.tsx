@@ -6,6 +6,7 @@ import {
   Fuel,
   HeartPulse,
   House,
+  Sprout,
   Utensils,
   Users,
   type LucideIcon,
@@ -14,6 +15,7 @@ import {
 } from "../imports/imports";
 import type { CategorySelectorSheetProps, SelectorCategory } from "../CategorySelectorSheet";
 import type { useCategorySelectorSheet } from "../hooks/useCategorySelectorSheet";
+import { PILLAR_FLAGS } from "@/config/pillars";
 import "../styles/CategorySelectorSheet.css";
 
 export interface CategorySelectorSheetViewProps extends CategorySelectorSheetProps {
@@ -23,7 +25,7 @@ export interface CategorySelectorSheetViewProps extends CategorySelectorSheetPro
 export function CategorySelectorSheetView(p: CategorySelectorSheetViewProps) {
   const { handleSelect } = p.sheet;
 
-  const categories: {
+  const allCategories: {
     id: SelectorCategory;
     label: string;
     icon: LucideIcon;
@@ -73,7 +75,22 @@ export function CategorySelectorSheetView(p: CategorySelectorSheetViewProps) {
       supported: false,
       tone: "neutral",
     },
+    {
+      id: "agri",
+      label: p.t.category_agri,
+      icon: Sprout,
+      supported: false,
+      tone: "neutral",
+    },
   ];
+
+  // PILLAR_FLAGS.agri (default-off, from @/config/pillars) is the sole runtime
+  // gate: while the flag is false the agri entry is dropped before render and
+  // never reaches the DOM. Flipping it on happens only at the credential-gated
+  // activation, never as a code default.
+  const categories = allCategories.filter(
+    (category) => category.id !== "agri" || PILLAR_FLAGS.agri,
+  );
 
   return (
     <ModalSheet open={p.open} onClose={p.onClose} title={p.t.select_category} size="form">

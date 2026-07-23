@@ -157,6 +157,7 @@ export const en = {
   category_health: "Health & Beauty",
   category_transport: "Transport",
   category_community: "Community",
+  category_agri: "Agri",
 
   /* Shared modal chrome. ModalSheet's close control (the X) is the one button
      behind every sheet in the app; its label is keyed once here rather than
@@ -833,6 +834,7 @@ const pidgin: LocaleTable = {
   category_health: UNTRANSLATED,
   category_transport: "Transport",
   category_community: "Community",
+  category_agri: UNTRANSLATED,
 
   // Verbatim English, the same class as "Done"/"Save"/"Settings" in this table:
   // a one-word UI control a Lagos speaker reads as-is.
@@ -1356,6 +1358,7 @@ const yoruba: LocaleTable = {
   category_health: UNTRANSLATED,
   category_transport: UNTRANSLATED,
   category_community: UNTRANSLATED,
+  category_agri: UNTRANSLATED,
 
   // LANES H2: Yorùbá withheld pending a native speaker.
   close: UNTRANSLATED,
