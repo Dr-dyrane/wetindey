@@ -452,6 +452,46 @@ async function main(): Promise<void> {
   });
   await assert.rejects(verify(invalidOtpBody), /Invalid webhook OTP code/);
 
+  // Anti-injection guards, pinned so they cannot regress green (the sweep that
+  // found them noted escapeHtml was never exercised against a special
+  // character, and the recipient and sender CRLF rejections had no case).
+
+  // The recipient email validator rejects a CRLF header-injection attempt, an
+  // over-length address, and a structurally invalid one.
+  for (const [label, badEmail] of [
+    ["CRLF header injection", "victim@example.com\r\nBcc: attacker@evil.test"],
+    ["over-length", `${"a".repeat(320)}@example.com`],
+    ["structurally invalid", "not-an-email"],
+  ] as const) {
+    const badRecipientBody = JSON.stringify({
+      ...basePayload,
+      user: { ...basePayload.user, email: badEmail },
+    });
+    await assert.rejects(
+      verify(badRecipientBody),
+      /Invalid webhook recipient email/,
+      `recipient guard must reject ${label}`,
+    );
+  }
+
+  // escapeHtml is the last backstop if the numeric OTP validator is ever
+  // loosened. Render directly with an injection-shaped code and prove the
+  // markup carries no raw angle bracket from it and the payload is escaped.
+  const escapedRender = renderWetinDeyOtpEmail(
+    { ...verified, otpCode: "<script>alert(1)</script>" },
+    issuedAtMs + 1_000,
+  );
+  assert.doesNotMatch(
+    escapedRender.html,
+    /<script>alert\(1\)<\/script>/,
+    "escapeHtml must neutralise an injection-shaped OTP code",
+  );
+  assert.match(
+    escapedRender.html,
+    /&lt;script&gt;alert\(1\)&lt;\/script&gt;/,
+    "the injection-shaped code must appear HTML-escaped",
+  );
+
   const expiredBody = JSON.stringify({
     ...basePayload,
     event_data: {
@@ -670,6 +710,24 @@ async function main(): Promise<void> {
       },
     ),
     NeonWebhookVerificationError,
+  );
+
+  // The sender-header CRLF guard rejects a from carrying an injected header,
+  // before any transport is touched.
+  await assert.rejects(
+    sendWetinDeyOtpEmail(
+      { ...verified, eventId: randomUUID() },
+      {
+        from: "WetinDey <auth@wetindey.live>\r\nBcc: attacker@evil.test",
+        now: () => deliveryNow,
+        transport: {
+          async sendMail() {
+            throw new Error("must not send with an injected sender header");
+          },
+        },
+      },
+    ),
+    AuthEmailConfigurationError,
   );
 
   let timeoutTransportClosed = false;
