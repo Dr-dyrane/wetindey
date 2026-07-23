@@ -196,6 +196,21 @@ Controller-directed, scout confirmed exact paths and stopped to the controller b
 
 ## Active exact path locks
 
+#### Report-sheet vocabulary lazy load - ACTIVE
+
+Owner: Private Contractor, Maps Delivery `c9c17443-ef5e-4a7b-9b6e-c8f5381da30c`, self-claimed under the Founder's standing continuous-work directive, scout-verified collision-free. Stop fetching the full submission vocabulary (getInitialSubmissionData: all places/items/variants/units, about 196 rows at seed scale, unbounded growth with catalog) at app boot for every visitor. The fetch moves behind the report-price sheet's first open (isReportOpen) with an idle/loading/ready/error status, an explicit in-sheet retry, and form defaults seeded only into empty fields. loadBaseline becomes getPlaces()-only, so loadError means exactly "map places failed" and first pin render no longer waits on the vocabulary query behind the shared Promise.all. The server action, its name, and its file position are untouched (contribution-actions-contract.test.ts uses the export line as a slice boundary). Declared behavior change: opening the sheet offline after a successful boot now shows an honest error with retry instead of a fillable form whose submit would fail; contributions have no offline drain by standing decision. New i18n keys ship English-only with pidgin/yoruba left untranslated per the recorded agri precedent; no agent-invented local-language copy.
+
+Exact writable paths:
+
+- `src/app/_components/home-page/hooks/useHomePage.ts`
+- `src/app/_components/home-page/views/HomePageView.tsx`
+- `src/app/_components/report-price-sheet/ReportPriceSheet.tsx`
+- `src/app/_components/report-price-sheet/views/ReportPriceSheetView.tsx`
+- `src/core/i18n/strings.ts`
+- new `scripts/contributions/report-vocab-lazy-load-contract.test.ts`
+
+Completion: no vocabulary call before first sheet open and a single fetch across reopen and strict mode, proven by a network-level browser drive; error state offers retry and never routes into the home list's anyLoadError; map pins unchanged from getPlaces; gates green; independent default-to-REFUTED refutation; path-scoped commit pushed under the `0bbdb11` class; span-checked release.
+
 #### Design-system control a11y repair - RELEASED / PATHLESS
 
 Complete at `6cca659`, pushed under the `0bbdb11` class after NOT REFUTED on all five claims with the refuter's own render-level proof (9/9): SheetPicker triggers now compose label plus value in the accessible name ("Market Mile 12 Market", placeholder when empty) with the label wired htmlFor the trigger; Input errors are role="alert" paragraphs the input points at via aria-invalid and a merged aria-describedby proven to survive consumer-passed values (the spread-order clobber was caught by the worker's own render proof, fixed, and mutation-proven); SearchField's clear button carries type="button". className sets proven byte-identical at HEAD versus candidate, all six live picker call sites pass a label, 4/4 contract mutations killed, gates green. Recorded residuals for later lanes: hardcoded English strings in these components belong to the i18n hoist finding, and the report-price Banner role remains with its own vertical. Paths released.
