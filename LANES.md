@@ -167,15 +167,9 @@ Controller-directed, scout confirms exact paths and STOPS to the controller befo
 
 ## Active exact path locks
 
-#### Maps fog opacity guard - ACTIVE
+#### Maps fog opacity guard - RELEASED / PATHLESS
 
-Owner: Private Contractor, Maps Delivery `c9c17443-ef5e-4a7b-9b6e-c8f5381da30c`. Exact writable path:
-
-- `src/integrations/maps/MapboxAdapter.ts`
-
-Purpose: controller ruling on QA D4: a guarded, reversible monkey-patch of mapbox-gl's Marker fade-timer fog read, not a version bump (the defect is verified unfixed through v3.6.0, so a bump buys regression risk with no benefit). The upstream race: setStyle swaps in a Style whose Fog object exists before its properties are assigned by the first recalculate pass; fade timers landing in that gap throw an uncaught TypeError in Fog.state and permanently disable that marker's fade evaluation. Patch constraints per the ruling: applied once, idempotently, at one documented site in the integration layer; commented as an upstream workaround pinned to v3.1.2 with the exact symptom and a delete-when-upstream-fixes note; fail-safe such that any internal shape change makes it no-op, never throw. Exclusions: every other path.
-
-Completion: the rapid-taps-plus-toggle repro that produced 13 to 45 uncaught TypeErrors produces zero across repeated runs, ordinary behavior unchanged; independent default-to-REFUTED refutation; gates green; path-scoped commit pushed under the `0bbdb11` class; span-checked release.
+Complete at the guard commit, pushed under the `0bbdb11` class after NOT REFUTED on all five claims: unguarded baseline reproduced by the refuter, five guarded runs at zero errors, idempotence proven through strict-mode double-mount, TypeError-only swallow verified by unit legs, FakeMap suite intact. One correction absorbed from the refuter: the claim that v3.6.0 leaves the race unfixed was overstated (static read suggests 3.6.0 closes it); the ruling's repricing rationale stands regardless and is now what the source comment says. Path released.
 
 #### Maps recenter control detent clamp - RELEASED / PATHLESS
 
