@@ -1,7 +1,8 @@
 # ADR-031: Farm inputs is a pillar, and it rides the existing truth engine
 
-**Status:** Proposed (Founder-directed shape, 2026-07-22; acceptance is the Founder's
-explicit act and has not yet been given)
+**Status:** Accepted (Founder-directed shape and Founder acceptance both given
+in-session, 2026-07-22; acceptance amends ADR-008's pillar set to seven, adding
+AGRICULTURE, inputs first, with the mapping rule intact)
 **Deciders:** Dr. Dyrane Alexander (final product authority)
 **Framed by:** Private Contractor, Maps Delivery, acting for Product & Portfolio
 **Phase discipline:** The sole launch phase remains WetinDey Food Truth & Pilot
@@ -38,9 +39,8 @@ uncertainty (FOOD, HOME, HEALTH, MONEY, TRANSPORT, COMMUNITY) and binds every ca
 to one of them. Farm inputs maps honestly to none of the six: a farmer buying NPK is
 not resolving a FOOD uncertainty (nobody eats fertilizer) and forcing it under FOOD
 would muddy both catalogs, the exact conflation this ADR's rejected alternative names.
-Acceptance of this ADR therefore amends ADR-008's pillar set to seven, adding
-AGRICULTURE (inputs first), with ADR-008's mapping rule otherwise intact. Until
-acceptance, ADR-008's six-pillar taxonomy stands unamended.
+Acceptance of this ADR (given 2026-07-22) amends ADR-008's pillar set to seven,
+adding AGRICULTURE (inputs first), with ADR-008's mapping rule otherwise intact.
 
 The pillar's shape:
 
@@ -92,4 +92,5 @@ freshness, flagged for Trust & Safety before any Agri trust surface ships.
 ## Register linkage
 
 Register entry WD-I-006 records the same decision with review cadence; the register
-never authorizes work, and neither does this ADR until accepted.
+never authorizes work, and this ADR grants none either: accepted, it governs the
+decision, and implementation begins only when LANES.md grants exact paths.

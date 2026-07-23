@@ -483,11 +483,15 @@ Trust & Safety, Growth/Analytics, Localization/Accessibility, Quality/Release.
 **Decision history:** Shaped as a Candidate. No approval, lane, implementation, or release
 commitment.
 
+## 10. Approved
+An entry appears here only after an explicit, attributed decision. Even then, it cannot
+move to Active until dependencies are satisfied and `LANES.md` grants exact paths.
+
 ### WD-I-006: Farm inputs pillar (Agri)
 
 | Field | Record |
 |---|---|
-| Stage | Candidate |
+| Stage | Approved |
 | Date captured | 2026-07-22 |
 | Proposer | Dr. Dyrane Alexander (Founder, directed in-session) |
 | Portfolio owner | Product & Portfolio |
@@ -495,9 +499,9 @@ commitment.
 | Department classification | Active now |
 | Current phase relevance | Outside current phase |
 | Consequential choice | Yes: a new pillar amends accepted ADR-008's six-pillar taxonomy and requires Founder acceptance of ADR-031 |
-| ADR status | Proposed ADR-031 |
+| ADR status | Accepted ADR-031 |
 | Lane status | None; ideas never imply a lane |
-| Next review | On Founder acceptance or rejection of ADR-031 |
+| Next review | When the controller sequences the first implementation lane |
 
 **Problem:** A farmer buying fertilizer, seed, agrochemicals, or feed faces harsher
 versions of the food shopper's uncertainty: seasonal price swings, long trips to
@@ -535,14 +539,7 @@ recorded.
 
 **Decision history:** 2026-07-22: Founder directed the agriculture lane and chose the
 farm inputs shape from framed alternatives in-session; ADR-031 drafted Proposed and
-submitted for explicit acceptance.
-
-## 10. Approved
-
-No entries.
-
-An entry appears here only after an explicit, attributed decision. Even then, it cannot
-move to Active until dependencies are satisfied and `LANES.md` grants exact paths.
+submitted for explicit acceptance. 2026-07-22, later in-session: Founder ACCEPTED ADR-031 against the recorded gate list; ADR-008 amendment in force; implementation lanes claimable in the ADR's recorded order.
 
 ## 11. Active
 
