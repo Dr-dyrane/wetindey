@@ -284,23 +284,29 @@ assert.match(
   /const nonce = \(await headers\(\)\)\.get\(CSP_NONCE_HEADER\);/,
 );
 assert.match(layoutSource, /if \(!nonce \|\| !isCspNonce\(nonce\)\)/);
-assert.equal(layoutSource.match(/nonce=\{nonce\}/g)?.length, 4);
+// mapbox-gl moved from an inline layout script to on-demand MapboxCanvas
+// injection (lazy-load split, commit 3c48eb7), so the layout now has 3 nonce'd
+// script attributes, not 4.
+assert.equal(layoutSource.match(/nonce=\{nonce\}/g)?.length, 3);
 assert.equal(
   layoutSource.match(
     /<script\s+nonce=\{nonce\}\s+suppressHydrationWarning/g,
   )?.length,
-  4,
+  3,
 );
 assert.equal(layoutSource.match(/dangerouslySetInnerHTML=/g)?.length, 3);
-assert.match(
-  layoutSource,
-  /<script\s+nonce=\{nonce\}\s+suppressHydrationWarning\s+src="https:\/\/api\.mapbox\.com\/mapbox-gl-js\/v3\.1\.2\/mapbox-gl\.js"\s+defer\s+\/>/,
-);
+// The mapbox-gl script is no longer an inline layout tag; MapboxCanvas
+// (ensureMapboxLibrary) injects it on demand per the lazy-load split (commit
+// 3c48eb7), so map-less routes download no map assets. It loads from
+// api.mapbox.com, an external src the CSP script-src host-allowlists (asserted
+// on previewScript above), so it needs no layout nonce and must NOT reappear as
+// an inline layout script.
+assert.doesNotMatch(layoutSource, /<script[^>]*api\.mapbox\.com/);
 assert.equal(
   layoutSource.match(
     /<(?:html|head|body|script)[^>]*\bsuppressHydrationWarning\b/g,
   )?.length,
-  5,
+  4,
 );
 assert.equal(
   layoutSource.match(
