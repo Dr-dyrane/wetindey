@@ -175,7 +175,9 @@ test("the modal shell has one document Escape owner", () => {
   assert.match(modalSource, /closest\("\[inert\], \[aria-hidden='true'\]"\)/);
   assert.match(modalSource, /document\.addEventListener\("keydown", onKeyDown, true\)/);
   assert.match(modalSource, /document\.addEventListener\("focusin", onFocusIn, true\)/);
-  assert.match(modalSource, /if \(returnFocus\?\.isConnected\) returnFocus\.focus\(\)/);
+  // Stronger than the original single-line pin: the guard must exist AND the
+  // return focus must not scroll-jump the page it lands on.
+  assert.match(modalSource, /if \(returnFocus\?\.isConnected\) \{\s*returnFocus\.focus\(\{ preventScroll: true \}\)/);
   assert.match(modalSource, /window\.history\.pushState/);
   assert.match(modalSource, /window\.addEventListener\("popstate"/);
 });

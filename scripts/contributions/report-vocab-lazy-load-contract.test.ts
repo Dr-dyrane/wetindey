@@ -24,7 +24,7 @@ const actions = readFileSync(join(ROOT, "src/app/_actions/report-actions.ts"), "
 
 // 1. The boot path no longer fetches the vocabulary. loadBaseline is
 // getPlaces-only, and the sole vocabulary call lives in the lazy callback.
-const loadBaseline = hook.match(/const loadBaseline = useCallback[\s\S]*?\n  \}, \[\]\);/)?.[0];
+const loadBaseline = hook.match(/const loadBaseline = useCallback[\s\S]*?\n  \}, \[[^\]]*\]\);/)?.[0];
 assert.ok(loadBaseline, "loadBaseline not found");
 assert.doesNotMatch(loadBaseline, /getInitialSubmissionData/);
 assert.equal(
@@ -33,7 +33,7 @@ assert.equal(
   "exactly one runtime call site, inside the lazy callback",
 );
 const lazy = hook.match(
-  /const loadSubmissionVocabulary = useCallback[\s\S]*?\n  \}, \[\]\);/,
+  /const loadSubmissionVocabulary = useCallback[\s\S]*?\n  \}, \[[^\]]*\]\);/,
 )?.[0];
 assert.ok(lazy, "loadSubmissionVocabulary not found");
 assert.match(lazy, /getInitialSubmissionData\(\)/);

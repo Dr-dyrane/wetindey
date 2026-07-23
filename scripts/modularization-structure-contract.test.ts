@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { readdirSync, existsSync, statSync } from "node:fs";
+import { readdirSync, existsSync, readFileSync, statSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { test } from "node:test";
@@ -20,6 +20,11 @@ const componentsDir = resolve(root, "src/app/_components");
 // Allowlisted folders are still held to imports/ and views/ (and the
 // <Component>View.tsx file rule). Everything else keeps all five subdirs.
 const ORCHESTRATION_HOSTS = new Set(["presentation-host"]);
+
+// Components whose user copy was hoisted into the central i18n dictionary
+// keep no local copy/ directory; the exemption is honest only while the
+// component actually reads @/core/i18n, which the contract verifies below.
+const CENTRALIZED_COPY = new Set(["location-sheet"]);
 
 test("modular component subfolders adhere to the 6-file MVC slice contract", () => {
   if (!existsSync(componentsDir)) {
@@ -44,9 +49,27 @@ test("modular component subfolders adhere to the 6-file MVC slice contract", () 
 
     // Verify sub-directories exist: hooks, views, styles, copy, imports
     // (orchestration hosts are held only to views/ and imports/).
+    const usesCentralCopy = CENTRALIZED_COPY.has(folder);
     const requiredSubdirs = isOrchestrationHost
       ? ["views", "imports"]
-      : ["hooks", "views", "styles", "copy", "imports"];
+      : usesCentralCopy
+        ? ["hooks", "views", "styles", "imports"]
+        : ["hooks", "views", "styles", "copy", "imports"];
+    if (usesCentralCopy) {
+      assert.ok(
+        !existsSync(resolve(folderPath, "copy")),
+        `'${folder}' claims centralized copy but still has a local copy/ directory`,
+      );
+      const viewSources = readdirSync(resolve(folderPath, "views"))
+        .filter((name) => name.endsWith(".tsx"))
+        .map((name) => readFileSync(resolve(folderPath, "views", name), "utf8"))
+        .join("\n");
+      assert.match(
+        viewSources,
+        /@\/core\/i18n/,
+        `'${folder}' claims centralized copy but its views never read @/core/i18n`,
+      );
+    }
     for (const subdir of requiredSubdirs) {
       const subdirPath = resolve(folderPath, subdir);
       assert.ok(
@@ -77,11 +100,13 @@ test("modular component subfolders adhere to the 6-file MVC slice contract", () 
         `Modularized component '${folder}' styles/ directory must contain a scoped CSS stylesheet`
       );
 
-      const copyFiles = readdirSync(resolve(folderPath, "copy"));
-      assert.ok(
-        copyFiles.includes("copy.ts"),
-        `Modularized component '${folder}' copy/ directory must contain copy.ts`
-      );
+      if (!usesCentralCopy) {
+        const copyFiles = readdirSync(resolve(folderPath, "copy"));
+        assert.ok(
+          copyFiles.includes("copy.ts"),
+          `Modularized component '${folder}' copy/ directory must contain copy.ts`
+        );
+      }
     }
 
     const importsFiles = readdirSync(resolve(folderPath, "imports"));

@@ -1,15 +1,27 @@
+/**
+ * Harness note: the module under test begins with `import "server-only"`,
+ * which throws outside a react-server condition. Rather than weakening the
+ * import, this file re-executes itself under `--conditions react-server`
+ * (where server-only resolves to its no-op build) when the condition is not
+ * already active, so a plain `npx tsx <this file>` works everywhere.
+ */
+import { spawnSync } from "node:child_process";
+import { createRequire } from "node:module";
+
+if (!process.env.WETINDEY_RSC_REEXEC) {
+  const cliRequire = createRequire(import.meta.url);
+  const result = spawnSync(
+    process.execPath,
+    [cliRequire.resolve("tsx/cli"), "--conditions", "react-server", process.argv[1]],
+    { stdio: "inherit", env: { ...process.env, WETINDEY_RSC_REEXEC: "1" } },
+  );
+  process.exit(result.status ?? 1);
+}
+
 import assert from "node:assert/strict";
 import { readdirSync, readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
-import {
-  loadModerationQueue,
-  loadModerationReview,
-  moderateContribution,
-  MODERATION_REASON_CODES,
-  moderationRuntimeForContract,
-} from "../../src/lib/contributions/moderation-runtime";
-import { executeModerationCommand, ModerationCommandCoordinator, settleModerationRead } from "../../src/app/operations/contributions/_components/hooks/useModerationConsole";
 
 const actor = "11111111-1111-4111-8111-111111111111";
 const observation = "22222222-2222-4222-8222-222222222222";
@@ -21,6 +33,17 @@ const environment = {
 };
 
 async function main() {
+  // Deferred imports: the runtime module begins with `import "server-only"`,
+  // which must only ever load in the re-executed child where the
+  // react-server condition resolves it to a no-op. A static import would be
+  // hoisted above the re-exec guard by the CJS transform and throw.
+  const {
+    loadModerationQueue, loadModerationReview, moderateContribution, MODERATION_REASON_CODES, moderationRuntimeForContract,
+  } = await import("../../src/lib/contributions/moderation-runtime");
+  const { executeModerationCommand, ModerationCommandCoordinator, settleModerationRead } = await import(
+    "../../src/app/operations/contributions/_components/hooks/useModerationConsole"
+  );
+
   const operationRoot = fileURLToPath(
     new URL("../../src/app/operations/contributions", import.meta.url)
   );
