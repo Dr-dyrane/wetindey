@@ -4,7 +4,7 @@
 
 **Reading order.** Read current root `LANES.md` before editing. For completed evidence and branch reconstruction, use [the current-cycle lane history index](docs/operations/lanes/history/README.md) and the [legacy historical archive](docs/operations/lanes/LANES-HISTORICAL-ARCHIVE.md).
 
-**Last updated:** 2026-07-22
+**Last updated:** 2026-07-23
 
 ## Current controller and release policy
 
@@ -208,70 +208,6 @@ Purpose: two proven PWA defects, both verified in-source before this claim. One:
 
 Completion: contract green, gates green, a service-worker drive proving navigated documents trim while the offline shell survives, independent default-to-REFUTED refutation, path-scoped commit pushed under the `0bbdb11` class, span-checked release.
 
-#### CSP dev-environment resolution defect - RELEASED / PATHLESS
-
-Complete at `44f8027`, pushed under the `0bbdb11` class after NOT REFUTED on all five claims with independent reproduction: the 679-violation flood reproduced at HEAD by a stash round-trip and eliminated to 0 by the candidate; `'unsafe-eval'` served exactly once in the dev report-only header; deployed behavior proven unchanged by exhaustive 81-pair enumeration of old versus new `resolveCspEnvironment` (the only changed pairs are dev-server-with-pulled-VERCEL_ENV, which now correctly resolve development); posture untouched (Report-Only unchanged, no directive edits, middleware and the enforcing `vercel.json` header clean); gates green and the nine new contract assertions proven to fail against the old precedence. The Founder/Security-gated enforcing flip is untouched by this lane; the flip's Preview verification will now read clean dev evidence instead of 679 lines of noise per load. Paths released.
-
-#### ADR-031 lane 3 agri map surface - RELEASED / PATHLESS
-
-Complete at `7707515`, pushed under the `0bbdb11` class after NOT REFUTED on all five claims with independent measurement: one source of truth proven (adapter imports AGRO_DEALER_PLACE_TYPE and keys both vocabularies with the computed constant, zero hardcoded keys), glow exclusion holds in code (PLACES_GLOW_TYPES untouched, NO-at-launch ruling intact), contract teeth proven by a six-mutation harness (import dropped, bare and quoted literal keys, glow additions by literal and by constant, symbol removal: all caught), dormancy proven by census (60 markers, 0 agro-dealer, glow 47 on both sides of the bridged theme toggle), gates green on the candidate manifest. Two refuter corrections absorbed: the glow diagnostic on fresh load and post-rebuild reads `layer-added:47` not `repainted:47` (repainted is same-style reconciliation only), and the lane-1 contract lives at scripts/catalog/, not scripts/agri/. Note for lane 2: whole-tree tsc currently carries one error in the uncommitted CategorySelectorSheetView.tsx agri-selector edit (array literal widened to string tones), outside this lane's manifest. CONTROLLER: lane 3 is on origin; the map half of ADR-031 is complete and dormant behind PILLAR_FLAGS.agri; lane 4 field truth remains human-led per the ADR. Paths released.
-
-#### ADR-031 lane 1 implementation note - RELEASED / PATHLESS
-
-Complete at the note commit, pushed under the `0bbdb11` class: Option B confirmed by the ADR steward and recorded on the accepted ADR itself; lane 1 is app-layer only with no migration, future CHECK hardening is its own coordinated lane, and agri migrations sequence after in-flight migration work settles. Path released.
-
-#### ADR-031 acceptance record - RELEASED / PATHLESS
-
-Complete at the acceptance commit, pushed under the `0bbdb11` class after a refuted-then-repaired record pass (conditional leftover fixed, WD-I-006 physically moved to Approved). ADR-031 is Accepted; the ADR-008 amendment is in force at seven pillars; the four implementation lanes are claimable in the ADR's recorded order with the schema lane routing through the controller, generated-not-applied. Paths released.
-
-#### Maps loader retry resurrection - RELEASED / PATHLESS
-
-Complete at the resurrection commit, pushed under the `0bbdb11` class after NOT REFUTED on all five claims: defect reproduced at HEAD by stash round-trip, fix proven twice (blocked-state fetches bounded to 5, Try again ends ready with 60 markers), healthy path shows zero dead stamps ever, cooldown arithmetic and fail-open bounds verified. The adverse-states sweep is fully dispositioned: denied-location honesty PASS, offline degradation PASS, cold-blocked recovery FIXED. Path released.
-
-#### Maps fog opacity guard - RELEASED / PATHLESS
-
-Complete at the guard commit, pushed under the `0bbdb11` class after NOT REFUTED on all five claims: unguarded baseline reproduced by the refuter, five guarded runs at zero errors, idempotence proven through strict-mode double-mount, TypeError-only swallow verified by unit legs, FakeMap suite intact. One correction absorbed from the refuter: the claim that v3.6.0 leaves the race unfixed was overstated (static read suggests 3.6.0 closes it); the ruling's repricing rationale stands regardless and is now what the source comment says. Path released.
-
-#### Maps recenter control detent clamp - RELEASED / PATHLESS
-
-Complete at the clamp commit, pushed under the `0bbdb11` class after NOT REFUTED on all four claims with sub-pixel verification (expanded clamps to y 68, half and collapsed match prior math exactly, desktop dormant). Accepted and recorded: at the expanded detent the control sits beneath the sheet, which is correct because the map it recenters is not visible there. MapPresentationView proved byte-identical; only the css shipped. Path released.
-
-#### Maps performance and operability pass - RELEASED / PATHLESS
-
-Complete at `5c9ba7d`, pushed under the `0bbdb11` class after a seven-claim NOT REFUTED with independent reproduction (keyboard operability both themes, leak flat at 60 across the QA repro, zero-teardown selection, batched glow at 2 writes per batch, injector proven in both worlds including hydration survival). The canvas is now self-sufficient for mapbox-gl: the controller's held layout.tsx global-tag removal is UNBLOCKED per the recorded ordering. The fog TypeError race is diagnosed upstream (unguarded mapbox-gl fog timer, present through v3.6.0) with mitigation options routed to the controller as a decision, not shipped. Path released.
-
-#### Maps WebKit capture evidence entry - RELEASED / PATHLESS
-
-Complete at the WD-MAPS-THEMEFADE-20260722-4 commit, pushed under the `0bbdb11` class after independent end-to-end reproduction on Playwright WebKit 18.2 (both toggle directions captured and bridged, native probe reads, glow replay, context-loss recovery). The owner-tooling blocker is dissolved at engine level; the residual Unknown is exactly Safari shell and iOS device behavior. Path released.
-
-#### Farm inputs pillar decision record - RELEASED / PATHLESS
-
-Complete at the ADR-031/WD-I-006 commit, pushed under the `0bbdb11` class. ADR-031 sits Proposed and, upon the Founder's explicit acceptance, amends accepted ADR-008's pillar taxonomy to seven (AGRICULTURE, inputs first); the refuter caught and forced that confrontation. Four implementation lanes are enumerated queued and non-authorizing. The acceptance decision awaits the Founder. Paths released.
-
-#### Maps own-markets glow layer - RELEASED / PATHLESS
-
-Complete at `266a294`, pushed under the `0bbdb11` class. WetinDey's own market places now glow softly beneath the data layer in both themes, market family only, measured subordinate. The lane also shipped a critical same-file repair the acceptance bar surfaced: mutation-safe style completion is now gated on the intended style, fixing a pre-existing defect where every theme toggle replayed cartography and route into the dying style and left the real style bare with lifecycle falsely ready. The refuter reproduced the defect at HEAD and its absence with the candidate. Residual recorded: context-loss glow replay is contract-test covered, not real-browser driven; a future custom style must update styleNameFor beside styleFor (documented at the pairing). Path released.
-
-#### Maps dark road hierarchy and wash strength - RELEASED / PATHLESS
-
-Complete at `c66dcd3`, pushed under the `0bbdb11` proven-reversible class. The dark network's hierarchy is restored data-driven across the road-simple/bridge-simple/tunnel-simple trio; the refuter refuted the first draft's single-layer citation and bridge gap, and the repair is credited in the source. Light held pixel-identical at 0.00 percent through both drafts. The commercial wash was audited and deliberately left honest: applied and opaque, bounded by Festac's sparse commercial_area polygon data. The Founder-directed richness pass (Lanes A, B, C) is complete. Path released.
-
-#### Maps route freshness tint - RELEASED / PATHLESS
-
-Complete at `a55eb9a`, pushed under the `0bbdb11` proven-reversible class after NOT REFUTED on all five claims with independent pixel reproduction (caution route amber at the status token, accent route zero orange delta, derivation keyed so a tint cannot outlive its route). Founder semantics of record; the controller ruling receipt and precedence note are preserved in history via this file's log. Known gaps recorded in the commit: unavailable branch type-proven only, no confirmed demo offer. Paths released; MapPresentation.tsx and home-page imports were manifest-listed but proven byte-identical.
-
-#### Maps light cartography warmth - RELEASED / PATHLESS
-
-Complete at `f307cef`, pushed under the `0bbdb11` proven-reversible class after a NOT REFUTED verdict on all five claims: light land warmed to the sand family, water settled, park opacity ramp lifted, dark proven pixel-identical (0.00% diff), stock citations verified against the live style. The commercial-district area wash and the routeTint spine slice remain the Lane B candidates, pending an owner call on tint semantics. Path released.
-
-#### Maps worklog action-noun conformance - RELEASED / PATHLESS
-
-Complete at `2508af0`, pushed under the authorization of record `0bbdb11`: the routed Action-noun fix cascaded into four sibling asserts in entries 3 and 4 (Targets, resolution-action order, Action verb), all repaired in the same conformance class. The department worklog contract passes 5 of 5 for the first time. Path released.
-
-#### Maps worklog plural conformance - RELEASED / PATHLESS
-
-Complete at the pluralization commit: both Owned paths lines now match the contract template; the focused test's only remaining failure is contribution-integrity's, separately routed. The routed push was declined; push authority stays with the owner. Path released.
-
 #### REQUEST TO CONTROLLER: status-chip media-scrim fill (PlaceOfferRow) - seat recommends NO-FILL
 
 Forwarded for the controller's decision; the seat holds `PlaceOfferRow.tsx` scrim edits and does not pre-empt. The token lane `1704eda` deferred whether the two regular-layout status chips in `src/design-system/components/PlaceOfferRow.tsx` (~126, ~136) should take `bg-media-scrim/<alpha>` after the dead `bg-black/78` was swept.
@@ -279,52 +215,6 @@ Forwarded for the controller's decision; the seat holds `PlaceOfferRow.tsx` scri
 Seat recommendation: no fill, on accessibility grounds. The `StatusBadge` chip already paints its own semantic tint (`bg-status-*-bg`, 14% opacity) under semantic ink (`-fg`) tuned to 4.5:1 on that tint per P0-6. `bg-media-scrim/80` is one background-color, so it replaces the 14% tint rather than layering over it, landing semantic ink on roughly 80% black. Light-mode inks fall below AA there: `caution-fg #a94c00` about 3.7:1, `confirmed-fg #1e7634` about 3.7:1, `unavailable-fg #be261b` about 3.5:1. The only dark-scrim pairing that passes is white text, exactly the `text-white` the Founder removed in `d2f557f` to preserve semantic ink. So the refuter's target (orange "Available", a `StatusBadge kind=confirmed|caution`) is the one chip where a scrim both fails AA and reverses a Founder decision. The underlying legibility concern is real and is pursued AA-safe under the HI claim below.
 
 CONTROLLER RULING 2026-07-22: NO-FILL affirmed. The seat's AA computation stands and a media-scrim on the StatusBadge both fails the P0-6 4.5:1 floor for every light-mode semantic ink and reverses the Founder's `d2f557f` removal of `text-white`; the controller will not trade semantic ink or a Founder decision for a scrim. The legibility concern is routed correctly to the HI text-shadow claim below, which is cleared to proceed under its default-to-REFUTED light/dark and P0-6 contrast gate. Any heavier semantic-tint option needs a separate Iconography/token claim, not a scrim.
-
-#### HI claim: AA-safe status-chip legibility over media (PlaceOfferRow) - RELEASED / PUSHED
-
-- **Owner:** Human Interface Design Engineer `019f75a5-0fc6-7f40-9a0f-8097ead3b45d`. Opened per Founder instruction 2026-07-22; the fresh product evidence that lifts the prior "no reopen" hold is the refuter's over-photo legibility finding plus the AA computation above.
-- **Exclusive path:** `src/design-system/components/PlaceOfferRow.tsx` only.
-- **Contract:** improve the orange "Available" chip's legibility over busy photos in-file, preserving semantic ink and the P0-6 4.5:1 floor. Primary lever is a stronger or layered `text-shadow` (it aids ink over varied photos without changing background-color or ink, so the measured contrast is unaffected). Optionally close the fallback `<span>` no-fill gap in the same file under the same gate.
-- **Exclusions:** no `bg-media-scrim` and no black scrim on the `StatusBadge`; no `text-white`; no `StatusBadge.tsx` or `globals.css` token edits (a heavier semantic tint would need those, so route it as a separate Iconography/token claim); no other `PlaceOfferRow` behavior.
-- **Gate:** independent light/dark and P0-6 contrast refutation, default-to-REFUTED, before release. No push.
-- **Evidence:** source complete at `25054a9` (path-scoped, `PlaceOfferRow.tsx` only). Two-layer theme-aware `text-shadow`: white halo in light mode and a black halo via `dark:` for the semantic-ink `StatusBadge` (dark ink in light, bright ink in dark), and a stronger black shadow for the white-ink fallback `<span>`. Independent default-to-REFUTED refuter returned NOT REFUTED, no P1/P2, two P3 non-defects. It compiled the exact classes on the project Tailwind 3.4.19 and confirmed both rules emit with the `dark:` variant winning by `:is(.dark *)` specificity, verified ink direction per theme, confirmed background-color and ink are unchanged so the P0-6 measured contrast is bit-identical, and confirmed forced-colors and the light/dark sync path untouched. `typecheck` and `audit:tokens` are clean.
-- **Push:** owner glanced light/dark and approved; pushed under the authorization of record. `25054a9` (code) and `085809b` (evidence) are on `origin/main` in the ancestry of `3fce90e`, and `git push` confirmed up-to-date. Path released; the HI seat returns to idle.
-
-#### Maps renderer-failure evidence entry — RELEASED / PATHLESS
-
-Complete at `23b1aef` (tuple base `b0f78cd`, digest `02f1ca61…`, re-verified byte-exact after a HEAD-race restamp). Renderer-failure bridging is closed with reproduced evidence; the remaining Unknown is exactly `Safari and iOS capture behavior`, blocked on host tooling only the owner can enable (no iOS Simulator runtime installed; Safari remote automation disabled). Path released.
-
-#### Contractor playbook amendment: handed incidents — RELEASED / PATHLESS
-
-Complete at `aa29b91`: the eight incidents Full-Stack Delivery handed at `4a8db00` are incorporated into `docs/operations/CONTRACTOR-PLAYBOOK.md` with credit, every commit-referenced incident verified against its citation, independently refuted to NOT REFUTED after one blocking and four precision repairs. The contributor input itself had already been swept out of this registry by the playbook lane's own release burst `fbd3995`, unseen, when its heading-to-heading replacement swallowed the section 4a8db00 had appended; it was recovered from git history this cycle, which is why release bursts must diff their replacement span before committing. Path released.
-
-#### Contractor workflow playbook — RELEASED / PATHLESS
-
-Complete at `9c1db98`: `docs/operations/CONTRACTOR-PLAYBOOK.md` preserves the recorded multi-session loop as method-only memory, granting no authority. Independent refutation passed after two bounded repair rounds (six findings repaired, then two, then NOT REFUTED). Path released.
-
-#### Food report pending-review experience — SOURCE PASS / RELEASED
-
-Commit `e554efd` wires only the existing ADR-019 `report_price` admission path. The first
-independent review found an in-flight dismissal duplicate-admission race, mismatched price
-normalization, wrong status semantics, localization/spacing defects, and a regex-only
-contract. The forward correction introduced an executable coordinator contract and the
-delta refuter returned **PASS** with no scoped P1/P2/P3. All six source/test/worklog paths
-are released. Runtime target activation remains blocked on the separately claimed review
-operations vertical below; this source commit must not deploy alone as a false affordance.
-
-#### Contribution control Neon endpoint guard — COMPLETE / RELEASED
-
-- **Owner:** Executive controller; independent Security/Quality refuter required before apply.
-- **Exclusive paths:** `scripts/contributions/contribution-moderator-control.ts` and
-  `scripts/contributions/contribution-moderator-control-contract.test.ts` only.
-- **Contract:** replace the unusable Neon proxy-IP equality with exact endpoint-id, project, branch,
-  database, configured-host, and allowlist agreement. Keep every control command dry-run by default;
-  do not assign a moderator or change reporting/moderation controls until the correction is refuted.
-
-Complete at `4b93726`: exact target and immutable Neon identity settings, target-bound hashed actor
-approvals, recursive no-`SET ROLE` membership closure, and one serializable pre-probe/mutation/post-probe
-transaction passed focused contracts, exact-path lint, live Preview read-only proof, and independent
-refutation. Paths released.
 
 #### Contribution pending-queue row-shape repair `0017` — SHARED APPLIED / IMMUTABLE
 
@@ -431,40 +321,6 @@ and an independently refuted exact-path candidate. Provider credentials, named a
 flags, Preview/Production activation, browser proof, migration, push, and deployment remain
 separate operational gates.
 
-#### Contribution moderation client/server boundary repair — SOURCE PASS / RELEASED
-
-Owner: controller. The Production build exposed one bounded import-boundary defect: the
-client moderation hook imported a value from the PostgreSQL-backed server runtime and
-therefore pulled Node `pg` dependencies into the browser bundle. Move only shared DTOs and
-finite reason-code constants into a client-safe contract, preserve all behavior, and add a
-focused regression assertion that client code cannot import the server runtime.
-
-Exact writable paths:
-
-- `LANES.md`
-- new `src/lib/contributions/moderation-contract.ts`
-- `src/lib/contributions/moderation-runtime.ts`
-- `src/app/operations/contributions/_components/ModerationConsole.tsx`
-- `src/app/operations/contributions/_components/hooks/useModerationConsole.ts`
-- `src/app/operations/contributions/_components/views/ModerationConsoleView.tsx`
-- `scripts/contributions/contribution-moderation-runtime-contract.test.ts`
-- `package.json`
-- `package-lock.json`
-
-No UI, copy, RPC, database, migration, environment, flag, provider, role, or moderation
-semantics may change. The only dependency change allowed is the standard `server-only`
-poison-package guard. Release requires the focused runtime contract, exact-path lint, a
-Production build, independent default-to-REFUTED review, and a path-scoped forward commit.
-
-Final evidence: the focused runtime contract and exact-path lint pass; the full Next
-Production build compiles and generates all 117 routes without the prior `pg` browser
-bundle; independent forward refutation returned PASS with no P1/P2/P3. Paths are released
-upon the path-scoped commit.
-
-#### Governance modularization — RELEASED / PATHLESS
-
-The active serialized governance claim completed as one atomic path-scoped candidate. Independent final refutation returned **PASS**; its exact documentation and archive-split paths are released upon the atomic path-scoped commit. Root `LANES.md` remains the required human coordination index for future current claims, while the current-cycle archive preserves completed evidence without granting authority.
-
 #### Account deletion vertical — RELEASED, BLOCKED BY ADR-021 / REQUEST TO CONTROLLER
 
 Owner released: Private Contractor, Full-Stack Delivery `ef98946c-a55e-4700-aa6e-c1a840e42eef`. Both paths (`src/app/_actions/account-actions.ts`, `src/app/_components/manage-profile-sheet/**`) are released; no source is claimed. Nothing was committed. The synchronous action and enabled control I built are reverted from the tree, preserved only in this session's scratchpad.
@@ -472,92 +328,6 @@ Owner released: Private Contractor, Full-Stack Delivery `ef98946c-a55e-4700-aa6e
 Why released: I claimed this lane on stale memory and did not first check the ADRs. [ADR-021 Account deletion lifecycle](docs/adr/021-account-deletion-lifecycle.md) (Accepted, decision owner Founder) redesigned deletion after my original evidence and, at its "Truthful UI and completion" section, forbids exposing an enabled self-delete control until a full async saga exists. My build was a synchronous action with an enabled control; it also ran a raw `DELETE FROM neon_auth."user"` through the app database role, which ADR-021 specifically prohibits (auth deletion must go through Neon's server-only branch administrative capability, no database credential substituting). ADR outranks a task or lane, so I stopped rather than ship over it. The build agent flagged the same divergence.
 
 REQUEST TO CONTROLLER / FOUNDER (a decision only they can make): account deletion is an App Store 5.1.1(v) submission requirement, but ADR-021 makes it a multi-phase saga (P1 persistence and a Neon branch-admin auth adapter, P2 cleanup adapters, P3 user flow), gated on Presence `0012` proof. This is a platform effort for the appropriate seat, not a contractor vertical. Options: (a) sequence ADR-021 P1/P2/P3 under a platform seat; (b) the Founder amends ADR-021 to permit a simpler pilot deletion, after which the reverted build is most of the way there but its raw-DELETE-via-app-role still needs the provider-boundary concern resolved. Governance note recorded during my schema mapping: our public identity tables carry no FK to `neon_auth`, and `presence_*`/`contribution_*` (measured empty, default-off) hold `account_id` columns, so whichever design ships must extend to those subsystems as they activate or it becomes an incomplete erasure.
-
-#### Maps theme-transition continuity — RELEASED / PATHLESS
-
-Complete at candidate `370cf07`: theme swaps hold the outgoing frame and cross-fade; the skeleton is suppressed only while bridged. Independent refutation passed (initial and delta). All three paths are released; the record is preserved at [2026-07-maps-experience-01](docs/operations/lanes/history/2026-07-maps-experience.md#2026-07-maps-experience-01). The release-critical Maps Adapter lane is closed, so the queued Presence integration serialization is no longer blocked by a Maps lock.
-
-#### Root UI Component Decluttering — RELEASED / PATHLESS
-
-Commit `699d1a5` moved the six remaining root UI components into the smallest live
-controller, hook, view, and import slices, rewired all four caller seams, and updated five
-focused UI contracts. Independent refutation first rejected an incomplete manifest, dead
-copy/style/hook scaffolds, an unused PresentationHost prop, and an unrelated place-detail
-layout change. The forward candidate removed the ceremonial layers, restored
-`home-detail-bounded`, and then passed TypeScript plus iconography, liquid-glass,
-live-sheet-inset, location-default, and motion contracts. The exact 39-path receipt is in
-the Human Interface worklog. Browser rendering remains explicitly unverified because the
-browser-control safety layer blocked the post-recovery action; no runtime success is
-claimed. All Root UI paths and contract requests are released.
-
-#### Public review privacy containment — RELEASED / PATHLESS
-
-Commit `8f91169` is on `origin/main`; `src/app/_actions/review-actions.ts` is released and
-owns no repository path. Independent refutation passed: the public DTO and SQL expose
-neither stable reviewer identity nor Auth email, existing name/avatar display and
-approved-only ordering remain intact, and review writes remain fail-closed with
-`REVIEWS_UNAVAILABLE`. No schema, UI, moderation, aggregate, provider, database, or
-deployment behavior was authorized or changed.
-
-#### Profile sheet signed-out view extraction — RELEASED / PATHLESS
-
-Commit `5155567` extracted the live signed-out OTP presentation into
-`ProfileSignInView.tsx`; both application paths are released and own no repository path.
-Independent refutation passed all idle, email, code, verified, stalled, retry, resend,
-different-email, focus/ref, accessibility, style, spinner, handler, and auto-submit
-equivalence checks. `ProfileSheetView.tsx` is 209 lines and `ProfileSignInView.tsx` is 166;
-no Auth provider, state, effect, signed-in flow, UI design, database, or deployment behavior
-changed.
-
-#### Get-It reviews view extraction — RELEASED / PATHLESS
-
-Commit `f777e6b` extracted the live review aggregate and reviews body into
-`GetItReviewsView.tsx`; both application paths are released and own no repository path.
-Independent refutation caught and then cleared an ordering regression: aggregate, Share,
-directions, manual-copy, contact, and reviews now retain their exact prior order and
-branches. `GetItSheetView.tsx` is 219 lines and `GetItReviewsView.tsx` is 136; no review
-data, moderation, copy, visual, accessibility, contact, share, directions, write,
-database, or deployment behavior changed.
-
-#### Currency upstream provider extraction — RELEASED / PATHLESS
-
-Commit `a214a7f` extracted Frankfurter/CBN transport, response validation, parsing, and
-upstream fetch helpers into the directly imported server-only provider boundary at
-`src/app/_actions/currency-provider.ts`. `src/app/_actions/currency-actions.ts` remains the
-sole public action boundary and is below 300 lines. Independent default-to-REFUTED review
-first caught a private exported-function return type and a missing type import; both were
-corrected before the final PASS. Public exports and signatures, URLs and queries, 8/35-day
-windows, one-hour revalidation, eight-second timeout, parsing, errors, fallback behavior,
-and provider attribution remain unchanged. No UI, browser-cache, provider-network, database,
-or deployment behavior changed. Both action paths are released.
-
-#### Food trust query extraction — RELEASED / PATHLESS
-
-Commit `93bba80` moved the private read-side trust key/types, normalization, fallback
-mapping, key serialization, and unchanged batch SQL/query processing into the directly
-imported server helper `src/app/_actions/food-trust.ts`. `food-actions.ts` retains the sole
-`use server` boundary plus the public `getOfferTrustBatch` and `getOfferTrust` actions and
-re-exported `OfferKey`/`ReadTrust` types. Independent default-to-REFUTED review returned PASS
-with no P1/P2/P3: SQL eligibility, provenance, trust assessment, newest-observation ordering,
-batching, empty/missing fallbacks, exports, signatures, and live callers remain equivalent.
-No UI, schema, migration, provider, database, browser, or deployment behavior changed. Both
-action paths are released.
-
-#### Maps platform consolidation — RELEASED / PATHLESS
-
-Commit `03adfad` extracted cartography and theme-snapshot helpers from the Mapbox adapter,
-kept the thin `applyCartography()` compatibility wrapper, and removed only the dormant
-ADR-016-prohibited contact-popup construction. Independent static refutation passed the
-exact four-path candidate with no P1/P2/P3; TypeScript, exact-path lint,
-`location-default-contract`, and diff checks passed. The worklog preserves the prior direct
-Chromium theme-transition evidence without overstating it. Hardware-GPU Safari/iOS,
-hidden-document, and forced-provider-failure behavior remain explicit runtime residuals;
-the browser-control safety layer blocked the post-recovery action, so no new browser PASS is
-claimed. All four paths are released.
-
-#### Maps three-scope evidence entry — RELEASED / PATHLESS
-
-Complete at `8fb9b02` (tuple base `8b1d7ca`, digest `21b35ad5…`, independently re-verified after a mid-refutation restamp). The first theme-transition entry's Unknown scope is closed to exactly: Safari and iOS capture behavior; renderer-failure bridging behavior. Path released.
 
 #### REQUEST TO CONTROLLER: image-on-price-reports (#25) is evidence-media, gated by ADR-019 (OPEN)
 
@@ -667,6 +437,45 @@ No future source path is pre-reserved. The released Slice 1 through Slice 10 evi
 
 ADR-027 is accepted as architecture direction only. It authorizes no AI endpoint, provider call, prompt, tool registry, schema, dependency, UI, rollout, or deployment. AI may interpret a request only; admitted WetinDey evidence answers it. The released decision record is in [release and governance history](docs/operations/lanes/history/2026-07-release-and-governance.md).
 
+## Released this cycle (evidence in the history index)
+
+Released, completed, or closed lane records collapsed from the sections above; each was independently refuted and is on `origin/main`. Full prose and branch-reconstruction evidence live in [the current-cycle lane history index](docs/operations/lanes/history/README.md), the [legacy historical archive](docs/operations/lanes/LANES-HISTORICAL-ARCHIVE.md), and the cited commits. These grant no current claim.
+
+- CSP dev-environment resolution defect - dev-server VERCEL_ENV precedence fixed so NODE_ENV=development wins, 679 report-only violations to 0, Report-Only posture untouched (`44f8027`)
+- ADR-031 lane 3 agri map surface - dormant agri map surface keyed to one source of truth behind PILLAR_FLAGS.agri, glow exclusion and contract teeth proven (`7707515`)
+- ADR-031 lane 1 implementation note - Option B confirmed on the accepted ADR; lane 1 app-layer only, no migration (note commit)
+- ADR-031 acceptance record - ADR-031 Accepted, ADR-008 amended to seven pillars, four implementation lanes claimable in order (acceptance commit)
+- Maps loader retry resurrection - blocked-state fetches bounded to 5, Try again recovers to 60 markers, adverse-states sweep dispositioned (resurrection commit)
+- Maps fog opacity guard - unguarded mapbox-gl fog TypeError race guarded, idempotent through strict-mode double-mount (guard commit)
+- Maps recenter control detent clamp - expanded detent clamped to y 68, half/collapsed math preserved, desktop dormant (clamp commit)
+- Maps performance and operability pass - keyboard operability both themes, leak flat at 60, batched glow; unblocks the held layout.tsx global-tag removal; fog race routed to controller as a decision (`5c9ba7d`)
+- Maps WebKit capture evidence entry - theme fade reproduced on Playwright WebKit 18.2, residual Unknown only Safari shell and iOS device (WD-MAPS-THEMEFADE-20260722-4 commit)
+- Farm inputs pillar decision record - ADR-031/WD-I-006 recorded Proposed; ADR-008 seven-pillar amendment and four lanes enumerated, acceptance later granted (ADR-031/WD-I-006 commit)
+- Maps own-markets glow layer - own-market glow beneath the data layer both themes plus mutation-safe style-completion repair (`266a294`)
+- Maps dark road hierarchy and wash strength - dark road hierarchy restored data-driven, light held pixel-identical (`c66dcd3`)
+- Maps route freshness tint - caution route amber at the status token, tint keyed so it cannot outlive its route (`a55eb9a`)
+- Maps light cartography warmth - light land warmed to the sand family, dark proven pixel-identical (`f307cef`)
+- Maps worklog action-noun conformance - Action-noun fix cascaded four sibling asserts, department worklog contract 5/5 (`2508af0`)
+- Maps worklog plural conformance - both Owned paths lines match the contract template; routed push declined, authority stays with owner (pluralization commit)
+- HI claim: AA-safe status-chip legibility over media (PlaceOfferRow) - two-layer theme-aware text-shadow, P0-6 measured contrast unchanged, pushed and released (`25054a9`, evidence `085809b`)
+- Maps renderer-failure evidence entry - renderer-failure bridging closed with reproduced evidence, residual only Safari/iOS capture (`23b1aef`)
+- Contractor playbook amendment: handed incidents - eight handed incidents incorporated into CONTRACTOR-PLAYBOOK.md with credit, independently refuted (`aa29b91`)
+- Contractor workflow playbook - CONTRACTOR-PLAYBOOK.md records the multi-session loop as method-only memory, granting no authority (`9c1db98`)
+- Food report pending-review experience - wired to the ADR-019 report_price admission path; six source/test/worklog paths released, runtime activation still gated, must not deploy alone (`e554efd`)
+- Contribution control Neon endpoint guard - exact endpoint-id/project/branch/database identity replaces proxy-IP equality, control commands dry-run by default (`4b93726`)
+- Contribution moderation client/server boundary repair - shared DTOs and reason codes moved to a client-safe contract, pg out of the browser bundle, 117 routes build (path-scoped forward commit)
+- Governance modularization - documentation and archive-split landed atomically; root LANES.md remains the required human coordination index (atomic path-scoped commit)
+- Maps theme-transition continuity - theme swaps hold the outgoing frame and cross-fade; closes the release-critical Maps Adapter lane, unblocking queued Presence integration (`370cf07`)
+- Root UI Component Decluttering - six root UI components moved into controller/hook/view/import slices, 39-path receipt, browser render explicitly unverified (`699d1a5`)
+- Public review privacy containment - public DTO/SQL expose no reviewer identity or Auth email, writes remain fail-closed with REVIEWS_UNAVAILABLE (`8f91169`)
+- Profile sheet signed-out view extraction - signed-out OTP presentation extracted to ProfileSignInView.tsx, behavior equivalent (`5155567`)
+- Get-It reviews view extraction - review aggregate and body extracted to GetItReviewsView.tsx, exact prior order preserved (`f777e6b`)
+- Currency upstream provider extraction - Frankfurter/CBN transport moved to currency-provider.ts, public action boundary under 300 lines (`a214a7f`)
+- Food trust query extraction - read-side trust helpers moved to food-trust.ts, single use server boundary retained (`93bba80`)
+- Maps platform consolidation - cartography/theme-snapshot helpers extracted, dormant ADR-016 contact-popup construction removed (`03adfad`)
+- Maps three-scope evidence entry - first theme-transition Unknown narrowed to Safari/iOS capture and renderer-failure bridging (`8fb9b02`)
+- Developer Relations department worklog protocol - worklog reconciled to 21 exclusive paths, five focused contracts pass, canonical digest fixed literal (`350882e`)
+
 ## Recently released pointer
 
 Released records are historical evidence, not current locks. Locate them through [the current-cycle lane history index](docs/operations/lanes/history/README.md), including Presence/platform, modularization, Human Interface/Aboki FX, documentation/enablement, and release/governance records.
@@ -679,13 +488,3 @@ Archives grant no current human claim. They preserve source-snapshot evidence fo
 - [Legacy historical archive](docs/operations/lanes/LANES-HISTORICAL-ARCHIVE.md)
 
 
-#### Developer Relations department worklog protocol — RELEASED / PATHLESS
-
-Commit `350882e` rebased the fixed-digest repair onto the final Root UI parent, reconciled
-the active department manifest to 21 exclusive paths, and preserved the historical
-23-path bootstrap evidence append-only. The canonical digest
-`759e9cd3263030be967fcce995935253b54dd4eb09c9f8402eca3c0d63b00597` is a fixed literal;
-normalization removes only its self-reference and permits no dynamic acceptance.
-Independent final refutation passed all five focused department-worklog contracts. All
-DevRel paths are released; the persistent employee remains available for later bounded
-assignments.
