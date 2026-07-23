@@ -207,9 +207,9 @@ Requested by: Private Contractor, Maps Delivery `c9c17443-ef5e-4a7b-9b6e-c8f5381
 
 Scouted shape on approval, the deletion-P1 house pattern: new src/db/schema/roles.ts plus its generated `0020` candidate as ONE unit (the drizzle schema glob makes a schema file without its migration poison every other seat's next generate), candidate_unapplied with every authorization flag false, journal append of idx 20 only, `0000`-`0019` byte-frozen; new src/db/pillars/90-role-security.sql (roles, grants, RLS only); new src/lib/roles/ (seller_owner, seller_manager, seller_staff templates only; deny-by-default resolver; lifecycle and separation-of-duties guards; no live caller); new scripts/roles/role-authorization-p1-contract.test.ts including disposable blank and 0019-to-0020 upgrade proof. contribution_moderator_assignments remains the sole moderator truth; P1 creates no second moderator store, no onboarding UI, no verification, no contact publication, no badge, no live caller, no shared application, no department worklog edit.
 
-#### Manage-profile Avatar chunk decoupling - ACTIVE
+#### Manage-profile Avatar chunk decoupling - RELEASED / PATHLESS
 
-Owner: Private Contractor, Maps Delivery `c9c17443-ef5e-4a7b-9b6e-c8f5381da30c`; the residual recorded by the released home code-split lane. One import: manage-profile-sheet's barrel gets Avatar from profile-sheet/views/Avatar instead of through profile-sheet/ProfileSheet, decoupling the manage-profile chunk from the whole profile-sheet chunk (no first-load impact either way; smaller on-demand fetch). Exact paths: `src/app/_components/manage-profile-sheet/imports/imports.ts`; `scripts/perf/home-code-split-contract.test.ts` (add the barrel to the static-import sweep exclusion audit). Completion: contract green, gates green, refuter two-line confirmation on the chunk mapping, path-scoped commit, release.
+Complete at the decoupling commit, pushed under the `0bbdb11` class after refuter confirmation on a fresh prod build: chunks 8370 (manage-profile) and 2427 (profile) share zero files, 8370 carries no ProfileSheetView or Avatar bytes, Avatar rides first-load via the header, and the code-split contract pins the direct import. Paths released.
 
 #### ADR-022 P1 app-layer half: roles vocabulary and guards - RELEASED / PATHLESS
 
