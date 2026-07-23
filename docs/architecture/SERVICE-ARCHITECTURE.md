@@ -11,19 +11,46 @@ Accepted with three qualifications, from ADR-002:
 
 Written against the working tree at `main` / `019f3f3`, which was dirty at authoring time; **line numbers must be re-verified at merge**.
 
+> **AMENDED 2026-07-23: five claims in this document were true at `019f3f3` and are now false.**
+> The original prose is kept below as the historical record this amendment corrects; wherever a
+> bracketed *[AMENDED 2026-07-23: see amendment block]* marker appears, this block is the current
+> truth. Citations here are by file and symbol, never line number.
+>
+> 1. **The trust orphans were wired, internally, and the public wrappers are gone.**
+>    `getOfferTrustBatch` and `getOfferTrust` no longer exist as exported server actions: the bare
+>    `"use server"` wrappers were deliberately removed at `8fbd259` because nothing outside the
+>    actions module ever called them and they exposed an unparsed, unbounded public endpoint. The
+>    logic lives internally as `getOfferTrustBatchImpl` in `src/lib/food-trust.ts`, with four live
+>    in-process callers: `searchItems`, `getPopularItems`, `getPlaceOffers`, and `getOffersNarrowed`
+>    in `src/app/_actions/food-actions.ts`. **R2's "wire this first" directive is superseded and
+>    MUST NOT be executed as written**: the wiring happened in process, and resurrecting a public
+>    wrapper would undo a deliberate hardening.
+> 2. **The two god-files are gone.** `src/app/page.tsx` is a twelve-line shell; the actions are
+>    split across `src/app/_actions/` (eleven files); the components under `src/app/_components/`
+>    are modular directories, not flat files.
+> 3. **`selectedPlaceId` is consumed.** `MapboxCanvas` threads it through `selectedPlaceIdRef` into
+>    the marker descriptors (`selected: candidate.placeId === selectedPlaceIdRef.current`) and a
+>    selection effect calls `MapboxAdapter.setMarkerSelected`. Pins do render as selected.
+> 4. **The i18n dictionary is adopted.** After `bd01582` and `489725f`, `src/core/i18n/strings.ts`
+>    is the central copy store, imported across nine or more modules (home-page, location-sheet,
+>    exchange-panel, manage-profile-sheet, settings-sheet, my-reports-sheet, currency-picker-sheet,
+>    get-it-sheet, `locationStore`). The single-consumer state described below is history.
+> 5. **The state-library accretion was cut, exactly as this document recommends.** `xstate`,
+>    `@xstate/react`, and `jotai` are gone from `package.json`; `zustand` alone remains.
+
 ---
 
 ## Read this first
 
 Nine things. If you read nothing else, read these.
 
-1. **`AGENTS.md` documents an architecture that does not exist.** It mandates that every capability implement `WetinDeyModule` (`src/core/module-contract.ts`). The contract has exactly one importer — its own orphaned implementation, `src/modules/food/application/FoodModule.ts`, which is backed by a five-item mock array. Capabilities implementing it: **zero**. The real application is `src/app/page.tsx` (~1,241 lines) plus `src/app/actions.ts` (~1,358 lines) doing everything directly. `src/db/queries/` — where the data layer is documented to live — contains one `.gitkeep`. Treat the docs in `docs/` as archaeology, not specification. `docs/APP-MAP.md` is confidently wrong about its own headline finding and cites files that are not on disk.
+1. **`AGENTS.md` documents an architecture that does not exist.** It mandates that every capability implement `WetinDeyModule` (`src/core/module-contract.ts`). The contract has exactly one importer — its own orphaned implementation, `src/modules/food/application/FoodModule.ts`, which is backed by a five-item mock array. Capabilities implementing it: **zero**. The real application is `src/app/page.tsx` (~1,241 lines) plus `src/app/actions.ts` (~1,358 lines) doing everything directly. `src/db/queries/` — where the data layer is documented to live — contains one `.gitkeep`. Treat the docs in `docs/` as archaeology, not specification. `docs/APP-MAP.md` is confidently wrong about its own headline finding and cites files that are not on disk. *[AMENDED 2026-07-23: see amendment block]*
 
 2. **Delivery and fulfilment are OUT, by decision (ADR-001, 16 Jul 2026).** Food **price and availability** are the current V1 vertical, not the universal product ontology. WetinDey's owner-directed mission is live local information: help a person understand nearby reality before leaving. Buyer and seller arrange any transaction themselves via "Contact seller." Do not design dispatch, courier, logistics, cart, checkout, or payments.
 
 3. **This is a modular monolith on Vercel.** "Service" in this document means *a bounded module with an owner inside one deployment*. Not a process. Not a container. Proposing Kubernetes, a service mesh, an event bus, or separate deploys for a pre-launch PWA with 478 offers is a failure of judgement, not a display of thoroughness.
 
-4. **The product's one claim is still not backed end to end.** "Know before you go" is a claim about evidence quality. The current tree now calls `assessTrust` on observation writes, but item detail and map markers still use competing UI heuristics and `getOfferTrustBatch` has no live UI caller. Synthetic seed rows are indistinguishable from observed reports, expired rows remain on important read surfaces, and offline cache age is not one authoritative signal. Everything else in this document is subordinate to fixing that.
+4. **The product's one claim is still not backed end to end.** "Know before you go" is a claim about evidence quality. The current tree now calls `assessTrust` on observation writes, but item detail and map markers still use competing UI heuristics and `getOfferTrustBatch` has no live UI caller. Synthetic seed rows are indistinguishable from observed reports, expired rows remain on important read surfaces, and offline cache age is not one authoritative signal. Everything else in this document is subordinate to fixing that. *[AMENDED 2026-07-23: see amendment block]*
 
 5. **The shape of the fix is subtraction, and the biggest risk is writing more dead code.** This repo has produced two generations of orphans (`FoodModule`, then `src/lib/trust.ts` written to rescue it and orphaned identically) because passes were forbidden from editing their own call sites — the source says so in its own comments. Before adding anything, delete the fiction and add a tool that makes orphans fail CI.
 
@@ -219,7 +246,7 @@ Aboki FX's licensed local non-emoji SVG flag sprite and prohibition on remote fl
 requests. These are accepted architecture rules, not evidence that the current runtime
 implements them. The implementation lane is separate and unclaimed.
 
-**Where the patterns break:** two of five lists ignore `AsyncList` and hand-roll their states (`ItemDetailSheet`'s error card has no retry at all). The search list has **no error path** while the popular list directly above it does — a database outage renders as *"Try a local name like 'ewa' or 'dodo'"*, the app blaming the user's vocabulary. The language picker is a lie: 215 i18n keys, one consumer; every dotted key has zero consumers; `ConfirmVisitSheet` forked its own dictionary; distance formatting hardcodes English `"away"` on the three surfaces where distance is read. `MapboxCanvas` declares `selectedPlaceId` as a **required** prop and destructures it as `_selectedPlaceId`, never using it — **no pin has ever rendered as selected.** The popular list ships `PhotoCredits`; the search list renders the same Wikimedia images with none — a licence breach by the codebase's own stated standard. Escape in a nested picker discards the whole form, because `ModalSheet` renders inline with no portal and both handlers sit on `document` where `stopPropagation` does not stop siblings.
+**Where the patterns break:** two of five lists ignore `AsyncList` and hand-roll their states (`ItemDetailSheet`'s error card has no retry at all). The search list has **no error path** while the popular list directly above it does — a database outage renders as *"Try a local name like 'ewa' or 'dodo'"*, the app blaming the user's vocabulary. The language picker is a lie: 215 i18n keys, one consumer; every dotted key has zero consumers; `ConfirmVisitSheet` forked its own dictionary; distance formatting hardcodes English `"away"` on the three surfaces where distance is read. `MapboxCanvas` declares `selectedPlaceId` as a **required** prop and destructures it as `_selectedPlaceId`, never using it — **no pin has ever rendered as selected.** The popular list ships `PhotoCredits`; the search list renders the same Wikimedia images with none — a licence breach by the codebase's own stated standard. Escape in a nested picker discards the whole form, because `ModalSheet` renders inline with no portal and both handlers sit on `document` where `stopPropagation` does not stop siblings. *[AMENDED 2026-07-23: see amendment block]*
 
 ---
 
@@ -329,13 +356,13 @@ not evidence that a public contribution currently succeeds or closes the loop.
 **Reality.** Offers is a table and a code block. `offers_current` is **not** a Postgres materialized view; it is a hand-maintained table recomputed **inline inside a Contribution action**, ~1,000 lines from its readers.
 
 **Owns:** `StatusBadge` — trust's public face, and not a generic pill.
-**Backend:** `getPopularItems`, `getPlaceOffers`, `getOffersNarrowed`, plus the recompute block welded inside `submitObservation`, plus `getOfferTrustBatch` / `getOfferTrust` (**both orphans, zero callers**), plus `src/lib/trust.ts` (one importer, feeding those two orphans).
+**Backend:** `getPopularItems`, `getPlaceOffers`, `getOffersNarrowed`, plus the recompute block welded inside `submitObservation`, plus `getOfferTrustBatch` / `getOfferTrust` (**both orphans, zero callers**), plus `src/lib/trust.ts` (one importer, feeding those two orphans). *[AMENDED 2026-07-23: see amendment block]*
 **Data:** `offers_current`. **The only genuinely contested table in the system.**
 **Depends on:** Contribution (read-only), Catalog (units, freshness policy), Geo (place location, radius cut).
 
 **The adjudication that matters.** `offers_current` is **derived by** Contribution and **consumed by** Discovery — which is exactly why neither may own it. Today `submitObservation`, a Contribution action, writes it directly: one function doing two areas' jobs, with no transaction. **This is the single boundary that, if drawn, makes the rest extractable.** `freshnessState` and `trustLevel` are Offers' columns holding trust's values; Offers is the sole authority for what they contain.
 
-**Why trust is a module rule here and not its own service.** The experiment already ran. `getOfferTrustBatch` / `getOfferTrust` **are** a clean, batched trust API over a careful 527-line model — batched precisely so a per-pin round trip is impossible — and grep proves **nothing calls either**. That is not an accident of scheduling. A trust assessment is not a thing anyone wants: nobody opens the app to ask "how reliable is this claim?"; they ask "is there rice, at what price, near me?" and trust is *how that answer is qualified*. Every input to it is an offer's own field or an aggregate of the observations behind one offer key. A service whose output is meaningless without another service's aggregate is that service's domain logic wearing a port. Reputation and abuse control split the other way, to **Contribution** — reputation is a property of a Source, and a Source is Contribution's data. A single "Trust service" would have to own both `sources` and `offers_current`; a boundary that swallows both its neighbours is not a boundary.
+**Why trust is a module rule here and not its own service.** The experiment already ran. `getOfferTrustBatch` / `getOfferTrust` **are** a clean, batched trust API over a careful 527-line model — batched precisely so a per-pin round trip is impossible — and grep proves **nothing calls either**. That is not an accident of scheduling. A trust assessment is not a thing anyone wants: nobody opens the app to ask "how reliable is this claim?"; they ask "is there rice, at what price, near me?" and trust is *how that answer is qualified*. Every input to it is an offer's own field or an aggregate of the observations behind one offer key. A service whose output is meaningless without another service's aggregate is that service's domain logic wearing a port. Reputation and abuse control split the other way, to **Contribution** — reputation is a property of a Source, and a Source is Contribution's data. A single "Trust service" would have to own both `sources` and `offers_current`; a boundary that swallows both its neighbours is not a boundary. *[AMENDED 2026-07-23: see amendment block]*
 
 **What is broken.**
 
@@ -367,11 +394,11 @@ not evidence that a public contribution currently succeeds or closes the loop.
 
 **What is broken.**
 
-- **215 i18n keys, one consumer, and a fork.** Every dotted key has zero consumers. `ConfirmVisitSheet` forked its own dictionary. `LocationSheet` admits it: *"English on purpose… waiting on the sheet's own i18n pass."* The dictionary comments still cite `AreaPickerSheet.tsx` — **a file that does not exist on disk**. The extraction landed; the adoption did not. Adopt the dictionary in the six sheets, or remove the picker. A control that offers three languages and delivers one is worse than English.
+- **215 i18n keys, one consumer, and a fork.** Every dotted key has zero consumers. `ConfirmVisitSheet` forked its own dictionary. `LocationSheet` admits it: *"English on purpose… waiting on the sheet's own i18n pass."* The dictionary comments still cite `AreaPickerSheet.tsx` — **a file that does not exist on disk**. The extraction landed; the adoption did not. Adopt the dictionary in the six sheets, or remove the picker. A control that offers three languages and delivers one is worse than English. *[AMENDED 2026-07-23: see amendment block]*
 - **`ThemeProvider` gates first paint of the entire app on hydration**, hiding all children until a `useEffect` fires. The blocking head script it references already resolved the theme class before paint — that is why the map can pick its basemap at construction. The gate defends against a flash the script makes impossible and charges the LCP budget for it, against a p75 target of ≤2.5s on mid-range Android over Lagos connections. **Delete it.**
 - **`report-error` declares three scopes for call sites that do not exist** — `'server-action'`, `'map'`, `'reporting'`. Two callers total, both error boundaries. `grep 'catch' src/app/actions.ts` → **zero hits**, so a throw in a server action reaches the user as a digest and goes nowhere. The queues log to bare `console.error` — the exact pattern the file was written to eliminate. **A silently-dropped price report is invisible today by construction.**
 - **Escape in a nested picker discards the whole form.** `ModalSheet` renders inline with no portal; `SheetPicker` mounts a `ModalSheet` inside the parent's; both listen on `document`, and `stopPropagation` does not stop other listeners on the same node — that requires `stopImmediatePropagation`. Reproduces for any keyboard user across four pickers in the report form and two in `ItemDetailSheet`. Fix with a module-level open-sheet stack, which also fixes focus restore.
-- **Three state libraries, one live consumer each.** `xstate` → only `reportingMachine.ts`, which has **zero importers**. `@xstate/react` → imported by **nothing**. `jotai` → two atoms, one consumer. `zustand` → two stores, real consumers. And the i18n module pointedly uses none of them. **This is accretion, not layering.** Cut `xstate` + `@xstate/react` — **harvest `reportingMachine`'s offline-queue design first**, it is the correct model for Contribution's queue. Fold the atoms into `page.tsx`. Land on `zustand` alone; it is the only one with the `persist` story `locationStore` needs.
+- **Three state libraries, one live consumer each.** `xstate` → only `reportingMachine.ts`, which has **zero importers**. `@xstate/react` → imported by **nothing**. `jotai` → two atoms, one consumer. `zustand` → two stores, real consumers. And the i18n module pointedly uses none of them. **This is accretion, not layering.** Cut `xstate` + `@xstate/react` — **harvest `reportingMachine`'s offline-queue design first**, it is the correct model for Contribution's queue. Fold the atoms into `page.tsx`. Land on `zustand` alone; it is the only one with the `persist` story `locationStore` needs. *[AMENDED 2026-07-23: see amendment block]*
 - **Dead surface.** `Card.tsx` — zero importers, carrying a careful comment about a bug nobody can hit. `ListRowSkeleton` — zero importers. Seven dead props. Five identical naira formatters. Four segmented controls. Two Banners. `OfferCardSkeleton` traces a row that **no longer exists** and is used for rows it does not match — different fill, radius, shadow and height, so rows shove on arrival, against the standard card skeleton set for itself.
 - **Ten `.gitkeep`-only directories** under `src/core/` and `src/integrations/` mirror the module contract's slice names exactly. **They are the negative space left by the contract nobody implemented.** An agent listing `src/core/` sees the Bible's architecture reflected back and files new code where nothing imports. **Delete them, do not fill them.**
 
@@ -477,7 +504,7 @@ only after its P1 authorization boundary and the Food/contribution migration gat
 
 ### M9 — Expiry sweep — **LATER, and possibly never**
 
-`expiresAt` is a column nothing enforces, which is *why* a React component recomputes freshness. A nightly cron sweep would kill that leak at the source. **But do not build it yet:** wiring `getOfferTrustBatch` makes freshness derived-at-read, which makes the cron optional. Building the cron first solves a problem the correct wiring dissolves.
+`expiresAt` is a column nothing enforces, which is *why* a React component recomputes freshness. A nightly cron sweep would kill that leak at the source. **But do not build it yet:** wiring `getOfferTrustBatch` makes freshness derived-at-read, which makes the cron optional. Building the cron first solves a problem the correct wiring dissolves. *[AMENDED 2026-07-23: see amendment block]*
 
 ### REJECTED — do not re-litigate
 
@@ -899,8 +926,8 @@ All 17 exported server actions. Each belongs to exactly one module. **No shares,
 | `getPopularItems` | **Offers** | `offers_current`, `places`, `items`, `item_variants`, `units` | — | **No** — `limit` uncapped | live; the most sophisticated and most correct SQL in the app. Uses `ST_DWithin` on geography — **the right pattern, hundreds of lines above the two that get it wrong.** |
 | `getPlaceOffers` | **Offers** | `offers_current`, `item_variants`, `items`, `units` | — | **No** | live; index-served |
 | `getOffersNarrowed` | **Offers** | `offers_current`, `item_variants`, `units`, `places`, `observations` | — | **No** | live; **the core discovery read.** `sort` indexes an object literal; `limit` uncapped; seq scan on the radius. |
-| `getOfferTrustBatch` | **Offers** | `observations`, `sources` | — | **No** | **ORPHAN.** Batched precisely so a per-pin round trip is impossible. Careful, correct, dead. **Wire this first — it is the whole fix for R2.** |
-| `getOfferTrust` | Offers | via the batch | — | **No** | **ORPHAN.** Dead wrapper around a dead batch. |
+| `getOfferTrustBatch` | **Offers** | `observations`, `sources` | — | **No** | **ORPHAN.** Batched precisely so a per-pin round trip is impossible. Careful, correct, dead. **Wire this first — it is the whole fix for R2.** *[AMENDED 2026-07-23: see amendment block; superseded, do not execute]* |
+| `getOfferTrust` | Offers | via the batch | — | **No** | **ORPHAN.** Dead wrapper around a dead batch. *[AMENDED 2026-07-23: see amendment block; superseded, do not execute]* |
 | — | **Discovery** | — | — | — | **Owns zero actions.** It composes. A Discovery action would be Discovery reaching into other people's data. |
 
 ### Validation coverage — 12 parsers, 15 unvalidated endpoints, and the three that get nothing
